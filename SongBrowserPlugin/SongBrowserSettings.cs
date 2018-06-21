@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 
@@ -17,6 +18,7 @@ namespace SongBrowserPlugin
     public class SongBrowserSettings
     {
         public SongSortMode sortMode = default(SongSortMode);
+        public List<String> favorites;
 
         [NonSerialized]
         private static Logger Log = new Logger("SongBrowserPlugin-Settings");
