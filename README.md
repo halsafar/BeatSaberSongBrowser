@@ -6,6 +6,8 @@ A plugin for customizing the in-game song browser.
 ## Status
 - Only tested happy paths so far.
 
+### Known Issues
+- Original sorting method (what you normally get with just SongLoaderPluging) is not working
 
 ## Usage
 - This adds three sorting methods to the Song Browser:
