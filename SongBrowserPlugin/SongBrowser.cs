@@ -8,6 +8,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Text;
 using HMUI;
+using System.Text.RegularExpressions;
 
 namespace SongBrowserPlugin
 {
@@ -305,15 +306,17 @@ namespace SongBrowserPlugin
                         .ToList();
                     break;
                 case SongSortMode.Original:
-                    _log.Debug("Sorting list as original");
+                    _log.Debug("  Sorting list as original");
                     songList = songList
                         .AsQueryable()
-                        .OrderBy(x => x.levelId.Contains("level")).ThenBy(x => x.songName)
+                        .OrderBy(x => !x.levelId.StartsWith("Level"))
+                        .ThenBy(x => x.levelId.StartsWith("Level"))
+                        .ThenBy(x => x.name)
                         .ToList();
                     break;
                 case SongSortMode.Default:                    
                 default:
-                    _log.Debug(  "Sorting list as default");
+                    _log.Debug("  Sorting list as default");
                     songList = songList
                         .AsQueryable()
                         .OrderBy(x => x.authorName)
@@ -381,6 +384,7 @@ namespace SongBrowserPlugin
         {
             if (Input.GetKeyDown(KeyCode.T))
             {
+                _settings.sortMode = SongSortMode.Original;
                 ProcessSongList();
                 RefreshSongList();
             }
