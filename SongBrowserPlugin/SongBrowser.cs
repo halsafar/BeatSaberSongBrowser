@@ -305,6 +305,10 @@ namespace SongBrowserPlugin
             ReflectionUtil.SetPrivateField(songTableView, "_levels", newSongList.ToArray());
             TableView tableView = ReflectionUtil.GetPrivateField<TableView>(songTableView, "_tableView");
             tableView.ReloadData();
+
+            songTableView.ClearSelection();
+            _songListViewController.SelectSong(0);
+            _songSelectionMasterView.HandleSongListDidSelectSong(_songListViewController);
             
             //Action showMethod = delegate () { };
             //_songSelectionMasterView.DismissModalViewController(showMethod);            
