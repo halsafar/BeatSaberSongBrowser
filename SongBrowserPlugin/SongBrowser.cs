@@ -304,6 +304,13 @@ namespace SongBrowserPlugin
                         .OrderBy(x => _settings.favorites.Contains(x.levelId) == false).ThenBy(x => x.songName)
                         .ToList();
                     break;
+                case SongSortMode.Original:
+                    _log.Debug("Sorting list as original");
+                    songList = songList
+                        .AsQueryable()
+                        .OrderBy(x => x.levelId.Contains("level")).ThenBy(x => x.songName)
+                        .ToList();
+                    break;
                 case SongSortMode.Default:                    
                 default:
                     _log.Debug(  "Sorting list as default");
