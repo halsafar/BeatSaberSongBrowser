@@ -28,6 +28,7 @@ namespace SongBrowserPlugin
         /// </summary>
         public SongBrowserSettings()
         {
+            favorites = new List<String>();
         }
 
         /// <summary>
