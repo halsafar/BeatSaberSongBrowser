@@ -41,6 +41,9 @@
     <Reference Include="IllusionPlugin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\IllusionPlugin.dll</HintPath>
     </Reference>
+    <Reference Include="SongLoaderPlugin">
+      <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Plugins\SongLoaderPlugin.dll</HintPath>
+    </Reference>
     <Reference Include="System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
       <HintPath>D:\SteamLibrary\steamapps\common\Beat Saber\Beat Saber_Data\Managed\System.dll</HintPath>
     </Reference>
@@ -78,7 +81,6 @@
   <ItemGroup>
     <Compile Include="Logger.cs" />
     <Compile Include="ReflectionUtil.cs" />
-    <Compile Include="SimpleJSON.cs" />
     <Compile Include="SongBrowser.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -86,14 +88,12 @@
     <Compile Include="UIBuilder.cs" />
   </ItemGroup>
   <ItemGroup>
-
+    <Folder Include="Internals\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Internals\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
          Other similar extension points exist, see Microsoft.Common.targets.

@@ -102,9 +102,6 @@ namespace SongBrowserPlugin
 
             try
             {
-                //RectTransform rect = _songSelectionMasterView.transform.parent as RectTransform;
-                //rect. = new Vector2(rect.sizeDelta.x+100, rect.sizeDelta.y+100);
-
                 // Create Sorting Songs By-Buttons
                 // Fav button
                 _favoriteButton = UIBuilder.CreateUIButton(_songSelectRectTransform, "QuitButton", _buttonInstance);
@@ -165,16 +162,13 @@ namespace SongBrowserPlugin
             //_log.Debug("scene.buildIndex==" + scene.buildIndex);
             try
             {
-                if (scene.buildIndex == 1 || scene.buildIndex == -1)
+                if (scene.buildIndex == SongBrowser.MenuIndex || scene.buildIndex == -1)
                 {
                     _log.Debug("SceneManagerOnActiveSceneChanged - binding to UI");
 
                     MainMenuViewController _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
-                    Button _buttonInstance = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "FreePlayButton"));
-                    _buttonInstance.onClick.AddListener(delegate ()
-                    {
 
-                    });
+                    SongLoaderPlugin.SongLoader.SongsLoaded.AddListener(OnSongLoaderLoadedSongs);
 
                     //SongListTableView table = Resources.FindObjectsOfTypeAll<SongListTableView>().FirstOrDefault();
                     //table.songListTableViewDidSelectRow += OnDidSelectSongRow;
@@ -185,6 +179,16 @@ namespace SongBrowserPlugin
             {
                 _log.Exception("Exception during scene change: " + e);
             }       
+        }
+
+        /// <summary>
+        /// Song Loader has loaded the songs, lets sort them.
+        /// </summary>
+        private void OnSongLoaderLoadedSongs()
+        {
+            _log.Debug("--OnSongLoaderLoadedSongs");
+            ProcessSongList();
+            RefreshSongList();
         }
 
         /// <summary>
