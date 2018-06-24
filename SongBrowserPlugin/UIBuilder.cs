@@ -61,20 +61,33 @@ namespace SongBrowserPlugin
         {
             if (_button.GetComponentsInChildren<UnityEngine.UI.Image>().Count() > 1)
             {
-
                 _button.GetComponentsInChildren<UnityEngine.UI.Image>()[1].sprite = _icon;
-            }
+            }            
+        }
 
+        static public void SetButtonIconEnabled(ref Button _button, bool enabled)
+        {
+            if (_button.GetComponentsInChildren<UnityEngine.UI.Image>().Count() > 1)
+            {
+                _button.GetComponentsInChildren<UnityEngine.UI.Image>()[1].enabled = enabled;
+            }
         }
 
         static public void SetButtonBackground(ref Button _button, Sprite _background)
         {
             if (_button.GetComponentsInChildren<Image>().Any())
             {
-
                 _button.GetComponentsInChildren<UnityEngine.UI.Image>()[0].sprite = _background;
             }
 
+        }
+
+        static public void SetButtonBorder(ref Button _button, Color color)
+        {
+            if (_button.GetComponentsInChildren<Image>().Any())
+            {
+                _button.GetComponentsInChildren<UnityEngine.UI.Image>()[0].color = color;
+            }
         }
     }
 }

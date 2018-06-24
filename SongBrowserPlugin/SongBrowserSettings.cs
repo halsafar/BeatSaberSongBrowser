@@ -9,8 +9,9 @@ namespace SongBrowserPlugin
     [Serializable]
     public enum SongSortMode
     {
-        Default,
+        Default,        
         Favorites,
+        Original,
     }
 
     [Serializable]
