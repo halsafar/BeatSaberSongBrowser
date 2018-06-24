@@ -26,28 +26,28 @@ namespace SongBrowserPlugin
             Console.WriteLine("[" + loggerName + " @ " + DateTime.Now.ToString("HH:mm") + "] " + String.Format(format, args));
         }
 
-        public void Info(string message)
+        public void Info(string format, params object[] args)
         {
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("[" + loggerName + " @ " + DateTime.Now.ToString("HH:mm") + "] " + message);
+            Console.WriteLine("[" + loggerName + " @ " + DateTime.Now.ToString("HH:mm") + "] " + String.Format(format, args));
         }
 
-        public void Warning(string message)
+        public void Warning(string format, params object[] args)
         {
             Console.ForegroundColor = ConsoleColor.Blue;
-            Console.WriteLine("[" + loggerName + " @ " + DateTime.Now.ToString("HH:mm") + "] " + message);
+            Console.WriteLine("[" + loggerName + " @ " + DateTime.Now.ToString("HH:mm") + "] " + String.Format(format, args));
         }
 
-        public void Error(string message)
+        public void Error(string format, params object[] args)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("[" + loggerName + " @ " + DateTime.Now.ToString("HH:mm") + "] " + message);
+            Console.WriteLine("[" + loggerName + " @ " + DateTime.Now.ToString("HH:mm") + "] " + String.Format(format, args));
         }
 
-        public void Exception(string message)
+        public void Exception(string format, params object[] args)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("[" + loggerName + " @ " + DateTime.Now.ToString("HH:mm") + "] " + message);
+            Console.WriteLine("[" + loggerName + " @ " + DateTime.Now.ToString("HH:mm") + "] " + String.Format(format, args));
         }
 
     }

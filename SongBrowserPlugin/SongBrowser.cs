@@ -7,6 +7,7 @@ using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Text;
+using HMUI;
 
 namespace SongBrowserPlugin
 {
@@ -20,6 +21,7 @@ namespace SongBrowserPlugin
 
         private SongSelectionMasterViewController _songSelectionMasterView;
         private SongDetailViewController _songDetailViewController;
+        private SongListViewController _songListViewController;
 
         private List<Sprite> _icons = new List<Sprite>();
 
@@ -32,7 +34,9 @@ namespace SongBrowserPlugin
 
         private SongBrowserSettings _settings;
 
-        
+        /// <summary>
+        /// Unity OnLoad
+        /// </summary>
         public static void OnLoad()
         {
             if (Instance != null) return;
@@ -73,11 +77,13 @@ namespace SongBrowserPlugin
             {
                 _buttonInstance = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "QuitButton"));
 
-                _songSelectionMasterView = Resources.FindObjectsOfTypeAll<SongSelectionMasterViewController>().First();
-
-                _songSelectRectTransform = _songSelectionMasterView.transform.parent as RectTransform;
+                _songSelectionMasterView = Resources.FindObjectsOfTypeAll<SongSelectionMasterViewController>().First();                
 
                 _songDetailViewController = Resources.FindObjectsOfTypeAll<SongDetailViewController>().FirstOrDefault();
+
+                _songListViewController = Resources.FindObjectsOfTypeAll<SongListViewController>().First();
+
+                _songSelectRectTransform = _songSelectionMasterView.transform as RectTransform;
             }
             catch (Exception e)
             {
@@ -96,17 +102,20 @@ namespace SongBrowserPlugin
 
             try
             {
+                //RectTransform rect = _songSelectionMasterView.transform.parent as RectTransform;
+                //rect. = new Vector2(rect.sizeDelta.x+100, rect.sizeDelta.y+100);
+
                 // Create Sorting Songs By-Buttons
                 // Fav button
                 _favoriteButton = UIBuilder.CreateUIButton(_songSelectRectTransform, "QuitButton", _buttonInstance);
-                (_favoriteButton.transform as RectTransform).anchoredPosition = new Vector2(0, 80f);
-                (_favoriteButton.transform as RectTransform).sizeDelta = new Vector2(25f, 10f);
+                _favoriteButton.interactable = true;
+                (_favoriteButton.transform as RectTransform).anchoredPosition = new Vector2(130, 70f);
+                (_favoriteButton.transform as RectTransform).sizeDelta = new Vector2(30f, 10f);
 
-                UIBuilder.SetButtonText(ref _favoriteButton, "Fav!");            
+                UIBuilder.SetButtonText(ref _favoriteButton, "Fav");            
                 UIBuilder.SetButtonIcon(ref _favoriteButton, _icons.First(x => (x.name == "AllDirectionsIcon")));
 
                 _favoriteButton.onClick.AddListener(delegate () {
-                    _log.Info("Sorting by Favorites!");
                     _settings.sortMode = SongSortMode.Favorites;
                     ProcessSongList();
                     RefreshSongList();
@@ -114,14 +123,14 @@ namespace SongBrowserPlugin
 
                 // Default button
                 _defaultButton = UIBuilder.CreateUIButton(_songSelectRectTransform, "QuitButton", _buttonInstance);
-                (_defaultButton.transform as RectTransform).anchoredPosition = new Vector2(25f, 80f);
-                (_defaultButton.transform as RectTransform).sizeDelta = new Vector2(25f, 10f);
+                _defaultButton.interactable = true;
+                (_defaultButton.transform as RectTransform).anchoredPosition = new Vector2(100f, 70f);
+                (_defaultButton.transform as RectTransform).sizeDelta = new Vector2(30f, 10f);
 
                 UIBuilder.SetButtonText(ref _defaultButton, "Def");
                 UIBuilder.SetButtonIcon(ref _defaultButton, _icons.First(x => (x.name == "SettingsIcon")));
 
                 _defaultButton.onClick.AddListener(delegate () {
-                    _log.Info("Sorting by Favorites!");
                     _settings.sortMode = SongSortMode.Default;
                     ProcessSongList();
                     RefreshSongList();
@@ -136,9 +145,8 @@ namespace SongBrowserPlugin
                 UIBuilder.SetButtonText(ref _addFavoriteButton, "+1");
                 UIBuilder.SetButtonIcon(ref _addFavoriteButton, _icons.First(x => (x.name == "AllDirectionsIcon")));
 
-                _addFavoriteButton.onClick.AddListener(delegate () {
-                    _log.Info("Add to Favorites!");
-                    AddSongToFavorites();
+                _addFavoriteButton.onClick.AddListener(delegate () {                    
+                    ToggleSongInFavorites();
                 });
             }
             catch (Exception e)
@@ -154,16 +162,24 @@ namespace SongBrowserPlugin
         /// <param name="scene"></param>
         private void SceneManagerOnActiveSceneChanged(Scene arg0, Scene scene)
         {
-            //Console.WriteLine("scene.buildIndex=" + scene.buildIndex);
-
+            //_log.Debug("scene.buildIndex==" + scene.buildIndex);
             try
             {
-                MainMenuViewController _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
-                Button _buttonInstance = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "SoloButton"));
-                _buttonInstance.onClick.AddListener(delegate ()
+                if (scene.buildIndex == 1 || scene.buildIndex == -1)
                 {
-                    //ProcessSongList();
-                });
+                    _log.Debug("SceneManagerOnActiveSceneChanged - binding to UI");
+
+                    MainMenuViewController _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
+                    Button _buttonInstance = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "FreePlayButton"));
+                    _buttonInstance.onClick.AddListener(delegate ()
+                    {
+
+                    });
+
+                    //SongListTableView table = Resources.FindObjectsOfTypeAll<SongListTableView>().FirstOrDefault();
+                    //table.songListTableViewDidSelectRow += OnDidSelectSongRow;
+                    _songListViewController.didSelectSongEvent += OnDidSelectSongEvent;
+                }
             }
             catch (Exception e)
             {
@@ -171,20 +187,47 @@ namespace SongBrowserPlugin
             }       
         }
 
-        public static byte[] GetHash(string inputString)
+        /// <summary>
+        /// Adjust UI based on song selected.
+        /// </summary>
+        /// <param name="songListViewController"></param>
+        private void OnDidSelectSongEvent(SongListViewController songListViewController)
         {
-            HashAlgorithm algorithm = MD5.Create();  //or use SHA256.Create();
-            return algorithm.ComputeHash(Encoding.UTF8.GetBytes(inputString));
+            LevelStaticData level = _songSelectionMasterView.GetLevelStaticDataForSelectedSong();
+            if (_settings.favorites.Contains(level.levelId))
+            {
+                UIBuilder.SetButtonText(ref _addFavoriteButton, "-1");
+            }
+            else
+            {
+                UIBuilder.SetButtonText(ref _addFavoriteButton, "+1");
+            }
         }
 
+        /*private void OnDidSelectSongRow(SongListTableView table, int index)
+        {
+            Console.WriteLine("OnDidSelectSongRow");
+        }*/
+
         /// <summary>
-        /// Add song to favorites.
+        /// Add/Remove song from favorites depending on if it already exists.
         /// </summary>
-        private void AddSongToFavorites()
+        private void ToggleSongInFavorites()
         {
             LevelStaticData songInfo = _songSelectionMasterView.GetLevelStaticDataForSelectedSong();
-            String favorite_hash = songInfo.levelId;
-            _settings.favorites.Add(favorite_hash);
+            if (_settings.favorites.Contains(songInfo.levelId))
+            {
+                _log.Info("Remove {0} from favorites", songInfo.name);                
+                _settings.favorites.Remove(songInfo.levelId);
+                UIBuilder.SetButtonText(ref _addFavoriteButton, "+1");
+            }
+            else
+            {
+                _log.Info("Add {0} to favorites", songInfo.name);
+                _settings.favorites.Add(songInfo.levelId);
+                UIBuilder.SetButtonText(ref _addFavoriteButton, "-1");
+            }
+
             _settings.Save();
             ProcessSongList();
         }
@@ -201,8 +244,7 @@ namespace SongBrowserPlugin
             var gameDataModel = PersistentSingleton<GameDataModel>.instance;
 
             List<LevelStaticData> songList = gameDataModel.gameStaticData.worldsData[0].levelsData.ToList();
-            _log.Debug("SongBrowser Acquiring songList, songList.Count={0}", songList.Count);
-            //oldData.ForEach(i => Console.WriteLine(i.levelId));
+            _log.Debug("SongBrowser songList.Count={0}", songList.Count);
 
             return songList;
         }
@@ -214,9 +256,7 @@ namespace SongBrowserPlugin
         public void OverwriteSongList(List<LevelStaticData> newSongList)
         {
             var gameDataModel = PersistentSingleton<GameDataModel>.instance;
-            ReflectionUtil.SetPrivateField(gameDataModel.gameStaticData.worldsData[0], "_levelsData", newSongList.ToArray());
-                        
-            SongListViewController _songListViewController = Resources.FindObjectsOfTypeAll<SongListViewController>().FirstOrDefault();
+            ReflectionUtil.SetPrivateField(gameDataModel.gameStaticData.worldsData[0], "_levelsData", newSongList.ToArray());                        
         }
 
         /// <summary>
@@ -231,7 +271,7 @@ namespace SongBrowserPlugin
             switch(_settings.sortMode)
             {
                 case SongSortMode.Favorites:
-                    _log.Debug("Sorting list as favorites");
+                    _log.Debug("  Sorting list as favorites");
                     songList = songList
                         .AsQueryable()
                         .OrderBy(x => x.authorName)
@@ -241,7 +281,7 @@ namespace SongBrowserPlugin
                     break;
                 case SongSortMode.Default:                    
                 default:
-                    _log.Debug("Sorting list as default");
+                    _log.Debug(  "Sorting list as default");
                     songList = songList
                         .AsQueryable()
                         .OrderBy(x => x.authorName)
@@ -259,19 +299,15 @@ namespace SongBrowserPlugin
         {
             _log.Debug("Trying to refresh song list!");
 
-            //gameDataModel.gameStaticData.SetDirty();
-            //_songListViewController.Init(newSongList.ToArray());
-            //_songSelectionMasterView.RefreshSongDetail();
-            //_songSelectionMasterView.Init(_songSelectionMasterView.levelId, _songSelectionMasterView.difficulty, newSongList.ToArray(), true, true, true, GameplayMode.SoloStandard);
-            //_songListViewController.DidActivate();
-
-
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-            //Button _buttonInstance = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "FreePlayButton"));
-            //_buttonInstance.onClick.Invoke();
-            //LayoutRebuilder.ForceRebuildLayoutImmediate(_songListViewController.rectTransform);
-            //LayoutRebuilder.ForceRebuildLayoutImmediate(_songSelectionMasterView.rectTransform);
-
+            // Forcefully refresh the song view
+            var newSongList = AcquireSongList();            
+            SongListTableView songTableView = _songListViewController.GetComponentInChildren<SongListTableView>();
+            ReflectionUtil.SetPrivateField(songTableView, "_levels", newSongList.ToArray());
+            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(songTableView, "_tableView");
+            tableView.ReloadData();
+            
+            //Action showMethod = delegate () { };
+            //_songSelectionMasterView.DismissModalViewController(showMethod);            
         }
 
         /// <summary>
@@ -279,9 +315,10 @@ namespace SongBrowserPlugin
         /// </summary>
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.R))
+            if (Input.GetKeyDown(KeyCode.T))
             {
                 ProcessSongList();
+                RefreshSongList();
             }
 
             if (Input.GetKeyDown(KeyCode.Z))
@@ -296,8 +333,6 @@ namespace SongBrowserPlugin
                 _buttonInstance.onClick.Invoke();                
             }
 
-            SongListViewController _songListViewController = Resources.FindObjectsOfTypeAll<SongListViewController>().First();
-
             if (Input.GetKeyDown(KeyCode.C))
             {                
 
@@ -309,22 +344,35 @@ namespace SongBrowserPlugin
                 _songSelectionMasterView.HandleDifficultyViewControllerDidSelectDifficulty(_difficultyViewController);
             }
 
-            if (Input.GetKeyDown(KeyCode.N))
+            if (Input.GetKeyDown(KeyCode.V))
             {
-                _songListViewController.SelectSong(_songSelectionMasterView.GetSelectedSongIndex() - 1);
+                _songSelectionMasterView.HandleSongDetailViewControllerDidPressPlayButton(_songDetailViewController);
+            }
+
+                if (Input.GetKeyDown(KeyCode.N))
+            {
+                int newIndex = _songSelectionMasterView.GetSelectedSongIndex() - 1;
+                _songListViewController.SelectSong(newIndex);
                 _songSelectionMasterView.HandleSongListDidSelectSong(_songListViewController);
+
+                SongListTableView songTableView = Resources.FindObjectsOfTypeAll<SongListTableView>().First();
+                _songListViewController.HandleSongListTableViewDidSelectRow(songTableView, newIndex);
             }
 
             if (Input.GetKeyDown(KeyCode.M))
             {
-                _songListViewController.SelectSong(_songSelectionMasterView.GetSelectedSongIndex() + 1);
+                int newIndex = _songSelectionMasterView.GetSelectedSongIndex() + 1;
+
+                _songListViewController.SelectSong(newIndex);
                 _songSelectionMasterView.HandleSongListDidSelectSong(_songListViewController);
+
+                SongListTableView songTableView = Resources.FindObjectsOfTypeAll<SongListTableView>().First();
+                _songListViewController.HandleSongListTableViewDidSelectRow(songTableView, newIndex);
             }
 
             if (Input.GetKeyDown(KeyCode.F))
             {
-                AddSongToFavorites();
-                _favoriteButton.onClick.Invoke();
+                ToggleSongInFavorites();
             }
         }
     }
