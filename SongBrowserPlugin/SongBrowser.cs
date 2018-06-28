@@ -159,7 +159,7 @@ namespace SongBrowserPlugin
                 _originalButton.onClick.RemoveAllListeners();
                 _originalButton.onClick.AddListener(delegate () {
                     _log.Debug("Sort button - original - pressed.");
-                    _settings.sortMode = SongSortMode.Default;
+                    _settings.sortMode = SongSortMode.Original;
                     ProcessSongList();
                     RefreshSongList();
                 });
@@ -326,7 +326,7 @@ namespace SongBrowserPlugin
             _log.Debug("ProcessSongList()");
 
             List<LevelStaticData> songList = AcquireSongList();
-
+            songList.ForEach(x => _log.Debug(x.levelId));
             switch(_settings.sortMode)
             {
                 case SongSortMode.Favorites:
@@ -340,12 +340,26 @@ namespace SongBrowserPlugin
                     break;
                 case SongSortMode.Original:
                     _log.Debug("  Sorting list as original");
+
+                    // Invert the weights from the game so we can order by descending and make LINQ work with us...
+                    /*  Level4, Level2, Level9, Level5, Level10, Level6, Level7, Level1, Level3, Level8, */
+                    Dictionary<string, int> weights = new Dictionary<string, int>();
+                    weights["Level4"] = 10;
+                    weights["Level2"] = 9;
+                    weights["Level9"] = 8;
+                    weights["Level5"] = 7;
+                    weights["Level10"] = 6;
+                    weights["Level6"] = 5;
+                    weights["Level7"] = 4;
+                    weights["Level1"] = 3;
+                    weights["Level3"] = 2;
+                    weights["Level8"] = 1;
+                    
                     songList = songList
                         .AsQueryable()
-                        .OrderBy(x => !x.levelId.StartsWith("Level"))
-                        .ThenBy(x => x.levelId.StartsWith("Level"))
-                        .ThenBy(x => x.name)
-                        .ToList();
+                        .OrderByDescending(x => weights.ContainsKey(x.levelId) ? weights[x.levelId] : 0)
+                        .ThenBy(x => x.songName)
+                        .ToList();                    
                     break;
                 case SongSortMode.Default:                    
                 default:
@@ -353,7 +367,7 @@ namespace SongBrowserPlugin
                     songList = songList
                         .AsQueryable()
                         .OrderBy(x => x.authorName)
-                        .ThenBy(x => x.songName).ToList();
+                        .ThenBy(x => x.songName).ToList();                    
                     break;
             }
 
@@ -480,3 +494,4 @@ namespace SongBrowserPlugin
         }
     }
 }
+ 
