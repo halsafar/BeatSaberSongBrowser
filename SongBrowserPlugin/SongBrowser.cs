@@ -383,19 +383,35 @@ namespace SongBrowserPlugin
         {
             _log.Debug("Trying to refresh song list!");
 
-            // Forcefully refresh the song view
-            var newSongList = AcquireSongList();            
+            // Forcefully refresh the song view            
+            var newSongList = AcquireSongList();
+
+            // Refresh the master view
+            bool useLocalLeaderboards = ReflectionUtil.GetPrivateField<bool>(_songSelectionMasterView, "_useLocalLeaderboards");
+            bool showDismissButton = true;
+            bool showPlayerStats = ReflectionUtil.GetPrivateField<bool>(_songSelectionMasterView, "_showPlayerStats");
+            GameplayMode gameplayMode = ReflectionUtil.GetPrivateField<GameplayMode>(_songSelectionMasterView, "_gameplayMode");
+
+            _songSelectionMasterView.Init(
+                _songSelectionMasterView.levelId, 
+                _songSelectionMasterView.difficulty, 
+                newSongList.ToArray(),
+                useLocalLeaderboards, showDismissButton, showPlayerStats, gameplayMode);
+
+            // Refresh the song list
             SongListTableView songTableView = _songListViewController.GetComponentInChildren<SongListTableView>();
             ReflectionUtil.SetPrivateField(songTableView, "_levels", newSongList.ToArray());
             TableView tableView = ReflectionUtil.GetPrivateField<TableView>(songTableView, "_tableView");
             tableView.ReloadData();
-
+                        
+            // Clear Force selection of index 0 so we don't end up in a weird state.
             songTableView.ClearSelection();
             _songListViewController.SelectSong(0);
             _songSelectionMasterView.HandleSongListDidSelectSong(_songListViewController);
 
             RefreshUI();
             
+            // Old method of force refresh
             //Action showMethod = delegate () { };
             //_songSelectionMasterView.DismissModalViewController(showMethod);            
         }
