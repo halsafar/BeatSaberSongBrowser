@@ -23,6 +23,7 @@ namespace SongBrowserPlugin
         private SongSelectionMasterViewController _songSelectionMasterView;
         private SongDetailViewController _songDetailViewController;
         private SongListViewController _songListViewController;
+        private MainMenuViewController _mainMenuViewController;
 
         private List<Sprite> _icons = new List<Sprite>();
 
@@ -78,15 +79,17 @@ namespace SongBrowserPlugin
 
             try
             {
-                _buttonInstance = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "QuitButton"));
+                _buttonInstance = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PlayButton"));
+
+                _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
 
                 _songSelectionMasterView = Resources.FindObjectsOfTypeAll<SongSelectionMasterViewController>().First();                
 
-                _songDetailViewController = Resources.FindObjectsOfTypeAll<SongDetailViewController>().FirstOrDefault();
+                _songDetailViewController = Resources.FindObjectsOfTypeAll<SongDetailViewController>().First();
 
                 _songListViewController = Resources.FindObjectsOfTypeAll<SongListViewController>().First();
 
-                _songSelectRectTransform = _songSelectionMasterView.transform.parent as RectTransform;
+                _songSelectRectTransform = _songListViewController.transform as RectTransform;
             }
             catch (Exception e)
             {
@@ -107,51 +110,55 @@ namespace SongBrowserPlugin
             {
                 // Create Sorting Songs By-Buttons
                 // Fav button
-                _favoriteButton = UIBuilder.CreateUIButton(_songSelectRectTransform, "QuitButton", _buttonInstance);
+                RectTransform rect = _songDetailViewController.transform as RectTransform; // _songDetailViewController.GetComponent<RectTransform>();
+                _favoriteButton = UIBuilder.CreateUIButton(rect, "PlayButton", _buttonInstance);
                 _favoriteButton.interactable = true;
-                (_favoriteButton.transform as RectTransform).anchoredPosition = new Vector2(145, 65f);
+                (_favoriteButton.transform as RectTransform).anchoredPosition = new Vector2(30f, 74f);
                 (_favoriteButton.transform as RectTransform).sizeDelta = new Vector2(15f, 10f);
                 
                 UIBuilder.SetButtonText(ref _favoriteButton, "Fav");
-                UIBuilder.SetButtonIconEnabled(ref _favoriteButton, false);
-                //UIBuilder.SetButtonIcon(ref _favoriteButton, _icons.First(x => (x.name == "AllDirectionsIcon")));
+                //UIBuilder.SetButtonIconEnabled(ref _favoriteButton, false);
+                UIBuilder.SetButtonIcon(ref _favoriteButton, _icons.First(x => (x.name == "AllDirectionsIcon")));
 
                 _favoriteButton.onClick.RemoveAllListeners();
                 _favoriteButton.onClick.AddListener(delegate () {
+                    _log.Debug("Sort button - favorites - pressed.");
                     _settings.sortMode = SongSortMode.Favorites;
                     ProcessSongList();
                     RefreshSongList();
                 });
 
                 // Default button
-                _defaultButton = UIBuilder.CreateUIButton(_songSelectRectTransform, "QuitButton", _buttonInstance);
+                _defaultButton = UIBuilder.CreateUIButton(rect, "PlayButton", _buttonInstance);
                 _defaultButton.interactable = true;
-                (_defaultButton.transform as RectTransform).anchoredPosition = new Vector2(130f, 65f);
+                (_defaultButton.transform as RectTransform).anchoredPosition = new Vector2(15f, 74f);
                 (_defaultButton.transform as RectTransform).sizeDelta = new Vector2(15f, 10f);
 
                 UIBuilder.SetButtonText(ref _defaultButton, "Def");
-                UIBuilder.SetButtonIconEnabled(ref _defaultButton, false);
-                //UIBuilder.SetButtonIcon(ref _defaultButton, _icons.First(x => (x.name == "SettingsIcon")));
+                //UIBuilder.SetButtonIconEnabled(ref _defaultButton, false);
+                UIBuilder.SetButtonIcon(ref _defaultButton, _icons.First(x => (x.name == "SettingsIcon")));
 
                 _defaultButton.onClick.RemoveAllListeners();
                 _defaultButton.onClick.AddListener(delegate () {
+                    _log.Debug("Sort button - default - pressed.");
                     _settings.sortMode = SongSortMode.Default;
                     ProcessSongList();
                     RefreshSongList();
                 });
 
                 // Original button
-                _originalButton = UIBuilder.CreateUIButton(_songSelectRectTransform, "QuitButton", _buttonInstance);
+                _originalButton = UIBuilder.CreateUIButton(rect, "PlayButton", _buttonInstance);
                 _originalButton.interactable = true;
-                (_originalButton.transform as RectTransform).anchoredPosition = new Vector2(115f, 65f);
+                (_originalButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 74f);
                 (_originalButton.transform as RectTransform).sizeDelta = new Vector2(15f, 10f);
 
                 UIBuilder.SetButtonText(ref _originalButton, "Org");
-                UIBuilder.SetButtonIconEnabled(ref _originalButton, false);
-                //UIBuilder.SetButtonIcon(ref _originalButton, _icons.First(x => (x.name == "SoloIcon")));
+                //UIBuilder.SetButtonIconEnabled(ref _originalButton, false);
+                UIBuilder.SetButtonIcon(ref _originalButton, _icons.First(x => (x.name == "SoloIcon")));
 
                 _originalButton.onClick.RemoveAllListeners();
                 _originalButton.onClick.AddListener(delegate () {
+                    _log.Debug("Sort button - original - pressed.");
                     _settings.sortMode = SongSortMode.Default;
                     ProcessSongList();
                     RefreshSongList();
@@ -166,6 +173,7 @@ namespace SongBrowserPlugin
                 UIBuilder.SetButtonText(ref _addFavoriteButton, "+1");
                 UIBuilder.SetButtonIcon(ref _addFavoriteButton, _icons.First(x => (x.name == "AllDirectionsIcon")));
 
+                _addFavoriteButton.onClick.RemoveAllListeners();
                 _addFavoriteButton.onClick.AddListener(delegate () {                    
                     ToggleSongInFavorites();
                 });
@@ -194,9 +202,10 @@ namespace SongBrowserPlugin
                     
                     SongLoaderPlugin.SongLoader.SongsLoaded.AddListener(OnSongLoaderLoadedSongs);
 
-                    //SongListTableView table = Resources.FindObjectsOfTypeAll<SongListTableView>().FirstOrDefault();
-                    //table.songListTableViewDidSelectRow += OnDidSelectSongRow;
+                    //SongListTableView table = _songListViewController.GetComponentInChildren<SongListTableView>();
+
                     //MainMenuViewController _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
+
                     _songListViewController.didSelectSongEvent += OnDidSelectSongEvent;
                 }
             }
