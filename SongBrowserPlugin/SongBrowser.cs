@@ -33,6 +33,7 @@ namespace SongBrowserPlugin
         private Button _originalButton;
 
         private Button _addFavoriteButton;
+        private String _addFavoriteButtonText = null;
     
         private RectTransform _songSelectRectTransform;
 
@@ -167,7 +168,13 @@ namespace SongBrowserPlugin
                 (_addFavoriteButton.transform as RectTransform).anchoredPosition = new Vector2(40f, 0f);
                 (_addFavoriteButton.transform as RectTransform).sizeDelta = new Vector2(25f, 10f);
 
-                UIBuilder.SetButtonText(ref _addFavoriteButton, "+1");
+                if (_addFavoriteButtonText == null)
+                {
+                    LevelStaticData level = getSelectedSong();
+                    RefreshAddFavoriteButton(level);
+                }
+                
+                UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);
                 UIBuilder.SetButtonIcon(ref _addFavoriteButton, _icons.First(x => (x.name == "AllDirectionsIcon")));
 
                 _addFavoriteButton.onClick.RemoveAllListeners();
@@ -221,7 +228,7 @@ namespace SongBrowserPlugin
             _log.Debug("--OnSongLoaderLoadedSongs");
             List<LevelStaticData>  sortedSongList = ProcessSongList();
             RefreshSongList(sortedSongList);
-            RefreshAddFavoriteButton(sortedSongList[0].levelId);
+            RefreshAddFavoriteButton(sortedSongList[0]);
         }
 
         /// <summary>
@@ -231,16 +238,7 @@ namespace SongBrowserPlugin
         /// <param name="songListViewController"></param>
         private void OnDidSelectSongEvent(SongListViewController songListViewController)
         {
-            int selectedIndex = _songSelectionMasterView.GetSelectedSongIndex();            
-            //_log.Debug("Selected song index: " + selectedIndex);
-
-            if (selectedIndex < 0)
-            {
-                _log.Debug("No song selected, index is less than zero.");
-                return;
-            }
-
-            LevelStaticData level = _songSelectionMasterView.GetLevelStaticDataForSelectedSong();
+            LevelStaticData level = getSelectedSong();
             if (level == null)
             {
                 _log.Debug("No song selected?");
@@ -253,7 +251,30 @@ namespace SongBrowserPlugin
                 return;
             }
 
-            RefreshAddFavoriteButton(level.levelId);
+            RefreshAddFavoriteButton(level);
+        }
+
+        /// <summary>
+        /// Return LevelStaticData or null.
+        /// </summary>
+        private LevelStaticData getSelectedSong()
+        {
+            // song list not even visible
+            if (!_songSelectionMasterView.isActiveAndEnabled)
+            {
+                return null;
+            }
+
+            int selectedIndex = _songSelectionMasterView.GetSelectedSongIndex();
+            //_log.Debug("Selected song index: " + selectedIndex);
+            if (selectedIndex < 0)
+            {
+                return null;
+            }
+
+            LevelStaticData level = _songSelectionMasterView.GetLevelStaticDataForSelectedSong();
+
+            return level;
         }
 
         /// <summary>
@@ -266,14 +287,16 @@ namespace SongBrowserPlugin
             {
                 _log.Info("Remove {0} from favorites", songInfo.name);                
                 _settings.favorites.Remove(songInfo.levelId);
-                UIBuilder.SetButtonText(ref _addFavoriteButton, "+1");
+                _addFavoriteButtonText = "+1";
             }
             else
             {
                 _log.Info("Add {0} to favorites", songInfo.name);
                 _settings.favorites.Add(songInfo.levelId);
-                UIBuilder.SetButtonText(ref _addFavoriteButton, "-1");
+                _addFavoriteButtonText = "-1";                
             }
+
+            UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);
 
             _settings.Save();
             ProcessSongList();
@@ -283,16 +306,22 @@ namespace SongBrowserPlugin
         /// Helper to quickly refresh add to favorites button
         /// </summary>
         /// <param name="levelId"></param>
-        private void RefreshAddFavoriteButton(string levelId)
+        private void RefreshAddFavoriteButton(LevelStaticData level)
         {
-            if (_settings.favorites.Contains(levelId))
+            if (level == null)
             {
-                UIBuilder.SetButtonText(ref _addFavoriteButton, "-1");
+                _addFavoriteButtonText = "0";
+            }
+            else if (_settings.favorites.Contains(level.levelId))
+            {
+                _addFavoriteButtonText = "-1";
             }
             else
             {
-                UIBuilder.SetButtonText(ref _addFavoriteButton, "+1");
+                _addFavoriteButtonText = "+1";                
             }
+
+            UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);
         }
 
         /// <summary>
@@ -429,7 +458,7 @@ namespace SongBrowserPlugin
                 _songListViewController.SelectSong(0);
                 _songSelectionMasterView.HandleSongListDidSelectSong(_songListViewController);
                 RefreshUI();
-                RefreshAddFavoriteButton(songList[0].levelId);
+                RefreshAddFavoriteButton(songList[0]);
 
                 // Old method of force refresh
                 //Action showMethod = delegate () { };
