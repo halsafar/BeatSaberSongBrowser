@@ -54,16 +54,18 @@ namespace SongBrowserPlugin
         /// </summary>
         private void Awake()
         {
+            _log.Debug("Awake()");
+
             Instance = this;
 
             _settings = SongBrowserSettings.Load();
-
-            AcquireUIElements();
-            CreateUI();
-           
+          
             SceneManager.activeSceneChanged += SceneManagerOnActiveSceneChanged;
-            SceneManagerOnActiveSceneChanged(new Scene(), new Scene());
-            
+
+            //SceneManagerOnActiveSceneChanged(new Scene(), new Scene());
+
+            SongLoaderPlugin.SongLoader.SongsLoaded.AddListener(OnSongLoaderLoadedSongs);
+
             DontDestroyOnLoad(gameObject);
         }
 
@@ -80,15 +82,10 @@ namespace SongBrowserPlugin
             try
             {
                 _buttonInstance = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PlayButton"));
-
                 _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
-
                 _songSelectionMasterView = Resources.FindObjectsOfTypeAll<SongSelectionMasterViewController>().First();                
-
                 _songDetailViewController = Resources.FindObjectsOfTypeAll<SongDetailViewController>().First();
-
                 _songListViewController = Resources.FindObjectsOfTypeAll<SongListViewController>().First();
-
                 _songSelectRectTransform = _songListViewController.transform as RectTransform;
             }
             catch (Exception e)
@@ -110,7 +107,7 @@ namespace SongBrowserPlugin
             {
                 // Create Sorting Songs By-Buttons
                 // Fav button
-                RectTransform rect = _songDetailViewController.transform as RectTransform; // _songDetailViewController.GetComponent<RectTransform>();
+                RectTransform rect = _songDetailViewController.transform as RectTransform; 
                 _favoriteButton = UIBuilder.CreateUIButton(rect, "PlayButton", _buttonInstance);
                 _favoriteButton.interactable = true;
                 (_favoriteButton.transform as RectTransform).anchoredPosition = new Vector2(30f, 74f);
@@ -124,8 +121,8 @@ namespace SongBrowserPlugin
                 _favoriteButton.onClick.AddListener(delegate () {
                     _log.Debug("Sort button - favorites - pressed.");
                     _settings.sortMode = SongSortMode.Favorites;
-                    ProcessSongList();
-                    RefreshSongList();
+                    var sortedSongList = ProcessSongList();
+                    RefreshSongList(sortedSongList);
                 });
 
                 // Default button
@@ -142,8 +139,8 @@ namespace SongBrowserPlugin
                 _defaultButton.onClick.AddListener(delegate () {
                     _log.Debug("Sort button - default - pressed.");
                     _settings.sortMode = SongSortMode.Default;
-                    ProcessSongList();
-                    RefreshSongList();
+                    var sortedSongList = ProcessSongList();
+                    RefreshSongList(sortedSongList);
                 });
 
                 // Original button
@@ -160,8 +157,8 @@ namespace SongBrowserPlugin
                 _originalButton.onClick.AddListener(delegate () {
                     _log.Debug("Sort button - original - pressed.");
                     _settings.sortMode = SongSortMode.Original;
-                    ProcessSongList();
-                    RefreshSongList();
+                    var sortedSongList = ProcessSongList();
+                    RefreshSongList(sortedSongList);
                 });
 
                 // Creaate Add to Favorites Button
@@ -193,18 +190,19 @@ namespace SongBrowserPlugin
         /// <param name="scene"></param>
         private void SceneManagerOnActiveSceneChanged(Scene arg0, Scene scene)
         {
-            //_log.Debug("scene.buildIndex==" + scene.buildIndex);
+            _log.Debug("scene.buildIndex==" + scene.buildIndex);
             try
             {
-                if (scene.buildIndex == SongBrowser.MenuIndex || scene.buildIndex == -1)
+                if (scene.buildIndex == SongBrowser.MenuIndex)
                 {
-                    _log.Debug("SceneManagerOnActiveSceneChanged - binding to UI");
-                    
-                    SongLoaderPlugin.SongLoader.SongsLoaded.AddListener(OnSongLoaderLoadedSongs);
+                    _log.Debug("SceneManagerOnActiveSceneChanged - Setting Up UI");
 
-                    //SongListTableView table = _songListViewController.GetComponentInChildren<SongListTableView>();
-
+                    AcquireUIElements();
+                    CreateUI();
+                                                            
+                    //SongListTableView tableView = _songListViewController.GetComponentInChildren<SongListTableView>();
                     //MainMenuViewController _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
+                    //tableView.songListTableViewDidSelectRow += TableView_songListTableViewDidSelectRow;
 
                     _songListViewController.didSelectSongEvent += OnDidSelectSongEvent;
                 }
@@ -221,18 +219,20 @@ namespace SongBrowserPlugin
         private void OnSongLoaderLoadedSongs()
         {
             _log.Debug("--OnSongLoaderLoadedSongs");
-            ProcessSongList();
-            RefreshSongList();
+            List<LevelStaticData>  sortedSongList = ProcessSongList();
+            RefreshSongList(sortedSongList);
+            RefreshAddFavoriteButton(sortedSongList[0].levelId);
         }
 
         /// <summary>
         /// Adjust UI based on song selected.
+        /// Various ways of detecting if a song is not properly selected.  Seems most hit the first one.
         /// </summary>
         /// <param name="songListViewController"></param>
         private void OnDidSelectSongEvent(SongListViewController songListViewController)
         {
-            int selectedIndex = _songSelectionMasterView.GetSelectedSongIndex();
-            _log.Debug("Selected song index: " + selectedIndex);
+            int selectedIndex = _songSelectionMasterView.GetSelectedSongIndex();            
+            //_log.Debug("Selected song index: " + selectedIndex);
 
             if (selectedIndex < 0)
             {
@@ -253,20 +253,8 @@ namespace SongBrowserPlugin
                 return;
             }
 
-            if (_settings.favorites.Contains(level.levelId))
-            {
-                UIBuilder.SetButtonText(ref _addFavoriteButton, "-1");
-            }
-            else
-            {
-                UIBuilder.SetButtonText(ref _addFavoriteButton, "+1");
-            }
+            RefreshAddFavoriteButton(level.levelId);
         }
-
-        /*private void OnDidSelectSongRow(SongListTableView table, int index)
-        {
-            Console.WriteLine("OnDidSelectSongRow");
-        }*/
 
         /// <summary>
         /// Add/Remove song from favorites depending on if it already exists.
@@ -289,6 +277,22 @@ namespace SongBrowserPlugin
 
             _settings.Save();
             ProcessSongList();
+        }
+
+        /// <summary>
+        /// Helper to quickly refresh add to favorites button
+        /// </summary>
+        /// <param name="levelId"></param>
+        private void RefreshAddFavoriteButton(string levelId)
+        {
+            if (_settings.favorites.Contains(levelId))
+            {
+                UIBuilder.SetButtonText(ref _addFavoriteButton, "-1");
+            }
+            else
+            {
+                UIBuilder.SetButtonText(ref _addFavoriteButton, "+1");
+            }
         }
 
         /// <summary>
@@ -321,12 +325,12 @@ namespace SongBrowserPlugin
         /// <summary>
         /// Sort the song list based on the settings.
         /// </summary>
-        public void ProcessSongList()
+        public List<LevelStaticData> ProcessSongList()
         {
             _log.Debug("ProcessSongList()");
 
             List<LevelStaticData> songList = AcquireSongList();
-            songList.ForEach(x => _log.Debug(x.levelId));
+            //songList.ForEach(x => _log.Debug(x.levelId));
             switch(_settings.sortMode)
             {
                 case SongSortMode.Favorites:
@@ -374,46 +378,67 @@ namespace SongBrowserPlugin
             //songList.ForEach(x => _log.Debug(x.songName));
 
             OverwriteSongList(songList);
+
+            return songList;
         }
 
         /// <summary>
         /// Try to refresh the song list.  Broken for now.
         /// </summary>
-        public void RefreshSongList()
+        public void RefreshSongList(List<LevelStaticData> songList)
         {
-            _log.Debug("Trying to refresh song list!");
+            _log.Debug("Trying to refresh song list - {0}", _songSelectionMasterView);
+            try
+            {
+                if (!_songSelectionMasterView.isActiveAndEnabled)
+                {
+                    _log.Debug("No song list to refresh.");
+                    return;
+                }
 
-            // Forcefully refresh the song view            
-            var newSongList = AcquireSongList();
+                // Refresh the master view
+                bool useLocalLeaderboards = ReflectionUtil.GetPrivateField<bool>(_songSelectionMasterView, "_useLocalLeaderboards");
+                bool showDismissButton = true;
+                bool showPlayerStats = ReflectionUtil.GetPrivateField<bool>(_songSelectionMasterView, "_showPlayerStats");
+                GameplayMode gameplayMode = ReflectionUtil.GetPrivateField<GameplayMode>(_songSelectionMasterView, "_gameplayMode");
 
-            // Refresh the master view
-            bool useLocalLeaderboards = ReflectionUtil.GetPrivateField<bool>(_songSelectionMasterView, "_useLocalLeaderboards");
-            bool showDismissButton = true;
-            bool showPlayerStats = ReflectionUtil.GetPrivateField<bool>(_songSelectionMasterView, "_showPlayerStats");
-            GameplayMode gameplayMode = ReflectionUtil.GetPrivateField<GameplayMode>(_songSelectionMasterView, "_gameplayMode");
+                _songSelectionMasterView.Init(
+                    _songSelectionMasterView.levelId,
+                    _songSelectionMasterView.difficulty,
+                    songList.ToArray(),
+                    useLocalLeaderboards, showDismissButton, showPlayerStats, gameplayMode);
 
-            _songSelectionMasterView.Init(
-                _songSelectionMasterView.levelId, 
-                _songSelectionMasterView.difficulty, 
-                newSongList.ToArray(),
-                useLocalLeaderboards, showDismissButton, showPlayerStats, gameplayMode);
+                // Refresh the song list
+                SongListTableView songTableView = _songListViewController.GetComponentInChildren<SongListTableView>();
+                if (songTableView == null)
+                {
+                    return;
+                }
+                
+                ReflectionUtil.SetPrivateField(songTableView, "_levels", songList.ToArray());
+                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(songTableView, "_tableView");
+                if (tableView == null)
+                {
+                    return;
+                }
 
-            // Refresh the song list
-            SongListTableView songTableView = _songListViewController.GetComponentInChildren<SongListTableView>();
-            ReflectionUtil.SetPrivateField(songTableView, "_levels", newSongList.ToArray());
-            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(songTableView, "_tableView");
-            tableView.ReloadData();
-                        
-            // Clear Force selection of index 0 so we don't end up in a weird state.
-            songTableView.ClearSelection();
-            _songListViewController.SelectSong(0);
-            _songSelectionMasterView.HandleSongListDidSelectSong(_songListViewController);
+                tableView.ReloadData();
 
-            RefreshUI();
-            
-            // Old method of force refresh
-            //Action showMethod = delegate () { };
-            //_songSelectionMasterView.DismissModalViewController(showMethod);            
+                // Clear Force selection of index 0 so we don't end up in a weird state.
+                songTableView.ClearSelection();
+                _songListViewController.SelectSong(0);
+                _songSelectionMasterView.HandleSongListDidSelectSong(_songListViewController);
+                RefreshUI();
+                RefreshAddFavoriteButton(songList[0].levelId);
+
+                // Old method of force refresh
+                //Action showMethod = delegate () { };
+                //_songSelectionMasterView.DismissModalViewController(showMethod);            
+            }
+            catch (Exception e)
+            {
+                _log.Exception("Exception refreshing song list: {0}", e.Message);
+            }
         }
 
         /// <summary>
@@ -447,13 +472,21 @@ namespace SongBrowserPlugin
         /// </summary>
         private void Update()
         {
+            // cycle sort modes
             if (Input.GetKeyDown(KeyCode.T))
             {
-                _settings.sortMode = SongSortMode.Original;
-                ProcessSongList();
-                RefreshSongList();
+                if (_settings.sortMode == SongSortMode.Favorites)
+                    _settings.sortMode = SongSortMode.Original;
+                else if (_settings.sortMode == SongSortMode.Original)
+                    _settings.sortMode = SongSortMode.Default;
+                else if (_settings.sortMode == SongSortMode.Default)
+                    _settings.sortMode = SongSortMode.Favorites;
+
+                var sortedSongList = ProcessSongList();
+                RefreshSongList(sortedSongList);
             }
 
+            // z,x,c,v can be used to get into a song, b will hit continue button after song ends
             if (Input.GetKeyDown(KeyCode.Z))
             {
                 Button _buttonInstance = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "SoloButton"));
@@ -468,7 +501,6 @@ namespace SongBrowserPlugin
 
             if (Input.GetKeyDown(KeyCode.C))
             {                
-
                 _songListViewController.SelectSong(0);
                 _songSelectionMasterView.HandleSongListDidSelectSong(_songListViewController);
 
@@ -482,7 +514,14 @@ namespace SongBrowserPlugin
                 _songSelectionMasterView.HandleSongDetailViewControllerDidPressPlayButton(_songDetailViewController);
             }
 
-                if (Input.GetKeyDown(KeyCode.N))
+            if (Input.GetKeyDown(KeyCode.B))
+            {
+                Button _buttonInstance = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "ContinueButton"));
+                _buttonInstance.onClick.Invoke();
+            }
+
+            // change song index
+            if (Input.GetKeyDown(KeyCode.N))
             {
                 int newIndex = _songSelectionMasterView.GetSelectedSongIndex() - 1;
                 _songListViewController.SelectSong(newIndex);
@@ -503,6 +542,7 @@ namespace SongBrowserPlugin
                 _songListViewController.HandleSongListTableViewDidSelectRow(songTableView, newIndex);
             }
 
+            // add to favorites
             if (Input.GetKeyDown(KeyCode.F))
             {
                 ToggleSongInFavorites();

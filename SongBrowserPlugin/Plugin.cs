@@ -45,20 +45,18 @@ namespace SongBrowserPlugin
         }
 
         public void OnLevelWasLoaded(int level)
-		{            
-            //Console.WriteLine("OnLevelWasLoaded=" + level);
-
-
+		{
+            //Console.WriteLine("OnLevelWasLoaded=" + level);            
+            if (level != SongBrowser.MenuIndex) return;
+            SongBrowser.OnLoad();
         }
 
 		public void OnLevelWasInitialized(int level)
 		{
             //Console.WriteLine("OnLevelWasInitialized=" + level);
-            if (level != SongBrowser.MenuIndex) return;
-            SongBrowser.OnLoad();
         }
 
-		public void OnUpdate()
+        public void OnUpdate()
 		{
 			
 		}
