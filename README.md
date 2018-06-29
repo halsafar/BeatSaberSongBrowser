@@ -8,12 +8,12 @@ A plugin for customizing the in-game song browser.
 - Currently supports these sorting methods:
   - Default: `authorName` then `songName`.
   - Favorite: Anything marked favorite followed by the Default method.
-  - Original" an attempt to match the original sorting (broken).
+  - Original: Match the original sorting you would normally get after SongLoaderPlugin.
 - Clicking a sorting method will resort the song list immediately.
 
 ## Status
-- BROKEN:
-  - Only works if you use my debug keyboard input keys to get to the song menu for some reason.
+- Known Issue:
+ - The added UI buttons disappear sometimes, usually after a song.
 - Only tested happy paths so far.
 
 ### Known Issues
