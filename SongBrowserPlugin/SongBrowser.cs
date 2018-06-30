@@ -41,6 +41,9 @@ namespace SongBrowserPlugin
     
         private SongBrowserSettings _settings;
 
+        private List<SongLoaderPlugin.CustomSongInfo> _customSongInfos;
+        private Dictionary<String, SongLoaderPlugin.CustomSongInfo> _levelIdToCustomSongInfo;
+
         /// <summary>
         /// Unity OnLoad
         /// </summary>
@@ -199,7 +202,7 @@ namespace SongBrowserPlugin
         /// <param name="scene"></param>
         private void SceneManagerOnActiveSceneChanged(Scene arg0, Scene scene)
         {
-            _log.Debug("scene.buildIndex==" + scene.buildIndex);
+            //_log.Debug("scene.buildIndex==" + scene.buildIndex);
             try
             {
                 if (scene.buildIndex == SongBrowser.MenuIndex)
@@ -223,10 +226,21 @@ namespace SongBrowserPlugin
         /// </summary>
         private void OnSongLoaderLoadedSongs()
         {
-            _log.Debug("--OnSongLoaderLoadedSongs");
+            _log.Debug("OnSongLoaderLoadedSongs");
             List<LevelStaticData>  sortedSongList = ProcessSongList();
             RefreshSongList(sortedSongList);
             RefreshAddFavoriteButton(sortedSongList[0]);
+
+            // Call into SongLoaderPlugin to get all the song info.
+            try
+            {
+                _customSongInfos = ReflectionUtil.InvokeMethod<SongLoaderPlugin.SongLoader>(SongLoaderPlugin.SongLoader.Instance, "RetrieveAllSongs", null) as List<SongLoaderPlugin.CustomSongInfo>;
+                _levelIdToCustomSongInfo = _customSongInfos.ToDictionary(x => x.GetIdentifier(), x => x);
+            }
+            catch (Exception e)
+            {
+                _log.Exception("Exception trying to sort by newest: {0}", e);
+            }
         }
 
         /// <summary>
@@ -296,7 +310,7 @@ namespace SongBrowserPlugin
             UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);
 
             _settings.Save();
-            ProcessSongList();
+            //ProcessSongList();
         }
 
         /// <summary>
@@ -305,6 +319,8 @@ namespace SongBrowserPlugin
         /// <param name="levelId"></param>
         private void RefreshAddFavoriteButton(LevelStaticData level)
         {
+            //if (level != null) _log.Debug(level.songName);
+
             if (level == null)
             {
                 _addFavoriteButtonText = "0";
@@ -333,7 +349,6 @@ namespace SongBrowserPlugin
             var gameDataModel = PersistentSingleton<GameDataModel>.instance;
 
             List<LevelStaticData> songList = gameDataModel.gameStaticData.worldsData[0].levelsData.ToList();
-            _log.Debug("SongBrowser songList.Count={0}", songList.Count);
 
             return songList;
         }
@@ -375,17 +390,16 @@ namespace SongBrowserPlugin
             switch(_settings.sortMode)
             {
                 case SongSortMode.Favorites:
-                    _log.Debug("  Sorting list as favorites");
+                    _log.Debug("Sorting song list as favorites");
                     songList = songList
                         .AsQueryable()
-                        .OrderBy(x => x.authorName)
-                        .OrderBy(x => x.songName)
                         .OrderBy(x => _settings.favorites.Contains(x.levelId) == false)
                         .ThenBy(x => x.songName)
+                        .ThenBy(x => x.authorName)                        
                         .ToList();
                     break;
                 case SongSortMode.Original:
-                    _log.Debug("  Sorting list as original");
+                    _log.Debug("Sorting song list as original");
                    
                     songList = songList
                         .AsQueryable()
@@ -394,25 +408,16 @@ namespace SongBrowserPlugin
                         .ToList();                    
                     break;
                 case SongSortMode.Newest:
-                    try
-                    {
-                        // Call into SongLoaderPlugin to get all the song info.
-                        var customSongInfos = ReflectionUtil.InvokeMethod<SongLoaderPlugin.SongLoader>(SongLoaderPlugin.SongLoader.Instance, "RetrieveAllSongs", null) as List<SongLoaderPlugin.CustomSongInfo>;
-                        var levelIdToCustomSongInfo = customSongInfos.ToDictionary(x => x.GetIdentifier(), x => x);
-
-                        songList = songList
-                            .AsQueryable()
-                            .OrderBy(x => weights.ContainsKey(x.levelId) ? weights[x.levelId] : 0)
-                            .ThenByDescending(x => x.levelId.StartsWith("Level") ? new DateTime() : File.GetLastWriteTimeUtc(levelIdToCustomSongInfo[x.levelId].path))
-                            .ToList();
-                    } catch (Exception e)
-                    {
-                        _log.Exception("Exception trying to sort by newest: {0}", e);
-                    }
+                    _log.Debug("Sorting song list as newest.");
+                    songList = songList
+                        .AsQueryable()
+                        .OrderBy(x => weights.ContainsKey(x.levelId) ? weights[x.levelId] : 0)
+                        .ThenByDescending(x => x.levelId.StartsWith("Level") ? DateTime.MinValue : File.GetLastWriteTimeUtc(_levelIdToCustomSongInfo[x.levelId].path))
+                        .ToList();
                     break;
                 case SongSortMode.Default:                    
                 default:
-                    _log.Debug("  Sorting list as default");
+                    _log.Debug("Sorting song list as default");
                     songList = songList
                         .AsQueryable()
                         .OrderBy(x => x.authorName)
@@ -430,7 +435,7 @@ namespace SongBrowserPlugin
         /// </summary>
         public void RefreshSongList(List<LevelStaticData> songList)
         {
-            _log.Debug("Trying to refresh song list - {0}", _songSelectionMasterView);
+            _log.Debug("Attempting to refresh the song list view.");
             try
             {
                 if (!_songSelectionMasterView.isActiveAndEnabled)
@@ -555,6 +560,7 @@ namespace SongBrowserPlugin
             if (Input.GetKeyDown(KeyCode.N))
             {
                 int newIndex = _songSelectionMasterView.GetSelectedSongIndex() - 1;
+
                 _songListViewController.SelectSong(newIndex);
                 _songSelectionMasterView.HandleSongListDidSelectSong(_songListViewController);
 
