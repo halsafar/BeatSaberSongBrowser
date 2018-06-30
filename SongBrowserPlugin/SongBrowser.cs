@@ -115,7 +115,7 @@ namespace SongBrowserPlugin
                 _sortButtonGroup.Add(CreateSortButton(rect, "PlayButton", "Fav", "AllDirectionsIcon", 30f, 75f, 15f, 8f, SongSortMode.Favorites));
                 _sortButtonGroup.Add(CreateSortButton(rect, "PlayButton", "Def", "AllDirectionsIcon", 15f, 75f, 15f, 8f, SongSortMode.Default));
                 _sortButtonGroup.Add(CreateSortButton(rect, "PlayButton", "Org", "AllDirectionsIcon", 0f, 75f, 15f, 8f, SongSortMode.Original));
-                //_sortButtonGroup.Add(CreateSortButton(rect, "PlayButton", "New", "AllDirectionsIcon", -15f, 75f, 15f, 10f, SongSortMode.Newest));
+                _sortButtonGroup.Add(CreateSortButton(rect, "PlayButton", "New", "AllDirectionsIcon", -15f, 75f, 15f, 10f, SongSortMode.Newest));
 
                 // Creaate Add to Favorites Button
                 RectTransform transform = _songDetailViewController.transform as RectTransform;
@@ -352,6 +352,21 @@ namespace SongBrowserPlugin
         {
             _log.Debug("ProcessSongList()");
 
+            // Weights used for keeping the original songs in order
+            // Invert the weights from the game so we can order by descending and make LINQ work with us...
+            /*  Level4, Level2, Level9, Level5, Level10, Level6, Level7, Level1, Level3, Level8, */
+            Dictionary<string, int> weights = new Dictionary<string, int>();
+            weights["Level4"] = 10;
+            weights["Level2"] = 9;
+            weights["Level9"] = 8;
+            weights["Level5"] = 7;
+            weights["Level10"] = 6;
+            weights["Level6"] = 5;
+            weights["Level7"] = 4;
+            weights["Level1"] = 3;
+            weights["Level3"] = 2;
+            weights["Level8"] = 1;
+
             List<LevelStaticData> songList = AcquireSongList();
             //songList.ForEach(x => _log.Debug(x.levelId));
             switch(_settings.sortMode)
@@ -367,26 +382,31 @@ namespace SongBrowserPlugin
                     break;
                 case SongSortMode.Original:
                     _log.Debug("  Sorting list as original");
-
-                    // Invert the weights from the game so we can order by descending and make LINQ work with us...
-                    /*  Level4, Level2, Level9, Level5, Level10, Level6, Level7, Level1, Level3, Level8, */
-                    Dictionary<string, int> weights = new Dictionary<string, int>();
-                    weights["Level4"] = 10;
-                    weights["Level2"] = 9;
-                    weights["Level9"] = 8;
-                    weights["Level5"] = 7;
-                    weights["Level10"] = 6;
-                    weights["Level6"] = 5;
-                    weights["Level7"] = 4;
-                    weights["Level1"] = 3;
-                    weights["Level3"] = 2;
-                    weights["Level8"] = 1;
-                    
+                   
                     songList = songList
                         .AsQueryable()
                         .OrderByDescending(x => weights.ContainsKey(x.levelId) ? weights[x.levelId] : 0)
                         .ThenBy(x => x.songName)
                         .ToList();                    
+                    break;
+                case SongSortMode.Newest:
+                    try
+                    {
+                        // Call into SongLoaderPlugin to get all the song info.
+                        var customSongInfos = ReflectionUtil.InvokeMethod<SongLoaderPlugin.SongLoader>(SongLoaderPlugin.SongLoader.Instance, "RetrieveAllSongs", null) as List<SongLoaderPlugin.CustomSongInfo>;
+                        var levelIdToCustomSongInfo = customSongInfos.ToDictionary(x => x.GetIdentifier(), x => x);
+
+                        //customSongInfos.ForEach(x => _log.Debug("{0} @ {1}", x.path, File.GetLastWriteTimeUtc(levelIdToCustomSongInfo[x.levelId].path)));
+                        
+                        songList = songList
+                            .AsQueryable()
+                            .OrderBy(x => weights.ContainsKey(x.levelId) ? weights[x.levelId] : 0)
+                            .ThenByDescending(x => x.levelId.StartsWith("Level") ? new DateTime() : File.GetLastWriteTimeUtc(levelIdToCustomSongInfo[x.levelId].path))
+                            .ToList();
+                    } catch (Exception e)
+                    {
+                        _log.Exception("Exception trying to sort by newest: {0}", e);
+                    }
                     break;
                 case SongSortMode.Default:                    
                 default:
@@ -485,6 +505,8 @@ namespace SongBrowserPlugin
             if (Input.GetKeyDown(KeyCode.T))
             {
                 if (_settings.sortMode == SongSortMode.Favorites)
+                    _settings.sortMode = SongSortMode.Newest;
+                else if (_settings.sortMode == SongSortMode.Newest)
                     _settings.sortMode = SongSortMode.Original;
                 else if (_settings.sortMode == SongSortMode.Original)
                     _settings.sortMode = SongSortMode.Default;

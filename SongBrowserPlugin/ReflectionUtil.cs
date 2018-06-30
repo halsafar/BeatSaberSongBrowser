@@ -28,5 +28,15 @@ namespace SongBrowserPlugin
 			MethodInfo dynMethod = obj.GetType().GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
 			dynMethod.Invoke(obj, methodParams);
 		}
-	}
+
+        public static object InvokeMethod<T>(this T o, string methodName, params object[] args)
+        {
+            var mi = o.GetType().GetMethod(methodName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (mi != null)
+            {
+                return mi.Invoke(o, args);
+            }
+            return null;
+        }
+    }
 }

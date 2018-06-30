@@ -12,6 +12,7 @@ namespace SongBrowserPlugin
         Default,        
         Favorites,
         Original,
+        Newest,
     }
 
     [Serializable]
