@@ -14,12 +14,8 @@ A plugin for customizing the in-game song browser.
 
 ## Status
 - Working!
-- Known Issues:
-  - Massive custom song collections seem to be causing issues.
-  - Add to favorites button shows wrong text sometimes in `not favorite` sort mode.
 
 ### Known Issues
-- Original sorting method (what you normally get with just SongLoaderPluging) is not working
-
-
+- Massive custom song collections seem to be causing issues.
+- Add to favorites button shows wrong text sometimes in `not favorite` sort mode.
 
