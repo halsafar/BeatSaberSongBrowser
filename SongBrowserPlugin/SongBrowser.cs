@@ -30,7 +30,7 @@ namespace SongBrowserPlugin
         private SongListViewController _songListViewController;
         private MainMenuViewController _mainMenuViewController;
 
-        private List<Sprite> _icons = new List<Sprite>();
+        private Dictionary<String, Sprite> _icons;
 
         private Button _buttonInstance;
 
@@ -39,8 +39,6 @@ namespace SongBrowserPlugin
         private Button _addFavoriteButton;
         private String _addFavoriteButtonText = null;
     
-        private RectTransform _songSelectRectTransform;
-
         private SongBrowserSettings _settings;
 
         /// <summary>
@@ -77,9 +75,14 @@ namespace SongBrowserPlugin
         /// </summary>
         public void AcquireUIElements()
         {
+            _icons = new Dictionary<String, Sprite>();
             foreach (Sprite sprite in Resources.FindObjectsOfTypeAll<Sprite>())
             {
-                _icons.Add(sprite);
+                if (_icons.ContainsKey(sprite.name))
+                {
+                    continue;
+                }
+                _icons.Add(sprite.name, sprite);
             }
 
             try
@@ -89,7 +92,6 @@ namespace SongBrowserPlugin
                 _songSelectionMasterView = Resources.FindObjectsOfTypeAll<SongSelectionMasterViewController>().First();                
                 _songDetailViewController = Resources.FindObjectsOfTypeAll<SongDetailViewController>().First();
                 _songListViewController = Resources.FindObjectsOfTypeAll<SongListViewController>().First();
-                _songSelectRectTransform = _songListViewController.transform as RectTransform;
             }
             catch (Exception e)
             {
@@ -107,21 +109,23 @@ namespace SongBrowserPlugin
             // _icons.ForEach(i => Console.WriteLine(i.ToString()));
 
             try
-            {
+            {                               
+                RectTransform rect = _songSelectionMasterView.transform as RectTransform;
+
                 // Create Sorting Songs By-Buttons
-                
-                RectTransform rect = _songDetailViewController.transform as RectTransform;
-                _sortButtonGroup = new List<SongSortButton>();
-                _sortButtonGroup.Add(CreateSortButton(rect, "PlayButton", "Fav", "AllDirectionsIcon", 30f, 75f, 15f, 8f, SongSortMode.Favorites));
-                _sortButtonGroup.Add(CreateSortButton(rect, "PlayButton", "Def", "AllDirectionsIcon", 15f, 75f, 15f, 8f, SongSortMode.Default));
-                _sortButtonGroup.Add(CreateSortButton(rect, "PlayButton", "Org", "AllDirectionsIcon", 0f, 75f, 15f, 8f, SongSortMode.Original));
-                _sortButtonGroup.Add(CreateSortButton(rect, "PlayButton", "New", "AllDirectionsIcon", -15f, 75f, 15f, 10f, SongSortMode.Newest));
+                _sortButtonGroup = new List<SongSortButton>
+                {
+                    CreateSortButton(rect, "PlayButton", "Fav", 3, "AllDirectionsIcon", 30f, 77.5f, 15f, 5f, SongSortMode.Favorites),
+                    CreateSortButton(rect, "PlayButton", "Def", 3, "AllDirectionsIcon", 15f, 77.5f, 15f, 5f, SongSortMode.Default),
+                    CreateSortButton(rect, "PlayButton", "Org", 3, "AllDirectionsIcon", 0f, 77.5f, 15f, 5f, SongSortMode.Original),
+                    CreateSortButton(rect, "PlayButton", "New", 3, "AllDirectionsIcon", -15f, 77.5f, 15f, 5f, SongSortMode.Newest)
+                };
 
                 // Creaate Add to Favorites Button
                 RectTransform transform = _songDetailViewController.transform as RectTransform;
                 _addFavoriteButton = UIBuilder.CreateUIButton(transform, "QuitButton", _buttonInstance);
-                (_addFavoriteButton.transform as RectTransform).anchoredPosition = new Vector2(40f, 0f);
-                (_addFavoriteButton.transform as RectTransform).sizeDelta = new Vector2(25f, 10f);
+                (_addFavoriteButton.transform as RectTransform).anchoredPosition = new Vector2(45f, 5f);
+                (_addFavoriteButton.transform as RectTransform).sizeDelta = new Vector2(10f, 10f);                
 
                 if (_addFavoriteButtonText == null)
                 {
@@ -130,7 +134,9 @@ namespace SongBrowserPlugin
                 }
                 
                 UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);
-                UIBuilder.SetButtonIcon(ref _addFavoriteButton, _icons.First(x => (x.name == "AllDirectionsIcon")));
+                //UIBuilder.SetButtonIcon(ref _addFavoriteButton, _icons["AllDirectionsIcon"]);
+                UIBuilder.SetButtonTextSize(ref _addFavoriteButton, 3);
+                UIBuilder.SetButtonIconEnabled(ref _addFavoriteButton, false);
 
                 _addFavoriteButton.onClick.RemoveAllListeners();
                 _addFavoriteButton.onClick.AddListener(delegate () {                    
@@ -157,7 +163,7 @@ namespace SongBrowserPlugin
         /// <param name="w"></param>
         /// <param name="h"></param>
         /// <param name="action"></param>
-        private SongSortButton CreateSortButton(RectTransform rect, string templateButtonName, string buttonText, string iconName, float x, float y, float w, float h, SongSortMode sortMode)
+        private SongSortButton CreateSortButton(RectTransform rect, string templateButtonName, string buttonText, float fontSize, string iconName, float x, float y, float w, float h, SongSortMode sortMode)
         {
             SongSortButton sortButton = new SongSortButton();
             Button newButton = UIBuilder.CreateUIButton(rect, templateButtonName, _buttonInstance);
@@ -168,12 +174,14 @@ namespace SongBrowserPlugin
 
             UIBuilder.SetButtonText(ref newButton, buttonText);
             //UIBuilder.SetButtonIconEnabled(ref _originalButton, false);
-            UIBuilder.SetButtonIcon(ref newButton, _icons.First(icon => (icon.name == iconName)));
+            UIBuilder.SetButtonIcon(ref newButton, _icons[iconName]);
+            UIBuilder.SetButtonTextSize(ref newButton, fontSize);
 
             newButton.onClick.RemoveAllListeners();
             newButton.onClick.AddListener(delegate () {
                 _log.Debug("Sort button - {0} - pressed.", sortMode.ToString());
                 _settings.sortMode = sortMode;
+                _settings.Save();
                 List<LevelStaticData> sortedSongList = ProcessSongList();
                 RefreshSongList(sortedSongList);
             });
@@ -201,10 +209,6 @@ namespace SongBrowserPlugin
                     AcquireUIElements();
                     CreateUI();
                                                             
-                    //SongListTableView tableView = _songListViewController.GetComponentInChildren<SongListTableView>();
-                    //MainMenuViewController _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
-                    //tableView.songListTableViewDidSelectRow += TableView_songListTableViewDidSelectRow;
-
                     _songListViewController.didSelectSongEvent += OnDidSelectSongEvent;
                 }
             }
@@ -260,7 +264,6 @@ namespace SongBrowserPlugin
             }
 
             int selectedIndex = _songSelectionMasterView.GetSelectedSongIndex();
-            //_log.Debug("Selected song index: " + selectedIndex);
             if (selectedIndex < 0)
             {
                 return null;
@@ -336,7 +339,7 @@ namespace SongBrowserPlugin
         }
 
         /// <summary>
-        /// Helper to overwrite the existing song list and refresh it.
+        /// Helper to overwrite the existing song list.
         /// </summary>
         /// <param name="newSongList"></param>
         public void OverwriteSongList(List<LevelStaticData> newSongList)
@@ -368,7 +371,7 @@ namespace SongBrowserPlugin
             weights["Level8"] = 1;
 
             List<LevelStaticData> songList = AcquireSongList();
-            //songList.ForEach(x => _log.Debug(x.levelId));
+
             switch(_settings.sortMode)
             {
                 case SongSortMode.Favorites:
@@ -377,7 +380,8 @@ namespace SongBrowserPlugin
                         .AsQueryable()
                         .OrderBy(x => x.authorName)
                         .OrderBy(x => x.songName)
-                        .OrderBy(x => _settings.favorites.Contains(x.levelId) == false).ThenBy(x => x.songName)
+                        .OrderBy(x => _settings.favorites.Contains(x.levelId) == false)
+                        .ThenBy(x => x.songName)
                         .ToList();
                     break;
                 case SongSortMode.Original:
@@ -396,8 +400,6 @@ namespace SongBrowserPlugin
                         var customSongInfos = ReflectionUtil.InvokeMethod<SongLoaderPlugin.SongLoader>(SongLoaderPlugin.SongLoader.Instance, "RetrieveAllSongs", null) as List<SongLoaderPlugin.CustomSongInfo>;
                         var levelIdToCustomSongInfo = customSongInfos.ToDictionary(x => x.GetIdentifier(), x => x);
 
-                        //customSongInfos.ForEach(x => _log.Debug("{0} @ {1}", x.path, File.GetLastWriteTimeUtc(levelIdToCustomSongInfo[x.levelId].path)));
-                        
                         songList = songList
                             .AsQueryable()
                             .OrderBy(x => weights.ContainsKey(x.levelId) ? weights[x.levelId] : 0)
@@ -417,8 +419,6 @@ namespace SongBrowserPlugin
                         .ThenBy(x => x.songName).ToList();                    
                     break;
             }
-
-            //songList.ForEach(x => _log.Debug(x.songName));
 
             OverwriteSongList(songList);
 

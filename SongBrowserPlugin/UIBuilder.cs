@@ -7,9 +7,9 @@ namespace SongBrowserPlugin
 {
     public static class UIBuilder
     {
-        static public Button CreateUIButton(RectTransform parent, string buttonTemplate, Button _buttonInstance)
+        static public Button CreateUIButton(RectTransform parent, string buttonTemplate, Button buttonInstance)
         {
-            if (_buttonInstance == null)
+            if (buttonInstance == null)
             {
                 return null;
             }
@@ -37,56 +37,56 @@ namespace SongBrowserPlugin
             return textMesh;
         }
 
-        static public void SetButtonText(ref Button _button, string _text)
+        static public void SetButtonText(ref Button button, string text)
         {
-            if (_button.GetComponentInChildren<TextMeshProUGUI>() != null)
+            if (button.GetComponentInChildren<TextMeshProUGUI>() != null)
             {
 
-                _button.GetComponentInChildren<TextMeshProUGUI>().text = _text;
+                button.GetComponentInChildren<TextMeshProUGUI>().text = text;
             }
 
         }
 
-        static public void SetButtonTextSize(ref Button _button, float _fontSize)
+        static public void SetButtonTextSize(ref Button button, float fontSize)
         {
-            if (_button.GetComponentInChildren<TextMeshProUGUI>() != null)
+            if (button.GetComponentInChildren<TextMeshProUGUI>() != null)
             {
-                _button.GetComponentInChildren<TextMeshProUGUI>().fontSize = _fontSize;
+                button.GetComponentInChildren<TextMeshProUGUI>().fontSize = fontSize;
             }
 
 
         }
 
-        static public void SetButtonIcon(ref Button _button, Sprite _icon)
+        static public void SetButtonIcon(ref Button button, Sprite icon)
         {
-            if (_button.GetComponentsInChildren<UnityEngine.UI.Image>().Count() > 1)
+            if (button.GetComponentsInChildren<UnityEngine.UI.Image>().Count() > 1)
             {
-                _button.GetComponentsInChildren<UnityEngine.UI.Image>()[1].sprite = _icon;
+                button.GetComponentsInChildren<UnityEngine.UI.Image>()[1].sprite = icon;
             }            
         }
 
-        static public void SetButtonIconEnabled(ref Button _button, bool enabled)
+        static public void SetButtonIconEnabled(ref Button button, bool enabled)
         {
-            if (_button.GetComponentsInChildren<UnityEngine.UI.Image>().Count() > 1)
+            if (button.GetComponentsInChildren<UnityEngine.UI.Image>().Count() > 1)
             {
-                _button.GetComponentsInChildren<UnityEngine.UI.Image>()[1].enabled = enabled;
+                button.GetComponentsInChildren<UnityEngine.UI.Image>()[1].enabled = enabled;
             }
         }
 
-        static public void SetButtonBackground(ref Button _button, Sprite _background)
+        static public void SetButtonBackground(ref Button button, Sprite background)
         {
-            if (_button.GetComponentsInChildren<Image>().Any())
+            if (button.GetComponentsInChildren<Image>().Any())
             {
-                _button.GetComponentsInChildren<UnityEngine.UI.Image>()[0].sprite = _background;
+                button.GetComponentsInChildren<UnityEngine.UI.Image>()[0].sprite = background;
             }
 
         }
 
-        static public void SetButtonBorder(ref Button _button, Color color)
+        static public void SetButtonBorder(ref Button button, Color color)
         {
-            if (_button.GetComponentsInChildren<Image>().Any())
+            if (button.GetComponentsInChildren<Image>().Any())
             {
-                _button.GetComponentsInChildren<UnityEngine.UI.Image>()[0].color = color;
+                button.GetComponentsInChildren<UnityEngine.UI.Image>()[0].color = color;
             }
         }
     }
