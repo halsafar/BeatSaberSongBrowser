@@ -9,13 +9,18 @@ using UnityEngine.UI;
 using System.Text;
 using HMUI;
 using System.Text.RegularExpressions;
+using System.IO;
 
 namespace SongBrowserPlugin
 {
+    public class SongSortButton
+    {
+        public SongSortMode SortMode;
+        public Button Button;
+    }
+
     public class SongBrowser : MonoBehaviour
     {       
-        public static readonly UnityEvent SongsLoaded = new UnityEvent();
-
         public const int MenuIndex = 1;
 
         private Logger _log = new Logger("SongBrowserPlugin");
@@ -28,10 +33,9 @@ namespace SongBrowserPlugin
         private List<Sprite> _icons = new List<Sprite>();
 
         private Button _buttonInstance;
-        private Button _favoriteButton;
-        private Button _defaultButton;
-        private Button _originalButton;
 
+        private List<SongSortButton> _sortButtonGroup;
+        
         private Button _addFavoriteButton;
         private String _addFavoriteButtonText = null;
     
@@ -62,8 +66,6 @@ namespace SongBrowserPlugin
             _settings = SongBrowserSettings.Load();
           
             SceneManager.activeSceneChanged += SceneManagerOnActiveSceneChanged;
-
-            //SceneManagerOnActiveSceneChanged(new Scene(), new Scene());
 
             SongLoaderPlugin.SongLoader.SongsLoaded.AddListener(OnSongLoaderLoadedSongs);
 
@@ -107,60 +109,13 @@ namespace SongBrowserPlugin
             try
             {
                 // Create Sorting Songs By-Buttons
-                // Fav button
-                RectTransform rect = _songDetailViewController.transform as RectTransform; 
-                _favoriteButton = UIBuilder.CreateUIButton(rect, "PlayButton", _buttonInstance);
-                _favoriteButton.interactable = true;
-                (_favoriteButton.transform as RectTransform).anchoredPosition = new Vector2(30f, 74f);
-                (_favoriteButton.transform as RectTransform).sizeDelta = new Vector2(15f, 10f);
                 
-                UIBuilder.SetButtonText(ref _favoriteButton, "Fav");
-                //UIBuilder.SetButtonIconEnabled(ref _favoriteButton, false);
-                UIBuilder.SetButtonIcon(ref _favoriteButton, _icons.First(x => (x.name == "AllDirectionsIcon")));
-
-                _favoriteButton.onClick.RemoveAllListeners();
-                _favoriteButton.onClick.AddListener(delegate () {
-                    _log.Debug("Sort button - favorites - pressed.");
-                    _settings.sortMode = SongSortMode.Favorites;
-                    var sortedSongList = ProcessSongList();
-                    RefreshSongList(sortedSongList);
-                });
-
-                // Default button
-                _defaultButton = UIBuilder.CreateUIButton(rect, "PlayButton", _buttonInstance);
-                _defaultButton.interactable = true;
-                (_defaultButton.transform as RectTransform).anchoredPosition = new Vector2(15f, 74f);
-                (_defaultButton.transform as RectTransform).sizeDelta = new Vector2(15f, 10f);
-
-                UIBuilder.SetButtonText(ref _defaultButton, "Def");
-                //UIBuilder.SetButtonIconEnabled(ref _defaultButton, false);
-                UIBuilder.SetButtonIcon(ref _defaultButton, _icons.First(x => (x.name == "SettingsIcon")));
-
-                _defaultButton.onClick.RemoveAllListeners();
-                _defaultButton.onClick.AddListener(delegate () {
-                    _log.Debug("Sort button - default - pressed.");
-                    _settings.sortMode = SongSortMode.Default;
-                    var sortedSongList = ProcessSongList();
-                    RefreshSongList(sortedSongList);
-                });
-
-                // Original button
-                _originalButton = UIBuilder.CreateUIButton(rect, "PlayButton", _buttonInstance);
-                _originalButton.interactable = true;
-                (_originalButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 74f);
-                (_originalButton.transform as RectTransform).sizeDelta = new Vector2(15f, 10f);
-
-                UIBuilder.SetButtonText(ref _originalButton, "Org");
-                //UIBuilder.SetButtonIconEnabled(ref _originalButton, false);
-                UIBuilder.SetButtonIcon(ref _originalButton, _icons.First(x => (x.name == "SoloIcon")));
-
-                _originalButton.onClick.RemoveAllListeners();
-                _originalButton.onClick.AddListener(delegate () {
-                    _log.Debug("Sort button - original - pressed.");
-                    _settings.sortMode = SongSortMode.Original;
-                    var sortedSongList = ProcessSongList();
-                    RefreshSongList(sortedSongList);
-                });
+                RectTransform rect = _songDetailViewController.transform as RectTransform;
+                _sortButtonGroup = new List<SongSortButton>();
+                _sortButtonGroup.Add(CreateSortButton(rect, "PlayButton", "Fav", "AllDirectionsIcon", 30f, 75f, 15f, 8f, SongSortMode.Favorites));
+                _sortButtonGroup.Add(CreateSortButton(rect, "PlayButton", "Def", "AllDirectionsIcon", 15f, 75f, 15f, 8f, SongSortMode.Default));
+                _sortButtonGroup.Add(CreateSortButton(rect, "PlayButton", "Org", "AllDirectionsIcon", 0f, 75f, 15f, 8f, SongSortMode.Original));
+                //_sortButtonGroup.Add(CreateSortButton(rect, "PlayButton", "New", "AllDirectionsIcon", -15f, 75f, 15f, 10f, SongSortMode.Newest));
 
                 // Creaate Add to Favorites Button
                 RectTransform transform = _songDetailViewController.transform as RectTransform;
@@ -188,6 +143,45 @@ namespace SongBrowserPlugin
             {
                 _log.Exception("Exception CreateUI: " + e.Message);
             }
+        }
+
+        /// <summary>
+        /// Generic create sort button.
+        /// </summary>
+        /// <param name="rect"></param>
+        /// <param name="templateButtonName"></param>
+        /// <param name="buttonText"></param>
+        /// <param name="iconName"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="w"></param>
+        /// <param name="h"></param>
+        /// <param name="action"></param>
+        private SongSortButton CreateSortButton(RectTransform rect, string templateButtonName, string buttonText, string iconName, float x, float y, float w, float h, SongSortMode sortMode)
+        {
+            SongSortButton sortButton = new SongSortButton();
+            Button newButton = UIBuilder.CreateUIButton(rect, templateButtonName, _buttonInstance);
+            
+            newButton.interactable = true;
+            (newButton.transform as RectTransform).anchoredPosition = new Vector2(x, y);
+            (newButton.transform as RectTransform).sizeDelta = new Vector2(w, h);
+
+            UIBuilder.SetButtonText(ref newButton, buttonText);
+            //UIBuilder.SetButtonIconEnabled(ref _originalButton, false);
+            UIBuilder.SetButtonIcon(ref newButton, _icons.First(icon => (icon.name == iconName)));
+
+            newButton.onClick.RemoveAllListeners();
+            newButton.onClick.AddListener(delegate () {
+                _log.Debug("Sort button - {0} - pressed.", sortMode.ToString());
+                _settings.sortMode = sortMode;
+                List<LevelStaticData> sortedSongList = ProcessSongList();
+                RefreshSongList(sortedSongList);
+            });
+
+            sortButton.Button = newButton;
+            sortButton.SortMode = sortMode;
+
+            return sortButton;
         }
 
         /// <summary>
@@ -458,11 +452,7 @@ namespace SongBrowserPlugin
                 _songListViewController.SelectSong(0);
                 _songSelectionMasterView.HandleSongListDidSelectSong(_songListViewController);
                 RefreshUI();
-                RefreshAddFavoriteButton(songList[0]);
-
-                // Old method of force refresh
-                //Action showMethod = delegate () { };
-                //_songSelectionMasterView.DismissModalViewController(showMethod);            
+                RefreshAddFavoriteButton(songList[0]);         
             }
             catch (Exception e)
             {
@@ -475,25 +465,15 @@ namespace SongBrowserPlugin
         /// </summary>
         public void RefreshUI()
         {
-            UIBuilder.SetButtonBorder(ref _favoriteButton, Color.black);
-            UIBuilder.SetButtonBorder(ref _defaultButton, Color.black);
-            UIBuilder.SetButtonBorder(ref _originalButton, Color.black);
-
-            switch (_settings.sortMode)
+            // So far all we need to refresh is the sort buttons.
+            foreach (SongSortButton sortButton in _sortButtonGroup)
             {
-                case SongSortMode.Favorites:
-                    UIBuilder.SetButtonBorder(ref _favoriteButton, Color.red);
-                    break;
-                case SongSortMode.Default:
-                    UIBuilder.SetButtonBorder(ref _defaultButton, Color.red);
-                    break;
-                case SongSortMode.Original:
-                    UIBuilder.SetButtonBorder(ref _originalButton, Color.red);
-                    break;
-                default:
-                    break;
-            }
-            
+                UIBuilder.SetButtonBorder(ref sortButton.Button, Color.black);
+                if (sortButton.SortMode == _settings.sortMode)
+                {
+                    UIBuilder.SetButtonBorder(ref sortButton.Button, Color.red);
+                }
+            }            
         }
 
         /// <summary>
