@@ -319,13 +319,32 @@ namespace SongBrowserPlugin
         /// <param name="levelId"></param>
         private void RefreshAddFavoriteButton(LevelStaticData level)
         {
-            //if (level != null) _log.Debug(level.songName);
+            var levelId = _songListViewController.levelId;
+            if (levelId == null)
+            {
+                if (level != null)
+                {
+                    levelId = level.levelId;
+                }
+            }
 
-            if (level == null)
+            //if (level != null) _log.Debug(level.songName);
+            //if (level != null)
+            //    _log.Debug("Level.id=" + level.levelId);
+            //_log.Debug("_songListViewController.levelId=" + _songListViewController.levelId);
+
+            if (levelId == null)
             {
                 _addFavoriteButtonText = "0";
+                return;
             }
-            else if (_settings.favorites.Contains(level.levelId))
+
+            if (levelId == null)
+            {
+                levelId = level.levelId;
+            }
+
+            if (_settings.favorites.Contains(levelId))
             {
                 _addFavoriteButtonText = "-1";
             }
