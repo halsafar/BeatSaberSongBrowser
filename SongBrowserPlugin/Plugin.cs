@@ -9,12 +9,14 @@ using IllusionPlugin;
 using TMPro;
 using UnityEngine.UI;
 using System.Collections;
-
+using SongBrowserPlugin.Tests;
 
 namespace SongBrowserPlugin
 {
 	public class Plugin : IPlugin
-	{	
+	{
+        public const bool RunTests = false;
+
 		public string Name
 		{
 			get { return "Song Browser"; }
@@ -27,7 +29,10 @@ namespace SongBrowserPlugin
 		
 		public void OnApplicationStart()
 		{
-
+            if (RunTests)
+            {
+                new SongBrowserTestRunner().RunTests();
+            }
         }
 
 		public void OnApplicationQuit()
@@ -47,8 +52,8 @@ namespace SongBrowserPlugin
         public void OnLevelWasLoaded(int level)
 		{
             //Console.WriteLine("OnLevelWasLoaded=" + level);            
-            if (level != SongBrowser.MenuIndex) return;
-            SongBrowser.OnLoad();
+            if (level != SongBrowserMasterViewController.MenuIndex) return;
+            SongBrowserMasterViewController.OnLoad();
         }
 
 		public void OnLevelWasInitialized(int level)

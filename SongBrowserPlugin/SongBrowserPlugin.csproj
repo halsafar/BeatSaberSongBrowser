@@ -79,12 +79,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataAccess\BeatSaberSongList.cs" />
+    <Compile Include="DataAccess\IBeatSaberSongList.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="ReflectionUtil.cs" />
-    <Compile Include="SongBrowser.cs" />
+    <Compile Include="SongBrowserMasterViewController.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SongBrowserModel.cs" />
     <Compile Include="SongBrowserSettings.cs" />
+    <Compile Include="Tests\ISongBrowserTest.cs" />
+    <Compile Include="Tests\SongBrowserModelTests.cs" />
+    <Compile Include="Tests\SongBrowserTestRunner.cs" />
     <Compile Include="UIBuilder.cs" />
   </ItemGroup>
   <ItemGroup>

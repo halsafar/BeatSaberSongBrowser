@@ -19,12 +19,14 @@ namespace SongBrowserPlugin
         public Button Button;
     }
 
-    public class SongBrowser : MonoBehaviour
+    public class SongBrowserMasterViewController : MonoBehaviour
     {       
+        // Which Scene index to run on
         public const int MenuIndex = 1;
 
-        private Logger _log = new Logger("SongBrowserPlugin");
+        private Logger _log = new Logger("SongBrowserMasterViewController");
 
+        // Private UI fields
         private SongSelectionMasterViewController _songSelectionMasterView;
         private SongDetailViewController _songDetailViewController;
         private SongListViewController _songListViewController;
@@ -38,11 +40,9 @@ namespace SongBrowserPlugin
         
         private Button _addFavoriteButton;
         private String _addFavoriteButtonText = null;
-    
-        private SongBrowserSettings _settings;
 
-        private List<SongLoaderPlugin.CustomSongInfo> _customSongInfos;
-        private Dictionary<String, SongLoaderPlugin.CustomSongInfo> _levelIdToCustomSongInfo;
+        // Model
+        private SongBrowserModel _model;
 
         /// <summary>
         /// Unity OnLoad
@@ -50,10 +50,10 @@ namespace SongBrowserPlugin
         public static void OnLoad()
         {
             if (Instance != null) return;
-            new GameObject("Song Browser").AddComponent<SongBrowser>();
+            new GameObject("Song Browser").AddComponent<SongBrowserMasterViewController>();
         }
 
-        public static SongBrowser Instance;
+        public static SongBrowserMasterViewController Instance;
 
         /// <summary>
         /// Builds the UI for this plugin.
@@ -63,8 +63,6 @@ namespace SongBrowserPlugin
             _log.Debug("Awake()");
 
             Instance = this;
-
-            _settings = SongBrowserSettings.Load();
           
             SceneManager.activeSceneChanged += SceneManagerOnActiveSceneChanged;
 
@@ -183,10 +181,9 @@ namespace SongBrowserPlugin
             newButton.onClick.RemoveAllListeners();
             newButton.onClick.AddListener(delegate () {
                 _log.Debug("Sort button - {0} - pressed.", sortMode.ToString());
-                _settings.sortMode = sortMode;
-                _settings.Save();
-                List<LevelStaticData> sortedSongList = ProcessSongList();
-                RefreshSongList(sortedSongList);
+                _model.Settings.sortMode = sortMode;
+                _model.Settings.Save();
+                UpdateSongList();
             });
 
             sortButton.Button = newButton;
@@ -205,11 +202,18 @@ namespace SongBrowserPlugin
             //_log.Debug("scene.buildIndex==" + scene.buildIndex);
             try
             {
-                if (scene.buildIndex == SongBrowser.MenuIndex)
+                if (scene.buildIndex == SongBrowserMasterViewController.MenuIndex)
                 {
                     _log.Debug("SceneManagerOnActiveSceneChanged - Setting Up UI");
 
                     AcquireUIElements();
+
+                    if (_model == null)
+                    {
+                        _model = new SongBrowserModel();
+                    }
+                    _model.Init(new DataAccess.BeatSaberSongList() /*_songSelectionMasterView, _songListViewController*/);
+
                     CreateUI();
                                                             
                     _songListViewController.didSelectSongEvent += OnDidSelectSongEvent;
@@ -226,16 +230,13 @@ namespace SongBrowserPlugin
         /// </summary>
         private void OnSongLoaderLoadedSongs()
         {
-            _log.Debug("OnSongLoaderLoadedSongs");
-            List<LevelStaticData>  sortedSongList = ProcessSongList();
-            RefreshSongList(sortedSongList);
-            RefreshAddFavoriteButton(sortedSongList[0]);
+            _log.Debug("OnSongLoaderLoadedSongs");            
+            //RefreshAddFavoriteButton(sortedSongList[0]);
 
             // Call into SongLoaderPlugin to get all the song info.
             try
             {
-                _customSongInfos = ReflectionUtil.InvokeMethod<SongLoaderPlugin.SongLoader>(SongLoaderPlugin.SongLoader.Instance, "RetrieveAllSongs", null) as List<SongLoaderPlugin.CustomSongInfo>;
-                _levelIdToCustomSongInfo = _customSongInfos.ToDictionary(x => x.GetIdentifier(), x => x);
+                UpdateSongList();
             }
             catch (Exception e)
             {
@@ -257,7 +258,7 @@ namespace SongBrowserPlugin
                 return;
             }
 
-            if (_settings == null)
+            if (_model.Settings == null)
             {
                 _log.Debug("Settings not instantiated yet?");
                 return;
@@ -294,23 +295,22 @@ namespace SongBrowserPlugin
         private void ToggleSongInFavorites()
         {
             LevelStaticData songInfo = _songSelectionMasterView.GetLevelStaticDataForSelectedSong();
-            if (_settings.favorites.Contains(songInfo.levelId))
+            if (_model.Settings.favorites.Contains(songInfo.levelId))
             {
-                _log.Info("Remove {0} from favorites", songInfo.name);                
-                _settings.favorites.Remove(songInfo.levelId);
+                _log.Info("Remove {0} from favorites", songInfo.name);
+                _model.Settings.favorites.Remove(songInfo.levelId);
                 _addFavoriteButtonText = "+1";
             }
             else
             {
                 _log.Info("Add {0} to favorites", songInfo.name);
-                _settings.favorites.Add(songInfo.levelId);
+                _model.Settings.favorites.Add(songInfo.levelId);
                 _addFavoriteButtonText = "-1";                
             }
 
             UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);
 
-            _settings.Save();
-            //ProcessSongList();
+            _model.Settings.Save();
         }
 
         /// <summary>
@@ -344,7 +344,7 @@ namespace SongBrowserPlugin
                 levelId = level.levelId;
             }
 
-            if (_settings.favorites.Contains(levelId))
+            if (_model.Settings.favorites.Contains(levelId))
             {
                 _addFavoriteButtonText = "-1";
             }
@@ -357,96 +357,19 @@ namespace SongBrowserPlugin
         }
 
         /// <summary>
-        /// Fetch the existing song list.
+        /// Adjust the UI colors.
         /// </summary>
-        /// <returns></returns>
-        public List<LevelStaticData> AcquireSongList()
+        public void RefreshUI()
         {
-            _log.Debug("AcquireSongList()");
-
-            var gameScenesManager = Resources.FindObjectsOfTypeAll<GameScenesManager>().FirstOrDefault();        
-            var gameDataModel = PersistentSingleton<GameDataModel>.instance;
-
-            List<LevelStaticData> songList = gameDataModel.gameStaticData.worldsData[0].levelsData.ToList();
-
-            return songList;
-        }
-
-        /// <summary>
-        /// Helper to overwrite the existing song list.
-        /// </summary>
-        /// <param name="newSongList"></param>
-        public void OverwriteSongList(List<LevelStaticData> newSongList)
-        {
-            var gameDataModel = PersistentSingleton<GameDataModel>.instance;
-            ReflectionUtil.SetPrivateField(gameDataModel.gameStaticData.worldsData[0], "_levelsData", newSongList.ToArray());                        
-        }
-
-        /// <summary>
-        /// Sort the song list based on the settings.
-        /// </summary>
-        public List<LevelStaticData> ProcessSongList()
-        {
-            _log.Debug("ProcessSongList()");
-
-            // Weights used for keeping the original songs in order
-            // Invert the weights from the game so we can order by descending and make LINQ work with us...
-            /*  Level4, Level2, Level9, Level5, Level10, Level6, Level7, Level1, Level3, Level8, */
-            Dictionary<string, int> weights = new Dictionary<string, int>();
-            weights["Level4"] = 10;
-            weights["Level2"] = 9;
-            weights["Level9"] = 8;
-            weights["Level5"] = 7;
-            weights["Level10"] = 6;
-            weights["Level6"] = 5;
-            weights["Level7"] = 4;
-            weights["Level1"] = 3;
-            weights["Level3"] = 2;
-            weights["Level8"] = 1;
-
-            List<LevelStaticData> songList = AcquireSongList();
-
-            switch(_settings.sortMode)
+            // So far all we need to refresh is the sort buttons.
+            foreach (SongSortButton sortButton in _sortButtonGroup)
             {
-                case SongSortMode.Favorites:
-                    _log.Debug("Sorting song list as favorites");
-                    songList = songList
-                        .AsQueryable()
-                        .OrderBy(x => _settings.favorites.Contains(x.levelId) == false)
-                        .ThenBy(x => x.songName)
-                        .ThenBy(x => x.authorName)                        
-                        .ToList();
-                    break;
-                case SongSortMode.Original:
-                    _log.Debug("Sorting song list as original");
-                   
-                    songList = songList
-                        .AsQueryable()
-                        .OrderByDescending(x => weights.ContainsKey(x.levelId) ? weights[x.levelId] : 0)
-                        .ThenBy(x => x.songName)
-                        .ToList();                    
-                    break;
-                case SongSortMode.Newest:
-                    _log.Debug("Sorting song list as newest.");
-                    songList = songList
-                        .AsQueryable()
-                        .OrderBy(x => weights.ContainsKey(x.levelId) ? weights[x.levelId] : 0)
-                        .ThenByDescending(x => x.levelId.StartsWith("Level") ? DateTime.MinValue : File.GetLastWriteTimeUtc(_levelIdToCustomSongInfo[x.levelId].path))
-                        .ToList();
-                    break;
-                case SongSortMode.Default:                    
-                default:
-                    _log.Debug("Sorting song list as default");
-                    songList = songList
-                        .AsQueryable()
-                        .OrderBy(x => x.authorName)
-                        .ThenBy(x => x.songName).ToList();                    
-                    break;
-            }
-
-            OverwriteSongList(songList);
-
-            return songList;
+                UIBuilder.SetButtonBorder(ref sortButton.Button, Color.black);
+                if (sortButton.SortMode == _model.Settings.sortMode)
+                {
+                    UIBuilder.SetButtonBorder(ref sortButton.Button, Color.red);
+                }
+            }            
         }
 
         /// <summary>
@@ -454,6 +377,8 @@ namespace SongBrowserPlugin
         /// </summary>
         public void RefreshSongList(List<LevelStaticData> songList)
         {
+            LevelStaticData[] songListArray = songList.ToArray();
+
             _log.Debug("Attempting to refresh the song list view.");
             try
             {
@@ -472,7 +397,7 @@ namespace SongBrowserPlugin
                 _songSelectionMasterView.Init(
                     _songSelectionMasterView.levelId,
                     _songSelectionMasterView.difficulty,
-                    songList.ToArray(),
+                    songListArray,
                     useLocalLeaderboards, showDismissButton, showPlayerStats, gameplayMode);
 
                 // Refresh the song list
@@ -481,8 +406,8 @@ namespace SongBrowserPlugin
                 {
                     return;
                 }
-                
-                ReflectionUtil.SetPrivateField(songTableView, "_levels", songList.ToArray());
+
+                ReflectionUtil.SetPrivateField(songTableView, "_levels", songListArray);
                 TableView tableView = ReflectionUtil.GetPrivateField<TableView>(songTableView, "_tableView");
                 if (tableView == null)
                 {
@@ -495,8 +420,9 @@ namespace SongBrowserPlugin
                 songTableView.ClearSelection();
                 _songListViewController.SelectSong(0);
                 _songSelectionMasterView.HandleSongListDidSelectSong(_songListViewController);
+
                 RefreshUI();
-                RefreshAddFavoriteButton(songList[0]);         
+                RefreshAddFavoriteButton(songList[0]);
             }
             catch (Exception e)
             {
@@ -505,19 +431,12 @@ namespace SongBrowserPlugin
         }
 
         /// <summary>
-        /// Adjust the UI colors.
+        /// Helper for updating the model (which updates the song list)
         /// </summary>
-        public void RefreshUI()
+        public void UpdateSongList()
         {
-            // So far all we need to refresh is the sort buttons.
-            foreach (SongSortButton sortButton in _sortButtonGroup)
-            {
-                UIBuilder.SetButtonBorder(ref sortButton.Button, Color.black);
-                if (sortButton.SortMode == _settings.sortMode)
-                {
-                    UIBuilder.SetButtonBorder(ref sortButton.Button, Color.red);
-                }
-            }            
+           _model.UpdateSongLists(true);
+            RefreshSongList(_model.SortedSongList);
         }
 
         /// <summary>
@@ -528,17 +447,16 @@ namespace SongBrowserPlugin
             // cycle sort modes
             if (Input.GetKeyDown(KeyCode.T))
             {
-                if (_settings.sortMode == SongSortMode.Favorites)
-                    _settings.sortMode = SongSortMode.Newest;
-                else if (_settings.sortMode == SongSortMode.Newest)
-                    _settings.sortMode = SongSortMode.Original;
-                else if (_settings.sortMode == SongSortMode.Original)
-                    _settings.sortMode = SongSortMode.Default;
-                else if (_settings.sortMode == SongSortMode.Default)
-                    _settings.sortMode = SongSortMode.Favorites;
+                if (_model.Settings.sortMode == SongSortMode.Favorites)
+                    _model.Settings.sortMode = SongSortMode.Newest;
+                else if (_model.Settings.sortMode == SongSortMode.Newest)
+                    _model.Settings.sortMode = SongSortMode.Original;
+                else if (_model.Settings.sortMode == SongSortMode.Original)
+                    _model.Settings.sortMode = SongSortMode.Default;
+                else if (_model.Settings.sortMode == SongSortMode.Default)
+                    _model.Settings.sortMode = SongSortMode.Favorites;
 
-                var sortedSongList = ProcessSongList();
-                RefreshSongList(sortedSongList);
+                UpdateSongList();
             }
 
             // z,x,c,v can be used to get into a song, b will hit continue button after song ends
