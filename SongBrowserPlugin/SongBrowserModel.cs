@@ -132,6 +132,8 @@ namespace SongBrowserPlugin
                 ["Level8"] = 1
             };
 
+            var Epoch = new DateTime(1970, 1, 1);
+
             switch (_settings.sortMode)
             {
                 case SongSortMode.Favorites:
@@ -156,7 +158,7 @@ namespace SongBrowserPlugin
                     _sortedSongs = _originalSongs
                         .AsQueryable()
                         .OrderBy(x => weights.ContainsKey(x.levelId) ? weights[x.levelId] : 0)
-                        .ThenByDescending(x => x.levelId.StartsWith("Level") ? DateTime.MinValue.Millisecond : File.GetLastWriteTimeUtc(_levelIdToCustomSongInfo[x.levelId].path).Millisecond)
+                        .ThenByDescending(x => x.levelId.StartsWith("Level") ? weights[x.levelId] : (File.GetLastWriteTimeUtc(_levelIdToCustomSongInfo[x.levelId].path) - Epoch).TotalMilliseconds)
                         .ToList();
                     break;
                 case SongSortMode.Default:
