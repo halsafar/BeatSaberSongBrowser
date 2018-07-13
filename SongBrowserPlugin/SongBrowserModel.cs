@@ -16,6 +16,7 @@ namespace SongBrowserPlugin
 
         private List<SongLoaderPlugin.CustomSongInfo> _customSongInfos;
         private Dictionary<String, SongLoaderPlugin.CustomSongInfo> _levelIdToCustomSongInfo;
+        private Dictionary<String, double> _cachedLastWriteTimes;
         private SongBrowserSettings _settings;
 
         //private SongSelectionMasterViewController _songSelectionMasterView;
@@ -50,7 +51,7 @@ namespace SongBrowserPlugin
         /// </summary>
         public SongBrowserModel()
         {
-
+            _cachedLastWriteTimes = new Dictionary<String, double>();
         }
 
         /// <summary>
@@ -77,13 +78,30 @@ namespace SongBrowserPlugin
             if (_cachedCustomSongDirLastWriteTIme == null || DateTime.Compare(currentLastWriteTIme, _cachedCustomSongDirLastWriteTIme) != 0)
             {
                 _log.Debug("Custom Song directory has changed. Fetching new songs. Sorting song list.");
-                _cachedCustomSongDirLastWriteTIme = currentLastWriteTIme;
-                _cachedSortMode = _settings.sortMode;
-                _originalSongs = this._beatSaberSongAccessor.AcquireSongList();
+        
+                // Get LastWriteTimes
+                var Epoch = new DateTime(1970, 1, 1);
+                string[] directories = Directory.GetDirectories(customSongsPath);
+                _log.Debug("Directories: " + directories);
+                foreach (string dir in directories)
+                {
+                    // Flip slashes, match SongLoaderPlugin
+                    string slashed_dir = dir.Replace("\\", "/");
+
+                    _log.Debug("Fetching LastWriteTime for {0}", slashed_dir);
+                    _cachedLastWriteTimes[slashed_dir] = (File.GetLastWriteTimeUtc(dir) - Epoch).TotalMilliseconds;
+                }
+
+                // Update song Infos
                 if (updateSongInfos)
                 {
                     this.UpdateSongInfos();
                 }
+
+                // Get new songs
+                _cachedCustomSongDirLastWriteTIme = currentLastWriteTIme;
+                _cachedSortMode = _settings.sortMode;
+                _originalSongs = this._beatSaberSongAccessor.AcquireSongList();
                 this.ProcessSongList();
             }
             else if (_settings.sortMode != _cachedSortMode)
@@ -131,9 +149,7 @@ namespace SongBrowserPlugin
                 ["Level3"] = 2,
                 ["Level8"] = 1
             };
-
-            var Epoch = new DateTime(1970, 1, 1);
-
+           
             switch (_settings.sortMode)
             {
                 case SongSortMode.Favorites:
@@ -158,7 +174,7 @@ namespace SongBrowserPlugin
                     _sortedSongs = _originalSongs
                         .AsQueryable()
                         .OrderBy(x => weights.ContainsKey(x.levelId) ? weights[x.levelId] : 0)
-                        .ThenByDescending(x => x.levelId.StartsWith("Level") ? weights[x.levelId] : (File.GetLastWriteTimeUtc(_levelIdToCustomSongInfo[x.levelId].path) - Epoch).TotalMilliseconds)
+                        .ThenByDescending(x => x.levelId.StartsWith("Level") ? weights[x.levelId] : _cachedLastWriteTimes[_levelIdToCustomSongInfo[x.levelId].path])
                         .ToList();
                     break;
                 case SongSortMode.Default:
