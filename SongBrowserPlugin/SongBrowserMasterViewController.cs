@@ -377,16 +377,30 @@ namespace SongBrowserPlugin
         /// </summary>
         public void RefreshSongList(List<LevelStaticData> songList)
         {
-            LevelStaticData[] songListArray = songList.ToArray();
-
             _log.Debug("Attempting to refresh the song list view.");
             try
             {
+                // Check a couple of possible situations that we can't refresh
                 if (!_songSelectionMasterView.isActiveAndEnabled)
                 {
                     _log.Debug("No song list to refresh.");
                     return;
                 }
+
+                SongListTableView songTableView = _songListViewController.GetComponentInChildren<SongListTableView>();
+                if (songTableView == null)
+                {
+                    return;
+                }
+
+                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(songTableView, "_tableView");
+                if (tableView == null)
+                {
+                    return;
+                }
+
+                // Convert to Array once in-case this is costly.
+                LevelStaticData[] songListArray = songList.ToArray();
 
                 // Refresh the master view
                 bool useLocalLeaderboards = ReflectionUtil.GetPrivateField<bool>(_songSelectionMasterView, "_useLocalLeaderboards");
@@ -398,22 +412,11 @@ namespace SongBrowserPlugin
                     _songSelectionMasterView.levelId,
                     _songSelectionMasterView.difficulty,
                     songListArray,
-                    useLocalLeaderboards, showDismissButton, showPlayerStats, gameplayMode);
+                    useLocalLeaderboards, showDismissButton, showPlayerStats, gameplayMode
+                );
 
-                // Refresh the song list
-                SongListTableView songTableView = _songListViewController.GetComponentInChildren<SongListTableView>();
-                if (songTableView == null)
-                {
-                    return;
-                }
-
+                // Refresh the table views
                 ReflectionUtil.SetPrivateField(songTableView, "_levels", songListArray);
-                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(songTableView, "_tableView");
-                if (tableView == null)
-                {
-                    return;
-                }
-
                 tableView.ReloadData();
 
                 // Clear Force selection of index 0 so we don't end up in a weird state.

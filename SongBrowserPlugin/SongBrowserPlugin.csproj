@@ -88,9 +88,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SongBrowserModel.cs" />
     <Compile Include="SongBrowserSettings.cs" />
-    <Compile Include="Tests\ISongBrowserTest.cs" />
-    <Compile Include="Tests\SongBrowserModelTests.cs" />
-    <Compile Include="Tests\SongBrowserTestRunner.cs" />
     <Compile Include="UIBuilder.cs" />
   </ItemGroup>
   <ItemGroup>

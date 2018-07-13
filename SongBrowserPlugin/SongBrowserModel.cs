@@ -2,6 +2,7 @@
 using SongBrowserPlugin.DataAccess;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -112,6 +113,7 @@ namespace SongBrowserPlugin
         private void ProcessSongList()
         {
             _log.Debug("ProcessSongList()");
+            Stopwatch stopwatch = Stopwatch.StartNew();
 
             // Weights used for keeping the original songs in order
             // Invert the weights from the game so we can order by descending and make LINQ work with us...
@@ -154,7 +156,7 @@ namespace SongBrowserPlugin
                     _sortedSongs = _originalSongs
                         .AsQueryable()
                         .OrderBy(x => weights.ContainsKey(x.levelId) ? weights[x.levelId] : 0)
-                        .ThenByDescending(x => x.levelId.StartsWith("Level") ? DateTime.MinValue : File.GetLastWriteTimeUtc(_levelIdToCustomSongInfo[x.levelId].path))
+                        .ThenByDescending(x => x.levelId.StartsWith("Level") ? DateTime.MinValue.Millisecond : File.GetLastWriteTimeUtc(_levelIdToCustomSongInfo[x.levelId].path).Millisecond)
                         .ToList();
                     break;
                 case SongSortMode.Default:
@@ -167,6 +169,9 @@ namespace SongBrowserPlugin
                         .ToList();
                     break;
             }
+
+            stopwatch.Stop();
+            _log.Info("Sorting songs took {0}ms", stopwatch.ElapsedMilliseconds);
 
             this._beatSaberSongAccessor.OverwriteBeatSaberSongList(_sortedSongs);
         }        

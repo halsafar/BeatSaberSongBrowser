@@ -9,14 +9,12 @@ using IllusionPlugin;
 using TMPro;
 using UnityEngine.UI;
 using System.Collections;
-using SongBrowserPlugin.Tests;
+
 
 namespace SongBrowserPlugin
 {
 	public class Plugin : IPlugin
 	{
-        public const bool RunTests = false;
-
 		public string Name
 		{
 			get { return "Song Browser"; }
@@ -24,15 +22,12 @@ namespace SongBrowserPlugin
 
 		public string Version
 		{
-			get { return "v1.0-alpha"; }
+			get { return "v1.0-rc2"; }
 		}
 		
 		public void OnApplicationStart()
 		{
-            if (RunTests)
-            {
-                new SongBrowserTestRunner().RunTests();
-            }
+
         }
 
 		public void OnApplicationQuit()

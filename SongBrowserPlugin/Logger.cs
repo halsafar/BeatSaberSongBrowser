@@ -3,7 +3,7 @@
 
 namespace SongBrowserPlugin
 {
-    class Logger
+    public class Logger
     {
         private string loggerName;
 

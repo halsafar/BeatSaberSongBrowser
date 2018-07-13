@@ -7,7 +7,7 @@ namespace SongBrowserPluginTest
 {
     public class Plugin : IPlugin
     {
-        public const bool RunTests = true;
+        public const bool RunTests = false;
 
         private bool _didRunTests = false;
 
