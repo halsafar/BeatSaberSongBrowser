@@ -14,7 +14,7 @@ using System.Collections;
 namespace SongBrowserPlugin
 {
 	public class Plugin : IPlugin
-	{	
+	{
 		public string Name
 		{
 			get { return "Song Browser"; }
@@ -22,7 +22,7 @@ namespace SongBrowserPlugin
 
 		public string Version
 		{
-			get { return "v1.0-alpha"; }
+			get { return "v1.0-rc2"; }
 		}
 		
 		public void OnApplicationStart()
@@ -47,8 +47,8 @@ namespace SongBrowserPlugin
         public void OnLevelWasLoaded(int level)
 		{
             //Console.WriteLine("OnLevelWasLoaded=" + level);            
-            if (level != SongBrowser.MenuIndex) return;
-            SongBrowser.OnLoad();
+            if (level != SongBrowserMasterViewController.MenuIndex) return;
+            SongBrowserMasterViewController.OnLoad();
         }
 
 		public void OnLevelWasInitialized(int level)

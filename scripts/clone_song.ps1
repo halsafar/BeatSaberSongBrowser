@@ -4,6 +4,7 @@ Careful with this.
 #>
 for($i=1;$i -le 2000;$i++)
 {
-    copy-item Believer -destination $i -Recurse
-    (Get-Content $i\info.json).replace('Believer', "Believer$i") | Set-Content $i\info.json    
+    copy-item Sunset -destination $i -Recurse
+    (Get-Content $i\info.json).replace('Sunset', "Sunset$i") | Set-Content $i\info.json    
+    (Get-Content $i\info.json).replace('from Deemo', "SunsetAuthor$i") | Set-Content $i\info.json    
 }
