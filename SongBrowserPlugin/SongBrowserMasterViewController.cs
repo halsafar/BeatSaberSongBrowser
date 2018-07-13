@@ -10,6 +10,7 @@ using System.Text;
 using HMUI;
 using System.Text.RegularExpressions;
 using System.IO;
+using System.Threading;
 
 namespace SongBrowserPlugin
 {
@@ -240,7 +241,7 @@ namespace SongBrowserPlugin
             }
             catch (Exception e)
             {
-                _log.Exception("Exception trying to sort by newest: {0}", e);
+                _log.Exception("Exception trying to update song list: {0}", e);
             }
         }
 
@@ -423,6 +424,7 @@ namespace SongBrowserPlugin
                 songTableView.ClearSelection();
                 _songListViewController.SelectSong(0);
                 _songSelectionMasterView.HandleSongListDidSelectSong(_songListViewController);
+                
 
                 RefreshUI();
                 RefreshAddFavoriteButton(songList[0]);

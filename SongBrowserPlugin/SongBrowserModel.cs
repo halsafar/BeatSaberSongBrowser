@@ -88,7 +88,7 @@ namespace SongBrowserPlugin
                     // Flip slashes, match SongLoaderPlugin
                     string slashed_dir = dir.Replace("\\", "/");
 
-                    _log.Debug("Fetching LastWriteTime for {0}", slashed_dir);
+                   //_log.Debug("Fetching LastWriteTime for {0}", slashed_dir);
                     _cachedLastWriteTimes[slashed_dir] = (File.GetLastWriteTimeUtc(dir) - Epoch).TotalMilliseconds;
                 }
 
@@ -121,8 +121,15 @@ namespace SongBrowserPlugin
         /// </summary>
         private void UpdateSongInfos()
         {
-            _customSongInfos = ReflectionUtil.InvokeMethod<SongLoaderPlugin.SongLoader>(SongLoaderPlugin.SongLoader.Instance, "RetrieveAllSongs", null) as List<SongLoaderPlugin.CustomSongInfo>;
-            _levelIdToCustomSongInfo = _customSongInfos.ToDictionary(x => x.GetIdentifier(), x => x);
+            _log.Debug("Attempting to fetch song infos from song loader plugin.");
+            _customSongInfos = SongLoaderPlugin.SongLoader.CustomSongInfos;
+            _customSongInfos.ForEach(x => _log.Debug(x.path));
+            _levelIdToCustomSongInfo = _customSongInfos.ToDictionary(x => x.levelId, x => x);
+
+            /*_customSongInfos.ForEach(x =>
+            {
+                _log.Debug("path={0}", x.levelId);
+            });*/
         }
         
         /// <summary>
@@ -149,7 +156,19 @@ namespace SongBrowserPlugin
                 ["Level3"] = 2,
                 ["Level8"] = 1
             };
-           
+
+            /*_originalSongs.ForEach(x =>
+            {
+                if (_levelIdToCustomSongInfo.ContainsKey(x.levelId))
+                {
+                    _log.Debug("_levelIdToCustomSongInfo.HasKey({0})",  x.levelId);
+                }
+                else
+                {
+                    _log.Debug("!_levelIdToCustomSongInfo.HasKey({0})", x.levelId);
+                }
+            });*/
+
             switch (_settings.sortMode)
             {
                 case SongSortMode.Favorites:
