@@ -82,7 +82,7 @@ namespace SongBrowserPlugin
                 // Get LastWriteTimes
                 var Epoch = new DateTime(1970, 1, 1);
                 string[] directories = Directory.GetDirectories(customSongsPath);
-                _log.Debug("Directories: " + directories);
+                //_log.Debug("Directories: " + directories);
                 foreach (string dir in directories)
                 {
                     // Flip slashes, match SongLoaderPlugin
@@ -123,7 +123,6 @@ namespace SongBrowserPlugin
         {
             _log.Debug("Attempting to fetch song infos from song loader plugin.");
             _customSongInfos = SongLoaderPlugin.SongLoader.CustomSongInfos;
-            _customSongInfos.ForEach(x => _log.Debug(x.path));
             _levelIdToCustomSongInfo = _customSongInfos.ToDictionary(x => x.levelId, x => x);
 
             /*_customSongInfos.ForEach(x =>
