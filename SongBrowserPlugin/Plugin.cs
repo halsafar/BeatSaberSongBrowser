@@ -22,7 +22,7 @@ namespace SongBrowserPlugin
 
 		public string Version
 		{
-			get { return "v1.0-rc3"; }
+			get { return "v2.0"; }
 		}
 		
 		public void OnApplicationStart()
@@ -47,8 +47,11 @@ namespace SongBrowserPlugin
         public void OnLevelWasLoaded(int level)
 		{
             //Console.WriteLine("OnLevelWasLoaded=" + level);            
+            //if (level != SongBrowserMasterViewController.MenuIndex) return;
+            //SongBrowserMasterViewController.OnLoad();
+
             if (level != SongBrowserMasterViewController.MenuIndex) return;
-            SongBrowserMasterViewController.OnLoad();
+            SongBrowserApplication.OnLoad();
         }
 
 		public void OnLevelWasInitialized(int level)

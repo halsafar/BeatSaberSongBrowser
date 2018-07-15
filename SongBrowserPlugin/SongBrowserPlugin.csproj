@@ -83,6 +83,7 @@
     <Compile Include="DataAccess\IBeatSaberSongList.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="ReflectionUtil.cs" />
+    <Compile Include="SongBrowserApplication.cs" />
     <Compile Include="SongBrowserMasterViewController.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
