@@ -19,9 +19,6 @@ namespace SongBrowserPlugin
         private Dictionary<String, double> _cachedLastWriteTimes;
         private SongBrowserSettings _settings;
 
-        //private SongSelectionMasterViewController _songSelectionMasterView;
-        //private SongListViewController _songListViewController;
-
         private IBeatSaberSongList _beatSaberSongAccessor;
 
         private List<LevelStaticData> _sortedSongs;
@@ -59,13 +56,10 @@ namespace SongBrowserPlugin
         /// </summary>
         /// <param name="songSelectionMasterView"></param>
         /// <param name="songListViewController"></param>
-        public void Init(IBeatSaberSongList beatSaberSongAccessor /*SongSelectionMasterViewController songSelectionMasterView, SongListViewController songListViewController*/)
+        public void Init(IBeatSaberSongList beatSaberSongAccessor)
         {
             _beatSaberSongAccessor = beatSaberSongAccessor;
             _settings = SongBrowserSettings.Load();
-
-            //_songSelectionMasterView = songSelectionMasterView;
-            //_songListViewController = songListViewController;
         }
 
         /// <summary>

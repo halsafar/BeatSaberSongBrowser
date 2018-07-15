@@ -1,8 +1,10 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
+
 
 namespace SongBrowserPlugin
 {
-	public static class ReflectionUtil
+    public static class ReflectionUtil
 	{
 		public static void SetPrivateField(object obj, string fieldName, object value)
 		{
@@ -38,5 +40,15 @@ namespace SongBrowserPlugin
             }
             return null;
         }
+
+        public static object InvokeStaticMethod(Type t, string methodName, params object[] args)
+        {
+            var mi = t.GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+            if (mi != null)
+            {
+                return mi.Invoke(obj: null, parameters: args);
+            }
+            return null;
+        }       
     }
 }
