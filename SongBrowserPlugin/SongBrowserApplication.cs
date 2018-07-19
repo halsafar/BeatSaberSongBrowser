@@ -141,9 +141,7 @@ namespace SongBrowserPlugin
         {
             _log.Debug("Hi jacking solo mode buttons");
             try
-            {
-                
-
+            {                
                 ReflectionUtil.SetPrivateField(_menuMasterViewController, "_gameplayMode", gameplayMode);
                 ReflectionUtil.SetPrivateField(_menuMasterViewController, "_songSelectionMasterViewController", _songBrowserMasterViewController);
 

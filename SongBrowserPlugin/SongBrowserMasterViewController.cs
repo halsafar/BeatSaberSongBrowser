@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using HMUI;
-
+using System.IO;
 
 namespace SongBrowserPlugin
 {
@@ -27,6 +27,10 @@ namespace SongBrowserPlugin
         private List<SongSortButton> _sortButtonGroup;        
         private Button _addFavoriteButton;
         private String _addFavoriteButtonText = null;
+        private SimpleDialogPromptViewController _simpleDialogPromptViewControllerPrefab;
+        private SimpleDialogPromptViewController _deleteDialog;
+
+        private Button _deleteButton;
 
         // Debug
         private int _sortButtonLastPushedIndex = 0;
@@ -59,7 +63,12 @@ namespace SongBrowserPlugin
             InitModel();
 
             _uiInitialized = false;
-            SceneManager.activeSceneChanged += SceneManagerOnActiveSceneChanged;            
+            SceneManager.activeSceneChanged += SceneManagerOnActiveSceneChanged;
+
+            _simpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
+
+            this._deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(this._simpleDialogPromptViewControllerPrefab);
+            this._deleteDialog.gameObject.SetActive(false);
         }
 
         /// <summary>
@@ -141,18 +150,20 @@ namespace SongBrowserPlugin
 
                 RectTransform transform = _songDetailViewController.transform as RectTransform;
                 _addFavoriteButton = UIBuilder.CreateUIButton(transform, "QuitButton", SongBrowserApplication.Instance.ButtonTemplate);
-                (_addFavoriteButton.transform as RectTransform).anchoredPosition = new Vector2(45f, 5f);
-                (_addFavoriteButton.transform as RectTransform).sizeDelta = new Vector2(10f, 10f);
+                (_addFavoriteButton.transform as RectTransform).anchoredPosition = new Vector2(45f, 9f);
+                (_addFavoriteButton.transform as RectTransform).sizeDelta = new Vector2(10f, 5.0f);
                 
                 if (_addFavoriteButtonText == null)
                 {
                     _log.Debug("Determinng if first selected song is a favorite.");
-                    LevelStaticData level = getSelectedSong();                    
-                    RefreshAddFavoriteButton(level.levelId);
+                    LevelStaticData level = getSelectedSong();
+                    if (level != null)
+                    {
+                        RefreshAddFavoriteButton(level.levelId);
+                    }                    
                 }
                 
-                UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);
-                //UIBuilder.SetButtonIcon(ref _addFavoriteButton, SongBrowserApplication.Instance.CachedIcons["AllDirectionsIcon"]);
+                UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);                
                 UIBuilder.SetButtonTextSize(ref _addFavoriteButton, 3);
                 UIBuilder.SetButtonIconEnabled(ref _addFavoriteButton, false);                
                 _addFavoriteButton.onClick.RemoveAllListeners();
@@ -160,12 +171,27 @@ namespace SongBrowserPlugin
                     ToggleSongInFavorites();
                 });
 
+                // Create delete button
+                _log.Debug("Creating delete button...");
+
+                transform = _songDetailViewController.transform as RectTransform;
+                _deleteButton = UIBuilder.CreateUIButton(transform, "QuitButton", SongBrowserApplication.Instance.ButtonTemplate);
+                (_deleteButton.transform as RectTransform).anchoredPosition = new Vector2(45f, 0f);
+                (_deleteButton.transform as RectTransform).sizeDelta = new Vector2(16f, 5f);
+                UIBuilder.SetButtonText(ref _deleteButton, "Delete");
+                UIBuilder.SetButtonTextSize(ref _deleteButton, 3);
+                UIBuilder.SetButtonIconEnabled(ref _deleteButton, false);
+                _deleteButton.onClick.RemoveAllListeners();
+                _deleteButton.onClick.AddListener(delegate () {
+                    HandleDeleteSelectedSong();
+                });
+
                 RefreshUI();
                 _uiInitialized = true;
             }
             catch (Exception e)
             {
-                _log.Exception("Exception CreateUI: " + e.Message);
+                _log.Exception("Exception CreateUI: {0}\n{1}", e.Message, e.StackTrace);
             }
         }
 
@@ -213,6 +239,11 @@ namespace SongBrowserPlugin
                 return null;
             }
 
+            /*if (this._levelsStaticData == null)
+            {
+                return null;
+            }*/
+
             int selectedIndex = this.GetSelectedSongIndex();
             if (selectedIndex < 0)
             {
@@ -220,8 +251,50 @@ namespace SongBrowserPlugin
             }
 
             LevelStaticData level = this.GetLevelStaticDataForSelectedSong();
-
             return level;
+        }
+
+        /// <summary>
+        /// Pop up a delete dialog.
+        /// </summary>
+        private void HandleDeleteSelectedSong()
+        {
+            int selectedIndex = this.GetSelectedSongIndex();
+            if (selectedIndex < 0)
+            {
+                return;
+            }
+
+            LevelStaticData level = this.GetLevelStaticDataForSelectedSong();
+            SongLoaderPlugin.CustomSongInfo songInfo = _model.LevelIdToCustomSongInfos[level.levelId];
+
+            this._deleteDialog.Init("Delete song warning!", String.Format("<color=#00AAFF>Permanently delete song: {0}</color>\n  Do you want to continue?", songInfo.songName), "YES", "NO");
+
+            this._deleteDialog.didFinishEvent += this.HandleSimpleDialogPromptViewControllerDidFinish;
+            this.PresentModalViewController(this._deleteDialog, null, false);
+        }
+
+        /// <summary>
+        /// Handle delete dialog resolution.
+        /// </summary>
+        /// <param name="viewController"></param>
+        /// <param name="ok"></param>
+        public virtual void HandleSimpleDialogPromptViewControllerDidFinish(SimpleDialogPromptViewController viewController, bool ok)
+        {
+            viewController.didFinishEvent -= this.HandleSimpleDialogPromptViewControllerDidFinish;
+            if (!ok)
+            {
+                viewController.DismissModalViewController(null, false);
+            }
+            else
+            {
+                LevelStaticData level = this.GetLevelStaticDataForSelectedSong();
+                SongLoaderPlugin.CustomSongInfo songInfo = _model.LevelIdToCustomSongInfos[level.levelId];
+
+                viewController.DismissModalViewController(null, false);
+                _log.Debug("DELETING: {0}", songInfo.path);
+                //Directory.Delete(songInfo.path);
+            }
         }
 
         /// <summary>
@@ -372,6 +445,12 @@ namespace SongBrowserPlugin
             {
                 _sortButtonLastPushedIndex = (_sortButtonLastPushedIndex + 1) % _sortButtonGroup.Count;
                 _sortButtonGroup[_sortButtonLastPushedIndex].Button.onClick.Invoke();                
+            }
+
+            // delete
+            if (Input.GetKeyDown(KeyCode.D))
+            {
+                _deleteButton.onClick.Invoke();
             }
 
             // z,x,c,v can be used to get into a song, b will hit continue button after song ends

@@ -26,6 +26,7 @@ namespace SongBrowserPlugin
         private SongSortMode _cachedSortMode = default(SongSortMode);
 
         private DateTime _cachedCustomSongDirLastWriteTIme = DateTime.MinValue;
+        private int _customSongDirTotalCount = -1;
 
         public SongBrowserSettings Settings
         {
@@ -40,6 +41,14 @@ namespace SongBrowserPlugin
             get
             {
                 return _sortedSongs;
+            }
+        }
+
+        public Dictionary<String, SongLoaderPlugin.CustomSongInfo> LevelIdToCustomSongInfos
+        {
+            get
+            {
+                return _levelIdToCustomSongInfo;
             }
         }
 
@@ -69,13 +78,22 @@ namespace SongBrowserPlugin
         {
             String customSongsPath = Path.Combine(Environment.CurrentDirectory, "CustomSongs");
             DateTime currentLastWriteTIme = File.GetLastWriteTimeUtc(customSongsPath);
-            if (_cachedCustomSongDirLastWriteTIme == null || DateTime.Compare(currentLastWriteTIme, _cachedCustomSongDirLastWriteTIme) != 0)
+            string[] directories = Directory.GetDirectories(customSongsPath);
+            int directoryCount = directories.Length;
+            int fileCount = Directory.GetFiles(customSongsPath, "*").Length;
+            int currentTotalCount = directoryCount + fileCount;
+
+            if (_cachedCustomSongDirLastWriteTIme == null || 
+                DateTime.Compare(currentLastWriteTIme, _cachedCustomSongDirLastWriteTIme) != 0 ||
+                currentTotalCount != this._customSongDirTotalCount)
             {
                 _log.Debug("Custom Song directory has changed. Fetching new songs. Sorting song list.");
-        
+
+                this._customSongDirTotalCount = directoryCount + fileCount;
+
                 // Get LastWriteTimes
                 var Epoch = new DateTime(1970, 1, 1);
-                string[] directories = Directory.GetDirectories(customSongsPath);
+
                 //_log.Debug("Directories: " + directories);
                 foreach (string dir in directories)
                 {
