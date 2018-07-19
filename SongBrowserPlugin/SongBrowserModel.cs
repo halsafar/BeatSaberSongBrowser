@@ -189,13 +189,21 @@ namespace SongBrowserPlugin
                         .ThenByDescending(x => x.levelId.StartsWith("Level") ? weights[x.levelId] : _cachedLastWriteTimes[_levelIdToCustomSongInfo[x.levelId].path])
                         .ToList();
                     break;
+                case SongSortMode.Author:
+                    _log.Debug("Sorting song list by author");
+                    _sortedSongs = _originalSongs
+                        .AsQueryable()
+                        .OrderBy(x => x.authorName)
+                        .ThenBy(x => x.songName)
+                        .ToList();
+                    break;
                 case SongSortMode.Default:
                 default:
                     _log.Debug("Sorting song list as default");
                     _sortedSongs = _originalSongs
                         .AsQueryable()
-                        .OrderBy(x => x.authorName)
-                        .ThenBy(x => x.songName)
+                        .OrderBy(x => x.songName)
+                        .ThenBy(x => x.authorName)
                         .ToList();
                     break;
             }

@@ -129,10 +129,11 @@ namespace SongBrowserPlugin
 
                 _sortButtonGroup = new List<SongSortButton>
                 {
-                    UIBuilder.CreateSortButton(rect, "PlayButton", "Fav", 3, "AllDirectionsIcon", 30f, 77.5f, 15f, 5f, SongSortMode.Favorites, onSortButtonClickEvent),
-                    UIBuilder.CreateSortButton(rect, "PlayButton", "Def", 3, "AllDirectionsIcon", 15f, 77.5f, 15f, 5f, SongSortMode.Default, onSortButtonClickEvent),
-                    UIBuilder.CreateSortButton(rect, "PlayButton", "Org", 3, "AllDirectionsIcon", 0f, 77.5f, 15f, 5f, SongSortMode.Original, onSortButtonClickEvent),
-                    UIBuilder.CreateSortButton(rect, "PlayButton", "New", 3, "AllDirectionsIcon", -15f, 77.5f, 15f, 5f, SongSortMode.Newest, onSortButtonClickEvent)
+                    UIBuilder.CreateSortButton(rect, "PlayButton", "Favorite", 3, "AllDirectionsIcon", 30f, 77.5f, 16f, 5f, SongSortMode.Favorites, onSortButtonClickEvent),
+                    UIBuilder.CreateSortButton(rect, "PlayButton", "Song", 3, "AllDirectionsIcon", 14f, 77.5f, 16f, 5f, SongSortMode.Default, onSortButtonClickEvent),
+                    UIBuilder.CreateSortButton(rect, "PlayButton", "Author", 3, "AllDirectionsIcon", -2f, 77.5f, 16f, 5f, SongSortMode.Author, onSortButtonClickEvent),
+                    UIBuilder.CreateSortButton(rect, "PlayButton", "Original", 3, "AllDirectionsIcon", -18f, 77.5f, 16f, 5f, SongSortMode.Original, onSortButtonClickEvent),
+                    UIBuilder.CreateSortButton(rect, "PlayButton", "Newest", 3, "AllDirectionsIcon", -34f, 77.5f, 16f, 5f, SongSortMode.Newest, onSortButtonClickEvent),
                 };
 
                 // Creaate Add to Favorites Button
