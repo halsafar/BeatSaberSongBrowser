@@ -76,8 +76,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataAccess\BeatSaberSongList.cs" />
-    <Compile Include="DataAccess\IBeatSaberSongList.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="ReflectionUtil.cs" />
     <Compile Include="SongBrowserApplication.cs" />
@@ -91,6 +89,7 @@
     <Compile Include="UI\SongSortButton.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="DataAccess\" />
     <Folder Include="Internals\" />
   </ItemGroup>
   <ItemGroup>

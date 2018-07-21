@@ -1,12 +1,8 @@
-﻿using HMUI;
-using SongBrowserPlugin.DataAccess;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using UnityEngine;
 
 namespace SongBrowserPlugin
 {
@@ -17,8 +13,6 @@ namespace SongBrowserPlugin
         private List<SongLoaderPlugin.CustomSongInfo> _customSongInfos;        
         private Dictionary<String, double> _cachedLastWriteTimes;
         private SongBrowserSettings _settings;
-
-        private IBeatSaberSongList _beatSaberSongAccessor;
 
         private List<SongLoaderPlugin.OverrideClasses.CustomLevel> _sortedSongs;
         private List<SongLoaderPlugin.OverrideClasses.CustomLevel> _originalSongs;
@@ -65,9 +59,8 @@ namespace SongBrowserPlugin
         /// </summary>
         /// <param name="songSelectionMasterView"></param>
         /// <param name="songListViewController"></param>
-        public void Init(IBeatSaberSongList beatSaberSongAccessor)
+        public void Init()
         {
-            _beatSaberSongAccessor = beatSaberSongAccessor;
             _settings = SongBrowserSettings.Load();
         }
 

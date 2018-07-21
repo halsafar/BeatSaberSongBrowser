@@ -115,7 +115,7 @@ namespace SongBrowserPlugin
             {
                 _model = new SongBrowserModel();
             }
-            _model.Init(new DataAccess.BeatSaberSongList());
+            _model.Init();
         }
 
         /// <summary>
