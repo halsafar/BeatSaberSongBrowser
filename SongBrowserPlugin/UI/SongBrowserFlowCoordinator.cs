@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using HMUI;
 using VRUI;
 using SongBrowserPlugin.DataAccess;
+using System.IO;
 
 namespace SongBrowserPlugin.UI
 {
@@ -236,7 +237,7 @@ namespace SongBrowserPlugin.UI
 
                 viewController.DismissModalViewController(null, false);
                 _log.Debug("DELETING: {0}", customLevel.customSongInfo.path);
-                Directory.Delete(songInfo.path);
+                SongLoaderPlugin.SongLoader.Instance.RemoveSongWithPath(customLevel.customSongInfo.path);
             }
         }
 
