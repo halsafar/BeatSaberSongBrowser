@@ -115,11 +115,11 @@ namespace SongBrowserPlugin.UI
 
                 _sortButtonGroup = new List<SongSortButton>
                 {
-                    UIBuilder.CreateSortButton(rect, "PlayButton", "Favorite", 3, "AllDirectionsIcon", 60, 75f, 16f, 5f, SongSortMode.Favorites, onSortButtonClickEvent),
-                    UIBuilder.CreateSortButton(rect, "PlayButton", "Song", 3, "AllDirectionsIcon", 44f, 75f, 16f, 5f, SongSortMode.Default, onSortButtonClickEvent),
-                    UIBuilder.CreateSortButton(rect, "PlayButton", "Author", 3, "AllDirectionsIcon", 28f, 75f, 16f, 5f, SongSortMode.Author, onSortButtonClickEvent),
-                    UIBuilder.CreateSortButton(rect, "PlayButton", "Original", 3, "AllDirectionsIcon", 12f, 75f, 16f, 5f, SongSortMode.Original, onSortButtonClickEvent),
-                    UIBuilder.CreateSortButton(rect, "PlayButton", "Newest", 3, "AllDirectionsIcon", -4f, 75f, 16f, 5f, SongSortMode.Newest, onSortButtonClickEvent),
+                    UIBuilder.CreateSortButton(rect, "PlayButton", "Favorite", 3, "AllDirectionsIcon", 66, 74.5f, 16f, 5f, SongSortMode.Favorites, onSortButtonClickEvent),
+                    UIBuilder.CreateSortButton(rect, "PlayButton", "Song", 3, "AllDirectionsIcon", 50f, 74.5f, 16f, 5f, SongSortMode.Default, onSortButtonClickEvent),
+                    UIBuilder.CreateSortButton(rect, "PlayButton", "Author", 3, "AllDirectionsIcon", 34f, 74.5f, 16f, 5f, SongSortMode.Author, onSortButtonClickEvent),
+                    UIBuilder.CreateSortButton(rect, "PlayButton", "Original", 3, "AllDirectionsIcon", 18f, 74.5f, 16f, 5f, SongSortMode.Original, onSortButtonClickEvent),
+                    UIBuilder.CreateSortButton(rect, "PlayButton", "Newest", 3, "AllDirectionsIcon", 2f, 74.5f, 16f, 5f, SongSortMode.Newest, onSortButtonClickEvent),
                 };
 
                 // Creaate Add to Favorites Button
@@ -127,9 +127,16 @@ namespace SongBrowserPlugin.UI
 
                 RectTransform transform = this._levelDetailViewController.transform as RectTransform;
                 _addFavoriteButton = UIBuilder.CreateUIButton(transform, "QuitButton", SongBrowserApplication.Instance.ButtonTemplate);
-                (_addFavoriteButton.transform as RectTransform).anchoredPosition = new Vector2(45f, 9f);
-                (_addFavoriteButton.transform as RectTransform).sizeDelta = new Vector2(16f, 5.0f);
-                
+                (_addFavoriteButton.transform as RectTransform).anchoredPosition = new Vector2(40f, 5.75f);
+                (_addFavoriteButton.transform as RectTransform).sizeDelta = new Vector2(10f, 10f);
+                UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);
+                UIBuilder.SetButtonTextSize(ref _addFavoriteButton, 3);
+                UIBuilder.SetButtonIconEnabled(ref _addFavoriteButton, false);
+                _addFavoriteButton.onClick.RemoveAllListeners();
+                _addFavoriteButton.onClick.AddListener(delegate () {
+                    ToggleSongInFavorites();
+                });
+
                 if (_addFavoriteButtonText == null)
                 {
                     _log.Debug("Determining if first selected song is a favorite: {0}", this._levelListViewController);
@@ -139,22 +146,15 @@ namespace SongBrowserPlugin.UI
                         RefreshAddFavoriteButton(level.levelID);
                     }                    
                 }
-                
-                UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);                
-                UIBuilder.SetButtonTextSize(ref _addFavoriteButton, 3);
-                UIBuilder.SetButtonIconEnabled(ref _addFavoriteButton, false);                
-                _addFavoriteButton.onClick.RemoveAllListeners();
-                _addFavoriteButton.onClick.AddListener(delegate () {                    
-                    ToggleSongInFavorites();
-                });
+
 
                 // Create delete button
                 _log.Debug("Creating delete button...");
 
                 transform = this._levelDetailViewController.transform as RectTransform;
                 _deleteButton = UIBuilder.CreateUIButton(transform, "QuitButton", SongBrowserApplication.Instance.ButtonTemplate);
-                (_deleteButton.transform as RectTransform).anchoredPosition = new Vector2(45f, 0f);
-                (_deleteButton.transform as RectTransform).sizeDelta = new Vector2(16f, 5f);
+                (_deleteButton.transform as RectTransform).anchoredPosition = new Vector2(46f, 0f);
+                (_deleteButton.transform as RectTransform).sizeDelta = new Vector2(15f, 5f);
                 UIBuilder.SetButtonText(ref _deleteButton, "Delete");
                 UIBuilder.SetButtonTextSize(ref _deleteButton, 3);
                 UIBuilder.SetButtonIconEnabled(ref _deleteButton, false);
@@ -204,7 +204,6 @@ namespace SongBrowserPlugin.UI
                 return;
             }
 
-            _log.Debug("LEVEL ON DELETE: {0}", level.levelID);
             if (level.levelID.StartsWith("Level"))
             {
                 _log.Debug("Cannot delete non-custom levels.");
@@ -213,8 +212,8 @@ namespace SongBrowserPlugin.UI
             SongLoaderPlugin.OverrideClasses.CustomLevel customLevel = _model.LevelIdToCustomSongInfos[level.levelID];
 
             this._deleteDialog.Init("Delete level warning!", String.Format("<color=#00AAFF>Permanently delete level: {0}</color>\n  Do you want to continue?", customLevel.songName), "YES", "NO");
-
             this._deleteDialog.didFinishEvent += this.HandleDeleteDialogPromptViewControllerDidFinish;
+
             this._levelSelectionNavigationController.PresentModalViewController(this._deleteDialog, null, false);
         }
 
