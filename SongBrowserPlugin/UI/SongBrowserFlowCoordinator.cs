@@ -238,6 +238,7 @@ namespace SongBrowserPlugin.UI
                 viewController.DismissModalViewController(null, false);
                 _log.Debug("DELETING: {0}", customLevel.customSongInfo.path);
                 SongLoaderPlugin.SongLoader.Instance.RemoveSongWithPath(customLevel.customSongInfo.path);
+                Directory.Delete(customLevel.customSongInfo.path);
             }
         }
 
