@@ -14,15 +14,15 @@ namespace SongBrowserPlugin
     {
         private Logger _log = new Logger("SongBrowserModel");
 
-        private List<SongLoaderPlugin.CustomSongInfo> _customSongInfos;
-        private Dictionary<String, SongLoaderPlugin.CustomSongInfo> _levelIdToCustomSongInfo;
+        private List<SongLoaderPlugin.CustomSongInfo> _customSongInfos;        
         private Dictionary<String, double> _cachedLastWriteTimes;
         private SongBrowserSettings _settings;
 
         private IBeatSaberSongList _beatSaberSongAccessor;
 
-        private List<LevelStaticData> _sortedSongs;
-        private List<LevelStaticData> _originalSongs;    
+        private List<SongLoaderPlugin.OverrideClasses.CustomLevel> _sortedSongs;
+        private List<SongLoaderPlugin.OverrideClasses.CustomLevel> _originalSongs;
+        private Dictionary<String, SongLoaderPlugin.OverrideClasses.CustomLevel> _levelIdToCustomLevel;
         private SongSortMode _cachedSortMode = default(SongSortMode);
 
         private DateTime _cachedCustomSongDirLastWriteTIme = DateTime.MinValue;
@@ -36,7 +36,7 @@ namespace SongBrowserPlugin
             }
         }
 
-        public List<LevelStaticData> SortedSongList
+        public List<SongLoaderPlugin.OverrideClasses.CustomLevel> SortedSongList
         {
             get
             {
@@ -44,11 +44,11 @@ namespace SongBrowserPlugin
             }
         }
 
-        public Dictionary<String, SongLoaderPlugin.CustomSongInfo> LevelIdToCustomSongInfos
+        public Dictionary<String, SongLoaderPlugin.OverrideClasses.CustomLevel> LevelIdToCustomSongInfos
         {
             get
             {
-                return _levelIdToCustomSongInfo;
+                return _levelIdToCustomLevel;
             }
         }
 
@@ -105,15 +105,12 @@ namespace SongBrowserPlugin
                 }
 
                 // Update song Infos
-                if (updateSongInfos)
-                {
-                    this.UpdateSongInfos();
-                }
-
+                this.UpdateSongInfos();
+                
                 // Get new songs
                 _cachedCustomSongDirLastWriteTIme = currentLastWriteTIme;
                 _cachedSortMode = _settings.sortMode;
-                _originalSongs = this._beatSaberSongAccessor.AcquireSongList();
+                
                 this.ProcessSongList();
             }
             else if (_settings.sortMode != _cachedSortMode)
@@ -134,9 +131,11 @@ namespace SongBrowserPlugin
         private void UpdateSongInfos()
         {
             _log.Debug("Attempting to fetch song infos from song loader plugin.");
-            _customSongInfos = SongLoaderPlugin.SongLoader.CustomSongInfos;
-            _levelIdToCustomSongInfo = _customSongInfos.ToDictionary(x => x.levelId, x => x);
+            _originalSongs = SongLoaderPlugin.SongLoader.CustomLevels;
+            _sortedSongs = _originalSongs;
+            _levelIdToCustomLevel = _originalSongs.ToDictionary(x => x.levelID, x => x);
 
+            _log.Debug("Song Browser knows about {0} songs...", _sortedSongs.Count);
             /*_customSongInfos.ForEach(x =>
             {
                 _log.Debug("path={0}", x.levelId);
@@ -186,16 +185,16 @@ namespace SongBrowserPlugin
                     _log.Debug("Sorting song list as favorites");
                     _sortedSongs = _originalSongs
                         .AsQueryable()
-                        .OrderBy(x => _settings.favorites.Contains(x.levelId) == false)
+                        .OrderBy(x => _settings.favorites.Contains(x.levelID) == false)
                         .ThenBy(x => x.songName)
-                        .ThenBy(x => x.authorName)
+                        .ThenBy(x => x.songAuthorName)
                         .ToList();
                     break;
                 case SongSortMode.Original:
                     _log.Debug("Sorting song list as original");
                     _sortedSongs = _originalSongs
                         .AsQueryable()
-                        .OrderByDescending(x => weights.ContainsKey(x.levelId) ? weights[x.levelId] : 0)
+                        .OrderByDescending(x => weights.ContainsKey(x.levelID) ? weights[x.levelID] : 0)
                         .ThenBy(x => x.songName)
                         .ToList();
                     break;
@@ -203,15 +202,15 @@ namespace SongBrowserPlugin
                     _log.Debug("Sorting song list as newest.");
                     _sortedSongs = _originalSongs
                         .AsQueryable()
-                        .OrderBy(x => weights.ContainsKey(x.levelId) ? weights[x.levelId] : 0)
-                        .ThenByDescending(x => x.levelId.StartsWith("Level") ? weights[x.levelId] : _cachedLastWriteTimes[_levelIdToCustomSongInfo[x.levelId].path])
+                        .OrderBy(x => weights.ContainsKey(x.levelID) ? weights[x.levelID] : 0)
+                        .ThenByDescending(x => x.levelID.StartsWith("Level") ? weights[x.levelID] : _cachedLastWriteTimes[_levelIdToCustomLevel[x.levelID].customSongInfo.path])
                         .ToList();
                     break;
                 case SongSortMode.Author:
                     _log.Debug("Sorting song list by author");
                     _sortedSongs = _originalSongs
                         .AsQueryable()
-                        .OrderBy(x => x.authorName)
+                        .OrderBy(x => x.songAuthorName)
                         .ThenBy(x => x.songName)
                         .ToList();
                     break;
@@ -221,7 +220,7 @@ namespace SongBrowserPlugin
                     _sortedSongs = _originalSongs
                         .AsQueryable()
                         .OrderBy(x => x.songName)
-                        .ThenBy(x => x.authorName)
+                        .ThenBy(x => x.songAuthorName)
                         .ToList();
                     break;
             }
@@ -229,7 +228,7 @@ namespace SongBrowserPlugin
             stopwatch.Stop();
             _log.Info("Sorting songs took {0}ms", stopwatch.ElapsedMilliseconds);
 
-            this._beatSaberSongAccessor.OverwriteBeatSaberSongList(_sortedSongs);
+            //this._beatSaberSongAccessor.OverwriteBeatSaberSongList(_sortedSongs);
         }        
     }
 }

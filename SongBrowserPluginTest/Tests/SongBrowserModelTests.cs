@@ -7,6 +7,7 @@ using SongBrowserPlugin;
 
 namespace SongBrowserPluginTests
 {
+    /*
     class MockBeatSaberSongList : SongBrowserPlugin.DataAccess.IBeatSaberSongList
     {
         List<LevelStaticData> testList;
@@ -84,5 +85,5 @@ namespace SongBrowserPluginTests
             stopwatch.Stop();
             _log.Info("Converting big list into array a bunch of times: {0}", stopwatch.ElapsedMilliseconds);
         }
-    }
+    }*/
 }

@@ -3,7 +3,7 @@ using System.Linq;
 using UnityEngine.UI;
 using TMPro;
 using VRUI;
-
+using SongBrowserPlugin.UI;
 
 namespace SongBrowserPlugin
 {
@@ -23,6 +23,24 @@ namespace SongBrowserPlugin
             vc.rectTransform.anchorMax = new Vector2(1f, 1f);
             vc.rectTransform.sizeDelta = new Vector2(0f, 0f);
             vc.rectTransform.anchoredPosition = new Vector2(0f, 0f);
+
+            return vc;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static T CreateFlowController<T>(string name) where T : FlowCoordinator
+        {
+            T vc = new GameObject(name).AddComponent<T>();
+
+            /*vc.rectTransform.anchorMin = new Vector2(0f, 0f);
+            vc.rectTransform.anchorMax = new Vector2(1f, 1f);
+            vc.rectTransform.sizeDelta = new Vector2(0f, 0f);
+            vc.rectTransform.anchoredPosition = new Vector2(0f, 0f);*/
 
             return vc;
         }

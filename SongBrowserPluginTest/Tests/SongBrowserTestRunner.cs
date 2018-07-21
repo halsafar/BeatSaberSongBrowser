@@ -19,7 +19,7 @@ namespace SongBrowserPluginTests
         {
             _log.Info("Running Song Browser Tests");
 
-            new SongBrowserModelTests().RunTest();
+            //new SongBrowserModelTests().RunTest();
         }
     }
 }

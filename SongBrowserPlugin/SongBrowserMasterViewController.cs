@@ -6,25 +6,22 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using HMUI;
 using System.IO;
+using SongBrowserPlugin.UI;
+using VRUI;
 
 namespace SongBrowserPlugin
 {
-    public class SongSortButton
+    /// <summary>
+    /// Hijack the flow coordinator.  Have access to all StandardLevel browser tabs.
+    /// </summary>
+    public class SongBrowserMasterViewController : StandardLevelSelectionFlowCoordinator
     {
-        public SongSortMode SortMode;
-        public Button Button;
-    }
-
-    public class SongBrowserMasterViewController : SongSelectionMasterViewController
-    {
+        // Logging
         public const String Name = "SongBrowserMasterViewController";
-
-        public const int MenuIndex = 1;
-
         private Logger _log = new Logger(Name);
-       
+
         // New UI Elements
-        private List<SongSortButton> _sortButtonGroup;        
+        private List<SongSortButton> _sortButtonGroup;
         private Button _addFavoriteButton;
         private String _addFavoriteButtonText = null;
         private SimpleDialogPromptViewController _simpleDialogPromptViewControllerPrefab;
@@ -34,6 +31,7 @@ namespace SongBrowserPlugin
 
         // Debug
         private int _sortButtonLastPushedIndex = 0;
+        private int _lastRow = 0;
 
         // Model
         private SongBrowserModel _model;
@@ -54,27 +52,36 @@ namespace SongBrowserPlugin
         /// <summary>
         /// Builds the UI for this plugin.
         /// </summary>
-        protected override void Awake()
+        public void InitUI()
         {
-            _log.Debug("Awake()");
+            _log.Debug("Init()");
 
-            base.Awake();
-
-            InitModel();
-
-            _uiInitialized = false;
             SceneManager.activeSceneChanged += SceneManagerOnActiveSceneChanged;
 
             _simpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
 
             this._deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(this._simpleDialogPromptViewControllerPrefab);
             this._deleteDialog.gameObject.SetActive(false);
+
+            DidActivate();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="parentViewController"></param>
+        /// <param name="levels"></param>
+        /// <param name="gameplayMode"></param>
+        public virtual void Present(VRUIViewController parentViewController, IStandardLevel[] levels, GameplayMode gameplayMode)
+        {
+            _log.Debug("Present()");
+            base.Present(parentViewController, levels, gameplayMode);
         }
 
         /// <summary>
         /// Override DidActivate to inject our UI elements.
         /// </summary>
-        protected override void DidActivate()
+        protected void DidActivate()
         {
             _log.Debug("DidActivate()");
 
@@ -82,31 +89,27 @@ namespace SongBrowserPlugin
             {
                 CreateUI();
             }
-
-
+        
             try
             {
                 //if (scene.buildIndex == SongBrowserMasterViewController.MenuIndex)
                 {
                     _log.Debug("SceneManagerOnActiveSceneChanged - Setting Up UI");
-
-                    this._songListViewController.didSelectSongEvent += OnDidSelectSongEvent;
+                    _levelListViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
 
                     UpdateSongList();
                 }
             }
             catch (Exception e)
             {
-                _log.Exception("Exception during scene change: " + e);
+                _log.Exception("Exception during DidActivate: " + e);
             }
-
-            base.DidActivate();
         }
 
         /// <summary>
         /// 
         /// </summary>
-        private void InitModel()
+        public void InitModel()
         {
             if (_model == null)
             {
@@ -124,7 +127,7 @@ namespace SongBrowserPlugin
 
             try
             {                               
-                RectTransform rect = this.transform as RectTransform;
+                RectTransform rect = this._levelSelectionNavigationController.transform as RectTransform;
 
                 // Create Sorting Songs By-Buttons
                 _log.Debug("Creating sort by buttons...");
@@ -138,28 +141,28 @@ namespace SongBrowserPlugin
 
                 _sortButtonGroup = new List<SongSortButton>
                 {
-                    UIBuilder.CreateSortButton(rect, "PlayButton", "Favorite", 3, "AllDirectionsIcon", 30f, 77.5f, 16f, 5f, SongSortMode.Favorites, onSortButtonClickEvent),
-                    UIBuilder.CreateSortButton(rect, "PlayButton", "Song", 3, "AllDirectionsIcon", 14f, 77.5f, 16f, 5f, SongSortMode.Default, onSortButtonClickEvent),
-                    UIBuilder.CreateSortButton(rect, "PlayButton", "Author", 3, "AllDirectionsIcon", -2f, 77.5f, 16f, 5f, SongSortMode.Author, onSortButtonClickEvent),
-                    UIBuilder.CreateSortButton(rect, "PlayButton", "Original", 3, "AllDirectionsIcon", -18f, 77.5f, 16f, 5f, SongSortMode.Original, onSortButtonClickEvent),
-                    UIBuilder.CreateSortButton(rect, "PlayButton", "Newest", 3, "AllDirectionsIcon", -34f, 77.5f, 16f, 5f, SongSortMode.Newest, onSortButtonClickEvent),
+                    UIBuilder.CreateSortButton(rect, "PlayButton", "Favorite", 3, "AllDirectionsIcon", 60, 75f, 16f, 5f, SongSortMode.Favorites, onSortButtonClickEvent),
+                    UIBuilder.CreateSortButton(rect, "PlayButton", "Song", 3, "AllDirectionsIcon", 44f, 75f, 16f, 5f, SongSortMode.Default, onSortButtonClickEvent),
+                    UIBuilder.CreateSortButton(rect, "PlayButton", "Author", 3, "AllDirectionsIcon", 28f, 75f, 16f, 5f, SongSortMode.Author, onSortButtonClickEvent),
+                    UIBuilder.CreateSortButton(rect, "PlayButton", "Original", 3, "AllDirectionsIcon", 12f, 75f, 16f, 5f, SongSortMode.Original, onSortButtonClickEvent),
+                    UIBuilder.CreateSortButton(rect, "PlayButton", "Newest", 3, "AllDirectionsIcon", -4f, 75f, 16f, 5f, SongSortMode.Newest, onSortButtonClickEvent),
                 };
 
                 // Creaate Add to Favorites Button
                 _log.Debug("Creating add to favorites button...");
 
-                RectTransform transform = _songDetailViewController.transform as RectTransform;
+                RectTransform transform = this._levelDetailViewController.transform as RectTransform;
                 _addFavoriteButton = UIBuilder.CreateUIButton(transform, "QuitButton", SongBrowserApplication.Instance.ButtonTemplate);
                 (_addFavoriteButton.transform as RectTransform).anchoredPosition = new Vector2(45f, 9f);
-                (_addFavoriteButton.transform as RectTransform).sizeDelta = new Vector2(10f, 5.0f);
+                (_addFavoriteButton.transform as RectTransform).sizeDelta = new Vector2(16f, 5.0f);
                 
                 if (_addFavoriteButtonText == null)
                 {
                     _log.Debug("Determinng if first selected song is a favorite.");
-                    LevelStaticData level = getSelectedSong();
+                    IStandardLevel level = this._levelListViewController.selectedLevel;
                     if (level != null)
                     {
-                        RefreshAddFavoriteButton(level.levelId);
+                        RefreshAddFavoriteButton(level.levelID);
                     }                    
                 }
                 
@@ -174,7 +177,7 @@ namespace SongBrowserPlugin
                 // Create delete button
                 _log.Debug("Creating delete button...");
 
-                transform = _songDetailViewController.transform as RectTransform;
+                transform = this._levelDetailViewController.transform as RectTransform;
                 _deleteButton = UIBuilder.CreateUIButton(transform, "QuitButton", SongBrowserApplication.Instance.ButtonTemplate);
                 (_deleteButton.transform as RectTransform).anchoredPosition = new Vector2(45f, 0f);
                 (_deleteButton.transform as RectTransform).sizeDelta = new Vector2(16f, 5f);
@@ -183,10 +186,10 @@ namespace SongBrowserPlugin
                 UIBuilder.SetButtonIconEnabled(ref _deleteButton, false);
                 _deleteButton.onClick.RemoveAllListeners();
                 _deleteButton.onClick.AddListener(delegate () {
-                    HandleDeleteSelectedSong();
+                    HandleDeleteSelectedLevel();
                 });
 
-                RefreshUI();
+                //RefreshUI();
                 _uiInitialized = true;
             }
             catch (Exception e)
@@ -206,16 +209,14 @@ namespace SongBrowserPlugin
         }
 
         /// <summary>
-        /// Adjust UI based on song selected.
-        /// Various ways of detecting if a song is not properly selected.  Seems most hit the first one.
+        /// Adjust UI based on level selected.
+        /// Various ways of detecting if a level is not properly selected.  Seems most hit the first one.
         /// </summary>
-        /// <param name="songListViewController"></param>
-        private void OnDidSelectSongEvent(SongListViewController songListViewController)
+        private void OnDidSelectLevelEvent(StandardLevelListViewController view, IStandardLevel level)
         {
-            LevelStaticData level = getSelectedSong();
             if (level == null)
             {
-                _log.Debug("No song selected?");
+                _log.Debug("No level selected?");
                 return;
             }
 
@@ -225,53 +226,33 @@ namespace SongBrowserPlugin
                 return;
             }
 
-            RefreshAddFavoriteButton(level.levelId);
-        }
-
-        /// <summary>
-        /// Return LevelStaticData or null.
-        /// </summary>
-        private LevelStaticData getSelectedSong()
-        {
-            // song browser not presenting
-            if (!this.beingPresented)
-            {
-                return null;
-            }
-
-            /*if (this._levelsStaticData == null)
-            {
-                return null;
-            }*/
-
-            int selectedIndex = this.GetSelectedSongIndex();
-            if (selectedIndex < 0)
-            {
-                return null;
-            }
-
-            LevelStaticData level = this.GetLevelStaticDataForSelectedSong();
-            return level;
+            RefreshAddFavoriteButton(level.levelID);
         }
 
         /// <summary>
         /// Pop up a delete dialog.
         /// </summary>
-        private void HandleDeleteSelectedSong()
+        private void HandleDeleteSelectedLevel()
         {
-            int selectedIndex = this.GetSelectedSongIndex();
-            if (selectedIndex < 0)
+            IStandardLevel level = this._levelListViewController.selectedLevel;
+            if (level == null)
             {
+                _log.Info("No level selected, cannot delete nothing...");
                 return;
             }
 
-            LevelStaticData level = this.GetLevelStaticDataForSelectedSong();
-            SongLoaderPlugin.CustomSongInfo songInfo = _model.LevelIdToCustomSongInfos[level.levelId];
+            _log.Debug("LEVEL ON DELETE: {0}", level.levelID);
+            if (level.levelID.StartsWith("Level"))
+            {
+                _log.Debug("Cannot delete non-custom levels.");
+                return;
+            }
+            SongLoaderPlugin.OverrideClasses.CustomLevel customLevel = _model.LevelIdToCustomSongInfos[level.levelID];
 
-            this._deleteDialog.Init("Delete song warning!", String.Format("<color=#00AAFF>Permanently delete song: {0}</color>\n  Do you want to continue?", songInfo.songName), "YES", "NO");
+            this._deleteDialog.Init("Delete level warning!", String.Format("<color=#00AAFF>Permanently delete level: {0}</color>\n  Do you want to continue?", customLevel.songName), "YES", "NO");
 
-            this._deleteDialog.didFinishEvent += this.HandleSimpleDialogPromptViewControllerDidFinish;
-            this.PresentModalViewController(this._deleteDialog, null, false);
+            this._deleteDialog.didFinishEvent += this.HandleDeleteDialogPromptViewControllerDidFinish;
+            this._levelSelectionNavigationController.PresentModalViewController(this._deleteDialog, null, false);
         }
 
         /// <summary>
@@ -279,7 +260,7 @@ namespace SongBrowserPlugin
         /// </summary>
         /// <param name="viewController"></param>
         /// <param name="ok"></param>
-        public virtual void HandleSimpleDialogPromptViewControllerDidFinish(SimpleDialogPromptViewController viewController, bool ok)
+        public void HandleDeleteDialogPromptViewControllerDidFinish(SimpleDialogPromptViewController viewController, bool ok)
         {
             viewController.didFinishEvent -= this.HandleSimpleDialogPromptViewControllerDidFinish;
             if (!ok)
@@ -288,11 +269,11 @@ namespace SongBrowserPlugin
             }
             else
             {
-                LevelStaticData level = this.GetLevelStaticDataForSelectedSong();
-                SongLoaderPlugin.CustomSongInfo songInfo = _model.LevelIdToCustomSongInfos[level.levelId];
+                IStandardLevel level = this._levelListViewController.selectedLevel;
+                SongLoaderPlugin.OverrideClasses.CustomLevel customLevel = _model.LevelIdToCustomSongInfos[level.levelID];
 
                 viewController.DismissModalViewController(null, false);
-                _log.Debug("DELETING: {0}", songInfo.path);
+                _log.Debug("DELETING: {0}", customLevel.customSongInfo.path);
                 //Directory.Delete(songInfo.path);
             }
         }
@@ -302,17 +283,17 @@ namespace SongBrowserPlugin
         /// </summary>
         private void ToggleSongInFavorites()
         {
-            LevelStaticData songInfo = this.GetLevelStaticDataForSelectedSong();
-            if (_model.Settings.favorites.Contains(songInfo.levelId))
+            IStandardLevel songInfo = this._levelListViewController.selectedLevel;
+            if (_model.Settings.favorites.Contains(songInfo.levelID))
             {
-                _log.Info("Remove {0} from favorites", songInfo.name);
-                _model.Settings.favorites.Remove(songInfo.levelId);
+                _log.Info("Remove {0} from favorites", songInfo.songName);
+                _model.Settings.favorites.Remove(songInfo.levelID);
                 _addFavoriteButtonText = "+1";
             }
             else
             {
-                _log.Info("Add {0} to favorites", songInfo.name);
-                _model.Settings.favorites.Add(songInfo.levelId);
+                _log.Info("Add {0} to favorites", songInfo.songName);
+                _model.Settings.favorites.Add(songInfo.levelID);
                 _addFavoriteButtonText = "-1";                
             }
 
@@ -364,37 +345,38 @@ namespace SongBrowserPlugin
         /// <summary>
         /// Try to refresh the song list.  Broken for now.
         /// </summary>
-        public void RefreshSongList(List<LevelStaticData> songList)
+        public void RefreshSongList(List<SongLoaderPlugin.OverrideClasses.CustomLevel> songList)
         {
             _log.Debug("Attempting to refresh the song list view.");
             try
             {
                 // Check a couple of possible situations that we can't refresh
-                if (!this.beingPresented)
+                if (!this._levelListViewController.isInViewControllerHierarchy)
                 {
                     _log.Debug("No song list to refresh.");
                     return;
                 }
-                             
+
                 // Convert to Array once in-case this is costly.
-                LevelStaticData[] songListArray = songList.ToArray();
-                
+                SongLoaderPlugin.OverrideClasses.CustomLevel[] songListArray = songList.ToArray();
+
                 // Store on song browser
-                this._levelsStaticData = songListArray;
-                this._songListViewController.Init(songListArray);
+                //this._levelsStaticData = songListArray;
+                this._levelListViewController.Init(songListArray, false);
+                //this._songListViewController.Init(songListArray);
 
                 // Refresh UI Elements in case something changed.
-                RefreshAddFavoriteButton(songList[0].levelId);
+                RefreshAddFavoriteButton(songList[0].levelID);
 
                 // Might not be fully presented yet.
-                SongListTableView songListTableView = this._songListViewController.GetComponentInChildren<SongListTableView>();
-                if (songListTableView == null || !songListTableView.isActiveAndEnabled)
+                StandardLevelListTableView levelListTableView = this._levelListViewController.GetComponentInChildren<StandardLevelListTableView>();
+                if (levelListTableView == null || !levelListTableView.isActiveAndEnabled)
                 {
                     _log.Debug("SongListTableView not presenting yet, cannot refresh view yet.");
                     return;
                 }
 
-                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(songListTableView, "_tableView");
+                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(levelListTableView, "_tableView");
                 if (tableView == null)
                 {
                     _log.Debug("TableView not presenting yet, cannot refresh view yet.");
@@ -402,14 +384,16 @@ namespace SongBrowserPlugin
                 }
 
                 // Refresh the list views and its table view
-                songListTableView.SetLevels(songListArray);
+                levelListTableView.Init(songListArray, null);
                 tableView.ScrollToRow(0, false);
                 tableView.ReloadData();
 
                 // Clear Force selection of index 0 so we don't end up in a weird state.
-                //songListTableView.ClearSelection();
-                _songListViewController.SelectSong(0);
-                this.HandleSongListDidSelectSong(_songListViewController);
+                // songListTableView.ClearSelection();              
+                levelListTableView.SelectAndScrollToLevel(_model.SortedSongList[0].levelID);
+                levelListTableView.HandleDidSelectRowEvent(tableView, 0);
+                this._levelListViewController.HandleLevelListTableViewDidSelectRow(levelListTableView, 0);
+                _lastRow = 0;
             }
             catch (Exception e)
             {
@@ -418,7 +402,7 @@ namespace SongBrowserPlugin
         }
 
         /// <summary>
-        /// Helper for updating the model (which updates the song list)
+        /// Helper for updating the model (which updates the song list)c
         /// </summary>
         public void UpdateSongList()
         {
@@ -428,9 +412,9 @@ namespace SongBrowserPlugin
         }
 
         /// <summary>
-        /// 
+        /// Not normally called by the game-engine.  Dependent on SongBrowserApplication to call it.
         /// </summary>
-        private void Update()
+        public void Update()
         {
             CheckDebugUserInput();
         }
@@ -440,62 +424,67 @@ namespace SongBrowserPlugin
         /// </summary>
         private void CheckDebugUserInput()
         {
-            // cycle sort modes
-            if (Input.GetKeyDown(KeyCode.T))
+            try
             {
-                _sortButtonLastPushedIndex = (_sortButtonLastPushedIndex + 1) % _sortButtonGroup.Count;
-                _sortButtonGroup[_sortButtonLastPushedIndex].Button.onClick.Invoke();                
-            }
+                // cycle sort modes
+                if (Input.GetKeyDown(KeyCode.T))
+                {
+                    _sortButtonLastPushedIndex = (_sortButtonLastPushedIndex + 1) % _sortButtonGroup.Count;
+                    _sortButtonGroup[_sortButtonLastPushedIndex].Button.onClick.Invoke();
+                }
 
-            // delete
-            if (Input.GetKeyDown(KeyCode.D))
+                // delete
+                if (Input.GetKeyDown(KeyCode.D))
+                {
+                    if (_deleteDialog.isInViewControllerHierarchy)
+                    {
+                        return;
+                    }
+                    _deleteButton.onClick.Invoke();
+                }
+
+                StandardLevelListTableView tableView = ReflectionUtil.GetPrivateField<StandardLevelListTableView>(this._levelListViewController, "_levelListTableView");
+
+                // z,x,c,v can be used to get into a song, b will hit continue button after song ends
+                if (Input.GetKeyDown(KeyCode.C))
+                {
+                    tableView.SelectAndScrollToLevel(_model.SortedSongList[0].levelID);
+                    this._levelListViewController.HandleLevelListTableViewDidSelectRow(tableView, 0);                    
+                    _levelDifficultyViewController.HandleDifficultyTableViewDidSelectRow(null, 0);
+                    this.HandleDifficultyViewControllerDidSelectDifficulty(_levelDifficultyViewController, _model.SortedSongList[0].GetDifficultyLevel(LevelDifficulty.Easy));
+                }
+
+                if (Input.GetKeyDown(KeyCode.V))
+                {
+                    this.HandleLevelDetailViewControllerDidPressPlayButton(this._levelDetailViewController);
+                }
+
+                // change song index
+                if (Input.GetKeyDown(KeyCode.N))
+                {
+                    _lastRow = (_lastRow - 1) != -1 ? (_lastRow - 1) % this._model.SortedSongList.Count : 0;
+
+                    tableView.SelectAndScrollToLevel(_model.SortedSongList[_lastRow].levelID);
+                    this._levelListViewController.HandleLevelListTableViewDidSelectRow(tableView, _lastRow);
+                }
+
+                if (Input.GetKeyDown(KeyCode.M))
+                {
+                    _lastRow = (_lastRow + 1) % this._model.SortedSongList.Count;
+
+                    tableView.SelectAndScrollToLevel(_model.SortedSongList[_lastRow].levelID);
+                    this._levelListViewController.HandleLevelListTableViewDidSelectRow(tableView, _lastRow);
+                }
+
+                // add to favorites
+                if (Input.GetKeyDown(KeyCode.F))
+                {
+                    ToggleSongInFavorites();
+                }
+            }
+            catch (Exception e)
             {
-                _deleteButton.onClick.Invoke();
-            }
-
-            // z,x,c,v can be used to get into a song, b will hit continue button after song ends
-            if (Input.GetKeyDown(KeyCode.C))
-            {                
-                _songListViewController.SelectSong(0);
-                this.HandleSongListDidSelectSong(_songListViewController);
-
-                DifficultyViewController _difficultyViewController = Resources.FindObjectsOfTypeAll<DifficultyViewController>().First();
-                _difficultyViewController.SelectDifficulty(LevelStaticData.Difficulty.Hard);
-                this.HandleDifficultyViewControllerDidSelectDifficulty(_difficultyViewController);
-            }
-
-            if (Input.GetKeyDown(KeyCode.V))
-            {
-                this.HandleSongDetailViewControllerDidPressPlayButton(_songDetailViewController);
-            }
-
-            // change song index
-            if (Input.GetKeyDown(KeyCode.N))
-            {
-                int newIndex = this.GetSelectedSongIndex() - 1;
-
-                _songListViewController.SelectSong(newIndex);
-                this.HandleSongListDidSelectSong(_songListViewController);
-
-                SongListTableView songTableView = Resources.FindObjectsOfTypeAll<SongListTableView>().First();
-                _songListViewController.HandleSongListTableViewDidSelectRow(songTableView, newIndex);
-            }
-
-            if (Input.GetKeyDown(KeyCode.M))
-            {
-                int newIndex = this.GetSelectedSongIndex() + 1;
-
-                _songListViewController.SelectSong(newIndex);
-                this.HandleSongListDidSelectSong(_songListViewController);
-
-                SongListTableView songTableView = Resources.FindObjectsOfTypeAll<SongListTableView>().First();
-                _songListViewController.HandleSongListTableViewDidSelectRow(songTableView, newIndex);
-            }
-
-            // add to favorites
-            if (Input.GetKeyDown(KeyCode.F))
-            {
-                ToggleSongInFavorites();
+                _log.Exception("{0}:\n{1}", e.Message, e.StackTrace);
             }
         }
     }

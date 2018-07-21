@@ -50,7 +50,7 @@ namespace SongBrowserPlugin
             //if (level != SongBrowserMasterViewController.MenuIndex) return;
             //SongBrowserMasterViewController.OnLoad();
 
-            if (level != SongBrowserMasterViewController.MenuIndex) return;
+            if (level != SongBrowserApplication.MenuIndex) return;
             SongBrowserApplication.OnLoad();
         }
 
