@@ -7,12 +7,13 @@ using UnityEngine.UI;
 using HMUI;
 using VRUI;
 
+
 namespace SongBrowserPlugin.UI
 {
     /// <summary>
-    /// Hijack the flow coordinator.  Have access to all StandardLevel browser tabs.
+    /// Hijack the flow coordinator.  Have access to all StandardLevel easily.
     /// </summary>
-    public class SongBrowserMasterViewController : StandardLevelSelectionFlowCoordinator
+    public class SongBrowserFlowCoordinator : StandardLevelSelectionFlowCoordinator
     {
         // Logging
         public const String Name = "SongBrowserMasterViewController";
@@ -36,17 +37,17 @@ namespace SongBrowserPlugin.UI
         /// <summary>
         /// Unity OnLoad
         /// </summary>
-        public static SongBrowserMasterViewController Instance;
+        public static SongBrowserFlowCoordinator Instance;
         public static void OnLoad()
         {
             if (Instance != null) return;
-            new GameObject("Song Browser Modded").AddComponent<SongBrowserMasterViewController>();
+            new GameObject("Song Browser Modded").AddComponent<SongBrowserFlowCoordinator>();
         }        
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public SongBrowserMasterViewController() : base()
+        public SongBrowserFlowCoordinator() : base()
         {
             if (_model == null)
             {
@@ -64,8 +65,6 @@ namespace SongBrowserPlugin.UI
             _log.Debug("Init()");
             try
             {
-                SceneManager.activeSceneChanged += SceneManagerOnActiveSceneChanged;
-
                 _simpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
 
                 this._deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(this._simpleDialogPromptViewControllerPrefab);
@@ -95,18 +94,6 @@ namespace SongBrowserPlugin.UI
             _log.Debug("Present()");
             base.Present(parentViewController, _model.SortedSongList.ToArray(), gameplayMode);
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /*public void InitModel()
-        {
-            if (_model == null)
-            {
-                _model = new SongBrowserModel();
-            }
-            _model.Init();
-        }*/
 
         /// <summary>
         /// Builds the SongBrowser UI
@@ -185,15 +172,6 @@ namespace SongBrowserPlugin.UI
             {
                 _log.Exception("Exception CreateUI: {0}\n{1}", e.Message, e.StackTrace);
             }
-        }
-
-        /// <summary>
-        /// Bind to some UI events.
-        /// </summary>
-        /// <param name="arg0"></param>
-        /// <param name="scene"></param>
-        private void SceneManagerOnActiveSceneChanged(Scene arg0, Scene scene)
-        {
         }
 
         /// <summary>

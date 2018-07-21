@@ -27,7 +27,7 @@ namespace SongBrowserPlugin
         private MainFlowCoordinator _mainFlowCoordinator;
 
         // Song Browser UI Elements
-        private SongBrowserMasterViewController _customLevelBrowserMasterViewController;
+        private SongBrowserFlowCoordinator _customLevelBrowserMasterViewController;
         public Dictionary<String, Sprite> CachedIcons;
         public Button ButtonTemplate;
 
@@ -70,7 +70,7 @@ namespace SongBrowserPlugin
             if (_customLevelBrowserMasterViewController == null)
             {
                 _log.Debug("Attempting to clone StandardLevelSelectionFlowCoordinator into our derived class.");
-                _customLevelBrowserMasterViewController = UIBuilder.CreateFlowController<SongBrowserMasterViewController>(SongBrowserMasterViewController.Name);
+                _customLevelBrowserMasterViewController = UIBuilder.CreateFlowController<SongBrowserFlowCoordinator>(SongBrowserFlowCoordinator.Name);
                 System.Reflection.FieldInfo[] fields = typeof(StandardLevelSelectionFlowCoordinator).GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 foreach (System.Reflection.FieldInfo field in fields)
                 {
