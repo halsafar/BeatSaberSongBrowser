@@ -89,7 +89,7 @@ namespace SongBrowserPlugin.UI
         public override void Present(VRUIViewController parentViewController, IStandardLevel[] levels, GameplayMode gameplayMode)
         {
             _log.Trace("Present()");
-            base.Present(parentViewController, _model.SortedSongList.ToArray(), gameplayMode);
+            base.Present(parentViewController, levels, gameplayMode);
         }
 
         /// <summary>
@@ -307,7 +307,7 @@ namespace SongBrowserPlugin.UI
         /// <summary>
         /// Try to refresh the song list.  Broken for now.
         /// </summary>
-        public void RefreshSongList(List<SongLoaderPlugin.OverrideClasses.CustomLevel> songList)
+        public void RefreshSongList(List<StandardLevelSO> songList)
         {
             _log.Info("Refreshing the song list view.");
             try
@@ -320,7 +320,7 @@ namespace SongBrowserPlugin.UI
                 }
 
                 // Convert to Array once in-case this is costly.
-                SongLoaderPlugin.OverrideClasses.CustomLevel[] songListArray = songList.ToArray();
+                StandardLevelSO[] songListArray = songList.ToArray();
 
                 // Store on song browser
                 this._levelListViewController.Init(songListArray, false);
@@ -369,7 +369,7 @@ namespace SongBrowserPlugin.UI
         {
             _log.Trace("UpdateSongList()");
 
-            _model.UpdateSongLists();
+            _model.UpdateSongLists(this._gameplayMode);
             RefreshSongList(_model.SortedSongList);
             RefreshUI();
         }

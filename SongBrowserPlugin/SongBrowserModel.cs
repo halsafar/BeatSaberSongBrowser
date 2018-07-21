@@ -1,9 +1,11 @@
 ﻿using SongBrowserPlugin.DataAccess;
+using SongLoaderPlugin;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using UnityEngine;
 
 namespace SongBrowserPlugin
 {
@@ -13,9 +15,10 @@ namespace SongBrowserPlugin
         
         private SongBrowserSettings _settings;
 
-        private List<SongLoaderPlugin.OverrideClasses.CustomLevel> _sortedSongs;
-        private List<SongLoaderPlugin.OverrideClasses.CustomLevel> _originalSongs;
+        private List<StandardLevelSO> _sortedSongs;
+        private List<StandardLevelSO> _originalSongs;
         private Dictionary<String, SongLoaderPlugin.OverrideClasses.CustomLevel> _levelIdToCustomLevel;
+        private SongLoaderPlugin.OverrideClasses.CustomLevelCollectionSO _gameplayModeCollection;
 
         private SongSortMode _cachedSortMode = default(SongSortMode);
         private Dictionary<String, double> _cachedLastWriteTimes;
@@ -30,7 +33,7 @@ namespace SongBrowserPlugin
             }
         }
 
-        public List<SongLoaderPlugin.OverrideClasses.CustomLevel> SortedSongList
+        public List<StandardLevelSO> SortedSongList
         {
             get
             {
@@ -67,8 +70,9 @@ namespace SongBrowserPlugin
 
         /// <summary>
         /// Get the song cache from the game.
+        /// TODO: This might not even be necessary anymore.  Need to test interactions with BeatSaverDownloader.
         /// </summary>
-        public void UpdateSongLists()
+        public void UpdateSongLists(GameplayMode gameplayMode)
         {
             String customSongsPath = Path.Combine(Environment.CurrentDirectory, "CustomSongs");
             DateTime currentLastWriteTIme = File.GetLastWriteTimeUtc(customSongsPath);
@@ -99,7 +103,7 @@ namespace SongBrowserPlugin
                 }
 
                 // Update song Infos
-                this.UpdateSongInfos();
+                this.UpdateSongInfos(gameplayMode);
                 
                 // Get new songs
                 _cachedCustomSongDirLastWriteTIme = currentLastWriteTIme;
@@ -122,12 +126,15 @@ namespace SongBrowserPlugin
         /// <summary>
         /// Get the song infos from SongLoaderPluging
         /// </summary>
-        private void UpdateSongInfos()
+        private void UpdateSongInfos(GameplayMode gameplayMode)
         {
-            _log.Trace("UpdateSongInfos()");
-            _originalSongs = SongLoaderPlugin.SongLoader.CustomLevels;
+            _log.Trace("UpdateSongInfos for Gameplay Mode {0}", gameplayMode);
+
+            SongLoaderPlugin.OverrideClasses.CustomLevelCollectionsForGameplayModes collections = SongLoaderPlugin.SongLoader.Instance.GetPrivateField<SongLoaderPlugin.OverrideClasses.CustomLevelCollectionsForGameplayModes>("_customLevelCollectionsForGameplayModes");
+            _gameplayModeCollection = collections.GetCollection(gameplayMode) as SongLoaderPlugin.OverrideClasses.CustomLevelCollectionSO;
+            _originalSongs = collections.GetLevels(gameplayMode).ToList();
             _sortedSongs = _originalSongs;
-            _levelIdToCustomLevel = _originalSongs.ToDictionary(x => x.levelID, x => x);
+            _levelIdToCustomLevel = SongLoader.CustomLevels.ToDictionary(x => x.levelID, x => x);
 
             _log.Debug("Song Browser knows about {0} songs from SongLoader...", _sortedSongs.Count);
         }
@@ -145,17 +152,31 @@ namespace SongBrowserPlugin
             /*  Level4, Level2, Level9, Level5, Level10, Level6, Level7, Level1, Level3, Level8, */
             Dictionary<string, int> weights = new Dictionary<string, int>
             {
-                ["Level4"] = 10,
-                ["Level2"] = 9,
-                ["Level9"] = 8,
-                ["Level5"] = 7,
-                ["Level10"] = 6,
-                ["Level6"] = 5,
-                ["Level7"] = 4,
-                ["Level1"] = 3,
-                ["Level3"] = 2,
-                ["Level8"] = 1
+                ["Level4"] = 11,
+                ["Level2"] = 10,
+                ["Level9"] = 9,
+                ["Level5"] = 8,
+                ["Level10"] = 7,
+                ["Level6"] = 6,
+                ["Level7"] = 5,
+                ["Level1"] = 4,
+                ["Level3"] = 3,
+                ["Level8"] = 2,
+                ["Level11"] = 1
             };
+
+            // This has come in handy many times for debugging issues with Newest.
+            /*foreach (StandardLevelSO level in _originalSongs)
+            {
+                if (_levelIdToCustomLevel.ContainsKey(level.levelID))
+                {
+                    _log.Debug("HAS KEY: {0}", level.levelID);
+                }
+                else
+                {
+                    _log.Debug("Missing KEY: {0}", level.levelID);
+                }
+            }*/
 
             switch (_settings.sortMode)
             {
@@ -205,6 +226,8 @@ namespace SongBrowserPlugin
 
             stopwatch.Stop();
             _log.Info("Sorting songs took {0}ms", stopwatch.ElapsedMilliseconds);
+
+            _gameplayModeCollection.Init(_sortedSongs.ToArray());
         }        
     }
 }
