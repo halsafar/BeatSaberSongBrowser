@@ -21,9 +21,6 @@ namespace SongBrowserPlugin
 
         // BeatSaber UI Elements
         private StandardLevelSelectionFlowCoordinator _levelSelectionFlowCoordinator;
-        //private StandardLevelDetailViewController _levelDetailViewController;
-        //private StandardLevelListViewController _levelListViewController;
-        //private MainMenuViewController _mainMenuViewController;
         private MainFlowCoordinator _mainFlowCoordinator;
 
         // Song Browser UI Elements
@@ -148,11 +145,9 @@ namespace SongBrowserPlugin
             try
             {
                 ButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PlayButton"));
-                //_mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
+
                 _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
                 _levelSelectionFlowCoordinator = Resources.FindObjectsOfTypeAll<StandardLevelSelectionFlowCoordinator>().First();
-                //_levelDetailViewController = Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First();
-                //_levelListViewController = Resources.FindObjectsOfTypeAll<StandardLevelListViewController>().First();
             }
             catch (Exception e)
             {

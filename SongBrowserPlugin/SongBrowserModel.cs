@@ -127,7 +127,7 @@ namespace SongBrowserPlugin
             _sortedSongs = _originalSongs;
             _levelIdToCustomLevel = _originalSongs.ToDictionary(x => x.levelID, x => x);
 
-            _log.Debug("Song Browser knows about {0} songs...", _sortedSongs.Count);
+            _log.Debug("Song Browser knows about {0} songs from SongLoader...", _sortedSongs.Count);
         }
         
         /// <summary>
@@ -154,18 +154,6 @@ namespace SongBrowserPlugin
                 ["Level3"] = 2,
                 ["Level8"] = 1
             };
-
-            /*_originalSongs.ForEach(x =>
-            {
-                if (_levelIdToCustomSongInfo.ContainsKey(x.levelId))
-                {
-                    _log.Debug("_levelIdToCustomSongInfo.HasKey({0})",  x.levelId);
-                }
-                else
-                {
-                    _log.Debug("!_levelIdToCustomSongInfo.HasKey({0})", x.levelId);
-                }
-            });*/
 
             switch (_settings.sortMode)
             {
