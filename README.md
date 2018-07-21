@@ -21,6 +21,7 @@ A plugin for customizing the in-game song browser.
 - Mostly Working!
 
 ### Known Issues
+- Might be some issues with game modes other than SoloStandard.
 - Some issues might occur if a new song is added in-game.
 - Add to favorites button shows wrong text sometimes in `not favorite` sort mode.
 
