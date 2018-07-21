@@ -1,18 +1,13 @@
 ﻿using UnityEngine;
 using System.Linq;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using SimpleJSON;
-using SongLoaderPlugin.Internals;
 using SongLoaderPlugin.OverrideClasses;
-using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 using SongLoaderPlugin;
 using UnityEngine.UI;
 using System.Reflection;
+using SongBrowserPlugin.UI;
 
 namespace SongBrowserPlugin
 {
@@ -90,8 +85,8 @@ namespace SongBrowserPlugin
                 _customLevelBrowserMasterViewController.UpdateSongList();
             }
 
-            _log.Debug("Overriding StandardLevelSelectionFlowCoordinator");            
-            ReflectionUtil.SetPrivateField(_mainFlowCoordinator, "_levelSelectionFlowCoordinator", _customLevelBrowserMasterViewController);
+            _log.Debug("Overriding StandardLevelSelectionFlowCoordinator");
+            _mainFlowCoordinator.SetPrivateField("_levelSelectionFlowCoordinator", _customLevelBrowserMasterViewController);
             _log.Debug("Success Overriding StandardLevelSelectionFlowCoordinator");
         }
 

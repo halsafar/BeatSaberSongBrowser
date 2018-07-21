@@ -9,16 +9,15 @@ namespace SongBrowserPlugin
     public class SongBrowserModel
     {
         private Logger _log = new Logger("SongBrowserModel");
-
-        private List<SongLoaderPlugin.CustomSongInfo> _customSongInfos;        
-        private Dictionary<String, double> _cachedLastWriteTimes;
+        
         private SongBrowserSettings _settings;
 
         private List<SongLoaderPlugin.OverrideClasses.CustomLevel> _sortedSongs;
         private List<SongLoaderPlugin.OverrideClasses.CustomLevel> _originalSongs;
         private Dictionary<String, SongLoaderPlugin.OverrideClasses.CustomLevel> _levelIdToCustomLevel;
-        private SongSortMode _cachedSortMode = default(SongSortMode);
 
+        private SongSortMode _cachedSortMode = default(SongSortMode);
+        private Dictionary<String, double> _cachedLastWriteTimes;
         private DateTime _cachedCustomSongDirLastWriteTIme = DateTime.MinValue;
         private int _customSongDirTotalCount = -1;
 
@@ -123,16 +122,12 @@ namespace SongBrowserPlugin
         /// </summary>
         private void UpdateSongInfos()
         {
-            _log.Debug("Attempting to fetch song infos from song loader plugin.");
+            _log.Debug("UpdateSongInfos()");
             _originalSongs = SongLoaderPlugin.SongLoader.CustomLevels;
             _sortedSongs = _originalSongs;
             _levelIdToCustomLevel = _originalSongs.ToDictionary(x => x.levelID, x => x);
 
             _log.Debug("Song Browser knows about {0} songs...", _sortedSongs.Count);
-            /*_customSongInfos.ForEach(x =>
-            {
-                _log.Debug("path={0}", x.levelId);
-            });*/
         }
         
         /// <summary>
@@ -209,7 +204,7 @@ namespace SongBrowserPlugin
                     break;
                 case SongSortMode.Default:
                 default:
-                    _log.Debug("Sorting song list as default");
+                    _log.Debug("Sorting song list as default (songName)");
                     _sortedSongs = _originalSongs
                         .AsQueryable()
                         .OrderBy(x => x.songName)
