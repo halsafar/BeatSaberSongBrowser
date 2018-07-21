@@ -62,7 +62,7 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         public void Init()
         {
-            _log.Debug("Init()");
+            _log.Trace("Init()");
             try
             {
                 _simpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
@@ -88,7 +88,7 @@ namespace SongBrowserPlugin.UI
         /// <param name="gameplayMode"></param>
         public override void Present(VRUIViewController parentViewController, IStandardLevel[] levels, GameplayMode gameplayMode)
         {
-            _log.Debug("Present()");
+            _log.Trace("Present()");
             base.Present(parentViewController, _model.SortedSongList.ToArray(), gameplayMode);
         }
 
@@ -97,7 +97,7 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         public void CreateUI()
         {
-            _log.Debug("CreateUI");
+            _log.Trace("CreateUI");
 
             try
             {                               
@@ -309,7 +309,7 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         public void RefreshSongList(List<SongLoaderPlugin.OverrideClasses.CustomLevel> songList)
         {
-            _log.Debug("Attempting to refresh the song list view.");
+            _log.Info("Refreshing the song list view.");
             try
             {
                 // Check a couple of possible situations that we can't refresh
@@ -367,7 +367,7 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         public void UpdateSongList()
         {
-            _log.Debug("UpdateSongList()");
+            _log.Trace("UpdateSongList()");
 
             _model.UpdateSongLists();
             RefreshSongList(_model.SortedSongList);

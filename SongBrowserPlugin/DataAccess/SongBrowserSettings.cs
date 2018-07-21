@@ -23,7 +23,7 @@ namespace SongBrowserPlugin.DataAccess
         public List<String> favorites;
 
         [NonSerialized]
-        private static Logger Log = new Logger("SongBrowserPlugin-Settings");
+        private static Logger Log = new Logger("SongBrowserSettings");
 
         /// <summary>
         /// Constructor.
@@ -49,7 +49,7 @@ namespace SongBrowserPlugin.DataAccess
         /// <returns>SongBrowserSettings</returns>
         public static SongBrowserSettings Load()
         {
-            Log.Debug("Load Song Browser Settings");
+            Log.Trace("Load()");
             SongBrowserSettings retVal = null;
 
             String settingsFilePath = SongBrowserSettings.SettingsPath();
@@ -68,8 +68,6 @@ namespace SongBrowserPlugin.DataAccess
                 XmlSerializer serializer = new XmlSerializer(typeof(SongBrowserSettings));
                 
                 retVal = (SongBrowserSettings)serializer.Deserialize(fs);
-
-                Log.Debug("sortMode: " + retVal.sortMode);
             }
             catch (Exception e)
             {

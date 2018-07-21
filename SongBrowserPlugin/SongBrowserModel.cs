@@ -62,6 +62,7 @@ namespace SongBrowserPlugin
         public void Init()
         {
             _settings = SongBrowserSettings.Load();
+            _log.Info("Settings loaded, sorting mode is: {0}", _settings.sortMode);
         }
 
         /// <summary>
@@ -123,7 +124,7 @@ namespace SongBrowserPlugin
         /// </summary>
         private void UpdateSongInfos()
         {
-            _log.Debug("UpdateSongInfos()");
+            _log.Trace("UpdateSongInfos()");
             _originalSongs = SongLoaderPlugin.SongLoader.CustomLevels;
             _sortedSongs = _originalSongs;
             _levelIdToCustomLevel = _originalSongs.ToDictionary(x => x.levelID, x => x);
@@ -136,7 +137,7 @@ namespace SongBrowserPlugin
         /// </summary>
         private void ProcessSongList()
         {
-            _log.Debug("ProcessSongList()");
+            _log.Trace("ProcessSongList()");
             Stopwatch stopwatch = Stopwatch.StartNew();
 
             // Weights used for keeping the original songs in order
@@ -159,7 +160,7 @@ namespace SongBrowserPlugin
             switch (_settings.sortMode)
             {
                 case SongSortMode.Favorites:
-                    _log.Debug("Sorting song list as favorites");
+                    _log.Info("Sorting song list as favorites");
                     _sortedSongs = _originalSongs
                         .AsQueryable()
                         .OrderBy(x => _settings.favorites.Contains(x.levelID) == false)
@@ -168,7 +169,7 @@ namespace SongBrowserPlugin
                         .ToList();
                     break;
                 case SongSortMode.Original:
-                    _log.Debug("Sorting song list as original");
+                    _log.Info("Sorting song list as original");
                     _sortedSongs = _originalSongs
                         .AsQueryable()
                         .OrderByDescending(x => weights.ContainsKey(x.levelID) ? weights[x.levelID] : 0)
@@ -176,7 +177,7 @@ namespace SongBrowserPlugin
                         .ToList();
                     break;
                 case SongSortMode.Newest:
-                    _log.Debug("Sorting song list as newest.");
+                    _log.Info("Sorting song list as newest.");
                     _sortedSongs = _originalSongs
                         .AsQueryable()
                         .OrderBy(x => weights.ContainsKey(x.levelID) ? weights[x.levelID] : 0)
@@ -184,7 +185,7 @@ namespace SongBrowserPlugin
                         .ToList();
                     break;
                 case SongSortMode.Author:
-                    _log.Debug("Sorting song list by author");
+                    _log.Info("Sorting song list by author");
                     _sortedSongs = _originalSongs
                         .AsQueryable()
                         .OrderBy(x => x.songAuthorName)
@@ -193,7 +194,7 @@ namespace SongBrowserPlugin
                     break;
                 case SongSortMode.Default:
                 default:
-                    _log.Debug("Sorting song list as default (songName)");
+                    _log.Info("Sorting song list as default (songName)");
                     _sortedSongs = _originalSongs
                         .AsQueryable()
                         .OrderBy(x => x.songName)
@@ -204,8 +205,6 @@ namespace SongBrowserPlugin
 
             stopwatch.Stop();
             _log.Info("Sorting songs took {0}ms", stopwatch.ElapsedMilliseconds);
-
-            //_mainFlowCoordinator.SetPrivateField("_levelCollectionsForGameplayModes", _customLevelCollectionsForGameplayModes);
         }        
     }
 }

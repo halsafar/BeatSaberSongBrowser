@@ -46,7 +46,7 @@ namespace SongBrowserPlugin
         /// </summary>
         private void Awake()
         {
-            _log.Debug("Awake()");
+            _log.Trace("Awake()");
 
             Instance = this;
 
@@ -59,7 +59,7 @@ namespace SongBrowserPlugin
         /// </summary>
         public void Start()
         {
-            _log.Debug("Start()");
+            _log.Trace("Start()");
 
             AcquireUIElements();
 
@@ -94,7 +94,7 @@ namespace SongBrowserPlugin
         /// <param name="levels"></param>
         private void OnSongLoaderLoadedSongs(SongLoader loader, List<CustomLevel> levels)
         {
-            _log.Debug("OnSongLoaderLoadedSongs");
+            _log.Trace("OnSongLoaderLoadedSongs");
             try
             {
                 _songBrowserFlowCoordinator.UpdateSongList();
@@ -123,7 +123,7 @@ namespace SongBrowserPlugin
         /// <param name="scene"></param>
         private void SceneManagerOnActiveSceneChanged(Scene arg0, Scene scene)
         {
-            _log.Debug("SceneManagerOnActiveSceneChanged");
+            _log.Trace("SceneManagerOnActiveSceneChanged");
         }
 
         /// <summary>
@@ -131,7 +131,7 @@ namespace SongBrowserPlugin
         /// </summary>
         public void AcquireUIElements()
         {
-            _log.Debug("Acquiring BeatSaber UI elements.");
+            _log.Trace("AcquireUIElements()");
             CachedIcons = new Dictionary<String, Sprite>();
             foreach (Sprite sprite in Resources.FindObjectsOfTypeAll<Sprite>())
             {
@@ -162,7 +162,7 @@ namespace SongBrowserPlugin
         /// <param name="gameplayMode"></param>
         private void HandleSoloModeSelectionViewControllerDidSelectMode(SoloModeSelectionViewController viewController, SoloModeSelectionViewController.SubMenuType subMenuType)
         {
-            _log.Debug("HandleSoloModeSelectionViewControllerDidSelectMode()");
+            _log.Trace("HandleSoloModeSelectionViewControllerDidSelectMode()");
             try
             {
                 LevelCollectionsForGameplayModes collection = _mainFlowCoordinator.GetPrivateField<LevelCollectionsForGameplayModes>("_levelCollectionsForGameplayModes");
@@ -191,8 +191,6 @@ namespace SongBrowserPlugin
                         viewController.DismissModalViewController(null, false);
                         break;
                 }                
-
-                _log.Debug("Success HandleSoloModeSelectionViewControllerDidSelectMode ...");
             }
             catch (Exception e)
             {
