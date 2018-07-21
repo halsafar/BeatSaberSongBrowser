@@ -28,12 +28,12 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
-        /// 
+        /// Create empty FlowCoordinator
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="name"></param>
         /// <returns></returns>
-        public static T CreateFlowController<T>(string name) where T : FlowCoordinator
+        public static T CreateFlowCoordinator<T>(string name) where T : FlowCoordinator
         {
             T vc = new GameObject(name).AddComponent<T>();
 
