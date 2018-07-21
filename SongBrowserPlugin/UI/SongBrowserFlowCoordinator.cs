@@ -147,7 +147,6 @@ namespace SongBrowserPlugin.UI
                     }                    
                 }
 
-
                 // Create delete button
                 _log.Debug("Creating delete button...");
 
@@ -380,7 +379,10 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         public void Update()
         {
-            CheckDebugUserInput();
+            if (this._levelListViewController.isInViewControllerHierarchy)
+            {
+                CheckDebugUserInput();
+            }
         }
 
         /// <summary>
