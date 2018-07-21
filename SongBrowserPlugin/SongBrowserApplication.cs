@@ -25,20 +25,22 @@ namespace SongBrowserPlugin
         private Logger _log = new Logger("SongBrowserApplication");
 
         // BeatSaber UI Elements
-        private StandardLevelSelectionFlowCoordinator _songSelectionMasterView;
-        private StandardLevelDetailViewController _songDetailViewController;
-        private StandardLevelListViewController _songListViewController;
-        private MainMenuViewController _mainMenuViewController;
+        private StandardLevelSelectionFlowCoordinator _levelSelectionFlowCoordinator;
+        //private StandardLevelDetailViewController _levelDetailViewController;
+        //private StandardLevelListViewController _levelListViewController;
+        //private MainMenuViewController _mainMenuViewController;
         private MainFlowCoordinator _mainFlowCoordinator;
 
         // Song Browser UI Elements
         private SongBrowserMasterViewController _customLevelBrowserMasterViewController;
-
         public Dictionary<String, Sprite> CachedIcons;
         public Button ButtonTemplate;
 
+        /// <summary>
+        /// 
+        /// </summary>
         internal static void OnLoad()
-        {
+        {            
             if (Instance != null)
             {
                 return;
@@ -52,44 +54,49 @@ namespace SongBrowserPlugin
         /// </summary>
         private void Awake()
         {
-            _log.Debug("AWAKE");
+            _log.Debug("Awake()");
+
             Instance = this;
 
             SceneManager.activeSceneChanged += SceneManagerOnActiveSceneChanged;
             SongLoader.SongsLoadedEvent += OnSongLoaderLoadedSongs;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void Start()
         {
-            _log.Debug("START");
-            //_log.Debug("SceneManagerOnActiveSceneChanged - {0}", scene.buildIndex);
-            /*if (scene.buildIndex != SongBrowserApplication.MenuIndex)
-            {
-                return;
-            }*/
+            _log.Debug("Start()");
 
             AcquireUIElements();
 
-            // Clone and override the default song-browser.
+            // Clone and override the default level flow controller.
             if (_customLevelBrowserMasterViewController == null)
             {
-                _log.Debug("Attempting to clone StandardLevelSelectionFlowCoordinator");
+                _log.Debug("Attempting to clone StandardLevelSelectionFlowCoordinator into our derived class.");
                 _customLevelBrowserMasterViewController = UIBuilder.CreateFlowController<SongBrowserMasterViewController>(SongBrowserMasterViewController.Name);
                 System.Reflection.FieldInfo[] fields = typeof(StandardLevelSelectionFlowCoordinator).GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 foreach (System.Reflection.FieldInfo field in fields)
                 {
                     //_log.Debug(field.Name);
-                    field.SetValue(_customLevelBrowserMasterViewController, field.GetValue(_songSelectionMasterView));
+                    field.SetValue(_customLevelBrowserMasterViewController, field.GetValue(_levelSelectionFlowCoordinator));
                 }
             }
 
-            _log.Debug("Overriding Song Browser");
+            _customLevelBrowserMasterViewController.Init();
+            if (SongLoaderPlugin.SongLoader.AreSongsLoaded)
+            {
+                _customLevelBrowserMasterViewController.UpdateSongList();
+            }
+
+            _log.Debug("Overriding StandardLevelSelectionFlowCoordinator");            
             ReflectionUtil.SetPrivateField(_mainFlowCoordinator, "_levelSelectionFlowCoordinator", _customLevelBrowserMasterViewController);
-            _log.Debug("Success Overriding Song Browser");
+            _log.Debug("Success Overriding StandardLevelSelectionFlowCoordinator");
         }
 
         /// <summary>
-        /// 
+        /// Only gets called once during boot of BeatSaber.  
         /// </summary>
         /// <param name="loader"></param>
         /// <param name="levels"></param>
@@ -98,8 +105,7 @@ namespace SongBrowserPlugin
             _log.Debug("OnSongLoaderLoadedSongs");
             try
             {
-                _customLevelBrowserMasterViewController.InitModel();
-                _customLevelBrowserMasterViewController.InitUI();
+                _customLevelBrowserMasterViewController.UpdateSongList();
 
                 _log.Debug("Attempting to take over the didSelectModeEvent Button");
                 SoloModeSelectionViewController view = Resources.FindObjectsOfTypeAll<SoloModeSelectionViewController>().First();
@@ -133,7 +139,7 @@ namespace SongBrowserPlugin
         /// </summary>
         public void AcquireUIElements()
         {
-            _log.Debug("Acquiring important UI elements.");
+            _log.Debug("Acquiring BeatSaber UI elements.");
             CachedIcons = new Dictionary<String, Sprite>();
             foreach (Sprite sprite in Resources.FindObjectsOfTypeAll<Sprite>())
             {
@@ -147,11 +153,11 @@ namespace SongBrowserPlugin
             try
             {
                 ButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PlayButton"));
-                _mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
+                //_mainMenuViewController = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
                 _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-                _songSelectionMasterView = Resources.FindObjectsOfTypeAll<StandardLevelSelectionFlowCoordinator>().First();
-                _songDetailViewController = Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First();
-                _songListViewController = Resources.FindObjectsOfTypeAll<StandardLevelListViewController>().First();
+                _levelSelectionFlowCoordinator = Resources.FindObjectsOfTypeAll<StandardLevelSelectionFlowCoordinator>().First();
+                //_levelDetailViewController = Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First();
+                //_levelListViewController = Resources.FindObjectsOfTypeAll<StandardLevelListViewController>().First();
             }
             catch (Exception e)
             {
@@ -166,11 +172,10 @@ namespace SongBrowserPlugin
         /// <param name="gameplayMode"></param>
         private void HandleSoloModeSelectionViewControllerDidSelectMode(SoloModeSelectionViewController viewController, SoloModeSelectionViewController.SubMenuType subMenuType)
         {
-            _log.Debug("Hi jacking solo mode buttons");
+            _log.Debug("HandleSoloModeSelectionViewControllerDidSelectMode()");
             try
             {
                 LevelCollectionsForGameplayModes collection = _mainFlowCoordinator.GetPrivateField<LevelCollectionsForGameplayModes>("_levelCollectionsForGameplayModes");
-                //_mainFlowCoordinator.SetPrivateField("_levelCollectionsForGameplayModes", _customLevelCollectionsForGameplayModes);
 
                 switch (subMenuType)
                 {
@@ -195,37 +200,14 @@ namespace SongBrowserPlugin
                     case SoloModeSelectionViewController.SubMenuType.Back:
                         viewController.DismissModalViewController(null, false);
                         break;
-                }
-                /*ReflectionUtil.SetPrivateField(_menuMasterViewController, "_gameplayMode", gameplayMode);
-                ReflectionUtil.SetPrivateField(_menuMasterViewController, "_songSelectionMasterViewController", _songBrowserMasterViewController);
+                }                
 
-                GameBuildMode gameBuildMode = ReflectionUtil.GetPrivateField<GameBuildMode>(_menuMasterViewController, "_gameBuildMode");
-                GameObject dismissButton = ReflectionUtil.GetPrivateField<GameObject>(_songSelectionMasterView, "_dismissButton");
-                ReflectionUtil.SetPrivateField(_songBrowserMasterViewController, "_dismissButton", dismissButton);
-
-                LevelStaticData[] levelsForGameplayMode = _menuMasterViewController.GetLevelsForGameplayMode(gameplayMode, gameBuildMode);
-
-                bool _canUseGlobalLeaderboards = ReflectionUtil.GetPrivateField<bool>(_menuMasterViewController, "_canUseGlobalLeaderboards");
-                bool showDismissButton = true;
-                bool useLocalLeaderboards = !_canUseGlobalLeaderboards || gameplayMode == GameplayMode.PartyStandard;
-                bool showPlayerStats = ArePlayerStatsUsed(gameplayMode);
-
-                _songBrowserMasterViewController.Init(null, LevelStaticData.Difficulty.Easy, levelsForGameplayMode, useLocalLeaderboards, showDismissButton, showPlayerStats, gameplayMode);
-                viewController.PresentModalViewController(_songBrowserMasterViewController, null, false);
-                _songSelectionMasterView = _songBrowserMasterViewController;*/
-
-                _log.Debug("Success hijacking ...");
+                _log.Debug("Success HandleSoloModeSelectionViewControllerDidSelectMode ...");
             }
             catch (Exception e)
             {
                 _log.Exception("Exception replacing in-game song browser: {0}\n{1}", e.Message, e.StackTrace);
             }
-        }
-
-        // Token: 0x06000C43 RID: 3139 RVA: 0x00035DE8 File Offset: 0x00033FE8
-        private bool ArePlayerStatsUsed(GameplayMode gameplayMode)
-        {
-            return gameplayMode == GameplayMode.SoloStandard || gameplayMode == GameplayMode.SoloNoArrows || gameplayMode == GameplayMode.SoloOneSaber;
         }
 
         /// <summary>
@@ -241,7 +223,7 @@ namespace SongBrowserPlugin
         /// <summary>
         /// Map some key presses directly to UI interactions to make testing easier.
         /// </summary>
-        private void Update()
+        private void LateUpdate()
         {
             // z,x,c,v can be used to get into a song, b will hit continue button after song ends
             if (Input.GetKeyDown(KeyCode.Z))

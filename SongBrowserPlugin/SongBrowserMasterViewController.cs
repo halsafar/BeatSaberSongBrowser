@@ -26,7 +26,6 @@ namespace SongBrowserPlugin
         private String _addFavoriteButtonText = null;
         private SimpleDialogPromptViewController _simpleDialogPromptViewControllerPrefab;
         private SimpleDialogPromptViewController _deleteDialog;
-
         private Button _deleteButton;
 
         // Debug
@@ -36,34 +35,55 @@ namespace SongBrowserPlugin
         // Model
         private SongBrowserModel _model;
 
-        private bool _uiInitialized;
-
         /// <summary>
         /// Unity OnLoad
         /// </summary>
+        public static SongBrowserMasterViewController Instance;
         public static void OnLoad()
         {
             if (Instance != null) return;
             new GameObject("Song Browser Modded").AddComponent<SongBrowserMasterViewController>();
-        }
+        }        
 
-        public static SongBrowserMasterViewController Instance;
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public SongBrowserMasterViewController() : base()
+        {
+            if (_model == null)
+            {
+                _model = new SongBrowserModel();
+            }
+            _model.Init();
+            _sortButtonLastPushedIndex = (int)(_model.Settings.sortMode);
+        }
 
         /// <summary>
         /// Builds the UI for this plugin.
         /// </summary>
-        public void InitUI()
+        public void Init()
         {
             _log.Debug("Init()");
+            try
+            {
+                SceneManager.activeSceneChanged += SceneManagerOnActiveSceneChanged;
 
-            SceneManager.activeSceneChanged += SceneManagerOnActiveSceneChanged;
+                _simpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
 
-            _simpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
+                this._deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(this._simpleDialogPromptViewControllerPrefab);
+                this._deleteDialog.gameObject.SetActive(false);
 
-            this._deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(this._simpleDialogPromptViewControllerPrefab);
-            this._deleteDialog.gameObject.SetActive(false);
-
-            DidActivate();
+                //if (!_uiInitialized)
+                {
+                    CreateUI();
+                }
+            
+                _levelListViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
+            }
+            catch (Exception e)
+            {
+                _log.Exception("Exception during DidActivate: " + e);
+            }
         }
 
         /// <summary>
@@ -75,48 +95,20 @@ namespace SongBrowserPlugin
         public virtual void Present(VRUIViewController parentViewController, IStandardLevel[] levels, GameplayMode gameplayMode)
         {
             _log.Debug("Present()");
-            base.Present(parentViewController, levels, gameplayMode);
-        }
-
-        /// <summary>
-        /// Override DidActivate to inject our UI elements.
-        /// </summary>
-        protected void DidActivate()
-        {
-            _log.Debug("DidActivate()");
-
-            if (!_uiInitialized)
-            {
-                CreateUI();
-            }
-        
-            try
-            {
-                //if (scene.buildIndex == SongBrowserMasterViewController.MenuIndex)
-                {
-                    _log.Debug("SceneManagerOnActiveSceneChanged - Setting Up UI");
-                    _levelListViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
-
-                    UpdateSongList();
-                }
-            }
-            catch (Exception e)
-            {
-                _log.Exception("Exception during DidActivate: " + e);
-            }
+            base.Present(parentViewController, _model.SortedSongList.ToArray(), gameplayMode);
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public void InitModel()
+        /*public void InitModel()
         {
             if (_model == null)
             {
                 _model = new SongBrowserModel();
             }
             _model.Init();
-        }
+        }*/
 
         /// <summary>
         /// Builds the SongBrowser UI
@@ -158,7 +150,7 @@ namespace SongBrowserPlugin
                 
                 if (_addFavoriteButtonText == null)
                 {
-                    _log.Debug("Determinng if first selected song is a favorite.");
+                    _log.Debug("Determining if first selected song is a favorite: {0}", this._levelListViewController);
                     IStandardLevel level = this._levelListViewController.selectedLevel;
                     if (level != null)
                     {
@@ -189,8 +181,7 @@ namespace SongBrowserPlugin
                     HandleDeleteSelectedLevel();
                 });
 
-                //RefreshUI();
-                _uiInitialized = true;
+                RefreshUI();
             }
             catch (Exception e)
             {
@@ -205,7 +196,6 @@ namespace SongBrowserPlugin
         /// <param name="scene"></param>
         private void SceneManagerOnActiveSceneChanged(Scene arg0, Scene scene)
         {
-            _uiInitialized = false;
         }
 
         /// <summary>
@@ -314,6 +304,7 @@ namespace SongBrowserPlugin
                 return;
             }
 
+            _log.Debug("_model={0}", _model);
             if (_model.Settings.favorites.Contains(levelId))
             {
                 _addFavoriteButtonText = "-1";
@@ -361,9 +352,7 @@ namespace SongBrowserPlugin
                 SongLoaderPlugin.OverrideClasses.CustomLevel[] songListArray = songList.ToArray();
 
                 // Store on song browser
-                //this._levelsStaticData = songListArray;
                 this._levelListViewController.Init(songListArray, false);
-                //this._songListViewController.Init(songListArray);
 
                 // Refresh UI Elements in case something changed.
                 RefreshAddFavoriteButton(songList[0].levelID);
@@ -406,7 +395,9 @@ namespace SongBrowserPlugin
         /// </summary>
         public void UpdateSongList()
         {
-            _model.UpdateSongLists(true);
+            _log.Debug("UpdateSongList()");
+
+            _model.UpdateSongLists();
             RefreshSongList(_model.SortedSongList);
             RefreshUI();
         }

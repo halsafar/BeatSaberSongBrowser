@@ -67,7 +67,7 @@ namespace SongBrowserPlugin
         /// <summary>
         /// Get the song cache from the game.
         /// </summary>
-        public void UpdateSongLists(bool updateSongInfos)
+        public void UpdateSongLists()
         {
             String customSongsPath = Path.Combine(Environment.CurrentDirectory, "CustomSongs");
             DateTime currentLastWriteTIme = File.GetLastWriteTimeUtc(customSongsPath);
@@ -221,7 +221,7 @@ namespace SongBrowserPlugin
             stopwatch.Stop();
             _log.Info("Sorting songs took {0}ms", stopwatch.ElapsedMilliseconds);
 
-            //this._beatSaberSongAccessor.OverwriteBeatSaberSongList(_sortedSongs);
+            //_mainFlowCoordinator.SetPrivateField("_levelCollectionsForGameplayModes", _customLevelCollectionsForGameplayModes);
         }        
     }
 }
