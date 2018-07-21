@@ -78,13 +78,13 @@
   <ItemGroup>
     <Compile Include="Logger.cs" />
     <Compile Include="SongBrowserApplication.cs" />
-    <Compile Include="UI\SongBrowserMasterViewController.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SongBrowserModel.cs" />
     <Compile Include="SongBrowserSettings.cs" />
     <Compile Include="UIBuilder.cs" />
     <Compile Include="UI\BrowserStandardLevelSelectionFlowCoordinator.cs" />
+    <Compile Include="UI\SongBrowserFlowCoordinator.cs" />
     <Compile Include="UI\SongSortButton.cs" />
   </ItemGroup>
   <ItemGroup>
