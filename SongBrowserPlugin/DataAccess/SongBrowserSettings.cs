@@ -4,7 +4,7 @@ using System.IO;
 using System.Xml.Serialization;
 
 
-namespace SongBrowserPlugin
+namespace SongBrowserPlugin.DataAccess
 {
     [Serializable]
     public enum SongSortMode

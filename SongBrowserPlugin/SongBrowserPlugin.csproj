@@ -81,14 +81,12 @@
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SongBrowserModel.cs" />
-    <Compile Include="SongBrowserSettings.cs" />
-    <Compile Include="UIBuilder.cs" />
-    <Compile Include="UI\BrowserStandardLevelSelectionFlowCoordinator.cs" />
+    <Compile Include="DataAccess\SongBrowserSettings.cs" />
     <Compile Include="UI\SongBrowserFlowCoordinator.cs" />
     <Compile Include="UI\SongSortButton.cs" />
+    <Compile Include="UI\UIBuilder.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="DataAccess\" />
     <Folder Include="Internals\" />
   </ItemGroup>
   <ItemGroup>

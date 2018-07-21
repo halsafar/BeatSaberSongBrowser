@@ -2,11 +2,10 @@
 using System.Linq;
 using System;
 using System.Collections.Generic;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using HMUI;
 using VRUI;
-
+using SongBrowserPlugin.DataAccess;
 
 namespace SongBrowserPlugin.UI
 {
@@ -70,10 +69,7 @@ namespace SongBrowserPlugin.UI
                 this._deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(this._simpleDialogPromptViewControllerPrefab);
                 this._deleteDialog.gameObject.SetActive(false);
 
-                //if (!_uiInitialized)
-                {
-                    CreateUI();
-                }
+                CreateUI();
             
                 _levelListViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
             }
@@ -89,7 +85,7 @@ namespace SongBrowserPlugin.UI
         /// <param name="parentViewController"></param>
         /// <param name="levels"></param>
         /// <param name="gameplayMode"></param>
-        public virtual void Present(VRUIViewController parentViewController, IStandardLevel[] levels, GameplayMode gameplayMode)
+        public override void Present(VRUIViewController parentViewController, IStandardLevel[] levels, GameplayMode gameplayMode)
         {
             _log.Debug("Present()");
             base.Present(parentViewController, _model.SortedSongList.ToArray(), gameplayMode);

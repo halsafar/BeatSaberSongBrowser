@@ -3,10 +3,9 @@ using System.Linq;
 using UnityEngine.UI;
 using TMPro;
 using VRUI;
-using SongBrowserPlugin.UI;
+using SongBrowserPlugin.DataAccess;
 
-
-namespace SongBrowserPlugin
+namespace SongBrowserPlugin.UI
 {
     public static class UIBuilder
     {
