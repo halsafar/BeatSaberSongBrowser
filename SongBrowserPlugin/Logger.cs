@@ -47,10 +47,10 @@ namespace SongBrowserPlugin
             ResetForegroundColor();
         }
 
-        public void Exception(string format, params object[] args)
+        public void Exception(string message, Exception e)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("[" + loggerName + " @ " + DateTime.Now.ToString("HH:mm") + "] " + String.Format(format, args));
+            Console.WriteLine("[" + loggerName + " @ " + DateTime.Now.ToString("HH:mm") + "] " + String.Format("{0}-{1}\n{2}", message, e.Message, e.StackTrace));
             ResetForegroundColor();
         }
 

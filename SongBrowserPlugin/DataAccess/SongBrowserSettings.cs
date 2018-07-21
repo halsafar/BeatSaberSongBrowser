@@ -73,7 +73,7 @@ namespace SongBrowserPlugin.DataAccess
             }
             catch (Exception e)
             {
-                Log.Exception("Unable to deserialize song browser settings file: " + e.Message);
+                Log.Exception("Unable to deserialize song browser settings file: ", e);
 
                 // Return default settings
                 retVal = new SongBrowserSettings();

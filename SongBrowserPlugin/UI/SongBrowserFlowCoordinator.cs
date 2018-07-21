@@ -76,7 +76,7 @@ namespace SongBrowserPlugin.UI
             }
             catch (Exception e)
             {
-                _log.Exception("Exception during DidActivate: " + e);
+                _log.Exception("Exception during Init: ", e);
             }
         }
 
@@ -166,7 +166,7 @@ namespace SongBrowserPlugin.UI
             }
             catch (Exception e)
             {
-                _log.Exception("Exception CreateUI: {0}\n{1}", e.Message, e.StackTrace);
+                _log.Exception("Exception CreateUI:", e);
             }
         }
 
@@ -358,7 +358,7 @@ namespace SongBrowserPlugin.UI
             }
             catch (Exception e)
             {
-                _log.Exception("Exception refreshing song list: {0}", e.Message);
+                _log.Exception("Exception refreshing song list:", e);
             }
         }
 
@@ -450,7 +450,7 @@ namespace SongBrowserPlugin.UI
             }
             catch (Exception e)
             {
-                _log.Exception("{0}:\n{1}", e.Message, e.StackTrace);
+                _log.Exception("Debug Input caused Exception: ", e);
             }
         }
     }

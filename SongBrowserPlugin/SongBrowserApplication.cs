@@ -112,7 +112,7 @@ namespace SongBrowserPlugin
             }
             catch (Exception e)
             {
-                _log.Exception("Exception during OnSongLoaderLoadedSongs: " + e);
+                _log.Exception("Exception during OnSongLoaderLoadedSongs: ", e);
             }
         }
 
@@ -151,7 +151,7 @@ namespace SongBrowserPlugin
             }
             catch (Exception e)
             {
-                _log.Exception("Exception AcquireUIElements(): " + e);
+                _log.Exception("Exception AcquireUIElements(): ", e);
             }
         }
 
@@ -196,7 +196,7 @@ namespace SongBrowserPlugin
             }
             catch (Exception e)
             {
-                _log.Exception("Exception replacing in-game song browser: {0}\n{1}", e.Message, e.StackTrace);
+                _log.Exception("Exception replacing in-game song browser: ", e);
             }
         }
 
