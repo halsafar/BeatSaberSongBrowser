@@ -7,17 +7,25 @@ using HMUI;
 using VRUI;
 using SongBrowserPlugin.DataAccess;
 using System.IO;
+using SongLoaderPlugin;
 
 namespace SongBrowserPlugin.UI
 {
     /// <summary>
     /// Hijack the flow coordinator.  Have access to all StandardLevel easily.
     /// </summary>
-    public class SongBrowserFlowCoordinator : StandardLevelSelectionFlowCoordinator
+    public class SongBrowserUI : MonoBehaviour
     {
         // Logging
-        public const String Name = "SongBrowserMasterViewController";
+        public const String Name = "SongBrowserUI";
         private Logger _log = new Logger(Name);
+
+        // Beat Saber UI Elements
+        StandardLevelSelectionFlowCoordinator _levelSelectionFlowCoordinator;
+        StandardLevelListViewController _levelListViewController;
+        StandardLevelDetailViewController _levelDetailViewController;
+        StandardLevelDifficultyViewController _levelDifficultyViewController;
+        StandardLevelSelectionNavigationController _levelSelectionNavigationController;
 
         // New UI Elements
         private List<SongSortButton> _sortButtonGroup;
@@ -37,17 +45,17 @@ namespace SongBrowserPlugin.UI
         /// <summary>
         /// Unity OnLoad
         /// </summary>
-        public static SongBrowserFlowCoordinator Instance;
-        public static void OnLoad()
+        //public static SongBrowserUI Instance;
+        /*public static void OnLoad()
         {
             if (Instance != null) return;
-            new GameObject("Song Browser Modded").AddComponent<SongBrowserFlowCoordinator>();
-        }        
+            new GameObject("Song Browser Modded").AddComponent<SongBrowserUI>();
+        }    */    
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public SongBrowserFlowCoordinator() : base()
+        public SongBrowserUI() : base()
         {
             if (_model == null)
             {
@@ -60,44 +68,57 @@ namespace SongBrowserPlugin.UI
         /// <summary>
         /// Builds the UI for this plugin.
         /// </summary>
-        public void Init()
+        public void CreateUI()
         {
-            _log.Trace("Init()");
+            _log.Trace("CreateUI()");
             try
             {
+                if (_levelSelectionFlowCoordinator == null)
+                {
+                    _levelSelectionFlowCoordinator = Resources.FindObjectsOfTypeAll<StandardLevelSelectionFlowCoordinator>().First();
+                }
+
+                if (_levelListViewController == null)
+                {
+                    _levelListViewController = _levelSelectionFlowCoordinator.GetPrivateField<StandardLevelListViewController>("_levelListViewController");
+                }
+
+                if (_levelDetailViewController == null)
+                {
+                    _levelDetailViewController = _levelSelectionFlowCoordinator.GetPrivateField<StandardLevelDetailViewController>("_levelDetailViewController");
+                }
+
+                if (_levelSelectionNavigationController == null)
+                {
+                    _levelSelectionNavigationController = _levelSelectionFlowCoordinator.GetPrivateField<StandardLevelSelectionNavigationController>("_levelSelectionNavigationController");
+                }
+
+                if (_levelDifficultyViewController == null)
+                {
+                    _levelDifficultyViewController = _levelSelectionFlowCoordinator.GetPrivateField<StandardLevelDifficultyViewController>("_levelDifficultyViewController");
+                }
+
                 _simpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
 
                 this._deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(this._simpleDialogPromptViewControllerPrefab);
                 this._deleteDialog.gameObject.SetActive(false);
 
-                CreateUI();
-            
+                this.CreateUIElements();
+
                 _levelListViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
             }
             catch (Exception e)
             {
-                _log.Exception("Exception during Init: ", e);
+                _log.Exception("Exception during CreateUI: ", e);
             }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="parentViewController"></param>
-        /// <param name="levels"></param>
-        /// <param name="gameplayMode"></param>
-        public override void Present(VRUIViewController parentViewController, IStandardLevel[] levels, GameplayMode gameplayMode)
-        {
-            _log.Trace("Present()");
-            base.Present(parentViewController, levels, gameplayMode);
         }
 
         /// <summary>
         /// Builds the SongBrowser UI
         /// </summary>
-        public void CreateUI()
+        private void CreateUIElements()
         {
-            _log.Trace("CreateUI");
+            _log.Trace("CreateUIElements");
 
             try
             {                               
@@ -111,6 +132,7 @@ namespace SongBrowserPlugin.UI
                     _model.Settings.sortMode = sortMode;
                     _model.Settings.Save();
                     UpdateSongList();
+                    RefreshSongList();
                 };
 
                 _sortButtonGroup = new List<SongSortButton>
@@ -139,7 +161,6 @@ namespace SongBrowserPlugin.UI
 
                 if (_addFavoriteButtonText == null)
                 {
-                    _log.Debug("Determining if first selected song is a favorite: {0}", this._levelListViewController);
                     IStandardLevel level = this._levelListViewController.selectedLevel;
                     if (level != null)
                     {
@@ -166,7 +187,7 @@ namespace SongBrowserPlugin.UI
             }
             catch (Exception e)
             {
-                _log.Exception("Exception CreateUI:", e);
+                _log.Exception("Exception CreateUIElements:", e);
             }
         }
 
@@ -208,6 +229,7 @@ namespace SongBrowserPlugin.UI
                 _log.Debug("Cannot delete non-custom levels.");
                 return;
             }
+
             SongLoaderPlugin.OverrideClasses.CustomLevel customLevel = _model.LevelIdToCustomSongInfos[level.levelID];
 
             this._deleteDialog.Init("Delete level warning!", String.Format("<color=#00AAFF>Permanently delete level: {0}</color>\n  Do you want to continue?", customLevel.songName), "YES", "NO");
@@ -223,7 +245,7 @@ namespace SongBrowserPlugin.UI
         /// <param name="ok"></param>
         public void HandleDeleteDialogPromptViewControllerDidFinish(SimpleDialogPromptViewController viewController, bool ok)
         {
-            viewController.didFinishEvent -= this.HandleSimpleDialogPromptViewControllerDidFinish;
+            viewController.didFinishEvent -= this.HandleDeleteDialogPromptViewControllerDidFinish;
             if (!ok)
             {
                 viewController.DismissModalViewController(null, false);
@@ -234,9 +256,15 @@ namespace SongBrowserPlugin.UI
                 SongLoaderPlugin.OverrideClasses.CustomLevel customLevel = _model.LevelIdToCustomSongInfos[level.levelID];
 
                 viewController.DismissModalViewController(null, false);
-                _log.Debug("DELETING: {0}", customLevel.customSongInfo.path);
+                _log.Debug("Deleting: {0}", customLevel.customSongInfo.path);
+                
+                FileAttributes attr = File.GetAttributes(customLevel.customSongInfo.path);
+                if (attr.HasFlag(FileAttributes.Directory))
+                    Directory.Delete(customLevel.customSongInfo.path);
+                else
+                    File.Delete(customLevel.customSongInfo.path);
+
                 SongLoaderPlugin.SongLoader.Instance.RemoveSongWithPath(customLevel.customSongInfo.path);
-                Directory.Delete(customLevel.customSongInfo.path);
             }
         }
 
@@ -307,59 +335,44 @@ namespace SongBrowserPlugin.UI
         /// <summary>
         /// Try to refresh the song list.  Broken for now.
         /// </summary>
-        public void RefreshSongList(List<StandardLevelSO> songList)
+        public void RefreshSongList()
         {
             _log.Info("Refreshing the song list view.");
             try
             {
-                // Check a couple of possible situations that we can't refresh
-                if (!this._levelListViewController.isInViewControllerHierarchy)
+                if (_model.SortedSongList == null)
                 {
-                    _log.Debug("No song list to refresh.");
+                    _log.Debug("Songs are not sorted yet, nothing to refresh.");
                     return;
                 }
 
-                // Convert to Array once in-case this is costly.
-                StandardLevelSO[] songListArray = songList.ToArray();
-
-                // Store on song browser
-                this._levelListViewController.Init(songListArray, false);
-
-                // Refresh UI Elements in case something changed.
-                RefreshAddFavoriteButton(songList[0].levelID);
-
-                // Might not be fully presented yet.
-                StandardLevelListTableView levelListTableView = this._levelListViewController.GetComponentInChildren<StandardLevelListTableView>();
-                if (levelListTableView == null || !levelListTableView.isActiveAndEnabled)
-                {
-                    _log.Debug("SongListTableView not presenting yet, cannot refresh view yet.");
-                    return;
-                }
-
-                TableView tableView = levelListTableView.GetComponent<TableView>();
-                //TableView tableView = ReflectionUtil.GetPrivateField<TableView>(levelListTableView, "_tableView");
-                if (tableView == null)
-                {
-                    _log.Debug("TableView not presenting yet, cannot refresh view yet.");
-                    return;
-                }
-
-                // Refresh the list views and its table view
-                levelListTableView.Init(songListArray, null);
-                tableView.ScrollToRow(0, false);
+                StandardLevelSO[] levels = _model.SortedSongList.ToArray();
+                StandardLevelListViewController songListViewController = this._levelSelectionFlowCoordinator.GetPrivateField<StandardLevelListViewController>("_levelListViewController");
+                StandardLevelListTableView _songListTableView = songListViewController.GetComponentInChildren<StandardLevelListTableView>();
+                ReflectionUtil.SetPrivateField(_songListTableView, "_levels", levels);
+                ReflectionUtil.SetPrivateField(songListViewController, "_levels", levels);            
+                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_songListTableView, "_tableView");
                 tableView.ReloadData();
 
-                // Clear Force selection of index 0 so we don't end up in a weird state.
-                // songListTableView.ClearSelection();              
-                levelListTableView.SelectAndScrollToLevel(_model.SortedSongList[0].levelID);
-                levelListTableView.HandleDidSelectRowEvent(tableView, 0);
-                this._levelListViewController.HandleLevelListTableViewDidSelectRow(levelListTableView, 0);
-                _lastRow = 0;
+                String selectedLevelID = null;
+
+
+                SelectAndScrollToLevel(_songListTableView, levels.FirstOrDefault().levelID);
+
+                RefreshUI();                
             }
             catch (Exception e)
             {
                 _log.Exception("Exception refreshing song list:", e);
             }
+        }
+
+        private void SelectAndScrollToLevel(StandardLevelListTableView table, string levelID)
+        {
+            int row = table.RowNumberForLevelID(levelID);
+            TableView _tableView = table.GetComponentInChildren<TableView>();
+            _tableView.SelectRow(row, true);
+            _tableView.ScrollToRow(row, true);
         }
 
         /// <summary>
@@ -369,15 +382,14 @@ namespace SongBrowserPlugin.UI
         {
             _log.Trace("UpdateSongList()");
 
-            _model.UpdateSongLists(this._gameplayMode);
-            RefreshSongList(_model.SortedSongList);
-            RefreshUI();
+            GameplayMode gameplayMode = _levelSelectionFlowCoordinator.GetPrivateField<GameplayMode>("_gameplayMode");
+            _model.UpdateSongLists(gameplayMode);                        
         }
 
         /// <summary>
         /// Not normally called by the game-engine.  Dependent on SongBrowserApplication to call it.
         /// </summary>
-        public void Update()
+        public void LateUpdate()
         {
             if (this._levelListViewController.isInViewControllerHierarchy)
             {
@@ -392,6 +404,12 @@ namespace SongBrowserPlugin.UI
         {
             try
             {
+                // back
+                if (Input.GetKeyDown(KeyCode.Escape))
+                {
+                    this._levelSelectionNavigationController.DismissButtonWasPressed();
+                }
+
                 // cycle sort modes
                 if (Input.GetKeyDown(KeyCode.T))
                 {
@@ -416,13 +434,13 @@ namespace SongBrowserPlugin.UI
                 {
                     levelListTableView.SelectAndScrollToLevel(_model.SortedSongList[0].levelID);
                     this._levelListViewController.HandleLevelListTableViewDidSelectRow(levelListTableView, 0);                    
-                    _levelDifficultyViewController.HandleDifficultyTableViewDidSelectRow(null, 0);
-                    this.HandleDifficultyViewControllerDidSelectDifficulty(_levelDifficultyViewController, _model.SortedSongList[0].GetDifficultyLevel(LevelDifficulty.Easy));
+                    this._levelDifficultyViewController.HandleDifficultyTableViewDidSelectRow(null, 0);
+                    this._levelSelectionFlowCoordinator.HandleDifficultyViewControllerDidSelectDifficulty(_levelDifficultyViewController, _model.SortedSongList[0].GetDifficultyLevel(LevelDifficulty.Easy));
                 }
 
                 if (Input.GetKeyDown(KeyCode.V))
                 {
-                    this.HandleLevelDetailViewControllerDidPressPlayButton(this._levelDetailViewController);
+                    this._levelSelectionFlowCoordinator.HandleLevelDetailViewControllerDidPressPlayButton(this._levelDetailViewController);
                 }
 
                 // change song index

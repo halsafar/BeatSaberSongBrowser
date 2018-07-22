@@ -1,13 +1,13 @@
 ﻿using UnityEngine;
 using System.Linq;
 using System;
-using System.Collections.Generic;
 using SongLoaderPlugin.OverrideClasses;
 using UnityEngine.SceneManagement;
 using SongLoaderPlugin;
 using UnityEngine.UI;
-using System.Reflection;
 using SongBrowserPlugin.UI;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace SongBrowserPlugin
 {
@@ -19,12 +19,8 @@ namespace SongBrowserPlugin
 
         private Logger _log = new Logger("SongBrowserApplication");
 
-        // BeatSaber UI Elements
-        private StandardLevelSelectionFlowCoordinator _levelSelectionFlowCoordinator;
-        private MainFlowCoordinator _mainFlowCoordinator;
-
         // Song Browser UI Elements
-        private SongBrowserFlowCoordinator _songBrowserFlowCoordinator;
+        private SongBrowserUI _songBrowserUI;
         public Dictionary<String, Sprite> CachedIcons;
         public Button ButtonTemplate;
 
@@ -38,7 +34,6 @@ namespace SongBrowserPlugin
                 return;
             }
             new GameObject("BeatSaber SongBrowser Mod").AddComponent<SongBrowserApplication>();
-            //DontDestroyOnLoad(gameObject);
         }
 
         /// <summary>
@@ -50,8 +45,7 @@ namespace SongBrowserPlugin
 
             Instance = this;
 
-            SceneManager.activeSceneChanged += SceneManagerOnActiveSceneChanged;
-            SongLoader.SongsLoadedEvent += OnSongLoaderLoadedSongs;
+            _songBrowserUI = gameObject.AddComponent<SongBrowserUI>();
         }
 
         /// <summary>
@@ -63,28 +57,33 @@ namespace SongBrowserPlugin
 
             AcquireUIElements();
 
-            // Clone and override the default level flow controller.
-            if (_songBrowserFlowCoordinator == null)
-            {
-                _log.Debug("Attempting to clone StandardLevelSelectionFlowCoordinator into our derived class.");
-                _songBrowserFlowCoordinator = UIBuilder.CreateFlowCoordinator<SongBrowserFlowCoordinator>(SongBrowserFlowCoordinator.Name);
-                System.Reflection.FieldInfo[] fields = typeof(StandardLevelSelectionFlowCoordinator).GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-                foreach (System.Reflection.FieldInfo field in fields)
-                {
-                    //_log.Debug(field.Name);
-                    field.SetValue(_songBrowserFlowCoordinator, field.GetValue(_levelSelectionFlowCoordinator));
-                }
-            }
+            StartCoroutine(WaitForSongListUI());
+        }
 
-            _songBrowserFlowCoordinator.Init();
+        /// <summary>
+        /// Wait for the song list to be visible to draw it.
+        /// </summary>
+        /// <returns></returns>
+        private IEnumerator WaitForSongListUI()
+        {
+            _log.Trace("WaitForSongListUI()");
+
+            yield return new WaitUntil(delegate () { return Resources.FindObjectsOfTypeAll<StandardLevelSelectionFlowCoordinator>().Any(); });
+
+            _log.Debug("Found StandardLevelSelectionFlowCoordinator...");
+
+            _songBrowserUI.CreateUI();
+
             if (SongLoaderPlugin.SongLoader.AreSongsLoaded)
             {
-                _songBrowserFlowCoordinator.UpdateSongList();
+                OnSongLoaderLoadedSongs(null, SongLoader.CustomLevels);
+            }
+            else
+            {
+                SongLoader.SongsLoadedEvent += OnSongLoaderLoadedSongs;
             }
 
-            _log.Debug("Overriding StandardLevelSelectionFlowCoordinator");
-            _mainFlowCoordinator.SetPrivateField("_levelSelectionFlowCoordinator", _songBrowserFlowCoordinator);
-            _log.Debug("Success Overriding StandardLevelSelectionFlowCoordinator");
+            _songBrowserUI.RefreshSongList();            
         }
 
         /// <summary>
@@ -97,18 +96,7 @@ namespace SongBrowserPlugin
             _log.Trace("OnSongLoaderLoadedSongs");
             try
             {
-                _songBrowserFlowCoordinator.UpdateSongList();
-
-                _log.Debug("Attempting to take over the didSelectModeEvent Button");
-                SoloModeSelectionViewController view = Resources.FindObjectsOfTypeAll<SoloModeSelectionViewController>().First();
-
-                if (view.didFinishEvent != null)
-                {
-                    Delegate[] delegates = view.didFinishEvent.GetInvocationList();
-                    view.didFinishEvent -= delegates[0] as Action<SoloModeSelectionViewController, SoloModeSelectionViewController.SubMenuType>;
-                }
-
-                view.didFinishEvent += HandleSoloModeSelectionViewControllerDidSelectMode;
+                _songBrowserUI.UpdateSongList();
             }
             catch (Exception e)
             {
@@ -117,37 +105,29 @@ namespace SongBrowserPlugin
         }
 
         /// <summary>
-        /// Bind to some UI events.
-        /// </summary>
-        /// <param name="arg0"></param>
-        /// <param name="scene"></param>
-        private void SceneManagerOnActiveSceneChanged(Scene arg0, Scene scene)
-        {
-            _log.Trace("SceneManagerOnActiveSceneChanged");
-        }
-
-        /// <summary>
         /// Get a handle to the view controllers we are going to add elements to.
         /// </summary>
         public void AcquireUIElements()
         {
-            _log.Trace("AcquireUIElements()");
-            CachedIcons = new Dictionary<String, Sprite>();
-            foreach (Sprite sprite in Resources.FindObjectsOfTypeAll<Sprite>())
-            {
-                if (CachedIcons.ContainsKey(sprite.name))
-                {
-                    continue;
-                }
-                CachedIcons.Add(sprite.name, sprite);
-            }
-
+            _log.Trace("AcquireUIElements()");        
             try
             {
+                CachedIcons = new Dictionary<String, Sprite>();
+                foreach (Sprite sprite in Resources.FindObjectsOfTypeAll<Sprite>())
+                {
+                    if (CachedIcons.ContainsKey(sprite.name))
+                    {
+                        continue;
+                    }
+                    CachedIcons.Add(sprite.name, sprite);
+                }
+
                 ButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PlayButton"));
 
-                _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-                _levelSelectionFlowCoordinator = Resources.FindObjectsOfTypeAll<StandardLevelSelectionFlowCoordinator>().First();
+                // Append our own event to appropriate events so we can refresh the song list before the user sees it.
+                MainFlowCoordinator mainFlow = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
+                SoloModeSelectionViewController view = Resources.FindObjectsOfTypeAll<SoloModeSelectionViewController>().First();                
+                view.didFinishEvent += HandleSoloModeSelectionViewControllerDidSelectMode;
             }
             catch (Exception e)
             {
@@ -156,46 +136,14 @@ namespace SongBrowserPlugin
         }
 
         /// <summary>
-        /// Hijack the result of clicking into the song browser.
+        /// Perfect time to refresh the level list on first entry.
         /// </summary>
-        /// <param name="viewController"></param>
-        /// <param name="gameplayMode"></param>
-        private void HandleSoloModeSelectionViewControllerDidSelectMode(SoloModeSelectionViewController viewController, SoloModeSelectionViewController.SubMenuType subMenuType)
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
+        private void HandleSoloModeSelectionViewControllerDidSelectMode(SoloModeSelectionViewController arg1, SoloModeSelectionViewController.SubMenuType arg2)
         {
             _log.Trace("HandleSoloModeSelectionViewControllerDidSelectMode()");
-            try
-            {
-                LevelCollectionsForGameplayModes collection = _mainFlowCoordinator.GetPrivateField<LevelCollectionsForGameplayModes>("_levelCollectionsForGameplayModes");
-
-                switch (subMenuType)
-                {
-                    case SoloModeSelectionViewController.SubMenuType.FreePlayMode:
-                        {
-                            GameplayMode gameplayMode = GameplayMode.SoloStandard;
-                            this._songBrowserFlowCoordinator.Present(viewController, collection.GetLevels(gameplayMode), gameplayMode);
-                            break;
-                        }
-                    case SoloModeSelectionViewController.SubMenuType.NoArrowsMode:
-                        {
-                            GameplayMode gameplayMode2 = GameplayMode.SoloNoArrows;
-                            this._songBrowserFlowCoordinator.Present(viewController, collection.GetLevels(gameplayMode2), gameplayMode2);
-                            break;
-                        }
-                    case SoloModeSelectionViewController.SubMenuType.OneSaberMode:
-                        {
-                            GameplayMode gameplayMode3 = GameplayMode.SoloOneSaber;
-                            this._songBrowserFlowCoordinator.Present(viewController, collection.GetLevels(gameplayMode3), gameplayMode3);
-                            break;
-                        }
-                    case SoloModeSelectionViewController.SubMenuType.Back:
-                        viewController.DismissModalViewController(null, false);
-                        break;
-                }                
-            }
-            catch (Exception e)
-            {
-                _log.Exception("Exception replacing in-game song browser: ", e);
-            }
+            this._songBrowserUI.RefreshSongList();
         }
 
         /// <summary>
@@ -228,8 +176,6 @@ namespace SongBrowserPlugin
             {
                 InvokeBeatSaberButton("ContinueButton");
             }
-
-            _songBrowserFlowCoordinator.Update();
         }
     }
 }

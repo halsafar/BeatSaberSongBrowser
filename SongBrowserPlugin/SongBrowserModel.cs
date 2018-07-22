@@ -22,7 +22,7 @@ namespace SongBrowserPlugin
 
         private SongSortMode _cachedSortMode = default(SongSortMode);
         private Dictionary<String, double> _cachedLastWriteTimes;
-        private DateTime _cachedCustomSongDirLastWriteTIme = DateTime.MinValue;
+        private DateTime _cachedCustomSongDirLastWriteTime = DateTime.MinValue;
         private int _customSongDirTotalCount = -1;
 
         public SongBrowserSettings Settings
@@ -81,13 +81,13 @@ namespace SongBrowserPlugin
             int fileCount = Directory.GetFiles(customSongsPath, "*").Length;
             int currentTotalCount = directoryCount + fileCount;
 
-            if (_cachedCustomSongDirLastWriteTIme == null || 
-                DateTime.Compare(currentLastWriteTIme, _cachedCustomSongDirLastWriteTIme) != 0 ||
-                currentTotalCount != this._customSongDirTotalCount)
+            /*if (_cachedCustomSongDirLastWriteTime == null || 
+                DateTime.Compare(currentLastWriteTIme, _cachedCustomSongDirLastWriteTime) != 0 ||
+                currentTotalCount != this._customSongDirTotalCount)*/
             {
-                _log.Debug("Custom Song directory has changed. Fetching new songs. Sorting song list.");
+                //_log.Debug("Custom Song directory has changed. Fetching new songs. Sorting song list.");
 
-                this._customSongDirTotalCount = directoryCount + fileCount;
+                //this._customSongDirTotalCount = directoryCount + fileCount;
 
                 // Get LastWriteTimes
                 var Epoch = new DateTime(1970, 1, 1);
@@ -106,12 +106,12 @@ namespace SongBrowserPlugin
                 this.UpdateSongInfos(gameplayMode);
                 
                 // Get new songs
-                _cachedCustomSongDirLastWriteTIme = currentLastWriteTIme;
+                _cachedCustomSongDirLastWriteTime = currentLastWriteTIme;
                 _cachedSortMode = _settings.sortMode;
                 
                 this.ProcessSongList();
             }
-            else if (_settings.sortMode != _cachedSortMode)
+            /*else if (_settings.sortMode != _cachedSortMode)
             {
                 _log.Debug("Sort mode has changed.  Sorting song list.");
                 _cachedSortMode = _settings.sortMode;
@@ -120,7 +120,7 @@ namespace SongBrowserPlugin
             else
             {
                 _log.Debug("Songs List and/or sort mode has not changed.");
-            }
+            }*/
         }
 
         /// <summary>
@@ -227,7 +227,7 @@ namespace SongBrowserPlugin
             stopwatch.Stop();
             _log.Info("Sorting songs took {0}ms", stopwatch.ElapsedMilliseconds);
 
-            _gameplayModeCollection.Init(_sortedSongs.ToArray());
+            //_gameplayModeCollection.Init(_sortedSongs.ToArray());
         }        
     }
 }
