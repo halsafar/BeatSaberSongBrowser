@@ -161,7 +161,7 @@ namespace SongBrowserPlugin.UI
         {
             if (button.GetComponentsInChildren<UnityEngine.UI.Image>().Count() > 1)
             {
-                button.GetComponentsInChildren<UnityEngine.UI.Image>()[1].sprite = icon;
+                button.GetComponentsInChildren<Image>().First(x => x.name == "Icon").sprite = icon;
             }            
         }
 
