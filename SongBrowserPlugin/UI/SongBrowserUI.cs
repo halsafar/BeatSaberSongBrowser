@@ -26,6 +26,7 @@ namespace SongBrowserPlugin.UI
         StandardLevelDetailViewController _levelDetailViewController;
         StandardLevelDifficultyViewController _levelDifficultyViewController;
         StandardLevelSelectionNavigationController _levelSelectionNavigationController;
+        StandardLevelListTableView _levelListTableView;
 
         // New UI Elements
         private List<SongSortButton> _sortButtonGroup;
@@ -86,6 +87,11 @@ namespace SongBrowserPlugin.UI
                 if (_levelDifficultyViewController == null)
                 {
                     _levelDifficultyViewController = _levelSelectionFlowCoordinator.GetPrivateField<StandardLevelDifficultyViewController>("_levelDifficultyViewController");
+                }
+
+                if (_levelListTableView == null)
+                {
+                    _levelListTableView = this._levelListViewController.GetComponentInChildren<StandardLevelListTableView>();
                 }
 
                 _simpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
@@ -189,7 +195,7 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         private void OnDidSelectLevelEvent(StandardLevelListViewController view, IStandardLevel level)
         {
-            _log.Trace("OnDidSelectLevelEvent({0}", level.levelID);
+            _log.Trace("OnDidSelectLevelEvent()");
             if (level == null)
             {
                 _log.Debug("No level selected?");
@@ -373,12 +379,17 @@ namespace SongBrowserPlugin.UI
             }
         }
 
+        /// <summary>
+        /// Scroll TableView to proper row, fire events.
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="levelID"></param>
         private void SelectAndScrollToLevel(StandardLevelListTableView table, string levelID)
         {
             int row = table.RowNumberForLevelID(levelID);
-            TableView _tableView = table.GetComponentInChildren<TableView>();
-            _tableView.SelectRow(row, true);
-            _tableView.ScrollToRow(row, true);
+            TableView tableView = table.GetComponentInChildren<TableView>();
+            tableView.SelectRow(row, true);
+            tableView.ScrollToRow(row, true);
         }
 
         /// <summary>
@@ -409,7 +420,7 @@ namespace SongBrowserPlugin.UI
         private void CheckDebugUserInput()
         {
             try
-            {
+            {                
                 // back
                 if (Input.GetKeyDown(KeyCode.Escape))
                 {
@@ -432,14 +443,11 @@ namespace SongBrowserPlugin.UI
                     }
                     _deleteButton.onClick.Invoke();
                 }
-
-                StandardLevelListTableView levelListTableView = this._levelListViewController.GetComponentInChildren<StandardLevelListTableView>();
-
-                // z,x,c,v can be used to get into a song, b will hit continue button after song ends
+                
+                // c,v can be used to get into a song
                 if (Input.GetKeyDown(KeyCode.C))
                 {
-                    levelListTableView.SelectAndScrollToLevel(_model.SortedSongList[0].levelID);
-                    this._levelListViewController.HandleLevelListTableViewDidSelectRow(levelListTableView, 0);                    
+                    this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[0].levelID);                 
                     this._levelDifficultyViewController.HandleDifficultyTableViewDidSelectRow(null, 0);
                     this._levelSelectionFlowCoordinator.HandleDifficultyViewControllerDidSelectDifficulty(_levelDifficultyViewController, _model.SortedSongList[0].GetDifficultyLevel(LevelDifficulty.Easy));
                 }
@@ -454,16 +462,14 @@ namespace SongBrowserPlugin.UI
                 {
                     _lastRow = (_lastRow - 1) != -1 ? (_lastRow - 1) % this._model.SortedSongList.Count : 0;
 
-                    levelListTableView.SelectAndScrollToLevel(_model.SortedSongList[_lastRow].levelID);
-                    this._levelListViewController.HandleLevelListTableViewDidSelectRow(levelListTableView, _lastRow);
+                    this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[_lastRow].levelID);
                 }
 
                 if (Input.GetKeyDown(KeyCode.M))
                 {
                     _lastRow = (_lastRow + 1) % this._model.SortedSongList.Count;
 
-                    levelListTableView.SelectAndScrollToLevel(_model.SortedSongList[_lastRow].levelID);
-                    this._levelListViewController.HandleLevelListTableViewDidSelectRow(levelListTableView, _lastRow);
+                    this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[_lastRow].levelID);
                 }
 
                 // add to favorites

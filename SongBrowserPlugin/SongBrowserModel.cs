@@ -73,8 +73,9 @@ namespace SongBrowserPlugin
         public void UpdateSongLists(GameplayMode gameplayMode)
         {
             String customSongsPath = Path.Combine(Environment.CurrentDirectory, "CustomSongs");
+            String cachedSongsPath = Path.Combine(customSongsPath, ".cache");
             DateTime currentLastWriteTIme = File.GetLastWriteTimeUtc(customSongsPath);
-            string[] directories = Directory.GetDirectories(customSongsPath);
+            IEnumerable<string> directories = Directory.EnumerateDirectories(customSongsPath, "*.*", SearchOption.AllDirectories);
 
             // Get LastWriteTimes
             var Epoch = new DateTime(1970, 1, 1);
@@ -118,7 +119,7 @@ namespace SongBrowserPlugin
 
             // Weights used for keeping the original songs in order
             // Invert the weights from the game so we can order by descending and make LINQ work with us...
-            /*  Level4, Level2, Level9, Level5, Level10, Level6, Level7, Level1, Level3, Level8, */
+            /*  Level4, Level2, Level9, Level5, Level10, Level6, Level7, Level1, Level3, Level8, Level11 */
             Dictionary<string, int> weights = new Dictionary<string, int>
             {
                 ["Level4"] = 11,
@@ -139,7 +140,7 @@ namespace SongBrowserPlugin
             {
                 if (_levelIdToCustomLevel.ContainsKey(level.levelID))
                 {
-                    _log.Debug("HAS KEY: {0}", level.levelID);
+                    _log.Debug("HAS KEY {0}: {1}", _levelIdToCustomLevel[level.levelID].customSongInfo.path, level.levelID);
                 }
                 else
                 {
