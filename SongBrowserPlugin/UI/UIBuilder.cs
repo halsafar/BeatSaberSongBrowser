@@ -3,9 +3,9 @@ using System.Linq;
 using UnityEngine.UI;
 using TMPro;
 using VRUI;
+using SongBrowserPlugin.DataAccess;
 
-
-namespace SongBrowserPlugin
+namespace SongBrowserPlugin.UI
 {
     public static class UIBuilder
     {
@@ -23,6 +23,19 @@ namespace SongBrowserPlugin
             vc.rectTransform.anchorMax = new Vector2(1f, 1f);
             vc.rectTransform.sizeDelta = new Vector2(0f, 0f);
             vc.rectTransform.anchoredPosition = new Vector2(0f, 0f);
+
+            return vc;
+        }
+
+        /// <summary>
+        /// Create empty FlowCoordinator
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static T CreateFlowCoordinator<T>(string name) where T : FlowCoordinator
+        {
+            T vc = new GameObject(name).AddComponent<T>();
 
             return vc;
         }
@@ -148,7 +161,7 @@ namespace SongBrowserPlugin
         {
             if (button.GetComponentsInChildren<UnityEngine.UI.Image>().Count() > 1)
             {
-                button.GetComponentsInChildren<UnityEngine.UI.Image>()[1].sprite = icon;
+                button.GetComponentsInChildren<Image>().First(x => x.name == "Icon").sprite = icon;
             }            
         }
 
