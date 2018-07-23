@@ -359,7 +359,11 @@ namespace SongBrowserPlugin.UI
                 {
                     selectedLevelID = levels.FirstOrDefault().levelID;
                 }
-                SelectAndScrollToLevel(_songListTableView, selectedLevelID);
+
+                if (levels.Any(x => x.levelID == selectedLevelID))
+                {
+                    SelectAndScrollToLevel(_songListTableView, selectedLevelID);
+                }
                 
                 RefreshUI();                
             }
