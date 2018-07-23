@@ -43,16 +43,6 @@ namespace SongBrowserPlugin.UI
         private SongBrowserModel _model;
 
         /// <summary>
-        /// Unity OnLoad
-        /// </summary>
-        //public static SongBrowserUI Instance;
-        /*public static void OnLoad()
-        {
-            if (Instance != null) return;
-            new GameObject("Song Browser Modded").AddComponent<SongBrowserUI>();
-        }    */    
-
-        /// <summary>
         /// Constructor
         /// </summary>
         public SongBrowserUI() : base()
@@ -129,6 +119,8 @@ namespace SongBrowserPlugin.UI
 
                 System.Action<SongSortMode> onSortButtonClickEvent = delegate (SongSortMode sortMode) {
                     _log.Debug("Sort button - {0} - pressed.", sortMode.ToString());
+                    SongBrowserModel.LastSelectedLevelId = null;
+
                     _model.Settings.sortMode = sortMode;
                     _model.Settings.Save();
                     UpdateSongList();
@@ -197,6 +189,7 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         private void OnDidSelectLevelEvent(StandardLevelListViewController view, IStandardLevel level)
         {
+            _log.Trace("OnDidSelectLevelEvent({0}", level.levelID);
             if (level == null)
             {
                 _log.Debug("No level selected?");
@@ -208,6 +201,8 @@ namespace SongBrowserPlugin.UI
                 _log.Debug("Settings not instantiated yet?");
                 return;
             }
+
+            SongBrowserModel.LastSelectedLevelId = level.levelID;
 
             RefreshAddFavoriteButton(level.levelID);
         }
@@ -355,10 +350,17 @@ namespace SongBrowserPlugin.UI
                 tableView.ReloadData();
 
                 String selectedLevelID = null;
-
-
-                SelectAndScrollToLevel(_songListTableView, levels.FirstOrDefault().levelID);
-
+                if (SongBrowserModel.LastSelectedLevelId != null)
+                {
+                    selectedLevelID = SongBrowserModel.LastSelectedLevelId;
+                    _log.Debug("Scrolling to row for level ID: {0}", selectedLevelID);                    
+                }
+                else
+                {
+                    selectedLevelID = levels.FirstOrDefault().levelID;
+                }
+                SelectAndScrollToLevel(_songListTableView, selectedLevelID);
+                
                 RefreshUI();                
             }
             catch (Exception e)

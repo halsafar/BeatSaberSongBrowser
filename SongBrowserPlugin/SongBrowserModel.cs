@@ -18,12 +18,10 @@ namespace SongBrowserPlugin
         private List<StandardLevelSO> _sortedSongs;
         private List<StandardLevelSO> _originalSongs;
         private Dictionary<String, SongLoaderPlugin.OverrideClasses.CustomLevel> _levelIdToCustomLevel;
-        private SongLoaderPlugin.OverrideClasses.CustomLevelCollectionSO _gameplayModeCollection;
-
-        private SongSortMode _cachedSortMode = default(SongSortMode);
+        private SongLoaderPlugin.OverrideClasses.CustomLevelCollectionSO _gameplayModeCollection;    
         private Dictionary<String, double> _cachedLastWriteTimes;
-        private DateTime _cachedCustomSongDirLastWriteTime = DateTime.MinValue;
-        private int _customSongDirTotalCount = -1;
+
+        public static String LastSelectedLevelId { get; set; }
 
         public SongBrowserSettings Settings
         {
@@ -77,50 +75,22 @@ namespace SongBrowserPlugin
             String customSongsPath = Path.Combine(Environment.CurrentDirectory, "CustomSongs");
             DateTime currentLastWriteTIme = File.GetLastWriteTimeUtc(customSongsPath);
             string[] directories = Directory.GetDirectories(customSongsPath);
-            int directoryCount = directories.Length;
-            int fileCount = Directory.GetFiles(customSongsPath, "*").Length;
-            int currentTotalCount = directoryCount + fileCount;
 
-            /*if (_cachedCustomSongDirLastWriteTime == null || 
-                DateTime.Compare(currentLastWriteTIme, _cachedCustomSongDirLastWriteTime) != 0 ||
-                currentTotalCount != this._customSongDirTotalCount)*/
+            // Get LastWriteTimes
+            var Epoch = new DateTime(1970, 1, 1);
+            foreach (string dir in directories)
             {
-                //_log.Debug("Custom Song directory has changed. Fetching new songs. Sorting song list.");
+                // Flip slashes, match SongLoaderPlugin
+                string slashed_dir = dir.Replace("\\", "/");
 
-                //this._customSongDirTotalCount = directoryCount + fileCount;
-
-                // Get LastWriteTimes
-                var Epoch = new DateTime(1970, 1, 1);
-
-                //_log.Debug("Directories: " + directories);
-                foreach (string dir in directories)
-                {
-                    // Flip slashes, match SongLoaderPlugin
-                    string slashed_dir = dir.Replace("\\", "/");
-
-                   //_log.Debug("Fetching LastWriteTime for {0}", slashed_dir);
-                    _cachedLastWriteTimes[slashed_dir] = (File.GetLastWriteTimeUtc(dir) - Epoch).TotalMilliseconds;
-                }
-
-                // Update song Infos
-                this.UpdateSongInfos(gameplayMode);
-                
-                // Get new songs
-                _cachedCustomSongDirLastWriteTime = currentLastWriteTIme;
-                _cachedSortMode = _settings.sortMode;
-                
-                this.ProcessSongList();
+                //_log.Debug("Fetching LastWriteTime for {0}", slashed_dir);
+                _cachedLastWriteTimes[slashed_dir] = (File.GetLastWriteTimeUtc(dir) - Epoch).TotalMilliseconds;
             }
-            /*else if (_settings.sortMode != _cachedSortMode)
-            {
-                _log.Debug("Sort mode has changed.  Sorting song list.");
-                _cachedSortMode = _settings.sortMode;
-                this.ProcessSongList();
-            }
-            else
-            {
-                _log.Debug("Songs List and/or sort mode has not changed.");
-            }*/
+
+            // Update song Infos
+            this.UpdateSongInfos(gameplayMode);
+                                
+            this.ProcessSongList();                       
         }
 
         /// <summary>
@@ -145,7 +115,6 @@ namespace SongBrowserPlugin
         private void ProcessSongList()
         {
             _log.Trace("ProcessSongList()");
-            Stopwatch stopwatch = Stopwatch.StartNew();
 
             // Weights used for keeping the original songs in order
             // Invert the weights from the game so we can order by descending and make LINQ work with us...
@@ -177,6 +146,8 @@ namespace SongBrowserPlugin
                     _log.Debug("Missing KEY: {0}", level.levelID);
                 }
             }*/
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
 
             switch (_settings.sortMode)
             {
@@ -226,8 +197,6 @@ namespace SongBrowserPlugin
 
             stopwatch.Stop();
             _log.Info("Sorting songs took {0}ms", stopwatch.ElapsedMilliseconds);
-
-            //_gameplayModeCollection.Init(_sortedSongs.ToArray());
         }        
     }
 }
