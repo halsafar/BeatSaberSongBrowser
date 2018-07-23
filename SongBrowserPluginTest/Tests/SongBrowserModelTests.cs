@@ -7,46 +7,18 @@ using SongBrowserPlugin;
 
 namespace SongBrowserPluginTests
 {
-    class MockBeatSaberSongList : SongBrowserPlugin.DataAccess.IBeatSaberSongList
-    {
-        List<LevelStaticData> testList;
-
-        public MockBeatSaberSongList()
-        {
-            testList = new List<LevelStaticData>();
-            for (int i = 0; i < 10000; i++)
-            {
-                LevelStaticData level = new LevelStaticData();
-                SongBrowserPlugin.ReflectionUtil.SetPrivateField(level, "_songName", "SongName" + i);
-                SongBrowserPlugin.ReflectionUtil.SetPrivateField(level, "_authorName", "AuthorName" + i);
-                SongBrowserPlugin.ReflectionUtil.SetPrivateField(level, "_levelId", "LevelId" + i);
-                testList.Add(level);
-            }
-
-        }
-
-        public List<LevelStaticData> AcquireSongList()
-        {
-            return testList;
-        }
-
-        public void OverwriteBeatSaberSongList(List<LevelStaticData> newSongList)
-        {
-            return;
-        }
-    }
-
+    
     class SongBrowserModelTests : ISongBrowserTest
     {
         private Logger _log = new Logger("SongBrowserModelTests");
 
         public void RunTest()
         {
-            _log.Info("SongBrowserModelTests - All tests in Milliseconds");
+            /*_log.Info("SongBrowserModelTests - All tests in Milliseconds");
 
             Stopwatch stopwatch = Stopwatch.StartNew();
             SongBrowserModel model = new SongBrowserModel();
-            model.Init(new MockBeatSaberSongList());
+            model.Init();
             stopwatch.Stop();
             _log.Info("Created a bunch of LevelStaticData: {0}", stopwatch.ElapsedMilliseconds);
 
@@ -82,7 +54,7 @@ namespace SongBrowserPluginTests
                 var m3 = model.SortedSongList.ToArray();
             }
             stopwatch.Stop();
-            _log.Info("Converting big list into array a bunch of times: {0}", stopwatch.ElapsedMilliseconds);
+            _log.Info("Converting big list into array a bunch of times: {0}", stopwatch.ElapsedMilliseconds);*/
         }
     }
 }

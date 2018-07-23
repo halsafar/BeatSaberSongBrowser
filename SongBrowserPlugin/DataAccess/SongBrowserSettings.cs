@@ -4,12 +4,13 @@ using System.IO;
 using System.Xml.Serialization;
 
 
-namespace SongBrowserPlugin
+namespace SongBrowserPlugin.DataAccess
 {
     [Serializable]
     public enum SongSortMode
     {
-        Default,        
+        Default,
+        Author,
         Favorites,
         Original,
         Newest,
@@ -22,7 +23,7 @@ namespace SongBrowserPlugin
         public List<String> favorites;
 
         [NonSerialized]
-        private static Logger Log = new Logger("SongBrowserPlugin-Settings");
+        private static Logger Log = new Logger("SongBrowserSettings");
 
         /// <summary>
         /// Constructor.
@@ -48,7 +49,7 @@ namespace SongBrowserPlugin
         /// <returns>SongBrowserSettings</returns>
         public static SongBrowserSettings Load()
         {
-            Log.Debug("Load Song Browser Settings");
+            Log.Trace("Load()");
             SongBrowserSettings retVal = null;
 
             String settingsFilePath = SongBrowserSettings.SettingsPath();
@@ -67,12 +68,10 @@ namespace SongBrowserPlugin
                 XmlSerializer serializer = new XmlSerializer(typeof(SongBrowserSettings));
                 
                 retVal = (SongBrowserSettings)serializer.Deserialize(fs);
-
-                Log.Debug("sortMode: " + retVal.sortMode);
             }
             catch (Exception e)
             {
-                Log.Exception("Unable to deserialize song browser settings file: " + e.Message);
+                Log.Exception("Unable to deserialize song browser settings file: ", e);
 
                 // Return default settings
                 retVal = new SongBrowserSettings();

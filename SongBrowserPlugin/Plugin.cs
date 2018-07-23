@@ -1,14 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
-using UnityEngine.SceneManagement;
-using VRUI;
+﻿using UnityEngine.SceneManagement;
 using IllusionPlugin;
-using TMPro;
-using UnityEngine.UI;
-using System.Collections;
 
 
 namespace SongBrowserPlugin
@@ -22,7 +13,7 @@ namespace SongBrowserPlugin
 
 		public string Version
 		{
-			get { return "v1.0-rc3"; }
+			get { return "v2.0-beta"; }
 		}
 		
 		public void OnApplicationStart()
@@ -47,8 +38,8 @@ namespace SongBrowserPlugin
         public void OnLevelWasLoaded(int level)
 		{
             //Console.WriteLine("OnLevelWasLoaded=" + level);            
-            if (level != SongBrowserMasterViewController.MenuIndex) return;
-            SongBrowserMasterViewController.OnLoad();
+            if (level != SongBrowserApplication.MenuIndex) return;
+            SongBrowserApplication.OnLoad();
         }
 
 		public void OnLevelWasInitialized(int level)
