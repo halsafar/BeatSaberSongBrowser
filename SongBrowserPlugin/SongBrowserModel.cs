@@ -11,6 +11,8 @@ namespace SongBrowserPlugin
 {
     public class SongBrowserModel
     {
+        public static String LastSelectedLevelId { get; set; }
+
         private Logger _log = new Logger("SongBrowserModel");
         
         private SongBrowserSettings _settings;
@@ -21,7 +23,7 @@ namespace SongBrowserPlugin
         private SongLoaderPlugin.OverrideClasses.CustomLevelCollectionSO _gameplayModeCollection;    
         private Dictionary<String, double> _cachedLastWriteTimes;
 
-        public static String LastSelectedLevelId { get; set; }
+        public bool InvertingResults { get; private set; }
 
         public SongBrowserSettings Settings
         {
@@ -64,6 +66,14 @@ namespace SongBrowserPlugin
         {
             _settings = SongBrowserSettings.Load();
             _log.Info("Settings loaded, sorting mode is: {0}", _settings.sortMode);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void ToggleInverting()
+        {
+            this.InvertingResults = !this.InvertingResults;
         }
 
         /// <summary>
@@ -194,6 +204,11 @@ namespace SongBrowserPlugin
                         .ThenBy(x => x.songAuthorName)
                         .ToList();
                     break;
+            }
+
+            if (this.InvertingResults)
+            {
+                _sortedSongs.Reverse();
             }
 
             stopwatch.Stop();

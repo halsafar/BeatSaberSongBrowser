@@ -127,8 +127,14 @@ namespace SongBrowserPlugin.UI
                     _log.Debug("Sort button - {0} - pressed.", sortMode.ToString());
                     SongBrowserModel.LastSelectedLevelId = null;
 
+                    if (_model.Settings.sortMode == sortMode)
+                    {
+                        _model.ToggleInverting();
+                    }
+
                     _model.Settings.sortMode = sortMode;
                     _model.Settings.Save();
+
                     UpdateSongList();
                     RefreshSongList();
                 };
@@ -328,7 +334,16 @@ namespace SongBrowserPlugin.UI
                 UIBuilder.SetButtonBorder(ref sortButton.Button, Color.black);
                 if (sortButton.SortMode == _model.Settings.sortMode)
                 {
-                    UIBuilder.SetButtonBorder(ref sortButton.Button, Color.red);
+                    if (_model.InvertingResults)
+                    {
+                        UIBuilder.SetButtonBorder(ref sortButton.Button, Color.red);
+                        UIBuilder.SetButtonIcon(ref sortButton.Button, SongBrowserApplication.Instance.CachedIcons["ArrowIcon"]);
+                    }
+                    else
+                    {
+                        UIBuilder.SetButtonBorder(ref sortButton.Button, Color.green);
+                        UIBuilder.SetButtonIcon(ref sortButton.Button, SongBrowserApplication.Instance.CachedIcons["ArrowIcon"]);
+                    }
                 }
             }            
         }
@@ -431,6 +446,12 @@ namespace SongBrowserPlugin.UI
                 if (Input.GetKeyDown(KeyCode.T))
                 {
                     _sortButtonLastPushedIndex = (_sortButtonLastPushedIndex + 1) % _sortButtonGroup.Count;
+                    _sortButtonGroup[_sortButtonLastPushedIndex].Button.onClick.Invoke();
+                }
+
+                // select current sort mode again (toggle inverting)
+                if (Input.GetKeyDown(KeyCode.Y))
+                {
                     _sortButtonGroup[_sortButtonLastPushedIndex].Button.onClick.Invoke();
                 }
 
