@@ -8,6 +8,8 @@ using VRUI;
 using SongBrowserPlugin.DataAccess;
 using System.IO;
 using SongLoaderPlugin;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace SongBrowserPlugin.UI
 {
@@ -119,21 +121,22 @@ namespace SongBrowserPlugin.UI
 
             try
             {
+                RectTransform parent = this._levelSelectionNavigationController.transform as RectTransform;
+
                 // Resize some of the UI
                 _tableViewRectTransform = _levelListViewController.GetComponentsInChildren<RectTransform>().First(x => x.name == "TableViewContainer");
                 _tableViewRectTransform.sizeDelta = new Vector2(0f, -20f);
                 _tableViewRectTransform.anchoredPosition = new Vector2(0f, -2.5f);
 
-                RectTransform _pageUp = _tableViewRectTransform.GetComponentsInChildren<RectTransform>().First(x => x.name == "PageUpButton");
-                _pageUp.anchoredPosition = new Vector2(0f, -1f);
+                Button pageUp = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageUpButton");
+                (pageUp.transform as RectTransform).anchoredPosition = new Vector2(0f, -1f);
 
-                RectTransform _pageDown = _tableViewRectTransform.GetComponentsInChildren<RectTransform>().First(x => x.name == "PageDownButton");
-                _pageDown.anchoredPosition = new Vector2(0f, 1f);
-                
+                Button pageDown = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageDownButton");
+                (pageDown.transform as RectTransform).anchoredPosition = new Vector2(0f, 1f);
+
                 // Create Sorting Songs By-Buttons
                 _log.Debug("Creating sort by buttons...");
-
-                RectTransform rect = this._levelSelectionNavigationController.transform as RectTransform;
+                
                 Sprite arrowIcon = SongBrowserApplication.Instance.CachedIcons["ArrowIcon"];
 
                 System.Action<SongSortMode> onSortButtonClickEvent = delegate (SongSortMode sortMode) {
@@ -174,7 +177,7 @@ namespace SongBrowserPlugin.UI
                 _sortButtonGroup = new List<SongSortButton>();
                 for (int i = 0; i < buttonNames.Length; i++)
                 {
-                    _sortButtonGroup.Add(UIBuilder.CreateSortButton(rect, sortButtonTemplate, arrowIcon, buttonNames[i], fontSize, buttonX, buttonY, buttonWidth, buttonHeight, sortModes[i], onSortButtonClickEvent));
+                    _sortButtonGroup.Add(UIBuilder.CreateSortButton(parent, sortButtonTemplate, arrowIcon, buttonNames[i], fontSize, buttonX, buttonY, buttonWidth, buttonHeight, sortModes[i], onSortButtonClickEvent));
                     buttonX -= buttonWidth;
                 }
 
@@ -289,19 +292,80 @@ namespace SongBrowserPlugin.UI
             }
             else
             {
-                IStandardLevel level = this._levelListViewController.selectedLevel;
+                string customSongsPath = Path.Combine(Environment.CurrentDirectory, "CustomSongs");
+                IStandardLevel level = this._levelListViewController.selectedLevel;                
                 SongLoaderPlugin.OverrideClasses.CustomLevel customLevel = _model.LevelIdToCustomSongInfos[level.levelID];
+                string songPath = customLevel.customSongInfo.path;
+                bool isZippedSong = false;
 
                 viewController.DismissModalViewController(null, false);
-                _log.Debug("Deleting: {0}", customLevel.customSongInfo.path);
-                
-                FileAttributes attr = File.GetAttributes(customLevel.customSongInfo.path);
-                if (attr.HasFlag(FileAttributes.Directory))
-                    Directory.Delete(customLevel.customSongInfo.path);
-                else
-                    File.Delete(customLevel.customSongInfo.path);
+                _log.Debug("Deleting: {0}", songPath);
 
-                SongLoaderPlugin.SongLoader.Instance.RemoveSongWithPath(customLevel.customSongInfo.path);
+                if (!string.IsNullOrEmpty(songPath) && songPath.Contains("/.cache/"))
+                {
+                    isZippedSong = true;
+                }
+
+                if (isZippedSong)
+                {
+                    DirectoryInfo songHashDir = Directory.GetParent(songPath);
+                    _log.Debug("Deleting zipped song cache: {0}", songHashDir.FullName);
+                    Directory.Delete(songHashDir.FullName, true);
+
+                    foreach (string file in Directory.GetFiles(customSongsPath, "*.zip"))
+                    {
+                        string hash = CreateMD5FromFile(file);
+                        if (hash != null)
+                        {
+                            if (hash == songHashDir.Name)
+                            {
+                                _log.Debug("Deleting zipped song: {0}", file);
+                                File.Delete(file);
+                                break;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    FileAttributes attr = File.GetAttributes(songPath);
+                    if (attr.HasFlag(FileAttributes.Directory))
+                    {
+                        _log.Debug("Deleting song: {0}", songPath);
+                        Directory.Delete(songPath, true);
+                    }
+                }
+
+                SongLoaderPlugin.SongLoader.Instance.RemoveSongWithPath(songPath);
+                this.UpdateSongList();
+                this.RefreshSongList();
+            }
+        }
+
+        /// <summary>
+        /// Create MD5 of a file.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static string CreateMD5FromFile(string path)
+        {
+            string hash = "";
+            if (!File.Exists(path)) return null;
+            using (MD5 md5 = MD5.Create())
+            {
+                using (var stream = File.OpenRead(path))
+                {
+                    byte[] hashBytes = md5.ComputeHash(stream);
+
+                    StringBuilder sb = new StringBuilder();
+                    foreach (byte hashByte in hashBytes)
+                    {
+                        sb.Append(hashByte.ToString("X2"));
+                    }
+
+                    hash = sb.ToString();
+                    return hash;
+                }
             }
         }
 
@@ -496,7 +560,13 @@ namespace SongBrowserPlugin.UI
                     }
                     _deleteButton.onClick.Invoke();
                 }
-                
+
+                // accept delete
+                if (Input.GetKeyDown(KeyCode.B) && _deleteDialog.isInViewControllerHierarchy)
+                {
+                    _deleteDialog.GetPrivateField<TextMeshProButton>("_okButton").button.onClick.Invoke();
+                }
+
                 // c,v can be used to get into a song
                 if (Input.GetKeyDown(KeyCode.C))
                 {
