@@ -14,6 +14,7 @@ namespace SongBrowserPlugin.DataAccess
         Favorites,
         Original,
         Newest,
+        PlayCount,
     }
 
     [Serializable]

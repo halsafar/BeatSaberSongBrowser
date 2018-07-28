@@ -146,6 +146,7 @@ namespace SongBrowserPlugin.UI
                     UIBuilder.CreateSortButton(rect, "PlayButton", "Author", 3, "AllDirectionsIcon", 34f, 74.5f, 16f, 5f, SongSortMode.Author, onSortButtonClickEvent),
                     UIBuilder.CreateSortButton(rect, "PlayButton", "Original", 3, "AllDirectionsIcon", 18f, 74.5f, 16f, 5f, SongSortMode.Original, onSortButtonClickEvent),
                     UIBuilder.CreateSortButton(rect, "PlayButton", "Newest", 3, "AllDirectionsIcon", 2f, 74.5f, 16f, 5f, SongSortMode.Newest, onSortButtonClickEvent),
+                    UIBuilder.CreateSortButton(rect, "PlayButton", "Playcount", 3, "AllDirectionsIcon", -14f, 74.5f, 16f, 5f, SongSortMode.PlayCount, onSortButtonClickEvent),
                 };
 
                 // Creaate Add to Favorites Button
