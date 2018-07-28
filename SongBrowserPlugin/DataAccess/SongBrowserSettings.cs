@@ -15,6 +15,7 @@ namespace SongBrowserPlugin.DataAccess
         Original,
         Newest,
         PlayCount,
+        Random,
     }
 
     [Serializable]
