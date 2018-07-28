@@ -21,12 +21,13 @@ namespace SongBrowserPlugin.UI
         private Logger _log = new Logger(Name);
 
         // Beat Saber UI Elements
-        StandardLevelSelectionFlowCoordinator _levelSelectionFlowCoordinator;
-        StandardLevelListViewController _levelListViewController;
-        StandardLevelDetailViewController _levelDetailViewController;
-        StandardLevelDifficultyViewController _levelDifficultyViewController;
-        StandardLevelSelectionNavigationController _levelSelectionNavigationController;
-        StandardLevelListTableView _levelListTableView;
+        private StandardLevelSelectionFlowCoordinator _levelSelectionFlowCoordinator;
+        private StandardLevelListViewController _levelListViewController;
+        private StandardLevelDetailViewController _levelDetailViewController;
+        private StandardLevelDifficultyViewController _levelDifficultyViewController;
+        private StandardLevelSelectionNavigationController _levelSelectionNavigationController;
+        private StandardLevelListTableView _levelListTableView;
+        private RectTransform _tableViewRectTransform;
 
         // New UI Elements
         private List<SongSortButton> _sortButtonGroup;
@@ -117,36 +118,71 @@ namespace SongBrowserPlugin.UI
             _log.Trace("CreateUIElements");
 
             try
-            {                               
-                RectTransform rect = this._levelSelectionNavigationController.transform as RectTransform;
+            {
+                // Resize some of the UI
+                _tableViewRectTransform = _levelListViewController.GetComponentsInChildren<RectTransform>().First(x => x.name == "TableViewContainer");
+                _tableViewRectTransform.sizeDelta = new Vector2(0f, -20f);
+                _tableViewRectTransform.anchoredPosition = new Vector2(0f, -2.5f);
 
+                RectTransform _pageUp = _tableViewRectTransform.GetComponentsInChildren<RectTransform>().First(x => x.name == "PageUpButton");
+                _pageUp.anchoredPosition = new Vector2(0f, -1f);
+
+                RectTransform _pageDown = _tableViewRectTransform.GetComponentsInChildren<RectTransform>().First(x => x.name == "PageDownButton");
+                _pageDown.anchoredPosition = new Vector2(0f, 1f);
+                
                 // Create Sorting Songs By-Buttons
                 _log.Debug("Creating sort by buttons...");
+
+                RectTransform rect = this._levelSelectionNavigationController.transform as RectTransform;
+                Sprite arrowIcon = SongBrowserApplication.Instance.CachedIcons["ArrowIcon"];
 
                 System.Action<SongSortMode> onSortButtonClickEvent = delegate (SongSortMode sortMode) {
                     _log.Debug("Sort button - {0} - pressed.", sortMode.ToString());
                     SongBrowserModel.LastSelectedLevelId = null;
 
+                    if (_model.Settings.sortMode == sortMode)
+                    {
+                        _model.ToggleInverting();
+                    }
+
                     _model.Settings.sortMode = sortMode;
                     _model.Settings.Save();
+
                     UpdateSongList();
                     RefreshSongList();
                 };
 
-                _sortButtonGroup = new List<SongSortButton>
+                Button sortButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PlayButton"));
+                Button otherButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "QuitButton"));
+
+                float fontSize = 2.75f;
+                float buttonWidth = 17.0f;
+                float buttonHeight = 5.0f;
+                float buttonX = 68.0f;
+                float buttonY = 74.5f;
+
+                string[] buttonNames = new string[]
                 {
-                    UIBuilder.CreateSortButton(rect, "PlayButton", "Favorite", 3, "AllDirectionsIcon", 66, 74.5f, 16f, 5f, SongSortMode.Favorites, onSortButtonClickEvent),
-                    UIBuilder.CreateSortButton(rect, "PlayButton", "Song", 3, "AllDirectionsIcon", 50f, 74.5f, 16f, 5f, SongSortMode.Default, onSortButtonClickEvent),
-                    UIBuilder.CreateSortButton(rect, "PlayButton", "Author", 3, "AllDirectionsIcon", 34f, 74.5f, 16f, 5f, SongSortMode.Author, onSortButtonClickEvent),
-                    UIBuilder.CreateSortButton(rect, "PlayButton", "Original", 3, "AllDirectionsIcon", 18f, 74.5f, 16f, 5f, SongSortMode.Original, onSortButtonClickEvent),
-                    UIBuilder.CreateSortButton(rect, "PlayButton", "Newest", 3, "AllDirectionsIcon", 2f, 74.5f, 16f, 5f, SongSortMode.Newest, onSortButtonClickEvent),
+                    "Favorite", "Song", "Author", "Original", "Newest", "PlayCount"
                 };
+
+                SongSortMode[] sortModes = new SongSortMode[]
+                {
+                    SongSortMode.Favorites, SongSortMode.Default, SongSortMode.Author, SongSortMode.Original, SongSortMode.Newest, SongSortMode.PlayCount
+                };
+
+                _sortButtonGroup = new List<SongSortButton>();
+                for (int i = 0; i < buttonNames.Length; i++)
+                {
+                    _sortButtonGroup.Add(UIBuilder.CreateSortButton(rect, sortButtonTemplate, arrowIcon, buttonNames[i], fontSize, buttonX, buttonY, buttonWidth, buttonHeight, sortModes[i], onSortButtonClickEvent));
+                    buttonX -= buttonWidth;
+                }
 
                 // Creaate Add to Favorites Button
                 _log.Debug("Creating add to favorites button...");
 
                 RectTransform transform = this._levelDetailViewController.transform as RectTransform;
-                _addFavoriteButton = UIBuilder.CreateUIButton(transform, "QuitButton", SongBrowserApplication.Instance.ButtonTemplate);
+                _addFavoriteButton = UIBuilder.CreateUIButton(transform, otherButtonTemplate);
                 (_addFavoriteButton.transform as RectTransform).anchoredPosition = new Vector2(40f, 5.75f);
                 (_addFavoriteButton.transform as RectTransform).sizeDelta = new Vector2(10f, 10f);
                 UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);
@@ -170,7 +206,7 @@ namespace SongBrowserPlugin.UI
                 _log.Debug("Creating delete button...");
 
                 transform = this._levelDetailViewController.transform as RectTransform;
-                _deleteButton = UIBuilder.CreateUIButton(transform, "QuitButton", SongBrowserApplication.Instance.ButtonTemplate);
+                _deleteButton = UIBuilder.CreateUIButton(transform, otherButtonTemplate);
                 (_deleteButton.transform as RectTransform).anchoredPosition = new Vector2(46f, 0f);
                 (_deleteButton.transform as RectTransform).sizeDelta = new Vector2(15f, 5f);
                 UIBuilder.SetButtonText(ref _deleteButton, "Delete");
@@ -326,9 +362,20 @@ namespace SongBrowserPlugin.UI
             foreach (SongSortButton sortButton in _sortButtonGroup)
             {
                 UIBuilder.SetButtonBorder(ref sortButton.Button, Color.black);
+                //UIBuilder.SetButtonIconEnabled(ref sortButton.Button, false);
                 if (sortButton.SortMode == _model.Settings.sortMode)
                 {
-                    UIBuilder.SetButtonBorder(ref sortButton.Button, Color.red);
+                    //UIBuilder.SetButtonIcon(ref sortButton.Button, SongBrowserApplication.Instance.CachedIcons["ArrowIcon"]);
+                    //UIBuilder.SetButtonIconEnabled(ref sortButton.Button, true);
+
+                    if (_model.InvertingResults)
+                    {
+                        UIBuilder.SetButtonBorder(ref sortButton.Button, Color.red);
+                    }
+                    else
+                    {
+                        UIBuilder.SetButtonBorder(ref sortButton.Button, Color.green);
+                    }
                 }
             }            
         }
@@ -431,6 +478,12 @@ namespace SongBrowserPlugin.UI
                 if (Input.GetKeyDown(KeyCode.T))
                 {
                     _sortButtonLastPushedIndex = (_sortButtonLastPushedIndex + 1) % _sortButtonGroup.Count;
+                    _sortButtonGroup[_sortButtonLastPushedIndex].Button.onClick.Invoke();
+                }
+
+                // select current sort mode again (toggle inverting)
+                if (Input.GetKeyDown(KeyCode.Y))
+                {
                     _sortButtonGroup[_sortButtonLastPushedIndex].Button.onClick.Invoke();
                 }
 

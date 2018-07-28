@@ -11,6 +11,8 @@ namespace SongBrowserPlugin
 {
     public class SongBrowserModel
     {
+        public static String LastSelectedLevelId { get; set; }
+
         private Logger _log = new Logger("SongBrowserModel");
         
         private SongBrowserSettings _settings;
@@ -21,7 +23,7 @@ namespace SongBrowserPlugin
         private SongLoaderPlugin.OverrideClasses.CustomLevelCollectionSO _gameplayModeCollection;    
         private Dictionary<String, double> _cachedLastWriteTimes;
 
-        public static String LastSelectedLevelId { get; set; }
+        public bool InvertingResults { get; private set; }
 
         public SongBrowserSettings Settings
         {
@@ -67,6 +69,14 @@ namespace SongBrowserPlugin
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        public void ToggleInverting()
+        {
+            this.InvertingResults = !this.InvertingResults;
+        }
+
+        /// <summary>
         /// Get the song cache from the game.
         /// TODO: This might not even be necessary anymore.  Need to test interactions with BeatSaverDownloader.
         /// </summary>
@@ -91,7 +101,7 @@ namespace SongBrowserPlugin
             // Update song Infos
             this.UpdateSongInfos(gameplayMode);
                                 
-            this.ProcessSongList();                       
+            this.ProcessSongList(gameplayMode);                       
         }
 
         /// <summary>
@@ -113,7 +123,7 @@ namespace SongBrowserPlugin
         /// <summary>
         /// Sort the song list based on the settings.
         /// </summary>
-        private void ProcessSongList()
+        private void ProcessSongList(GameplayMode gameplayMode)
         {
             _log.Trace("ProcessSongList()");
 
@@ -147,6 +157,8 @@ namespace SongBrowserPlugin
                     _log.Debug("Missing KEY: {0}", level.levelID);
                 }
             }*/
+
+            PlayerDynamicData playerData = GameDataModel.instance.gameDynamicData.GetCurrentPlayerDynamicData();
 
             Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -185,6 +197,17 @@ namespace SongBrowserPlugin
                         .ThenBy(x => x.songName)
                         .ToList();
                     break;
+                case SongSortMode.PlayCount:
+                    _log.Info("Sorting song list by playcount");
+                    // Build a map of levelId to sum of all playcounts and sort.
+                    IEnumerable<LevelDifficulty> difficultyIterator = Enum.GetValues(typeof(LevelDifficulty)).Cast<LevelDifficulty>();
+                    Dictionary<string, int> _levelIdToPlayCount = _originalSongs.ToDictionary(x => x.levelID, x => difficultyIterator.Sum(difficulty => playerData.GetPlayerLevelStatsData(x.levelID, difficulty, gameplayMode).playCount));
+                    _sortedSongs = _originalSongs
+                        .AsQueryable()
+                        .OrderByDescending(x => _levelIdToPlayCount[x.levelID])
+                        .ThenBy(x => x.songName)
+                        .ToList();
+                    break;
                 case SongSortMode.Default:
                 default:
                     _log.Info("Sorting song list as default (songName)");
@@ -194,6 +217,11 @@ namespace SongBrowserPlugin
                         .ThenBy(x => x.songAuthorName)
                         .ToList();
                     break;
+            }
+
+            if (this.InvertingResults)
+            {
+                _sortedSongs.Reverse();
             }
 
             stopwatch.Stop();

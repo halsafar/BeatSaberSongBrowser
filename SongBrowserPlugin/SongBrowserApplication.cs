@@ -22,7 +22,7 @@ namespace SongBrowserPlugin
         // Song Browser UI Elements
         private SongBrowserUI _songBrowserUI;
         public Dictionary<String, Sprite> CachedIcons;
-        public Button ButtonTemplate;
+        //public Button PlayButtonTemplate;
 
         /// <summary>
         /// 
@@ -122,7 +122,7 @@ namespace SongBrowserPlugin
                     CachedIcons.Add(sprite.name, sprite);
                 }
 
-                ButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PlayButton"));
+                //PlayButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PlayButton"));
 
                 // Append our own event to appropriate events so we can refresh the song list before the user sees it.
                 MainFlowCoordinator mainFlow = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();

@@ -1,9 +1,18 @@
-﻿using UnityEngine;
-using System.Linq;
-using UnityEngine.UI;
-using TMPro;
-using VRUI;
+﻿using HMUI;
 using SongBrowserPlugin.DataAccess;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using TMPro;
+using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using VRUI;
+using Image = UnityEngine.UI.Image;
+
 
 namespace SongBrowserPlugin.UI
 {
@@ -47,16 +56,12 @@ namespace SongBrowserPlugin.UI
         /// <param name="buttonTemplate"></param>
         /// <param name="buttonInstance"></param>
         /// <returns></returns>
-        static public Button CreateUIButton(RectTransform parent, string buttonTemplate, Button buttonInstance)
+        static public Button CreateUIButton(RectTransform parent, Button buttonTemplate)
         {
-            if (buttonInstance == null)
-            {
-                return null;
-            }
-
-            Button btn = UnityEngine.Object.Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == buttonTemplate)), parent, false);
+            Button btn = UnityEngine.Object.Instantiate(buttonTemplate, parent, false);
             UnityEngine.Object.DestroyImmediate(btn.GetComponent<GameEventOnUIButtonClick>());
             btn.onClick = new Button.ButtonClickedEvent();
+            btn.name = "CustomUIButton";
 
             return btn;
         }
@@ -73,18 +78,29 @@ namespace SongBrowserPlugin.UI
         /// <param name="w"></param>
         /// <param name="h"></param>
         /// <param name="action"></param>
-        public static SongSortButton CreateSortButton(RectTransform rect, string templateButtonName, string buttonText, float fontSize, string iconName, float x, float y, float w, float h, SongSortMode sortMode, System.Action<SongSortMode> onClickEvent)
+        public static SongSortButton CreateSortButton(RectTransform rect, Button buttonTemplate, Sprite iconSprite, string buttonText, float fontSize, float x, float y, float w, float h, SongSortMode sortMode, System.Action<SongSortMode> onClickEvent)
         {
             SongSortButton sortButton = new SongSortButton();
-            Button newButton = UIBuilder.CreateUIButton(rect, templateButtonName, SongBrowserApplication.Instance.ButtonTemplate);
+            Button newButton = UIBuilder.CreateUIButton(rect, buttonTemplate);
 
             newButton.interactable = true;
             (newButton.transform as RectTransform).anchoredPosition = new Vector2(x, y);
             (newButton.transform as RectTransform).sizeDelta = new Vector2(w, h);
 
+            /*RectTransform iconTransform = newButton.GetComponentsInChildren<RectTransform>(true).First(c => c.name == "Icon");
+            iconTransform.gameObject.SetActive(false);
+
+            HorizontalLayoutGroup hgroup = iconTransform.parent.GetComponent<HorizontalLayoutGroup>();
+            hgroup.padding = new RectOffset();
+            hgroup.childForceExpandWidth = true;
+            hgroup.childForceExpandHeight = true;
+            iconTransform.sizeDelta = new Vector2(5f, 5f);
+            iconTransform.localScale = new Vector2(1f, 1f);
+            iconTransform.anchoredPosition = new Vector2(x, y);*/
+
             UIBuilder.SetButtonText(ref newButton, buttonText);
-            //UIBuilder.SetButtonIconEnabled(ref _originalButton, false);
-            UIBuilder.SetButtonIcon(ref newButton, SongBrowserApplication.Instance.CachedIcons[iconName]);
+            UIBuilder.SetButtonIconEnabled(ref newButton, false);
+            UIBuilder.SetButtonIcon(ref newButton, iconSprite);
             UIBuilder.SetButtonTextSize(ref newButton, fontSize);
 
             newButton.onClick.RemoveAllListeners();
@@ -148,8 +164,6 @@ namespace SongBrowserPlugin.UI
             {
                 button.GetComponentInChildren<TextMeshProUGUI>().fontSize = fontSize;
             }
-
-
         }
 
         /// <summary>
@@ -161,7 +175,9 @@ namespace SongBrowserPlugin.UI
         {
             if (button.GetComponentsInChildren<UnityEngine.UI.Image>().Count() > 1)
             {
+                Console.WriteLine("SETTING ICONS");
                 button.GetComponentsInChildren<Image>().First(x => x.name == "Icon").sprite = icon;
+                //button.GetComponentsInChildren<Image>().First(x => x.name == "Icon").transform.Rotate(0, 0, 90);
             }            
         }
 
@@ -174,6 +190,7 @@ namespace SongBrowserPlugin.UI
         {
             if (button.GetComponentsInChildren<UnityEngine.UI.Image>().Count() > 1)
             {
+                //button.GetComponentsInChildren<Image>().First(x => x.name == "Icon").gameObject.SetActive(enabled);
                 button.GetComponentsInChildren<UnityEngine.UI.Image>()[1].enabled = enabled;
             }
         }
