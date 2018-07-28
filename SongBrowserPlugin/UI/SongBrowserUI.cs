@@ -129,7 +129,6 @@ namespace SongBrowserPlugin.UI
 
                 RectTransform _pageDown = _tableViewRectTransform.GetComponentsInChildren<RectTransform>().First(x => x.name == "PageDownButton");
                 _pageDown.anchoredPosition = new Vector2(0f, 1f);
-
                 
                 // Create Sorting Songs By-Buttons
                 _log.Debug("Creating sort by buttons...");
@@ -152,8 +151,6 @@ namespace SongBrowserPlugin.UI
                     UpdateSongList();
                     RefreshSongList();
                 };
-
-                Sprite favIcon = Base64Sprites.Base64ToSprite(Base64Sprites.AddToFavorites);
 
                 float fontSize = 2.75f;
                 float buttonWidth = 17.0f;
