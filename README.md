@@ -16,6 +16,7 @@ A plugin for customizing the in-game song browser.
   - Original: Match the original sorting you would normally get after SongLoaderPlugin.
   - Newest: Sort songs by their last write time.
   - PlayCount: Sort by playcount (sum of play counts across all difficulties for a given song).
+  - Random: Randomize the song list each time.
 - Clicking a sorting method will resort the song list immediately.
 - Sort buttons can be pressed a second time to invert the sorting.
 
