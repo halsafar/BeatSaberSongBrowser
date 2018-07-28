@@ -56,9 +56,9 @@ namespace SongBrowserPlugin.UI
         /// <param name="buttonTemplate"></param>
         /// <param name="buttonInstance"></param>
         /// <returns></returns>
-        static public Button CreateUIButton(RectTransform parent, string buttonTemplate)
+        static public Button CreateUIButton(RectTransform parent, Button buttonTemplate)
         {
-            Button btn = UnityEngine.Object.Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == buttonTemplate)), parent, false);
+            Button btn = UnityEngine.Object.Instantiate(buttonTemplate, parent, false);
             UnityEngine.Object.DestroyImmediate(btn.GetComponent<GameEventOnUIButtonClick>());
             btn.onClick = new Button.ButtonClickedEvent();
             btn.name = "CustomUIButton";
@@ -78,10 +78,10 @@ namespace SongBrowserPlugin.UI
         /// <param name="w"></param>
         /// <param name="h"></param>
         /// <param name="action"></param>
-        public static SongSortButton CreateSortButton(RectTransform rect, string templateButtonName, Sprite iconSprite, string buttonText, float fontSize, float x, float y, float w, float h, SongSortMode sortMode, System.Action<SongSortMode> onClickEvent)
+        public static SongSortButton CreateSortButton(RectTransform rect, Button buttonTemplate, Sprite iconSprite, string buttonText, float fontSize, float x, float y, float w, float h, SongSortMode sortMode, System.Action<SongSortMode> onClickEvent)
         {
             SongSortButton sortButton = new SongSortButton();
-            Button newButton = UIBuilder.CreateUIButton(rect, templateButtonName);
+            Button newButton = UIBuilder.CreateUIButton(rect, buttonTemplate);
 
             newButton.interactable = true;
             (newButton.transform as RectTransform).anchoredPosition = new Vector2(x, y);

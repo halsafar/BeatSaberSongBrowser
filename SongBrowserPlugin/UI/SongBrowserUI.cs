@@ -152,6 +152,9 @@ namespace SongBrowserPlugin.UI
                     RefreshSongList();
                 };
 
+                Button sortButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PlayButton"));
+                Button otherButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "QuitButton"));
+
                 float fontSize = 2.75f;
                 float buttonWidth = 17.0f;
                 float buttonHeight = 5.0f;
@@ -171,7 +174,7 @@ namespace SongBrowserPlugin.UI
                 _sortButtonGroup = new List<SongSortButton>();
                 for (int i = 0; i < buttonNames.Length; i++)
                 {
-                    _sortButtonGroup.Add(UIBuilder.CreateSortButton(rect, "PlayButton", arrowIcon, buttonNames[i], fontSize, buttonX, buttonY, buttonWidth, buttonHeight, sortModes[i], onSortButtonClickEvent));
+                    _sortButtonGroup.Add(UIBuilder.CreateSortButton(rect, sortButtonTemplate, arrowIcon, buttonNames[i], fontSize, buttonX, buttonY, buttonWidth, buttonHeight, sortModes[i], onSortButtonClickEvent));
                     buttonX -= buttonWidth;
                 }
 
@@ -179,7 +182,7 @@ namespace SongBrowserPlugin.UI
                 _log.Debug("Creating add to favorites button...");
 
                 RectTransform transform = this._levelDetailViewController.transform as RectTransform;
-                _addFavoriteButton = UIBuilder.CreateUIButton(transform, "QuitButton");
+                _addFavoriteButton = UIBuilder.CreateUIButton(transform, otherButtonTemplate);
                 (_addFavoriteButton.transform as RectTransform).anchoredPosition = new Vector2(40f, 5.75f);
                 (_addFavoriteButton.transform as RectTransform).sizeDelta = new Vector2(10f, 10f);
                 UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);
@@ -203,7 +206,7 @@ namespace SongBrowserPlugin.UI
                 _log.Debug("Creating delete button...");
 
                 transform = this._levelDetailViewController.transform as RectTransform;
-                _deleteButton = UIBuilder.CreateUIButton(transform, "QuitButton");
+                _deleteButton = UIBuilder.CreateUIButton(transform, otherButtonTemplate);
                 (_deleteButton.transform as RectTransform).anchoredPosition = new Vector2(46f, 0f);
                 (_deleteButton.transform as RectTransform).sizeDelta = new Vector2(15f, 5f);
                 UIBuilder.SetButtonText(ref _deleteButton, "Delete");
