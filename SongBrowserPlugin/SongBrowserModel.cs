@@ -208,6 +208,16 @@ namespace SongBrowserPlugin
                         .ThenBy(x => x.songName)
                         .ToList();
                     break;
+                case SongSortMode.Random:
+                    _log.Info("Sorting song list by random");
+
+                    System.Random rnd = new System.Random(Guid.NewGuid().GetHashCode());
+
+                    _sortedSongs = _originalSongs
+                        .AsQueryable()
+                        .OrderBy(x => rnd.Next())
+                        .ToList();
+                    break;
                 case SongSortMode.Default:
                 default:
                     _log.Info("Sorting song list as default (songName)");
@@ -219,7 +229,7 @@ namespace SongBrowserPlugin
                     break;
             }
 
-            if (this.InvertingResults)
+            if (this.InvertingResults && _settings.sortMode != SongSortMode.Random)
             {
                 _sortedSongs.Reverse();
             }
