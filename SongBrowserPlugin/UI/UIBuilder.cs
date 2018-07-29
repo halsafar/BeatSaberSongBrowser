@@ -78,25 +78,14 @@ namespace SongBrowserPlugin.UI
         /// <param name="w"></param>
         /// <param name="h"></param>
         /// <param name="action"></param>
-        public static SongSortButton CreateSortButton(RectTransform rect, Button buttonTemplate, Sprite iconSprite, string buttonText, float fontSize, float x, float y, float w, float h, SongSortMode sortMode, System.Action<SongSortMode> onClickEvent)
+        public static SongSortButton CreateSortButton(RectTransform parent, Button buttonTemplate, Sprite iconSprite, string buttonText, float fontSize, float x, float y, float w, float h, SongSortMode sortMode, System.Action<SongSortMode> onClickEvent)
         {
             SongSortButton sortButton = new SongSortButton();
-            Button newButton = UIBuilder.CreateUIButton(rect, buttonTemplate);
+            Button newButton = UIBuilder.CreateUIButton(parent, buttonTemplate);
 
             newButton.interactable = true;
             (newButton.transform as RectTransform).anchoredPosition = new Vector2(x, y);
             (newButton.transform as RectTransform).sizeDelta = new Vector2(w, h);
-
-            /*RectTransform iconTransform = newButton.GetComponentsInChildren<RectTransform>(true).First(c => c.name == "Icon");
-            iconTransform.gameObject.SetActive(false);
-
-            HorizontalLayoutGroup hgroup = iconTransform.parent.GetComponent<HorizontalLayoutGroup>();
-            hgroup.padding = new RectOffset();
-            hgroup.childForceExpandWidth = true;
-            hgroup.childForceExpandHeight = true;
-            iconTransform.sizeDelta = new Vector2(5f, 5f);
-            iconTransform.localScale = new Vector2(1f, 1f);
-            iconTransform.anchoredPosition = new Vector2(x, y);*/
 
             UIBuilder.SetButtonText(ref newButton, buttonText);
             UIBuilder.SetButtonIconEnabled(ref newButton, false);
@@ -113,6 +102,45 @@ namespace SongBrowserPlugin.UI
             sortButton.SortMode = sortMode;
 
             return sortButton;
+        }
+
+        public static Button CreatePageButton(RectTransform parent, Button buttonTemplate, Sprite iconSprite, float x, float y, float w, float h, float iconWidth, float iconHeight, float iconRotation)
+        {
+            Button newButton = UIBuilder.CreateUIButton(parent, buttonTemplate);
+
+            newButton.interactable = true;
+            (newButton.transform as RectTransform).anchoredPosition = new Vector2(x, y);
+            (newButton.transform as RectTransform).sizeDelta = new Vector2(w, h);
+
+            RectTransform iconTransform = newButton.GetComponentsInChildren<RectTransform>(true).First(c => c.name == "Icon");
+            iconTransform.gameObject.SetActive(true);
+
+            HorizontalLayoutGroup hgroup = iconTransform.parent.GetComponent<HorizontalLayoutGroup>();
+            UnityEngine.Object.Destroy(hgroup);
+
+            iconTransform.sizeDelta = new Vector2(iconWidth, iconHeight);
+            iconTransform.localScale = new Vector2(2f, 2f);
+            iconTransform.anchoredPosition = new Vector2(0, 0);
+            iconTransform.Rotate(0, 0, iconRotation);
+            //button.GetComponentsInChildren<Image>().First(x => x.name == "Icon").transform.Rotate(0, 0, 90);
+            //  iconTransform.anchoredPosition = new Vector2(buttonTransform.anchoredPosition.x, buttonTransform.anchoredPosition.y);
+
+            UnityEngine.Object.Destroy(newButton.GetComponentsInChildren<RectTransform>(true).First(c => c.name == "Text").gameObject);
+
+            UIBuilder.SetButtonIcon(ref newButton, iconSprite);
+
+            return newButton;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="button"></param>
+        /// <param name="s"></param>
+        public static void CreateIconForButton(ref Button button, Sprite s)
+        {
+            RectTransform buttonTransform = button.transform as RectTransform;
+            
         }
 
         /// <summary>
@@ -147,7 +175,6 @@ namespace SongBrowserPlugin.UI
         {
             if (button.GetComponentInChildren<TextMeshProUGUI>() != null)
             {
-
                 button.GetComponentInChildren<TextMeshProUGUI>().text = text;
             }
 
@@ -175,9 +202,7 @@ namespace SongBrowserPlugin.UI
         {
             if (button.GetComponentsInChildren<UnityEngine.UI.Image>().Count() > 1)
             {
-                Console.WriteLine("SETTING ICONS");
-                button.GetComponentsInChildren<Image>().First(x => x.name == "Icon").sprite = icon;
-                //button.GetComponentsInChildren<Image>().First(x => x.name == "Icon").transform.Rotate(0, 0, 90);
+                button.GetComponentsInChildren<Image>().First(x => x.name == "Icon").sprite = icon;                
             }            
         }
 

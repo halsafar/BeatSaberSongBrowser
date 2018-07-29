@@ -66,6 +66,10 @@
     <Reference Include="UnityEngine.JSONSerializeModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.JSONSerializeModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.UI.dll</HintPath>

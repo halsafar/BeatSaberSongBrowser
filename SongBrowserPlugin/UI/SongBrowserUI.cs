@@ -20,6 +20,9 @@ namespace SongBrowserPlugin.UI
     {
         // Logging
         public const String Name = "SongBrowserUI";
+
+        private const float SEGMENT_PERCENT = 0.1f;
+
         private Logger _log = new Logger(Name);
 
         // Beat Saber UI Elements
@@ -30,6 +33,8 @@ namespace SongBrowserPlugin.UI
         private StandardLevelSelectionNavigationController _levelSelectionNavigationController;
         private StandardLevelListTableView _levelListTableView;
         private RectTransform _tableViewRectTransform;
+        private Button _tableViewPageUpButton;
+        private Button _tableViewPageDownButton;
 
         // New UI Elements
         private List<SongSortButton> _sortButtonGroup;
@@ -37,7 +42,9 @@ namespace SongBrowserPlugin.UI
         private String _addFavoriteButtonText = null;
         private SimpleDialogPromptViewController _simpleDialogPromptViewControllerPrefab;
         private SimpleDialogPromptViewController _deleteDialog;
-        private Button _deleteButton;
+        private Button _deleteButton;        
+        private Button _pageUpTenPercent;
+        private Button _pageDownTenPercent;
 
         // Debug
         private int _sortButtonLastPushedIndex = 0;
@@ -121,18 +128,22 @@ namespace SongBrowserPlugin.UI
 
             try
             {
-                RectTransform parent = this._levelSelectionNavigationController.transform as RectTransform;
+                // Gather some transforms and templates to use.
+                RectTransform sortButtonTransform = this._levelSelectionNavigationController.transform as RectTransform;
+                RectTransform otherButtonTransform = this._levelDetailViewController.transform as RectTransform;
+                Button sortButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PlayButton"));
+                Button otherButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "QuitButton"));
 
                 // Resize some of the UI
                 _tableViewRectTransform = _levelListViewController.GetComponentsInChildren<RectTransform>().First(x => x.name == "TableViewContainer");
                 _tableViewRectTransform.sizeDelta = new Vector2(0f, -20f);
                 _tableViewRectTransform.anchoredPosition = new Vector2(0f, -2.5f);
 
-                Button pageUp = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageUpButton");
-                (pageUp.transform as RectTransform).anchoredPosition = new Vector2(0f, -1f);
+                _tableViewPageUpButton = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageUpButton");
+                (_tableViewPageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -1f);
 
-                Button pageDown = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageDownButton");
-                (pageDown.transform as RectTransform).anchoredPosition = new Vector2(0f, 1f);
+                _tableViewPageDownButton = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageDownButton");
+                (_tableViewPageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 1f);
 
                 // Create Sorting Songs By-Buttons
                 _log.Debug("Creating sort by buttons...");
@@ -155,9 +166,6 @@ namespace SongBrowserPlugin.UI
                     RefreshSongList();
                 };
 
-                Button sortButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PlayButton"));
-                Button otherButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "QuitButton"));
-
                 float fontSize = 2.75f;
                 float buttonWidth = 17.0f;
                 float buttonHeight = 5.0f;
@@ -177,19 +185,17 @@ namespace SongBrowserPlugin.UI
                 _sortButtonGroup = new List<SongSortButton>();
                 for (int i = 0; i < buttonNames.Length; i++)
                 {
-                    _sortButtonGroup.Add(UIBuilder.CreateSortButton(parent, sortButtonTemplate, arrowIcon, buttonNames[i], fontSize, buttonX, buttonY, buttonWidth, buttonHeight, sortModes[i], onSortButtonClickEvent));
+                    _sortButtonGroup.Add(UIBuilder.CreateSortButton(sortButtonTransform, sortButtonTemplate, arrowIcon, buttonNames[i], fontSize, buttonX, buttonY, buttonWidth, buttonHeight, sortModes[i], onSortButtonClickEvent));
                     buttonX -= buttonWidth;
                 }
 
                 // Creaate Add to Favorites Button
-                _log.Debug("Creating add to favorites button...");
-
-                RectTransform transform = this._levelDetailViewController.transform as RectTransform;
-                _addFavoriteButton = UIBuilder.CreateUIButton(transform, otherButtonTemplate);
+                _log.Debug("Creating add to favorites button...");                
+                _addFavoriteButton = UIBuilder.CreateUIButton(otherButtonTransform, otherButtonTemplate);
                 (_addFavoriteButton.transform as RectTransform).anchoredPosition = new Vector2(40f, 5.75f);
                 (_addFavoriteButton.transform as RectTransform).sizeDelta = new Vector2(10f, 10f);
                 UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);
-                UIBuilder.SetButtonTextSize(ref _addFavoriteButton, 3);
+                UIBuilder.SetButtonTextSize(ref _addFavoriteButton, fontSize);
                 UIBuilder.SetButtonIconEnabled(ref _addFavoriteButton, false);
                 _addFavoriteButton.onClick.RemoveAllListeners();
                 _addFavoriteButton.onClick.AddListener(delegate () {
@@ -207,20 +213,29 @@ namespace SongBrowserPlugin.UI
 
                 // Create delete button
                 _log.Debug("Creating delete button...");
-
-                transform = this._levelDetailViewController.transform as RectTransform;
-                _deleteButton = UIBuilder.CreateUIButton(transform, otherButtonTemplate);
+                _deleteButton = UIBuilder.CreateUIButton(otherButtonTransform, otherButtonTemplate);
                 (_deleteButton.transform as RectTransform).anchoredPosition = new Vector2(46f, 0f);
                 (_deleteButton.transform as RectTransform).sizeDelta = new Vector2(15f, 5f);
                 UIBuilder.SetButtonText(ref _deleteButton, "Delete");
-                UIBuilder.SetButtonTextSize(ref _deleteButton, 3);
+                UIBuilder.SetButtonTextSize(ref _deleteButton, fontSize);
                 UIBuilder.SetButtonIconEnabled(ref _deleteButton, false);
                 _deleteButton.onClick.RemoveAllListeners();
                 _deleteButton.onClick.AddListener(delegate () {
                     HandleDeleteSelectedLevel();
                 });
 
-                RefreshUI();
+                // Create fast scroll buttons
+                _pageUpTenPercent = UIBuilder.CreatePageButton(sortButtonTransform, otherButtonTemplate, arrowIcon, 15, 67.5f, 6.0f, 5.5f, 1.5f, 1.5f, 180);
+                _pageUpTenPercent.onClick.AddListener(delegate () {
+                    this.JumpSongList(-1, SEGMENT_PERCENT);
+                });
+
+                _pageDownTenPercent = UIBuilder.CreatePageButton(sortButtonTransform, otherButtonTemplate, arrowIcon, 15, 0.5f, 6.0f, 5.5f, 1.5f, 1.5f, 0);
+                _pageDownTenPercent.onClick.AddListener(delegate () {
+                    this.JumpSongList(1, SEGMENT_PERCENT);
+                });
+
+                RefreshSortButtonUI();
             }
             catch (Exception e)
             {
@@ -250,6 +265,7 @@ namespace SongBrowserPlugin.UI
             SongBrowserModel.LastSelectedLevelId = level.levelID;
 
             RefreshAddFavoriteButton(level.levelID);
+            RefreshQuickScrollButtons();
         }
 
         /// <summary>
@@ -370,6 +386,30 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
+        /// Make big jumps in the song list.
+        /// </summary>
+        /// <param name="numJumps"></param>
+        private void JumpSongList(int numJumps, float segmentPercent)
+        {
+            int totalSize = _model.SortedSongList.Count;
+            int segmentSize = (int)(totalSize * segmentPercent);
+
+            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelListTableView, "_tableView");
+            HashSet<int> rows = tableView.GetPrivateField<HashSet<int>>("_selectedRows");
+            int listSegment = (rows.First() / segmentSize);
+            int newSegment = listSegment + numJumps;
+            int newRow = 0;
+            if (newSegment > 0)
+            {
+                newRow = Math.Min(newSegment * segmentSize, totalSize - 1);
+            }                       
+
+            _log.Debug("ListSegment: {0}, newRow: {1}", listSegment, newRow);
+
+            this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[newRow].levelID);
+        }
+
+        /// <summary>
         /// Add/Remove song from favorites depending on if it already exists.
         /// </summary>
         private void ToggleSongInFavorites()
@@ -391,6 +431,16 @@ namespace SongBrowserPlugin.UI
             UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);
 
             _model.Settings.Save();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void RefreshQuickScrollButtons()
+        {
+            // Refresh the fast scroll buttons
+            _pageUpTenPercent.interactable = _tableViewPageUpButton.interactable;
+            _pageDownTenPercent.interactable = _tableViewPageDownButton.interactable;
         }
 
         /// <summary>
@@ -420,7 +470,7 @@ namespace SongBrowserPlugin.UI
         /// <summary>
         /// Adjust the UI colors.
         /// </summary>
-        public void RefreshUI()
+        public void RefreshSortButtonUI()
         {
             // So far all we need to refresh is the sort buttons.
             foreach (SongSortButton sortButton in _sortButtonGroup)
@@ -460,10 +510,10 @@ namespace SongBrowserPlugin.UI
 
                 StandardLevelSO[] levels = _model.SortedSongList.ToArray();
                 StandardLevelListViewController songListViewController = this._levelSelectionFlowCoordinator.GetPrivateField<StandardLevelListViewController>("_levelListViewController");
-                StandardLevelListTableView _songListTableView = songListViewController.GetComponentInChildren<StandardLevelListTableView>();
-                ReflectionUtil.SetPrivateField(_songListTableView, "_levels", levels);
+                //StandardLevelListTableView _songListTableView = songListViewController.GetComponentInChildren<StandardLevelListTableView>();
+                ReflectionUtil.SetPrivateField(_levelListTableView, "_levels", levels);
                 ReflectionUtil.SetPrivateField(songListViewController, "_levels", levels);            
-                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_songListTableView, "_tableView");
+                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelListTableView, "_tableView");
                 tableView.ReloadData();
 
                 String selectedLevelID = null;
@@ -479,10 +529,10 @@ namespace SongBrowserPlugin.UI
 
                 if (levels.Any(x => x.levelID == selectedLevelID))
                 {
-                    SelectAndScrollToLevel(_songListTableView, selectedLevelID);
+                    SelectAndScrollToLevel(_levelListTableView, selectedLevelID);
                 }
-                
-                RefreshUI();                
+
+                RefreshSortButtonUI();                
             }
             catch (Exception e)
             {
@@ -531,7 +581,9 @@ namespace SongBrowserPlugin.UI
         private void CheckDebugUserInput()
         {
             try
-            {                
+            {
+                bool isShiftKeyDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+
                 // back
                 if (Input.GetKeyDown(KeyCode.Escape))
                 {
@@ -581,19 +633,26 @@ namespace SongBrowserPlugin.UI
                 }
 
                 // change song index
-                if (Input.GetKeyDown(KeyCode.N))
+                if (isShiftKeyDown && Input.GetKeyDown(KeyCode.N))
+                {
+                    _pageUpTenPercent.onClick.Invoke();
+                }
+                else if (Input.GetKeyDown(KeyCode.N))
                 {
                     _lastRow = (_lastRow - 1) != -1 ? (_lastRow - 1) % this._model.SortedSongList.Count : 0;
-
                     this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[_lastRow].levelID);
                 }
 
-                if (Input.GetKeyDown(KeyCode.M))
+                if (isShiftKeyDown && Input.GetKeyDown(KeyCode.M))
+                {
+                    _pageDownTenPercent.onClick.Invoke();
+                }
+                else if (Input.GetKeyDown(KeyCode.M))
                 {
                     _lastRow = (_lastRow + 1) % this._model.SortedSongList.Count;
-
                     this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[_lastRow].levelID);
                 }
+
 
                 // add to favorites
                 if (Input.GetKeyDown(KeyCode.F))
