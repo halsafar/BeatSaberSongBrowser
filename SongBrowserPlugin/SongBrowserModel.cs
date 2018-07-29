@@ -182,7 +182,6 @@ namespace SongBrowserPlugin
            
             foreach (StandardLevelSO level in _originalSongs)
             {
-                _log.Debug("Processing: {0}", level.levelID);
                 if (level.levelID.Length < 32) continue;
                 AddItemToDirectoryTree(customSongDirUri, level);
             }
@@ -209,18 +208,15 @@ namespace SongBrowserPlugin
 
                 if (path == Path.GetFileName(songInfo.path))
                 {
-                    //_log.Debug("Done, adding {0} to {1}", level.levelID, currentNode.Key);
                     currentNode.Levels.Add(level);
                     break;
                 }
                 else if (currentNode.Nodes.ContainsKey(path))
                 {                    
                     currentNode = currentNode.Nodes[path];
-                    //_log.Debug("Next node: {0}", currentNode.Key);
                 }
                 else
                 {
-                    //_log.Debug("Adding new node: {0}", path);
                     currentNode.Nodes[path] = new DirectoryNode(path);
                 }
             }
