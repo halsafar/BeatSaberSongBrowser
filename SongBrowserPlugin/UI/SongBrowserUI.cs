@@ -439,7 +439,8 @@ namespace SongBrowserPlugin.UI
         {
             _log.Debug("Searching for \"{0}\"...", searchFor);
 
-            _model.Settings.searchTerms.Add(searchFor);
+            _model.Settings.searchTerms.Insert(0, searchFor);
+            SongBrowserModel.LastSelectedLevelId = null;
             this.UpdateSongList();
             this.RefreshSongList();
         }
@@ -588,7 +589,7 @@ namespace SongBrowserPlugin.UI
                     SelectAndScrollToLevel(_levelListTableView, selectedLevelID);
                 }
 
-                RefreshSortButtonUI();                
+                RefreshSortButtonUI();
             }
             catch (Exception e)
             {

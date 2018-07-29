@@ -96,27 +96,28 @@ namespace SongBrowserPlugin.UI
         {
             if (!this.isInViewControllerHierarchy) return;
 
+            if (Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Return))
+            {
+                _searchButton.onClick.Invoke();
+            }
+            else if (Input.GetKeyDown(KeyCode.Backspace))
+            {
+                this._searchKeyboard.DeleteButtonWasPressed();
+            }
+            else if (Input.GetKeyDown(KeyCode.Space))
+            {
+                this._searchKeyboard.SpaceButtonWasPressed();
+            }
+
             IEnumerable<KeyCode> keycodeIterator = Enum.GetValues(typeof(KeyCode)).Cast<KeyCode>();
             foreach (KeyCode keycode in keycodeIterator)
             {
-                if (keycode.CompareTo(KeyCode.Backspace) == 0 && Input.GetKeyDown(keycode))
-                {
-                    this._searchKeyboard.DeleteButtonWasPressed();
-                }
-                else if (keycode.CompareTo(KeyCode.Space) == 0 && Input.GetKeyDown(keycode))
-                {
-                    this._searchKeyboard.SpaceButtonWasPressed();
-                }
-                else if (Input.GetKeyDown(keycode))
+                if (!((keycode >= KeyCode.A && keycode <= KeyCode.Z) || (keycode >= KeyCode.Alpha0 && keycode <= KeyCode.Alpha9))) continue;
+                if (Input.GetKeyDown(keycode))
                 {
                     this._searchKeyboard.KeyButtonWasPressed(keycode.ToString());
                 }
-            }
-
-            if (Input.GetKeyDown(KeyCode.KeypadEnter))
-            {
-                _searchButton.onClick.Invoke();                
-            }
+            }            
         }
     }
 }
