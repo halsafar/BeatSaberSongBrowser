@@ -152,15 +152,15 @@ namespace SongBrowserPlugin.UI
                 
                 Sprite arrowIcon = SongBrowserApplication.Instance.CachedIcons["ArrowIcon"];
 
-                float fontSize = 2.75f;
-                float buttonWidth = 17.0f;
+                float fontSize = 2.5f;
+                float buttonWidth = 14.0f;
                 float buttonHeight = 5.0f;
                 float buttonX = 68.0f;
                 float buttonY = 74.5f;
 
                 string[] buttonNames = new string[]
                 {
-                    "Favorite", "Song", "Author", "Original", "Newest", "PlayCount", "Random", "Search"
+                    "Favorite", "Song", "Author", "Original", "Newest", "Plays", "Random", "Search"
                 };
 
                 SongSortMode[] sortModes = new SongSortMode[]
@@ -625,10 +625,8 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         public void LateUpdate()
         {
-            if (this._levelListViewController.isInViewControllerHierarchy)
-            {
-                CheckDebugUserInput();
-            }
+            if (!this._levelListViewController.isActiveAndEnabled) return;
+            CheckDebugUserInput();
         }
 
         /// <summary>
