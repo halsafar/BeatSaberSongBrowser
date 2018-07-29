@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
@@ -88,23 +89,27 @@ namespace SongBrowserPlugin.UI
             _inputString = "";
         }
 
+        /// <summary>
+        /// Emulate keyboard support.
+        /// </summary>
         private void LateUpdate()
         {
             if (!this.isInViewControllerHierarchy) return;
 
-            foreach (KeyCode kcode in Enum.GetValues(typeof(KeyCode)))
+            IEnumerable<KeyCode> keycodeIterator = Enum.GetValues(typeof(KeyCode)).Cast<KeyCode>();
+            foreach (KeyCode keycode in keycodeIterator)
             {
-                if (kcode.CompareTo(KeyCode.Backspace) == 0)
+                if (keycode.CompareTo(KeyCode.Backspace) == 0 && Input.GetKeyDown(keycode))
                 {
-                    this._searchKeyboard.DeleteButtonWasPressed();                   
+                    this._searchKeyboard.DeleteButtonWasPressed();
                 }
-                else if (kcode.CompareTo(KeyCode.Space) == 0)
+                else if (keycode.CompareTo(KeyCode.Space) == 0 && Input.GetKeyDown(keycode))
                 {
                     this._searchKeyboard.SpaceButtonWasPressed();
                 }
-                else if (Input.GetKeyDown(kcode))
+                else if (Input.GetKeyDown(keycode))
                 {
-                    this._searchKeyboard.KeyButtonWasPressed(kcode.ToString());
+                    this._searchKeyboard.KeyButtonWasPressed(keycode.ToString());
                 }
             }
 
