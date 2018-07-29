@@ -22,6 +22,7 @@ namespace SongBrowserPlugin
         private Dictionary<String, SongLoaderPlugin.OverrideClasses.CustomLevel> _levelIdToCustomLevel;
         private SongLoaderPlugin.OverrideClasses.CustomLevelCollectionSO _gameplayModeCollection;    
         private Dictionary<String, double> _cachedLastWriteTimes;
+        private Dictionary<string, int> _weights;
 
         public bool InvertingResults { get; private set; }
 
@@ -55,6 +56,24 @@ namespace SongBrowserPlugin
         public SongBrowserModel()
         {
             _cachedLastWriteTimes = new Dictionary<String, double>();
+
+            // Weights used for keeping the original songs in order
+            // Invert the weights from the game so we can order by descending and make LINQ work with us...
+            /*  Level4, Level2, Level9, Level5, Level10, Level6, Level7, Level1, Level3, Level8, Level11 */
+            _weights = new Dictionary<string, int>
+            {
+                ["Level4"] = 11,
+                ["Level2"] = 10,
+                ["Level9"] = 9,
+                ["Level5"] = 8,
+                ["Level10"] = 7,
+                ["Level6"] = 6,
+                ["Level7"] = 5,
+                ["Level1"] = 4,
+                ["Level3"] = 3,
+                ["Level8"] = 2,
+                ["Level11"] = 1
+            };
         }
 
         /// <summary>
@@ -126,24 +145,6 @@ namespace SongBrowserPlugin
         {
             _log.Trace("ProcessSongList()");
 
-            // Weights used for keeping the original songs in order
-            // Invert the weights from the game so we can order by descending and make LINQ work with us...
-            /*  Level4, Level2, Level9, Level5, Level10, Level6, Level7, Level1, Level3, Level8, Level11 */
-            Dictionary<string, int> weights = new Dictionary<string, int>
-            {
-                ["Level4"] = 11,
-                ["Level2"] = 10,
-                ["Level9"] = 9,
-                ["Level5"] = 8,
-                ["Level10"] = 7,
-                ["Level6"] = 6,
-                ["Level7"] = 5,
-                ["Level1"] = 4,
-                ["Level3"] = 3,
-                ["Level8"] = 2,
-                ["Level11"] = 1
-            };
-
             // This has come in handy many times for debugging issues with Newest.
             /*foreach (StandardLevelSO level in _originalSongs)
             {
@@ -156,97 +157,35 @@ namespace SongBrowserPlugin
                     _log.Debug("Missing KEY: {0}", level.levelID);
                 }
             }*/
-
-            PlayerDynamicData playerData = GameDataModel.instance.gameDynamicData.GetCurrentPlayerDynamicData();
-
+            
             Stopwatch stopwatch = Stopwatch.StartNew();
 
             switch (_settings.sortMode)
             {
                 case SongSortMode.Favorites:
-                    _log.Info("Sorting song list as favorites");
-                    _sortedSongs = _originalSongs
-                        .AsQueryable()
-                        .OrderBy(x => _settings.favorites.Contains(x.levelID) == false)
-                        .ThenBy(x => x.songName)
-                        .ThenBy(x => x.songAuthorName)
-                        .ToList();
+                    SortFavorites();
                     break;
                 case SongSortMode.Original:
-                    _log.Info("Sorting song list as original");
-                    _sortedSongs = _originalSongs
-                        .AsQueryable()
-                        .OrderByDescending(x => weights.ContainsKey(x.levelID) ? weights[x.levelID] : 0)
-                        .ThenBy(x => x.songName)
-                        .ToList();
+                    SortOriginal();
                     break;
                 case SongSortMode.Newest:
-                    _log.Info("Sorting song list as newest.");
-                    _sortedSongs = _originalSongs
-                        .AsQueryable()
-                        .OrderBy(x => weights.ContainsKey(x.levelID) ? weights[x.levelID] : 0)
-                        .ThenByDescending(x => x.levelID.StartsWith("Level") ? weights[x.levelID] : _cachedLastWriteTimes[_levelIdToCustomLevel[x.levelID].customSongInfo.path])
-                        .ToList();
+                    SortNewest();
                     break;
                 case SongSortMode.Author:
-                    _log.Info("Sorting song list by author");
-                    _sortedSongs = _originalSongs
-                        .AsQueryable()
-                        .OrderBy(x => x.songAuthorName)
-                        .ThenBy(x => x.songName)
-                        .ToList();
+                    SortAuthor();
                     break;
                 case SongSortMode.PlayCount:
-                    _log.Info("Sorting song list by playcount");
-                    // Build a map of levelId to sum of all playcounts and sort.
-                    IEnumerable<LevelDifficulty> difficultyIterator = Enum.GetValues(typeof(LevelDifficulty)).Cast<LevelDifficulty>();
-                    Dictionary<string, int> _levelIdToPlayCount = _originalSongs.ToDictionary(x => x.levelID, x => difficultyIterator.Sum(difficulty => playerData.GetPlayerLevelStatsData(x.levelID, difficulty, gameplayMode).playCount));
-                    _sortedSongs = _originalSongs
-                        .AsQueryable()
-                        .OrderByDescending(x => _levelIdToPlayCount[x.levelID])
-                        .ThenBy(x => x.songName)
-                        .ToList();
+                    SortPlayCount(gameplayMode);
                     break;
                 case SongSortMode.Random:
-                    _log.Info("Sorting song list by random");
-
-                    System.Random rnd = new System.Random(Guid.NewGuid().GetHashCode());
-
-                    _sortedSongs = _originalSongs
-                        .AsQueryable()
-                        .OrderBy(x => rnd.Next())
-                        .ToList();
+                    SortRandom();
                     break;
                 case SongSortMode.Search:
-                    // Make sure we can actually search.
-                    if (this._settings.searchTerms.Count <= 0)
-                    {
-                        _log.Error("Tried to search for a song with no valid search terms...");
-                        break;
-                    }
-                    string searchTerm = this._settings.searchTerms[0];
-                    if (String.IsNullOrEmpty(searchTerm))
-                    {
-                        _log.Error("Empty search term entered.");
-                        break;
-                    }
-
-                    _log.Info("Sorting song list by search term: {0}", searchTerm);
-                    //_originalSongs.ForEach(x => _log.Debug($"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()).ToString()));
-
-                    _sortedSongs = _originalSongs
-                        .AsQueryable()
-                        .Where(x => $"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()))
-                        .ToList();
+                    SortSearch();
                     break;
                 case SongSortMode.Default:
                 default:
-                    _log.Info("Sorting song list as default (songName)");
-                    _sortedSongs = _originalSongs
-                        .AsQueryable()
-                        .OrderBy(x => x.songName)
-                        .ThenBy(x => x.songAuthorName)
-                        .ToList();
+                    SortSongName();
                     break;
             }
 
@@ -257,6 +196,109 @@ namespace SongBrowserPlugin
 
             stopwatch.Stop();
             _log.Info("Sorting songs took {0}ms", stopwatch.ElapsedMilliseconds);
-        }        
+        }    
+        
+        private void SortFavorites()
+        {
+            _log.Info("Sorting song list as favorites");
+            _sortedSongs = _originalSongs
+                .AsQueryable()
+                .OrderBy(x => _settings.favorites.Contains(x.levelID) == false)
+                .ThenBy(x => x.songName)
+                .ThenBy(x => x.songAuthorName)
+                .ToList();
+        }
+
+        private void SortOriginal()
+        {
+            _log.Info("Sorting song list as original");
+            _sortedSongs = _originalSongs
+                .AsQueryable()
+                .OrderByDescending(x => _weights.ContainsKey(x.levelID) ? _weights[x.levelID] : 0)
+                .ThenBy(x => x.songName)
+                .ToList();
+        }
+
+        private void SortNewest()
+        {
+            _log.Info("Sorting song list as newest.");
+            _sortedSongs = _originalSongs
+                .AsQueryable()
+                .OrderBy(x => _weights.ContainsKey(x.levelID) ? _weights[x.levelID] : 0)
+                .ThenByDescending(x => x.levelID.StartsWith("Level") ? _weights[x.levelID] : _cachedLastWriteTimes[_levelIdToCustomLevel[x.levelID].customSongInfo.path])
+                .ToList();
+        }
+
+        private void SortAuthor()
+        {
+            _log.Info("Sorting song list by author");
+            _sortedSongs = _originalSongs
+                .AsQueryable()
+                .OrderBy(x => x.songAuthorName)
+                .ThenBy(x => x.songName)
+                .ToList();
+        }
+
+        private void SortPlayCount(GameplayMode gameplayMode)
+        {
+            _log.Info("Sorting song list by playcount");
+            // Build a map of levelId to sum of all playcounts and sort.
+            PlayerDynamicData playerData = GameDataModel.instance.gameDynamicData.GetCurrentPlayerDynamicData();
+            IEnumerable<LevelDifficulty> difficultyIterator = Enum.GetValues(typeof(LevelDifficulty)).Cast<LevelDifficulty>();
+            Dictionary<string, int> _levelIdToPlayCount = _originalSongs.ToDictionary(x => x.levelID, x => difficultyIterator.Sum(difficulty => playerData.GetPlayerLevelStatsData(x.levelID, difficulty, gameplayMode).playCount));
+            _sortedSongs = _originalSongs
+                .AsQueryable()
+                .OrderByDescending(x => _levelIdToPlayCount[x.levelID])
+                .ThenBy(x => x.songName)
+                .ToList();
+        }
+
+        private void SortRandom()
+        {
+            _log.Info("Sorting song list by random");
+
+            System.Random rnd = new System.Random(Guid.NewGuid().GetHashCode());
+
+            _sortedSongs = _originalSongs
+                .AsQueryable()
+                .OrderBy(x => rnd.Next())
+                .ToList();
+        }
+
+        private void SortSearch()
+        {
+            // Make sure we can actually search.
+            if (this._settings.searchTerms.Count <= 0)
+            {
+                _log.Error("Tried to search for a song with no valid search terms...");
+                SortSongName();
+                return;
+            }
+            string searchTerm = this._settings.searchTerms[0];
+            if (String.IsNullOrEmpty(searchTerm))
+            {
+                _log.Error("Empty search term entered.");
+                SortSongName();
+                return;
+            }
+
+            _log.Info("Sorting song list by search term: {0}", searchTerm);
+            //_originalSongs.ForEach(x => _log.Debug($"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()).ToString()));
+
+            _sortedSongs = _originalSongs
+                .AsQueryable()
+                .Where(x => $"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()))
+                .ToList();
+        }
+
+        private void SortSongName()
+        {
+            _log.Info("Sorting song list as default (songName)");
+            _sortedSongs = _originalSongs
+                .AsQueryable()
+                .OrderBy(x => x.songName)
+                .ThenBy(x => x.songAuthorName)
+                .ToList();
+        }
     }
 }
