@@ -34,7 +34,8 @@ namespace SongBrowserPlugin.DataAccess
         /// </summary>
         public SongBrowserSettings()
         {
-            //favorites = new List<String>();
+            favorites = new List<String>();
+            searchTerms = new List<string>();
         }
 
         /// <summary>
