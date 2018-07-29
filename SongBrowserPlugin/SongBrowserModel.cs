@@ -99,8 +99,7 @@ namespace SongBrowserPlugin
             }
 
             // Update song Infos
-            this.UpdateSongInfos(gameplayMode);
-                                
+            this.UpdateSongInfos(gameplayMode);                                
             this.ProcessSongList(gameplayMode);                       
         }
 
@@ -216,6 +215,28 @@ namespace SongBrowserPlugin
                     _sortedSongs = _originalSongs
                         .AsQueryable()
                         .OrderBy(x => rnd.Next())
+                        .ToList();
+                    break;
+                case SongSortMode.Search:
+                    // Make sure we can actually search.
+                    if (this._settings.searchTerms.Count <= 0)
+                    {
+                        _log.Error("Tried to search for a song with no valid search terms...");
+                        break;
+                    }
+                    string searchTerm = this._settings.searchTerms[0];
+                    if (String.IsNullOrEmpty(searchTerm))
+                    {
+                        _log.Error("Empty search term entered.");
+                        break;
+                    }
+
+                    _log.Info("Sorting song list by search term: {0}", searchTerm);
+                    //_originalSongs.ForEach(x => _log.Debug($"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()).ToString()));
+
+                    _sortedSongs = _originalSongs
+                        .AsQueryable()
+                        .Where(x => $"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()))
                         .ToList();
                     break;
                 case SongSortMode.Default:

@@ -45,6 +45,8 @@ namespace SongBrowserPlugin.UI
         private Button _deleteButton;        
         private Button _pageUpTenPercent;
         private Button _pageDownTenPercent;
+        private SearchKeyboardViewController _searchViewController;
+
 
         // Debug
         private int _sortButtonLastPushedIndex = 0;
@@ -150,22 +152,6 @@ namespace SongBrowserPlugin.UI
                 
                 Sprite arrowIcon = SongBrowserApplication.Instance.CachedIcons["ArrowIcon"];
 
-                System.Action<SongSortMode> onSortButtonClickEvent = delegate (SongSortMode sortMode) {
-                    _log.Debug("Sort button - {0} - pressed.", sortMode.ToString());
-                    SongBrowserModel.LastSelectedLevelId = null;
-
-                    if (_model.Settings.sortMode == sortMode)
-                    {
-                        _model.ToggleInverting();
-                    }
-
-                    _model.Settings.sortMode = sortMode;
-                    _model.Settings.Save();
-
-                    UpdateSongList();
-                    RefreshSongList();
-                };
-
                 float fontSize = 2.75f;
                 float buttonWidth = 17.0f;
                 float buttonHeight = 5.0f;
@@ -174,18 +160,23 @@ namespace SongBrowserPlugin.UI
 
                 string[] buttonNames = new string[]
                 {
-                    "Favorite", "Song", "Author", "Original", "Newest", "PlayCount", "Random"
+                    "Favorite", "Song", "Author", "Original", "Newest", "PlayCount", "Random", "Search"
                 };
 
                 SongSortMode[] sortModes = new SongSortMode[]
                 {
-                    SongSortMode.Favorites, SongSortMode.Default, SongSortMode.Author, SongSortMode.Original, SongSortMode.Newest, SongSortMode.PlayCount, SongSortMode.Random
+                    SongSortMode.Favorites, SongSortMode.Default, SongSortMode.Author, SongSortMode.Original, SongSortMode.Newest, SongSortMode.PlayCount, SongSortMode.Random, SongSortMode.Search
+                };
+
+                System.Action<SongSortMode>[] onClickEvents = new Action<SongSortMode>[]
+                {
+                    onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSearchButtonClickEvent
                 };
 
                 _sortButtonGroup = new List<SongSortButton>();
                 for (int i = 0; i < buttonNames.Length; i++)
                 {
-                    _sortButtonGroup.Add(UIBuilder.CreateSortButton(sortButtonTransform, sortButtonTemplate, arrowIcon, buttonNames[i], fontSize, buttonX, buttonY, buttonWidth, buttonHeight, sortModes[i], onSortButtonClickEvent));
+                    _sortButtonGroup.Add(UIBuilder.CreateSortButton(sortButtonTransform, sortButtonTemplate, arrowIcon, buttonNames[i], fontSize, buttonX, buttonY, buttonWidth, buttonHeight, sortModes[i], onClickEvents[i]));
                     buttonX -= buttonWidth;
                 }
 
@@ -241,6 +232,38 @@ namespace SongBrowserPlugin.UI
             {
                 _log.Exception("Exception CreateUIElements:", e);
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void onSortButtonClickEvent(SongSortMode sortMode)
+        {
+            _log.Debug("Sort button - {0} - pressed.", sortMode.ToString());
+            SongBrowserModel.LastSelectedLevelId = null;
+
+            if (_model.Settings.sortMode == sortMode)
+            {
+                _model.ToggleInverting();
+            }
+
+            _model.Settings.sortMode = sortMode;
+            _model.Settings.Save();
+
+            UpdateSongList();
+            RefreshSongList();
+        }
+
+        /// <summary>
+        /// Saerch button clicked.  
+        /// </summary>
+        /// <param name="sortMode"></param>
+        private void onSearchButtonClickEvent(SongSortMode sortMode)
+        {
+            _model.Settings.sortMode = sortMode;
+            _model.Settings.Save();
+
+            this.ShowSearchKeyboard();
         }
 
         /// <summary>
@@ -386,6 +409,42 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
+        /// Display the search keyboard
+        /// </summary>
+        void ShowSearchKeyboard()
+        {
+            if (_searchViewController == null)
+            {
+                _searchViewController = UIBuilder.CreateViewController<SearchKeyboardViewController>("SearchKeyboardViewController");
+                _searchViewController.searchButtonPressed += SearchViewControllerSearchButtonPressed;
+                _searchViewController.backButtonPressed += SearchViewControllerbackButtonPressed;
+            }
+
+            _levelListViewController.navigationController.PresentModalViewController(_searchViewController, null, false);
+        }
+
+        /// <summary>
+        /// Handle back button event from search keyboard.
+        /// </summary>
+        private void SearchViewControllerbackButtonPressed()
+        {
+ 
+        }
+
+        /// <summary>
+        /// Handle search.
+        /// </summary>
+        /// <param name="searchFor"></param>
+        private void SearchViewControllerSearchButtonPressed(string searchFor)
+        {
+            _log.Debug("Searching for \"{0}\"...", searchFor);
+
+            _model.Settings.searchTerms.Add(searchFor);
+            this.UpdateSongList();
+            this.RefreshSongList();
+        }
+
+        /// <summary>
         /// Make big jumps in the song list.
         /// </summary>
         /// <param name="numJumps"></param>
@@ -434,7 +493,7 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
-        /// 
+        /// Update interactive state of the quick scroll buttons.
         /// </summary>
         private void RefreshQuickScrollButtons()
         {
@@ -476,12 +535,8 @@ namespace SongBrowserPlugin.UI
             foreach (SongSortButton sortButton in _sortButtonGroup)
             {
                 UIBuilder.SetButtonBorder(ref sortButton.Button, Color.black);
-                //UIBuilder.SetButtonIconEnabled(ref sortButton.Button, false);
                 if (sortButton.SortMode == _model.Settings.sortMode)
                 {
-                    //UIBuilder.SetButtonIcon(ref sortButton.Button, SongBrowserApplication.Instance.CachedIcons["ArrowIcon"]);
-                    //UIBuilder.SetButtonIconEnabled(ref sortButton.Button, true);
-
                     if (_model.InvertingResults)
                     {
                         UIBuilder.SetButtonBorder(ref sortButton.Button, Color.red);
@@ -510,7 +565,6 @@ namespace SongBrowserPlugin.UI
 
                 StandardLevelSO[] levels = _model.SortedSongList.ToArray();
                 StandardLevelListViewController songListViewController = this._levelSelectionFlowCoordinator.GetPrivateField<StandardLevelListViewController>("_levelListViewController");
-                //StandardLevelListTableView _songListTableView = songListViewController.GetComponentInChildren<StandardLevelListTableView>();
                 ReflectionUtil.SetPrivateField(_levelListTableView, "_levels", levels);
                 ReflectionUtil.SetPrivateField(songListViewController, "_levels", levels);            
                 TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelListTableView, "_tableView");
@@ -597,6 +651,11 @@ namespace SongBrowserPlugin.UI
                     _sortButtonGroup[_sortButtonLastPushedIndex].Button.onClick.Invoke();
                 }
 
+                if (Input.GetKeyDown(KeyCode.S))
+                {
+                    onSortButtonClickEvent(SongSortMode.Search);
+                }
+
                 // select current sort mode again (toggle inverting)
                 if (Input.GetKeyDown(KeyCode.Y))
                 {
@@ -652,7 +711,6 @@ namespace SongBrowserPlugin.UI
                     _lastRow = (_lastRow + 1) % this._model.SortedSongList.Count;
                     this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[_lastRow].levelID);
                 }
-
 
                 // add to favorites
                 if (Input.GetKeyDown(KeyCode.F))

@@ -11,6 +11,7 @@ namespace SongBrowserPlugin
         Warn,
         Error
     }
+
     public class Logger
     {
         private string loggerName;

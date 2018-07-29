@@ -16,13 +16,15 @@ namespace SongBrowserPlugin.DataAccess
         Newest,
         PlayCount,
         Random,
+        Search
     }
 
     [Serializable]
     public class SongBrowserSettings
     {
         public SongSortMode sortMode = default(SongSortMode);
-        public List<String> favorites;
+        public List<String> favorites = default(List<String>);
+        public List<String> searchTerms = default(List<String>);
 
         [NonSerialized]
         private static Logger Log = new Logger("SongBrowserSettings");
@@ -32,7 +34,7 @@ namespace SongBrowserPlugin.DataAccess
         /// </summary>
         public SongBrowserSettings()
         {
-            favorites = new List<String>();
+            //favorites = new List<String>();
         }
 
         /// <summary>
