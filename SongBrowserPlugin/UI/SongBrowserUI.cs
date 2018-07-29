@@ -499,7 +499,9 @@ namespace SongBrowserPlugin.UI
         {
             // Refresh the fast scroll buttons
             _pageUpTenPercent.interactable = _tableViewPageUpButton.interactable;
+            _pageUpTenPercent.gameObject.SetActive(_tableViewPageUpButton.IsActive());
             _pageDownTenPercent.interactable = _tableViewPageDownButton.interactable;
+            _pageDownTenPercent.gameObject.SetActive(_tableViewPageDownButton.IsActive());
         }
 
         /// <summary>
