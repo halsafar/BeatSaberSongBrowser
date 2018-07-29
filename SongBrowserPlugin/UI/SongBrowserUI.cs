@@ -581,10 +581,13 @@ namespace SongBrowserPlugin.UI
                 }
                 else
                 {
-                    selectedLevelID = levels.FirstOrDefault().levelID;
+                    if (levels.Length > 0)
+                    {
+                        selectedLevelID = levels.FirstOrDefault().levelID;
+                    }
                 }
 
-                if (levels.Any(x => x.levelID == selectedLevelID))
+                if (!String.IsNullOrEmpty(selectedLevelID) && levels.Any(x => x.levelID == selectedLevelID))
                 {
                     SelectAndScrollToLevel(_levelListTableView, selectedLevelID);
                 }
