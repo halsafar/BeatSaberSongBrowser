@@ -133,7 +133,12 @@ namespace SongBrowserPlugin
             _gameplayModeCollection = collections.GetCollection(gameplayMode) as SongLoaderPlugin.OverrideClasses.CustomLevelCollectionSO;
             _originalSongs = collections.GetLevels(gameplayMode).ToList();
             _sortedSongs = _originalSongs;
-            _levelIdToCustomLevel = SongLoader.CustomLevels.ToDictionary(x => x.levelID, x => x);
+            _levelIdToCustomLevel = new Dictionary<string, SongLoaderPlugin.OverrideClasses.CustomLevel>();
+            foreach (var level in SongLoader.CustomLevels)
+            {
+                if (!_levelIdToCustomLevel.Keys.Contains(level.levelID))
+                    _levelIdToCustomLevel.Add(level.levelID, level);
+            }
 
             _log.Debug("Song Browser knows about {0} songs from SongLoader...", _sortedSongs.Count);
         }
@@ -245,10 +250,19 @@ namespace SongBrowserPlugin
             // Build a map of levelId to sum of all playcounts and sort.
             PlayerDynamicData playerData = GameDataModel.instance.gameDynamicData.GetCurrentPlayerDynamicData();
             IEnumerable<LevelDifficulty> difficultyIterator = Enum.GetValues(typeof(LevelDifficulty)).Cast<LevelDifficulty>();
-            Dictionary<string, int> _levelIdToPlayCount = _originalSongs.ToDictionary(x => x.levelID, x => difficultyIterator.Sum(difficulty => playerData.GetPlayerLevelStatsData(x.levelID, difficulty, gameplayMode).playCount));
+            Dictionary<string, int>  levelIdToPlayCount = new Dictionary<string, int>();
+            foreach (var level in _originalSongs)
+            {
+                if (!levelIdToPlayCount.ContainsKey(level.levelID))
+                {
+                    int playCountSum = difficultyIterator.Sum(difficulty => playerData.GetPlayerLevelStatsData(level.levelID, difficulty, gameplayMode).playCount);
+                    levelIdToPlayCount.Add(level.levelID, playCountSum);
+                }
+            }
+
             _sortedSongs = _originalSongs
                 .AsQueryable()
-                .OrderByDescending(x => _levelIdToPlayCount[x.levelID])
+                .OrderByDescending(x => levelIdToPlayCount[x.levelID])
                 .ThenBy(x => x.songName)
                 .ToList();
         }

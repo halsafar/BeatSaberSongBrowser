@@ -272,23 +272,30 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         private void OnDidSelectLevelEvent(StandardLevelListViewController view, IStandardLevel level)
         {
-            _log.Trace("OnDidSelectLevelEvent()");
-            if (level == null)
+            try
             {
-                _log.Debug("No level selected?");
-                return;
-            }
+                _log.Trace("OnDidSelectLevelEvent()");
+                if (level == null)
+                {
+                    _log.Debug("No level selected?");
+                    return;
+                }
 
-            if (_model.Settings == null)
+                if (_model.Settings == null)
+                {
+                    _log.Debug("Settings not instantiated yet?");
+                    return;
+                }
+
+                SongBrowserModel.LastSelectedLevelId = level.levelID;
+
+                RefreshAddFavoriteButton(level.levelID);
+                RefreshQuickScrollButtons();
+            }
+            catch (Exception e)
             {
-                _log.Debug("Settings not instantiated yet?");
-                return;
+                _log.Exception("Exception selecting song:", e);
             }
-
-            SongBrowserModel.LastSelectedLevelId = level.levelID;
-
-            RefreshAddFavoriteButton(level.levelID);
-            RefreshQuickScrollButtons();
         }
 
         /// <summary>
