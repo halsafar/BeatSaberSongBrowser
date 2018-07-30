@@ -180,7 +180,7 @@ namespace SongBrowserPlugin.UI
                     buttonX -= buttonWidth;
                 }
 
-                // Creaate Add to Favorites Button
+                // Create Add to Favorites Button
                 _log.Debug("Creating add to favorites button...");                
                 _addFavoriteButton = UIBuilder.CreateUIButton(otherButtonTransform, otherButtonTemplate);
                 (_addFavoriteButton.transform as RectTransform).anchoredPosition = new Vector2(40f, (sortButtonTemplate.transform as RectTransform).anchoredPosition.y);
