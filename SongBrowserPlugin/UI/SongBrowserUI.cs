@@ -440,6 +440,7 @@ namespace SongBrowserPlugin.UI
             _log.Debug("Searching for \"{0}\"...", searchFor);
 
             _model.Settings.searchTerms.Insert(0, searchFor);
+            _model.Settings.Save();
             SongBrowserModel.LastSelectedLevelId = null;
             this.UpdateSongList();
             this.RefreshSongList();
@@ -567,11 +568,13 @@ namespace SongBrowserPlugin.UI
                 }
 
                 StandardLevelSO[] levels = _model.SortedSongList.ToArray();
+                foreach (StandardLevelSO level in levels)
+                    _log.Debug(level.levelID);
                 StandardLevelListViewController songListViewController = this._levelSelectionFlowCoordinator.GetPrivateField<StandardLevelListViewController>("_levelListViewController");
                 ReflectionUtil.SetPrivateField(_levelListTableView, "_levels", levels);
                 ReflectionUtil.SetPrivateField(songListViewController, "_levels", levels);            
                 TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelListTableView, "_tableView");
-                tableView.ReloadData();
+                tableView.ReloadData();                
 
                 String selectedLevelID = null;
                 if (SongBrowserModel.LastSelectedLevelId != null)
@@ -587,7 +590,8 @@ namespace SongBrowserPlugin.UI
                     }
                 }
 
-                if (!String.IsNullOrEmpty(selectedLevelID) && levels.Any(x => x.levelID == selectedLevelID))
+                // HACK, seems like if 6 or less items scrolling to row causes the song list to disappear.
+                if (levels.Length > 6 && !String.IsNullOrEmpty(selectedLevelID) && levels.Any(x => x.levelID == selectedLevelID))
                 {
                     SelectAndScrollToLevel(_levelListTableView, selectedLevelID);
                 }

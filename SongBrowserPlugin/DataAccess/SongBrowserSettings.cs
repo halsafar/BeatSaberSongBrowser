@@ -96,6 +96,12 @@ namespace SongBrowserPlugin.DataAccess
         {            
             String settingsFilePath = SongBrowserSettings.SettingsPath();
 
+            // TODO - not here
+            if (searchTerms.Count > 10)
+            {
+                searchTerms.RemoveRange(10, searchTerms.Count - 10);
+            }
+
             FileStream fs = new FileStream(settingsFilePath, FileMode.Create, FileAccess.Write);
             
             XmlSerializer serializer = new XmlSerializer(typeof(SongBrowserSettings));           

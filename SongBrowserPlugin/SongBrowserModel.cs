@@ -375,6 +375,7 @@ namespace SongBrowserPlugin
                 .AsQueryable()
                 .Where(x => $"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()))
                 .ToList();
+            //_sortedSongs.ForEach(x => _log.Debug(x.levelID));
         }
 
         private void SortSongName(List<StandardLevelSO> levels)
