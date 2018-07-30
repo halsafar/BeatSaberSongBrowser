@@ -155,7 +155,7 @@ namespace SongBrowserPlugin.UI
                 float fontSize = 2.5f;
                 float buttonWidth = 14.0f;
                 float buttonHeight = 5.0f;
-                float buttonX = 68.0f;
+                float buttonX = -68;
                 float buttonY = 74.5f;
 
                 string[] buttonNames = new string[]
@@ -177,7 +177,7 @@ namespace SongBrowserPlugin.UI
                 for (int i = 0; i < buttonNames.Length; i++)
                 {
                     _sortButtonGroup.Add(UIBuilder.CreateSortButton(sortButtonTransform, sortButtonTemplate, arrowIcon, buttonNames[i], fontSize, buttonX, buttonY, buttonWidth, buttonHeight, sortModes[i], onClickEvents[i]));
-                    buttonX -= buttonWidth;
+                    buttonX += buttonWidth;
                 }
 
                 // Create Add to Favorites Button
