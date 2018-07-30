@@ -16,13 +16,15 @@ namespace SongBrowserPlugin.DataAccess
         Newest,
         PlayCount,
         Random,
+        Search
     }
 
     [Serializable]
     public class SongBrowserSettings
     {
         public SongSortMode sortMode = default(SongSortMode);
-        public List<String> favorites;
+        public List<String> favorites = default(List<String>);
+        public List<String> searchTerms = default(List<String>);
 
         [NonSerialized]
         private static Logger Log = new Logger("SongBrowserSettings");
@@ -33,6 +35,7 @@ namespace SongBrowserPlugin.DataAccess
         public SongBrowserSettings()
         {
             favorites = new List<String>();
+            searchTerms = new List<string>();
         }
 
         /// <summary>
@@ -92,6 +95,12 @@ namespace SongBrowserPlugin.DataAccess
         public void Save()
         {            
             String settingsFilePath = SongBrowserSettings.SettingsPath();
+
+            // TODO - not here
+            if (searchTerms.Count > 10)
+            {
+                searchTerms.RemoveRange(10, searchTerms.Count - 10);
+            }
 
             FileStream fs = new FileStream(settingsFilePath, FileMode.Create, FileAccess.Write);
             

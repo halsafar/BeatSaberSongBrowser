@@ -13,6 +13,7 @@ namespace SongBrowserPlugin
 {
     public class SongBrowserApplication : MonoBehaviour
     {
+        // Which scene index to load into
         public const int MenuIndex = 1;
 
         public static SongBrowserApplication Instance;
@@ -22,7 +23,6 @@ namespace SongBrowserPlugin
         // Song Browser UI Elements
         private SongBrowserUI _songBrowserUI;
         public Dictionary<String, Sprite> CachedIcons;
-        //public Button PlayButtonTemplate;
 
         /// <summary>
         /// 
@@ -49,7 +49,7 @@ namespace SongBrowserPlugin
         }
 
         /// <summary>
-        /// 
+        /// Acquire any UI elements from Beat saber that we need.  Wait for the song list to be loaded.
         /// </summary>
         public void Start()
         {
@@ -122,8 +122,6 @@ namespace SongBrowserPlugin
                     CachedIcons.Add(sprite.name, sprite);
                 }
 
-                //PlayButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PlayButton"));
-
                 // Append our own event to appropriate events so we can refresh the song list before the user sees it.
                 MainFlowCoordinator mainFlow = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
                 SoloModeSelectionViewController view = Resources.FindObjectsOfTypeAll<SoloModeSelectionViewController>().First();                
@@ -150,7 +148,7 @@ namespace SongBrowserPlugin
         /// Helper for invoking buttons.
         /// </summary>
         /// <param name="buttonName"></param>
-        private void InvokeBeatSaberButton(String buttonName)
+        public static void InvokeBeatSaberButton(String buttonName)
         {
             Button buttonInstance = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == buttonName));
             buttonInstance.onClick.Invoke();
