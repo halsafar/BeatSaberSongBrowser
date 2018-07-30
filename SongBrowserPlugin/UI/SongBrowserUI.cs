@@ -183,7 +183,7 @@ namespace SongBrowserPlugin.UI
                 // Creaate Add to Favorites Button
                 _log.Debug("Creating add to favorites button...");                
                 _addFavoriteButton = UIBuilder.CreateUIButton(otherButtonTransform, otherButtonTemplate);
-                (_addFavoriteButton.transform as RectTransform).anchoredPosition = new Vector2(40f, 5.75f);
+                (_addFavoriteButton.transform as RectTransform).anchoredPosition = new Vector2(40f, (sortButtonTemplate.transform as RectTransform).anchoredPosition.y);
                 (_addFavoriteButton.transform as RectTransform).sizeDelta = new Vector2(10f, 10f);
                 UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);
                 UIBuilder.SetButtonTextSize(ref _addFavoriteButton, fontSize);
