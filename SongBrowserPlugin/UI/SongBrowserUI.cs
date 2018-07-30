@@ -568,8 +568,6 @@ namespace SongBrowserPlugin.UI
                 }
 
                 StandardLevelSO[] levels = _model.SortedSongList.ToArray();
-                foreach (StandardLevelSO level in levels)
-                    _log.Debug(level.levelID);
                 StandardLevelListViewController songListViewController = this._levelSelectionFlowCoordinator.GetPrivateField<StandardLevelListViewController>("_levelListViewController");
                 ReflectionUtil.SetPrivateField(_levelListTableView, "_levels", levels);
                 ReflectionUtil.SetPrivateField(songListViewController, "_levels", levels);            
