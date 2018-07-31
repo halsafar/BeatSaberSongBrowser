@@ -155,7 +155,7 @@ namespace SongBrowserPlugin.UI
                 float fontSize = 2.5f;
                 float buttonWidth = 14.0f;
                 float buttonHeight = 5.0f;
-                float buttonX = 68.0f;
+                float buttonX = -68;
                 float buttonY = 74.5f;
 
                 string[] buttonNames = new string[]
@@ -177,13 +177,13 @@ namespace SongBrowserPlugin.UI
                 for (int i = 0; i < buttonNames.Length; i++)
                 {
                     _sortButtonGroup.Add(UIBuilder.CreateSortButton(sortButtonTransform, sortButtonTemplate, arrowIcon, buttonNames[i], fontSize, buttonX, buttonY, buttonWidth, buttonHeight, sortModes[i], onClickEvents[i]));
-                    buttonX -= buttonWidth;
+                    buttonX += buttonWidth;
                 }
 
-                // Creaate Add to Favorites Button
+                // Create Add to Favorites Button
                 _log.Debug("Creating add to favorites button...");                
                 _addFavoriteButton = UIBuilder.CreateUIButton(otherButtonTransform, otherButtonTemplate);
-                (_addFavoriteButton.transform as RectTransform).anchoredPosition = new Vector2(40f, 5.75f);
+                (_addFavoriteButton.transform as RectTransform).anchoredPosition = new Vector2(40f, (sortButtonTemplate.transform as RectTransform).anchoredPosition.y);
                 (_addFavoriteButton.transform as RectTransform).sizeDelta = new Vector2(10f, 10f);
                 UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);
                 UIBuilder.SetButtonTextSize(ref _addFavoriteButton, fontSize);
@@ -272,23 +272,30 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         private void OnDidSelectLevelEvent(StandardLevelListViewController view, IStandardLevel level)
         {
-            _log.Trace("OnDidSelectLevelEvent()");
-            if (level == null)
+            try
             {
-                _log.Debug("No level selected?");
-                return;
-            }
+                _log.Trace("OnDidSelectLevelEvent()");
+                if (level == null)
+                {
+                    _log.Debug("No level selected?");
+                    return;
+                }
 
-            if (_model.Settings == null)
+                if (_model.Settings == null)
+                {
+                    _log.Debug("Settings not instantiated yet?");
+                    return;
+                }
+
+                SongBrowserModel.LastSelectedLevelId = level.levelID;
+
+                RefreshAddFavoriteButton(level.levelID);
+                RefreshQuickScrollButtons();
+            }
+            catch (Exception e)
             {
-                _log.Debug("Settings not instantiated yet?");
-                return;
+                _log.Exception("Exception selecting song:", e);
             }
-
-            SongBrowserModel.LastSelectedLevelId = level.levelID;
-
-            RefreshAddFavoriteButton(level.levelID);
-            RefreshQuickScrollButtons();
         }
 
         /// <summary>
