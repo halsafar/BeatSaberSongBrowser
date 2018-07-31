@@ -1,5 +1,6 @@
 ﻿using SongBrowserPlugin.DataAccess;
 using SongLoaderPlugin;
+using SongLoaderPlugin.OverrideClasses;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,6 +10,67 @@ using UnityEngine;
 
 namespace SongBrowserPlugin
 {
+    class FolderBeatMapData : BeatmapData
+    {
+        public FolderBeatMapData(BeatmapLineData[] beatmapLinesData, BeatmapEventData[] beatmapEventData) :
+            base(beatmapLinesData, beatmapEventData)
+        {
+        }
+
+        public new int notesCount
+        {
+            get
+            {
+                return 0;
+            }
+        }
+        public new int obstaclesCount
+        {
+            get
+            {
+                return 0;
+            }
+        }
+    }
+
+    class FolderBeatMapDataSO : BeatmapDataSO
+    {
+        public FolderBeatMapDataSO()
+        {
+            BeatmapLineData lineData = new BeatmapLineData();
+            lineData.beatmapObjectsData = new BeatmapObjectData[0];
+            this._beatmapData = new FolderBeatMapData(
+                new BeatmapLineData[1]
+                {
+                    lineData
+                },
+                new BeatmapEventData[1]
+                {
+                    new BeatmapEventData(0, BeatmapEventType.Event0, 0)
+                });
+        }
+    }
+
+    class FolderLevel : StandardLevelSO
+    {
+        public void Init(String folderName)
+        {
+            _levelID = $"Folder_{folderName}";
+            _songName = folderName;
+            _songSubName = "";
+            _songAuthorName = "Folder";
+
+            var beatmapData = new FolderBeatMapDataSO();
+            var difficultyBeatmaps = new List<CustomLevel.CustomDifficultyBeatmap>();
+            var newDiffBeatmap = new CustomLevel.CustomDifficultyBeatmap(this, LevelDifficulty.Easy, 0, 0, beatmapData);
+            difficultyBeatmaps.Add(newDiffBeatmap);
+
+            var sceneInfo = Resources.Load<SceneInfo>("SceneInfo/" + "DefaultEnvironment" + "SceneInfo");
+            this.InitFull(_levelID, _songName, "songSubName", _songAuthorName, SongLoaderPlugin.SongLoader.TemporaryAudioClip, 1, 1, 1, 1, 1, 1, 1, null, difficultyBeatmaps.ToArray(), sceneInfo);
+            this.InitData();
+        }
+    }
+
     class DirectoryNode
     {
         public string Key { get; private set; }
@@ -223,6 +285,12 @@ namespace SongBrowserPlugin
                 else
                 {
                     currentNode.Nodes[path] = new DirectoryNode(path);
+                    FolderLevel folderLevel = new FolderLevel();
+
+                    folderLevel.Init(path);
+
+                    _log.Debug("Adding folder level {0}->{1}", currentNode.Key, path);
+                    currentNode.Levels.Add(folderLevel);
                 }
             }
         }

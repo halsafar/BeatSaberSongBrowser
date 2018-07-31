@@ -271,7 +271,7 @@ namespace SongBrowserPlugin.UI
         /// Various ways of detecting if a level is not properly selected.  Seems most hit the first one.
         /// </summary>
         private void OnDidSelectLevelEvent(StandardLevelListViewController view, IStandardLevel level)
-        {
+        {            
             try
             {
                 _log.Trace("OnDidSelectLevelEvent()");
@@ -285,6 +285,11 @@ namespace SongBrowserPlugin.UI
                 {
                     _log.Debug("Settings not instantiated yet?");
                     return;
+                }
+
+                if (level.levelID.StartsWith("Folder_"))
+                {
+                    _log.Debug("Folder selected!  Adjust PlayButton logic...");
                 }
 
                 SongBrowserModel.LastSelectedLevelId = level.levelID;
