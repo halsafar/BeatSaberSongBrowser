@@ -275,9 +275,15 @@ namespace SongBrowserPlugin
             string[] paths = relPath.Split('/');
 
             string curPath = paths[0];
+            bool isCache = false;
+            if (paths.Length > 2)
+            {
+                isCache = paths[1].Contains(".cache");
+            }
+
             for (int i = 1; i < paths.Length; i++)
             {
-                string path = paths[i];
+                string path = paths[i];                
 
                 if (path == Path.GetFileName(songInfo.path))
                 {
@@ -288,7 +294,7 @@ namespace SongBrowserPlugin
                 {                    
                     currentNode = currentNode.Nodes[path];
                 }
-                else
+                else if (!isCache)
                 {
                     currentNode.Nodes[path] = new DirectoryNode(path);
                     FolderLevel folderLevel = new FolderLevel();
