@@ -300,10 +300,8 @@ namespace SongBrowserPlugin
                     String[] paths = this.CurrentDirectory.Split('/');
                     for (int i = 1; i < paths.Length; i++)
                     {
-                        _log.Debug("FIUCL");
                         if (currentNode.Nodes.ContainsKey(paths[i]))
                         {
-                            _log.Debug("asdad");
                             currentNode = currentNode.Nodes[paths[i]];
                             _directoryStack.Push(currentNode);
                         }
