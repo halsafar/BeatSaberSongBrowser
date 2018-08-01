@@ -35,6 +35,7 @@ namespace SongBrowserPlugin.UI
         private RectTransform _tableViewRectTransform;
         private Button _tableViewPageUpButton;
         private Button _tableViewPageDownButton;
+        private Button _playButton;
 
         // New UI Elements
         private List<SongSortButton> _sortButtonGroup;
@@ -45,6 +46,8 @@ namespace SongBrowserPlugin.UI
         private Button _deleteButton;        
         private Button _pageUpTenPercent;
         private Button _pageDownTenPercent;
+        private Button _enterFolderButton;
+        private Button _upFolderButton;
         private SearchKeyboardViewController _searchViewController;
 
 
@@ -106,6 +109,8 @@ namespace SongBrowserPlugin.UI
                     _levelListTableView = this._levelListViewController.GetComponentInChildren<StandardLevelListTableView>();
                 }
 
+                _playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PlayButton"));
+                               
                 _simpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
 
                 this._deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(this._simpleDialogPromptViewControllerPrefab);
@@ -133,7 +138,7 @@ namespace SongBrowserPlugin.UI
                 // Gather some transforms and templates to use.
                 RectTransform sortButtonTransform = this._levelSelectionNavigationController.transform as RectTransform;
                 RectTransform otherButtonTransform = this._levelDetailViewController.transform as RectTransform;
-                Button sortButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PlayButton"));
+                Button sortButtonTemplate = _playButton;
                 Button otherButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "QuitButton"));
 
                 // Resize some of the UI
@@ -226,6 +231,16 @@ namespace SongBrowserPlugin.UI
                     this.JumpSongList(1, SEGMENT_PERCENT);
                 });
 
+                // Create enter folder button
+                _enterFolderButton = UIBuilder.CreateUIButton(otherButtonTransform, _playButton);
+                _enterFolderButton.onClick.RemoveAllListeners();
+                _enterFolderButton.onClick.AddListener(delegate()
+                {
+                    _model.PushDirectory();
+                    this.RefreshSongList();
+                });
+                UIBuilder.SetButtonText(ref _enterFolderButton, "Enter");
+
                 RefreshSortButtonUI();
             }
             catch (Exception e)
@@ -287,20 +302,44 @@ namespace SongBrowserPlugin.UI
                     return;
                 }
 
-                if (level.levelID.StartsWith("Folder_"))
-                {
-                    _log.Debug("Folder selected!  Adjust PlayButton logic...");
-                }
-
                 SongBrowserModel.LastSelectedLevelId = level.levelID;
 
                 RefreshAddFavoriteButton(level.levelID);
                 RefreshQuickScrollButtons();
+
+                if (level.levelID.StartsWith("Folder_"))
+                {
+                    _log.Debug("Folder selected!  Adjust PlayButton logic...");
+                    HandleDidSelectFolderRow(level);
+                }
+                else
+                {
+                    HandleDidSelectLevelRow(level);
+                }
             }
             catch (Exception e)
             {
                 _log.Exception("Exception selecting song:", e);
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void HandleDidSelectFolderRow(IStandardLevel level)
+        {
+            _enterFolderButton.gameObject.SetActive(true);
+            _playButton.gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="level"></param>
+        private void HandleDidSelectLevelRow(IStandardLevel level)
+        {
+            _enterFolderButton.gameObject.SetActive(false);
+            _playButton.gameObject.SetActive(true);
         }
 
         /// <summary>
@@ -696,7 +735,7 @@ namespace SongBrowserPlugin.UI
                     _deleteDialog.GetPrivateField<TextMeshProButton>("_okButton").button.onClick.Invoke();
                 }
 
-                // c,v can be used to get into a song
+                // c - select difficulty for top song
                 if (Input.GetKeyDown(KeyCode.C))
                 {
                     this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[0].levelID);                 
@@ -704,9 +743,17 @@ namespace SongBrowserPlugin.UI
                     this._levelSelectionFlowCoordinator.HandleDifficultyViewControllerDidSelectDifficulty(_levelDifficultyViewController, _model.SortedSongList[0].GetDifficultyLevel(LevelDifficulty.Easy));
                 }
 
+                // v start a song or enter a folder
                 if (Input.GetKeyDown(KeyCode.V))
                 {
-                    this._levelSelectionFlowCoordinator.HandleLevelDetailViewControllerDidPressPlayButton(this._levelDetailViewController);
+                    if (_playButton.isActiveAndEnabled)
+                    {
+                        _playButton.onClick.Invoke();
+                    }
+                    else if (_enterFolderButton.isActiveAndEnabled)
+                    {
+                        _enterFolderButton.onClick.Invoke();
+                    }
                 }
 
                 // change song index

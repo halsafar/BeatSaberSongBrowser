@@ -16,21 +16,6 @@ namespace SongBrowserPlugin
             base(beatmapLinesData, beatmapEventData)
         {
         }
-
-        public new int notesCount
-        {
-            get
-            {
-                return 0;
-            }
-        }
-        public new int obstaclesCount
-        {
-            get
-            {
-                return 0;
-            }
-        }
     }
 
     class FolderBeatMapDataSO : BeatmapDataSO
@@ -66,7 +51,7 @@ namespace SongBrowserPlugin
             difficultyBeatmaps.Add(newDiffBeatmap);
 
             var sceneInfo = Resources.Load<SceneInfo>("SceneInfo/" + "DefaultEnvironment" + "SceneInfo");
-            this.InitFull(_levelID, _songName, "songSubName", _songAuthorName, SongLoaderPlugin.SongLoader.TemporaryAudioClip, 1, 1, 1, 1, 1, 1, 1, null, difficultyBeatmaps.ToArray(), sceneInfo);
+            this.InitFull(_levelID, _songName, _songSubName, _songAuthorName, SongLoaderPlugin.SongLoader.TemporaryAudioClip, 1, 1, 1, 1, 1, 1, 1, null, difficultyBeatmaps.ToArray(), sceneInfo);
             this.InitData();
         }
     }
@@ -104,8 +89,8 @@ namespace SongBrowserPlugin
         private Dictionary<String, double> _cachedLastWriteTimes;
         private Dictionary<string, int> _weights;
         private Dictionary<String, DirectoryNode> _directoryTree;
-        private String _currentDirectory = CUSTOM_SONGS_DIR;       
-
+        private Stack<String> _directoryStack = new Stack<String>();
+        private GameplayMode _currentGamePlayMode;
         public bool InvertingResults { get; private set; }
 
         /// <summary>
@@ -165,6 +150,8 @@ namespace SongBrowserPlugin
                 ["Level8"] = 2,
                 ["Level11"] = 1
             };
+
+            _directoryStack.Push(CUSTOM_SONGS_DIR);
         }
 
         /// <summary>
@@ -192,6 +179,8 @@ namespace SongBrowserPlugin
         /// </summary>
         public void UpdateSongLists(GameplayMode gameplayMode)
         {
+            _currentGamePlayMode = gameplayMode;
+
             String customSongsPath = Path.Combine(Environment.CurrentDirectory, CUSTOM_SONGS_DIR);
             String cachedSongsPath = Path.Combine(customSongsPath, ".cache");
             DateTime currentLastWriteTIme = File.GetLastWriteTimeUtc(customSongsPath);
@@ -209,9 +198,9 @@ namespace SongBrowserPlugin
             }
 
             // Update song Infos, directory tree, and sort
-            this.UpdateSongInfos(gameplayMode);
+            this.UpdateSongInfos(_currentGamePlayMode);
             this.UpdateDirectoryTree(customSongsPath);
-            this.ProcessSongList(gameplayMode);                       
+            this.ProcessSongList(_currentGamePlayMode);                       
         }
 
         /// <summary>
@@ -252,6 +241,8 @@ namespace SongBrowserPlugin
                 if (level.levelID.Length < 32) continue;
                 AddItemToDirectoryTree(customSongDirUri, level);
             }
+
+            PrintDirectory(_directoryTree[CUSTOM_SONGS_DIR], 1);
         }
 
         /// <summary>
@@ -294,6 +285,48 @@ namespace SongBrowserPlugin
                 }
             }
         }
+
+        /// <summary>
+        /// Push a dir onto the stack.
+        /// </summary>
+        public void PushDirectory()
+        {
+            if (SongBrowserModel.LastSelectedLevelId.StartsWith("Folder_"))
+            {
+                _directoryStack.Push(SongBrowserModel.LastSelectedLevelId);
+            }
+            ProcessSongList(_currentGamePlayMode);
+        }
+
+        /// <summary>
+        /// Pop a dir off the stack.
+        /// </summary>
+        public void PopDirectory()
+        {
+            if (_directoryStack.Count > 1)
+            {
+                _directoryStack.Pop();
+                ProcessSongList(_currentGamePlayMode);
+            }            
+        }
+
+        /// <summary>
+        /// Print the directory structure parsed.
+        /// </summary>
+        /// <param name="node"></param>
+        /// <param name="depth"></param>
+        private void PrintDirectory(DirectoryNode node, int depth)
+        {
+            String levelStr = "";
+            String nodeStr = "";
+
+            Console.WriteLine("Dir: {0}".PadLeft(depth*4, ' '), node.Key);
+            node.Levels.ForEach(x => Console.WriteLine("{0}".PadLeft((depth + 1)*4, ' '), x.levelID));
+            foreach (KeyValuePair<string, DirectoryNode> childNode in node.Nodes)
+            {
+                PrintDirectory(childNode.Value, depth + 1);
+            }            
+        }
         
         /// <summary>
         /// Sort the song list based on the settings.
@@ -317,7 +350,8 @@ namespace SongBrowserPlugin
             
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            List<StandardLevelSO> songList = _directoryTree[_currentDirectory].Levels;
+            _log.Debug("Showing songs for directory: {0}", _directoryStack.Peek());
+            List<StandardLevelSO> songList = _directoryTree[_directoryStack.Peek()].Levels;
 
             switch (_settings.sortMode)
             {
