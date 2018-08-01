@@ -245,7 +245,7 @@ namespace SongBrowserPlugin.UI
                 UIBuilder.SetButtonText(ref _enterFolderButton, "Enter");
 
                 // Create up folder button
-                _upFolderButton = UIBuilder.CreatePageButton(sortButtonTransform, sortButtonTemplate, arrowIcon, buttonX, buttonY, 5.5f, buttonHeight, 1.5f, 1.5f, 180);
+                _upFolderButton = UIBuilder.CreatePageButton(sortButtonTransform, sortButtonTemplate, arrowIcon, buttonX, buttonY, 5.5f, buttonHeight, 0.85f, 0.85f, 180);
                 _upFolderButton.onClick.RemoveAllListeners();
                 _upFolderButton.onClick.AddListener(delegate ()
                 {
