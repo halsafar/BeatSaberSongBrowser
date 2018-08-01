@@ -42,7 +42,7 @@ namespace SongBrowserPlugin
         public void Init(String relativePath, String name, Sprite coverImage)
         {
             _songName = name;
-            _songSubName = "FolderSubName";
+            _songSubName = "";
             _songAuthorName = "Folder";
 
             _levelID = $"Folder_{relativePath}";
@@ -284,7 +284,6 @@ namespace SongBrowserPlugin
 
             foreach (StandardLevelSO level in _originalSongs)
             {
-                //if (level.levelID.Length < 32) continue;
                 AddItemToDirectoryTree(customSongDirUri, level);
             }
 
@@ -319,6 +318,7 @@ namespace SongBrowserPlugin
         /// <param name="level"></param>
         private void AddItemToDirectoryTree(Uri customSongDirUri, StandardLevelSO level)
         {
+            //_log.Debug("Processing item into directory tree: {0}", level.levelID);
             DirectoryNode currentNode = _directoryTree[CUSTOM_SONGS_DIR];
             
             // Just add original songs to root and bail
@@ -348,6 +348,7 @@ namespace SongBrowserPlugin
 
                 if (path == Path.GetFileName(songInfo.path))
                 {
+                    //_log.Debug("\tLevel Found Adding {0}->{1}", currentNode.Key, level.levelID);
                     currentNode.Levels.Add(level);
                     break;
                 }
@@ -361,10 +362,12 @@ namespace SongBrowserPlugin
                     FolderLevel folderLevel = new FolderLevel();
                     folderLevel.Init(relPath, path, folderIcon);
 
-                    _log.Debug("Adding folder level {0}->{1}", currentNode.Key, path);
+                    //_log.Debug("Adding folder level {0}->{1}", currentNode.Key, path);
                     currentNode.Levels.Add(folderLevel);
 
                     _cachedLastWriteTimes[folderLevel.levelID] = (File.GetLastWriteTimeUtc(relPath) - EPOCH).TotalMilliseconds;
+
+                    currentNode = currentNode.Nodes[path];
                 }
             }
         }
