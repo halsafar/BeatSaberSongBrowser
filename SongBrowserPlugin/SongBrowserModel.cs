@@ -275,6 +275,8 @@ namespace SongBrowserPlugin
             string[] paths = relPath.Split('/');
 
             string curPath = paths[0];
+
+            // Prevent cache directory from building into the tree, will add all its leafs to root.
             bool isCache = false;
             if (paths.Length > 2)
             {
