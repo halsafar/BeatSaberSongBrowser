@@ -41,7 +41,7 @@ namespace SongBrowserPlugin
         public void Init(String relativePath, String name)
         {
             _songName = name;
-            _songSubName = "";
+            _songSubName = "FolderSubName";
             _songAuthorName = "Folder";
 
             _levelID = $"Folder_{relativePath}";
@@ -74,6 +74,7 @@ namespace SongBrowserPlugin
     public class SongBrowserModel
     {
         private const String CUSTOM_SONGS_DIR = "CustomSongs";
+
         private DateTime EPOCH = new DateTime(1970, 1, 1);
 
         private Logger _log = new Logger("SongBrowserModel");
@@ -91,6 +92,10 @@ namespace SongBrowserPlugin
         private Dictionary<String, DirectoryNode> _directoryTree;
         private Stack<DirectoryNode> _directoryStack = new Stack<DirectoryNode>();
         private GameplayMode _currentGamePlayMode;
+
+        /// <summary>
+        /// Toggle whether inverting the results.
+        /// </summary>
         public bool InvertingResults { get; private set; }
 
         /// <summary>

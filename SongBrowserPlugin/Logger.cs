@@ -15,7 +15,7 @@ namespace SongBrowserPlugin
     public class Logger
     {
         private string loggerName;
-        private LogLevel _LogLevel = LogLevel.Trace;
+        private LogLevel _LogLevel = LogLevel.Debug;
         private ConsoleColor _defaultFgColor;
 
         public Logger(string _name)
