@@ -15,6 +15,7 @@ namespace SongBrowserPlugin.DataAccess
         Original,
         Newest,
         PlayCount,
+        Difficulty,
         Random,
         Search
     }

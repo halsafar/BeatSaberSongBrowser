@@ -165,17 +165,17 @@ namespace SongBrowserPlugin.UI
 
                 string[] buttonNames = new string[]
                 {
-                    "Favorite", "Song", "Author", "Original", "Newest", "Plays", "Random", "Search"
+                    "Favorite", "Song", "Author", "Original", "Newest", "Plays", "Difficult", "Random", "Search"
                 };
 
                 SongSortMode[] sortModes = new SongSortMode[]
                 {
-                    SongSortMode.Favorites, SongSortMode.Default, SongSortMode.Author, SongSortMode.Original, SongSortMode.Newest, SongSortMode.PlayCount, SongSortMode.Random, SongSortMode.Search
+                    SongSortMode.Favorites, SongSortMode.Default, SongSortMode.Author, SongSortMode.Original, SongSortMode.Newest, SongSortMode.PlayCount, SongSortMode.Difficulty, SongSortMode.Random, SongSortMode.Search
                 };
 
                 System.Action<SongSortMode>[] onClickEvents = new Action<SongSortMode>[]
                 {
-                    onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSearchButtonClickEvent
+                    onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSearchButtonClickEvent
                 };
 
                 _sortButtonGroup = new List<SongSortButton>();

@@ -471,6 +471,9 @@ namespace SongBrowserPlugin
                 case SongSortMode.PlayCount:
                     SortPlayCount(songList, _currentGamePlayMode);
                     break;
+                case SongSortMode.Difficulty:
+                    SortDifficulty(songList);
+                    break;
                 case SongSortMode.Random:
                     SortRandom(songList);
                     break;
@@ -566,6 +569,56 @@ namespace SongBrowserPlugin
             _sortedSongs = levels
                 .AsQueryable()
                 .OrderByDescending(x => levelIdToPlayCount[x.levelID])
+                .ThenBy(x => x.songName)
+                .ToList();
+        }
+
+        private void SortDifficulty(List<StandardLevelSO> levels)
+        {
+            _log.Info("Sorting song list by random");
+
+            System.Random rnd = new System.Random(Guid.NewGuid().GetHashCode());
+
+            Dictionary<LevelDifficulty, int> difficultyWeights = new Dictionary<LevelDifficulty, int>
+            {
+                [LevelDifficulty.Easy] = int.MaxValue - 4,
+                [LevelDifficulty.Normal] = int.MaxValue - 3,
+                [LevelDifficulty.Hard] = int.MaxValue - 2,
+                [LevelDifficulty.Expert] = int.MaxValue - 1,
+                [LevelDifficulty.ExpertPlus] = int.MaxValue,
+            };
+
+            IEnumerable<LevelDifficulty> difficultyIterator = Enum.GetValues(typeof(LevelDifficulty)).Cast<LevelDifficulty>();
+            Dictionary<string, int>  levelIdToDifficultyValue = new Dictionary<string, int>();
+            foreach (var level in levels)
+            {
+                if (!levelIdToDifficultyValue.ContainsKey(level.levelID))
+                {
+                    // Skip folders
+                    if (level.levelID.StartsWith("Folder_"))
+                    {
+                        levelIdToDifficultyValue.Add(level.levelID, 0);
+                    }
+                    else
+                    {
+                        int difficultyValue = 0;
+                        foreach (LevelDifficulty difficulty in difficultyIterator)
+                        {
+                            IStandardLevelDifficultyBeatmap beatmap = level.GetDifficultyLevel(difficulty);
+                            if (beatmap != null)
+                            {
+                                difficultyValue += difficultyWeights[difficulty];
+                                break;
+                            }
+                        }
+                        levelIdToDifficultyValue.Add(level.levelID, difficultyValue);
+                    }
+                }
+            }
+
+            _sortedSongs = levels
+                .AsQueryable()
+                .OrderBy(x => levelIdToDifficultyValue[x.levelID])
                 .ThenBy(x => x.songName)
                 .ToList();
         }
