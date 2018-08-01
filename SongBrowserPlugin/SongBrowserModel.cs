@@ -463,12 +463,25 @@ namespace SongBrowserPlugin
             IEnumerable<LevelDifficulty> difficultyIterator = Enum.GetValues(typeof(LevelDifficulty)).Cast<LevelDifficulty>();
 
             Dictionary<string, int>  levelIdToPlayCount = new Dictionary<string, int>();
-            foreach (var level in _originalSongs)
+            foreach (var level in levels)
             {
                 if (!levelIdToPlayCount.ContainsKey(level.levelID))
                 {
-                    int playCountSum = difficultyIterator.Sum(difficulty => playerData.GetPlayerLevelStatsData(level.levelID, difficulty, gameplayMode).playCount);
-                    levelIdToPlayCount.Add(level.levelID, playCountSum);
+                    // Skip folders
+                    if (level.levelID.StartsWith("Folder_"))
+                    {
+                        levelIdToPlayCount.Add(level.levelID, 0);
+                    }
+                    else
+                    {
+                        int playCountSum = 0;
+                        foreach (LevelDifficulty difficulty in difficultyIterator)
+                        {
+                            PlayerLevelStatsData stats = playerData.GetPlayerLevelStatsData(level.levelID, difficulty, gameplayMode);
+                            playCountSum += stats.playCount;
+                        }
+                        levelIdToPlayCount.Add(level.levelID, playCountSum);
+                    }
                 }
             }
 
