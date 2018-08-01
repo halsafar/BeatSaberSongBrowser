@@ -284,7 +284,7 @@ namespace SongBrowserPlugin
 
             foreach (StandardLevelSO level in _originalSongs)
             {
-                if (level.levelID.Length < 32) continue;
+                //if (level.levelID.Length < 32) continue;
                 AddItemToDirectoryTree(customSongDirUri, level);
             }
 
@@ -322,12 +322,19 @@ namespace SongBrowserPlugin
         private void AddItemToDirectoryTree(Uri customSongDirUri, StandardLevelSO level)
         {
             DirectoryNode currentNode = _directoryTree[CUSTOM_SONGS_DIR];
+            
+            // Just add original songs to root and bail
+            if (level.levelID.Length < 32)
+            {
+                currentNode.Levels.Add(level);
+                return;
+            }
+
             CustomSongInfo songInfo = _levelIdToCustomLevel[level.levelID].customSongInfo;            
             Uri customSongUri = new Uri(songInfo.path);
             Uri pathDiff = customSongDirUri.MakeRelativeUri(customSongUri);
             string relPath = Uri.UnescapeDataString(pathDiff.OriginalString);
             string[] paths = relPath.Split('/');
-
             Sprite folderIcon = Base64Sprites.Base64ToSprite(Base64Sprites.Folder);
 
             // Prevent cache directory from building into the tree, will add all its leafs to root.
