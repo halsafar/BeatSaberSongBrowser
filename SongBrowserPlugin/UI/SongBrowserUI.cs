@@ -160,7 +160,7 @@ namespace SongBrowserPlugin.UI
                 float fontSize = 2.5f;
                 float buttonWidth = 14.0f;
                 float buttonHeight = 5.0f;
-                float buttonX = -68;
+                float buttonX = -61;
                 float buttonY = 74.5f;
 
                 string[] buttonNames = new string[]
@@ -245,7 +245,7 @@ namespace SongBrowserPlugin.UI
                 UIBuilder.SetButtonText(ref _enterFolderButton, "Enter");
 
                 // Create up folder button
-                _upFolderButton = UIBuilder.CreatePageButton(sortButtonTransform, sortButtonTemplate, arrowIcon, buttonX, buttonY, 5.5f, buttonHeight, 0.85f, 0.85f, 180);
+                _upFolderButton = UIBuilder.CreatePageButton(sortButtonTransform, sortButtonTemplate, arrowIcon, buttonX-4.0f, buttonY, 5.5f, buttonHeight, 0.85f, 0.85f, 180);
                 _upFolderButton.onClick.RemoveAllListeners();
                 _upFolderButton.onClick.AddListener(delegate ()
                 {
