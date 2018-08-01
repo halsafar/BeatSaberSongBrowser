@@ -374,6 +374,12 @@ namespace SongBrowserPlugin.UI
                 return;
             }
 
+            if (level.levelID.StartsWith("Folder"))
+            {
+                _log.Debug("Cannot delete folders.");
+                return;
+            }
+
             SongLoaderPlugin.OverrideClasses.CustomLevel customLevel = _model.LevelIdToCustomSongInfos[level.levelID];
 
             this._deleteDialog.Init("Delete level warning!", String.Format("<color=#00AAFF>Permanently delete level: {0}</color>\n  Do you want to continue?", customLevel.songName), "YES", "NO");
