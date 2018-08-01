@@ -1,4 +1,5 @@
 ﻿using SongBrowserPlugin.DataAccess;
+using SongBrowserPlugin.UI;
 using SongLoaderPlugin;
 using SongLoaderPlugin.OverrideClasses;
 using System;
@@ -38,7 +39,7 @@ namespace SongBrowserPlugin
 
     class FolderLevel : StandardLevelSO
     {
-        public void Init(String relativePath, String name)
+        public void Init(String relativePath, String name, Sprite coverImage)
         {
             _songName = name;
             _songSubName = "FolderSubName";
@@ -52,7 +53,7 @@ namespace SongBrowserPlugin
             difficultyBeatmaps.Add(newDiffBeatmap);
 
             var sceneInfo = Resources.Load<SceneInfo>("SceneInfo/" + "DefaultEnvironment" + "SceneInfo");
-            this.InitFull(_levelID, _songName, _songSubName, _songAuthorName, SongLoaderPlugin.SongLoader.TemporaryAudioClip, 1, 1, 1, 1, 1, 1, 1, null, difficultyBeatmaps.ToArray(), sceneInfo);
+            this.InitFull(_levelID, _songName, _songSubName, _songAuthorName, SongLoaderPlugin.SongLoader.TemporaryAudioClip, 1, 1, 1, 1, 1, 1, 1, coverImage, difficultyBeatmaps.ToArray(), sceneInfo);
             this.InitData();
         }
     }
@@ -327,6 +328,8 @@ namespace SongBrowserPlugin
             string relPath = Uri.UnescapeDataString(pathDiff.OriginalString);
             string[] paths = relPath.Split('/');
 
+            Sprite folderIcon = Base64Sprites.Base64ToSprite(Base64Sprites.Folder);
+
             // Prevent cache directory from building into the tree, will add all its leafs to root.
             bool isCache = false;
             if (paths.Length > 2)
@@ -351,7 +354,7 @@ namespace SongBrowserPlugin
                 {
                     currentNode.Nodes[path] = new DirectoryNode(path);
                     FolderLevel folderLevel = new FolderLevel();
-                    folderLevel.Init(relPath, path);
+                    folderLevel.Init(relPath, path, folderIcon);
 
                     _log.Debug("Adding folder level {0}->{1}", currentNode.Key, path);
                     currentNode.Levels.Add(folderLevel);
