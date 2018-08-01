@@ -74,6 +74,7 @@ namespace SongBrowserPlugin
     public class SongBrowserModel
     {
         private const String CUSTOM_SONGS_DIR = "CustomSongs";
+        private DateTime EPOCH = new DateTime(1970, 1, 1);
 
         public static String LastSelectedLevelId { get; set; }
 
@@ -196,15 +197,14 @@ namespace SongBrowserPlugin
             DateTime currentLastWriteTIme = File.GetLastWriteTimeUtc(customSongsPath);
             IEnumerable<string> directories = Directory.EnumerateDirectories(customSongsPath, "*.*", SearchOption.AllDirectories);
 
-            // Get LastWriteTimes
-            var Epoch = new DateTime(1970, 1, 1);
-            foreach (string dir in directories)
+            // Get LastWriteTimes            
+            foreach (var level in SongLoader.CustomLevels)
             {
                 // Flip slashes, match SongLoaderPlugin
-                string slashed_dir = dir.Replace("\\", "/");
+                //string slashed_dir = dir.Replace("\\", "/");
 
                 //_log.Debug("Fetching LastWriteTime for {0}", slashed_dir);
-                _cachedLastWriteTimes[slashed_dir] = (File.GetLastWriteTimeUtc(dir) - Epoch).TotalMilliseconds;
+                _cachedLastWriteTimes[level.levelID] = (File.GetLastWriteTimeUtc(level.customSongInfo.path) - EPOCH).TotalMilliseconds;
             }
 
             // Update song Infos, directory tree, and sort
@@ -268,13 +268,11 @@ namespace SongBrowserPlugin
         private void AddItemToDirectoryTree(Uri customSongDirUri, StandardLevelSO level)
         {
             DirectoryNode currentNode = _directoryTree[CUSTOM_SONGS_DIR];
-            CustomSongInfo songInfo = _levelIdToCustomLevel[level.levelID].customSongInfo;
+            CustomSongInfo songInfo = _levelIdToCustomLevel[level.levelID].customSongInfo;            
             Uri customSongUri = new Uri(songInfo.path);
             Uri pathDiff = customSongDirUri.MakeRelativeUri(customSongUri);
             string relPath = Uri.UnescapeDataString(pathDiff.OriginalString);
             string[] paths = relPath.Split('/');
-
-            string curPath = paths[0];
 
             // Prevent cache directory from building into the tree, will add all its leafs to root.
             bool isCache = false;
@@ -300,11 +298,12 @@ namespace SongBrowserPlugin
                 {
                     currentNode.Nodes[path] = new DirectoryNode(path);
                     FolderLevel folderLevel = new FolderLevel();
-
                     folderLevel.Init(relPath, path);
 
                     _log.Debug("Adding folder level {0}->{1}", currentNode.Key, path);
                     currentNode.Levels.Add(folderLevel);
+
+                    _cachedLastWriteTimes[folderLevel.levelID] = (File.GetLastWriteTimeUtc(relPath) - EPOCH).TotalMilliseconds;
                 }
             }
         }
@@ -441,7 +440,7 @@ namespace SongBrowserPlugin
             _sortedSongs = levels
                 .AsQueryable()
                 .OrderBy(x => _weights.ContainsKey(x.levelID) ? _weights[x.levelID] : 0)
-                .ThenByDescending(x => x.levelID.StartsWith("Level") ? _weights[x.levelID] : _cachedLastWriteTimes[_levelIdToCustomLevel[x.levelID].customSongInfo.path])
+                .ThenByDescending(x => x.levelID.StartsWith("Level") ? _weights[x.levelID] : _cachedLastWriteTimes[x.levelID])
                 .ToList();
         }
 
