@@ -8,7 +8,8 @@ A plugin for customizing the in-game song browser.
 ![Alt text](/Screenshot.png?raw=true "Screenshot")
 
 ## Features
-- Marking a song as favorite
+- Folders!  Organize your songs into folders.
+- Marking a song as favorite!
 - Currently supports these sorting methods:
   - Favorite: Anything marked favorite followed by the Default method.
   - Song: By song name (default).

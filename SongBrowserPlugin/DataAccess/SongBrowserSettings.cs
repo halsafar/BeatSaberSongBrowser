@@ -26,6 +26,10 @@ namespace SongBrowserPlugin.DataAccess
         public List<String> favorites = default(List<String>);
         public List<String> searchTerms = default(List<String>);
 
+        public String currentLevelId = default(String);
+        public String currentDirectory = default(String);
+
+
         [NonSerialized]
         private static Logger Log = new Logger("SongBrowserSettings");
 

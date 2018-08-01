@@ -35,6 +35,7 @@ namespace SongBrowserPlugin.UI
         private RectTransform _tableViewRectTransform;
         private Button _tableViewPageUpButton;
         private Button _tableViewPageDownButton;
+        private Button _playButton;
 
         // New UI Elements
         private List<SongSortButton> _sortButtonGroup;
@@ -45,6 +46,8 @@ namespace SongBrowserPlugin.UI
         private Button _deleteButton;        
         private Button _pageUpTenPercent;
         private Button _pageDownTenPercent;
+        private Button _enterFolderButton;
+        private Button _upFolderButton;
         private SearchKeyboardViewController _searchViewController;
 
 
@@ -106,6 +109,8 @@ namespace SongBrowserPlugin.UI
                     _levelListTableView = this._levelListViewController.GetComponentInChildren<StandardLevelListTableView>();
                 }
 
+                _playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PlayButton"));
+                               
                 _simpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
 
                 this._deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(this._simpleDialogPromptViewControllerPrefab);
@@ -133,7 +138,7 @@ namespace SongBrowserPlugin.UI
                 // Gather some transforms and templates to use.
                 RectTransform sortButtonTransform = this._levelSelectionNavigationController.transform as RectTransform;
                 RectTransform otherButtonTransform = this._levelDetailViewController.transform as RectTransform;
-                Button sortButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PlayButton"));
+                Button sortButtonTemplate = _playButton;
                 Button otherButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "QuitButton"));
 
                 // Resize some of the UI
@@ -217,16 +222,40 @@ namespace SongBrowserPlugin.UI
 
                 // Create fast scroll buttons
                 _pageUpTenPercent = UIBuilder.CreatePageButton(sortButtonTransform, otherButtonTemplate, arrowIcon, 15, 67.5f, 6.0f, 5.5f, 1.5f, 1.5f, 180);
+                _pageUpTenPercent.onClick.RemoveAllListeners();
                 _pageUpTenPercent.onClick.AddListener(delegate () {
                     this.JumpSongList(-1, SEGMENT_PERCENT);
                 });
 
                 _pageDownTenPercent = UIBuilder.CreatePageButton(sortButtonTransform, otherButtonTemplate, arrowIcon, 15, 0.5f, 6.0f, 5.5f, 1.5f, 1.5f, 0);
+                _pageDownTenPercent.onClick.RemoveAllListeners();
                 _pageDownTenPercent.onClick.AddListener(delegate () {
                     this.JumpSongList(1, SEGMENT_PERCENT);
                 });
 
+                // Create enter folder button
+                _enterFolderButton = UIBuilder.CreateUIButton(otherButtonTransform, _playButton);
+                _enterFolderButton.onClick.RemoveAllListeners();
+                _enterFolderButton.onClick.AddListener(delegate()
+                {
+                    _model.PushDirectory(_levelListViewController.selectedLevel);
+                    this.RefreshSongList();
+                    this.RefreshDirectoryButtons();
+                });
+                UIBuilder.SetButtonText(ref _enterFolderButton, "Enter");
+
+                // Create up folder button
+                _upFolderButton = UIBuilder.CreatePageButton(sortButtonTransform, sortButtonTemplate, arrowIcon, buttonX, buttonY, 5.5f, buttonHeight, 0.85f, 0.85f, 180);
+                _upFolderButton.onClick.RemoveAllListeners();
+                _upFolderButton.onClick.AddListener(delegate ()
+                {
+                    _model.PopDirectory();
+                    this.RefreshSongList();
+                    this.RefreshDirectoryButtons();
+                });
+
                 RefreshSortButtonUI();
+                RefreshDirectoryButtons();
             }
             catch (Exception e)
             {
@@ -240,7 +269,7 @@ namespace SongBrowserPlugin.UI
         private void onSortButtonClickEvent(SongSortMode sortMode)
         {
             _log.Debug("Sort button - {0} - pressed.", sortMode.ToString());
-            SongBrowserModel.LastSelectedLevelId = null;
+            _model.LastSelectedLevelId = null;
 
             if (_model.Settings.sortMode == sortMode)
             {
@@ -271,7 +300,7 @@ namespace SongBrowserPlugin.UI
         /// Various ways of detecting if a level is not properly selected.  Seems most hit the first one.
         /// </summary>
         private void OnDidSelectLevelEvent(StandardLevelListViewController view, IStandardLevel level)
-        {
+        {            
             try
             {
                 _log.Trace("OnDidSelectLevelEvent()");
@@ -287,15 +316,44 @@ namespace SongBrowserPlugin.UI
                     return;
                 }
 
-                SongBrowserModel.LastSelectedLevelId = level.levelID;
+                _model.LastSelectedLevelId = level.levelID;
 
                 RefreshAddFavoriteButton(level.levelID);
                 RefreshQuickScrollButtons();
+
+                if (level.levelID.StartsWith("Folder_"))
+                {
+                    _log.Debug("Folder selected!  Adjust PlayButton logic...");
+                    HandleDidSelectFolderRow(level);
+                }
+                else
+                {
+                    HandleDidSelectLevelRow(level);
+                }
             }
             catch (Exception e)
             {
                 _log.Exception("Exception selecting song:", e);
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void HandleDidSelectFolderRow(IStandardLevel level)
+        {
+            _enterFolderButton.gameObject.SetActive(true);
+            _playButton.gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="level"></param>
+        private void HandleDidSelectLevelRow(IStandardLevel level)
+        {
+            _enterFolderButton.gameObject.SetActive(false);
+            _playButton.gameObject.SetActive(true);
         }
 
         /// <summary>
@@ -313,6 +371,12 @@ namespace SongBrowserPlugin.UI
             if (level.levelID.StartsWith("Level"))
             {
                 _log.Debug("Cannot delete non-custom levels.");
+                return;
+            }
+
+            if (level.levelID.StartsWith("Folder"))
+            {
+                _log.Debug("Cannot delete folders.");
                 return;
             }
 
@@ -448,7 +512,7 @@ namespace SongBrowserPlugin.UI
 
             _model.Settings.searchTerms.Insert(0, searchFor);
             _model.Settings.Save();
-            SongBrowserModel.LastSelectedLevelId = null;
+            _model.LastSelectedLevelId = null;
             this.UpdateSongList();
             this.RefreshSongList();
         }
@@ -561,6 +625,21 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
+        /// Refresh the UI state of any directory buttons.
+        /// </summary>
+        public void RefreshDirectoryButtons()
+        {
+            if (_model.DirStackSize > 1)
+            {
+                _upFolderButton.interactable = true;
+            }
+            else
+            {
+                _upFolderButton.interactable = false;
+            }
+        }
+
+        /// <summary>
         /// Try to refresh the song list.  Broken for now.
         /// </summary>
         public void RefreshSongList()
@@ -582,9 +661,9 @@ namespace SongBrowserPlugin.UI
                 tableView.ReloadData();                
 
                 String selectedLevelID = null;
-                if (SongBrowserModel.LastSelectedLevelId != null)
+                if (_model.LastSelectedLevelId != null)
                 {
-                    selectedLevelID = SongBrowserModel.LastSelectedLevelId;
+                    selectedLevelID = _model.LastSelectedLevelId;
                     _log.Debug("Scrolling to row for level ID: {0}", selectedLevelID);                    
                 }
                 else
@@ -630,7 +709,8 @@ namespace SongBrowserPlugin.UI
             _log.Trace("UpdateSongList()");
 
             GameplayMode gameplayMode = _levelSelectionFlowCoordinator.GetPrivateField<GameplayMode>("_gameplayMode");
-            _model.UpdateSongLists(gameplayMode);                        
+            _model.UpdateSongLists(gameplayMode);
+            this.RefreshDirectoryButtons();
         }
 
         /// <summary>
@@ -691,7 +771,7 @@ namespace SongBrowserPlugin.UI
                     _deleteDialog.GetPrivateField<TextMeshProButton>("_okButton").button.onClick.Invoke();
                 }
 
-                // c,v can be used to get into a song
+                // c - select difficulty for top song
                 if (Input.GetKeyDown(KeyCode.C))
                 {
                     this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[0].levelID);                 
@@ -699,9 +779,23 @@ namespace SongBrowserPlugin.UI
                     this._levelSelectionFlowCoordinator.HandleDifficultyViewControllerDidSelectDifficulty(_levelDifficultyViewController, _model.SortedSongList[0].GetDifficultyLevel(LevelDifficulty.Easy));
                 }
 
-                if (Input.GetKeyDown(KeyCode.V))
+                // v start a song or enter a folder
+                if (Input.GetKeyDown(KeyCode.Return))
                 {
-                    this._levelSelectionFlowCoordinator.HandleLevelDetailViewControllerDidPressPlayButton(this._levelDetailViewController);
+                    if (_playButton.isActiveAndEnabled)
+                    {
+                        _playButton.onClick.Invoke();
+                    }
+                    else if (_enterFolderButton.isActiveAndEnabled)
+                    {
+                        _enterFolderButton.onClick.Invoke();
+                    }
+                }
+
+                // backspace - up a folder
+                if (Input.GetKeyDown(KeyCode.Backspace))
+                {
+                    _upFolderButton.onClick.Invoke();
                 }
 
                 // change song index
