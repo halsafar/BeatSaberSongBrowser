@@ -76,10 +76,8 @@ namespace SongBrowserPlugin
         private const String CUSTOM_SONGS_DIR = "CustomSongs";
         private DateTime EPOCH = new DateTime(1970, 1, 1);
 
-        public static String LastSelectedLevelId { get; set; }
-
         private Logger _log = new Logger("SongBrowserModel");
-        
+
         // song_browser_settings.xml
         private SongBrowserSettings _settings;
 
@@ -87,7 +85,7 @@ namespace SongBrowserPlugin
         private List<StandardLevelSO> _sortedSongs;
         private List<StandardLevelSO> _originalSongs;
         private Dictionary<String, SongLoaderPlugin.OverrideClasses.CustomLevel> _levelIdToCustomLevel;
-        private SongLoaderPlugin.OverrideClasses.CustomLevelCollectionSO _gameplayModeCollection;    
+        private SongLoaderPlugin.OverrideClasses.CustomLevelCollectionSO _gameplayModeCollection;
         private Dictionary<String, double> _cachedLastWriteTimes;
         private Dictionary<string, int> _weights;
         private Dictionary<String, DirectoryNode> _directoryTree;
@@ -138,6 +136,38 @@ namespace SongBrowserPlugin
                 return _directoryStack.Count;
             }
         }
+
+        /// <summary>
+        /// Get the last selected (stored in settings) level id.
+        /// </summary>
+        public String LastSelectedLevelId
+        {
+            get
+            {
+                return _settings.currentLevelId;
+            }
+
+            set
+            {
+                _settings.currentLevelId = value;
+                _settings.Save();
+            }
+        }
+
+        public String CurrentDirectory
+        {
+            get
+            {
+                return _settings.currentDirectory;
+            }
+
+            set
+            {
+                _settings.currentDirectory = value;
+                _settings.Save();
+            }
+        }
+
 
         /// <summary>
         /// Constructor.
@@ -244,17 +274,35 @@ namespace SongBrowserPlugin
             // Determine folder mapping
             Uri customSongDirUri = new Uri(customSongsPath);
             _directoryTree = new Dictionary<string, DirectoryNode>();
-            _directoryTree[CUSTOM_SONGS_DIR] = new DirectoryNode(CUSTOM_SONGS_DIR);
-           
-            if (_directoryStack.Count < 1)
-            {
-                _directoryStack.Push(_directoryTree[CUSTOM_SONGS_DIR]);
-            }
+            _directoryTree[CUSTOM_SONGS_DIR] = new DirectoryNode(CUSTOM_SONGS_DIR);                      
 
             foreach (StandardLevelSO level in _originalSongs)
             {
                 if (level.levelID.Length < 32) continue;
                 AddItemToDirectoryTree(customSongDirUri, level);
+            }
+
+            // Determine starting location
+            if (_directoryStack.Count < 1)
+            {
+                DirectoryNode currentNode = _directoryTree[CUSTOM_SONGS_DIR];
+                _directoryStack.Push(currentNode);
+
+                // Try to navigate directory path
+                if (!String.IsNullOrEmpty(this.CurrentDirectory))
+                {
+                    String[] paths = this.CurrentDirectory.Split('/');
+                    for (int i = 1; i < paths.Length; i++)
+                    {
+                        _log.Debug("FIUCL");
+                        if (currentNode.Nodes.ContainsKey(paths[i]))
+                        {
+                            _log.Debug("asdad");
+                            currentNode = currentNode.Nodes[paths[i]];
+                            _directoryStack.Push(currentNode);
+                        }
+                    }
+                }
             }
 
             PrintDirectory(_directoryTree[CUSTOM_SONGS_DIR], 1);
@@ -311,11 +359,20 @@ namespace SongBrowserPlugin
         /// <summary>
         /// Push a dir onto the stack.
         /// </summary>
-        public void PushDirectory(String levelName)
+        public void PushDirectory(IStandardLevel level)
         {
             DirectoryNode currentNode = _directoryStack.Peek();
-            _log.Debug("Pushing directory {0}", levelName);
-            _directoryStack.Push(currentNode.Nodes[levelName]);
+            _log.Debug("Pushing directory {0}", level.songName);
+
+            if (!currentNode.Nodes.ContainsKey(level.songName))
+            {
+                _log.Debug("Trying to push a directory that doesn't exist at this level.");
+                return;
+            }
+
+            _directoryStack.Push(currentNode.Nodes[level.songName]);
+
+            this.CurrentDirectory = level.levelID;
                 
             ProcessSongList();            
         }

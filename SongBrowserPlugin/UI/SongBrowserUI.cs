@@ -238,7 +238,7 @@ namespace SongBrowserPlugin.UI
                 _enterFolderButton.onClick.RemoveAllListeners();
                 _enterFolderButton.onClick.AddListener(delegate()
                 {
-                    _model.PushDirectory(_levelListViewController.selectedLevel.songName);
+                    _model.PushDirectory(_levelListViewController.selectedLevel);
                     this.RefreshSongList();
                     this.RefreshDirectoryButtons();
                 });
@@ -269,7 +269,7 @@ namespace SongBrowserPlugin.UI
         private void onSortButtonClickEvent(SongSortMode sortMode)
         {
             _log.Debug("Sort button - {0} - pressed.", sortMode.ToString());
-            SongBrowserModel.LastSelectedLevelId = null;
+            _model.LastSelectedLevelId = null;
 
             if (_model.Settings.sortMode == sortMode)
             {
@@ -316,7 +316,7 @@ namespace SongBrowserPlugin.UI
                     return;
                 }
 
-                SongBrowserModel.LastSelectedLevelId = level.levelID;
+                _model.LastSelectedLevelId = level.levelID;
 
                 RefreshAddFavoriteButton(level.levelID);
                 RefreshQuickScrollButtons();
@@ -512,7 +512,7 @@ namespace SongBrowserPlugin.UI
 
             _model.Settings.searchTerms.Insert(0, searchFor);
             _model.Settings.Save();
-            SongBrowserModel.LastSelectedLevelId = null;
+            _model.LastSelectedLevelId = null;
             this.UpdateSongList();
             this.RefreshSongList();
         }
@@ -661,9 +661,9 @@ namespace SongBrowserPlugin.UI
                 tableView.ReloadData();                
 
                 String selectedLevelID = null;
-                if (SongBrowserModel.LastSelectedLevelId != null)
+                if (_model.LastSelectedLevelId != null)
                 {
-                    selectedLevelID = SongBrowserModel.LastSelectedLevelId;
+                    selectedLevelID = _model.LastSelectedLevelId;
                     _log.Debug("Scrolling to row for level ID: {0}", selectedLevelID);                    
                 }
                 else
@@ -709,7 +709,8 @@ namespace SongBrowserPlugin.UI
             _log.Trace("UpdateSongList()");
 
             GameplayMode gameplayMode = _levelSelectionFlowCoordinator.GetPrivateField<GameplayMode>("_gameplayMode");
-            _model.UpdateSongLists(gameplayMode);                        
+            _model.UpdateSongLists(gameplayMode);
+            this.RefreshDirectoryButtons();
         }
 
         /// <summary>
