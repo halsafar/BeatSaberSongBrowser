@@ -393,6 +393,12 @@ namespace SongBrowserPlugin
             if (_directoryStack.Count > 1)
             {
                 _directoryStack.Pop();
+                String currentDir = "";
+                foreach (DirectoryNode node in _directoryStack)
+                {
+                    currentDir = node.Key + "/" + currentDir;
+                }
+                this.CurrentDirectory = "Folder_" + currentDir;
                 ProcessSongList();
             }      
         }
