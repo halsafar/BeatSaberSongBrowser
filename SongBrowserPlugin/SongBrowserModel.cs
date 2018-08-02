@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace SongBrowserPlugin
@@ -336,10 +337,16 @@ namespace SongBrowserPlugin
             Sprite folderIcon = Base64Sprites.Base64ToSprite(Base64Sprites.Folder);
 
             // Prevent cache directory from building into the tree, will add all its leafs to root.
-            bool isCache = false;
+            bool forceIntoRoot = false;
+            _log.Debug("Processing path: {0}", songInfo.path);
             if (paths.Length > 2)
             {
-                isCache = paths[1].Contains(".cache");
+                forceIntoRoot = paths[1].Contains(".cache");
+                Regex r = new Regex(@"^\d{1,}-\d{1,}");
+                if (r.Match(paths[1]).Success)
+                {
+                    forceIntoRoot = true;
+                }
             }
 
             for (int i = 1; i < paths.Length; i++)
@@ -348,7 +355,7 @@ namespace SongBrowserPlugin
 
                 if (path == Path.GetFileName(songInfo.path))
                 {
-                    //_log.Debug("\tLevel Found Adding {0}->{1}", currentNode.Key, level.levelID);
+                    _log.Debug("\tLevel Found Adding {0}->{1}", currentNode.Key, level.levelID);
                     currentNode.Levels.Add(level);
                     break;
                 }
@@ -356,13 +363,13 @@ namespace SongBrowserPlugin
                 {                    
                     currentNode = currentNode.Nodes[path];
                 }
-                else if (!isCache)
+                else if (!forceIntoRoot)
                 {
                     currentNode.Nodes[path] = new DirectoryNode(path);
                     FolderLevel folderLevel = new FolderLevel();
                     folderLevel.Init(relPath, path, folderIcon);
 
-                    //_log.Debug("Adding folder level {0}->{1}", currentNode.Key, path);
+                    _log.Debug("\tAdding folder level {0}->{1}", currentNode.Key, path);
                     currentNode.Levels.Add(folderLevel);
 
                     _cachedLastWriteTimes[folderLevel.levelID] = (File.GetLastWriteTimeUtc(relPath) - EPOCH).TotalMilliseconds;
@@ -418,9 +425,6 @@ namespace SongBrowserPlugin
         /// <param name="depth"></param>
         private void PrintDirectory(DirectoryNode node, int depth)
         {
-            String levelStr = "";
-            String nodeStr = "";
-
             Console.WriteLine("Dir: {0}".PadLeft(depth*4, ' '), node.Key);
             node.Levels.ForEach(x => Console.WriteLine("{0}".PadLeft((depth + 1)*4, ' '), x.levelID));
             foreach (KeyValuePair<string, DirectoryNode> childNode in node.Nodes)
