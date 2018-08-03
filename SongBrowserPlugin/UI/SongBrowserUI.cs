@@ -161,7 +161,7 @@ namespace SongBrowserPlugin.UI
                 float buttonWidth = 14.0f;
                 float buttonHeight = 5.0f;
                 float buttonX = -61;
-                float buttonY = 74.5f;
+                float buttonY = 77.0f;
 
                 string[] buttonNames = new string[]
                 {

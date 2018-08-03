@@ -13,7 +13,7 @@ namespace SongBrowserPlugin
 
 		public string Version
 		{
-			get { return "v2.0-beta"; }
+			get { return "v2.2.0-rc1"; }
 		}
 		
 		public void OnApplicationStart()
@@ -36,15 +36,16 @@ namespace SongBrowserPlugin
         }
 
         public void OnLevelWasLoaded(int level)
-		{
-            //Console.WriteLine("OnLevelWasLoaded=" + level);            
-            if (level != SongBrowserApplication.MenuIndex) return;
-            SongBrowserApplication.OnLoad();
+		{          
+            if (SceneManager.GetSceneByBuildIndex(level).name == "Menu")
+            {
+                SongBrowserApplication.OnLoad();
+            }
         }
 
 		public void OnLevelWasInitialized(int level)
 		{
-            //Console.WriteLine("OnLevelWasInitialized=" + level);
+
         }
 
         public void OnUpdate()
