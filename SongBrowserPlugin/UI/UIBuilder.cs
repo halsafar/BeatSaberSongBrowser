@@ -78,6 +78,32 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
+        /// Very generic helper create button method.
+        /// </summary>
+        /// <param name="parent"></param>
+        /// <param name="buttonTemplate"></param>
+        /// <param name="buttonText"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="w"></param>
+        /// <param name="h"></param>
+        /// <returns></returns>
+        static public Button CreateButton(RectTransform parent, Button buttonTemplate, String buttonText, float fontSize, float x, float y, float w, float h)
+        {
+            Button newButton = UIBuilder.CreateUIButton(parent, buttonTemplate);
+
+            newButton.interactable = true;
+            (newButton.transform as RectTransform).anchoredPosition = new Vector2(x, y);
+            (newButton.transform as RectTransform).sizeDelta = new Vector2(w, h);
+
+            UIBuilder.SetButtonText(ref newButton, buttonText);
+            UIBuilder.SetButtonIconEnabled(ref newButton, false);
+            UIBuilder.SetButtonTextSize(ref newButton, fontSize);
+
+            return newButton;
+        }
+
+        /// <summary>
         /// Generic create sort button.
         /// </summary>
         /// <param name="rect"></param>
