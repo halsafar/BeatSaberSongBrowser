@@ -162,7 +162,7 @@ namespace SongBrowserPlugin.UI
         /// <returns></returns>
         public static Button CreateBackButton(RectTransform parent)
         {
-            Button dismissButton = CreateUIButton(parent, "BackArrowButton");  //UnityEngine.Object.Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "BackArrowButton")), parent, false);
+            Button dismissButton = CreateUIButton(parent, "BackArrowButton");
             dismissButton.onClick.RemoveAllListeners();            
             return dismissButton;
         }
