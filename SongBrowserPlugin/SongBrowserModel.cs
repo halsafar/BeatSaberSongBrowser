@@ -309,7 +309,7 @@ namespace SongBrowserPlugin
                 }
             }
 
-            PrintDirectory(_directoryTree[CUSTOM_SONGS_DIR], 1);
+            //PrintDirectory(_directoryTree[CUSTOM_SONGS_DIR], 1);
         }
 
         /// <summary>
@@ -338,7 +338,7 @@ namespace SongBrowserPlugin
 
             // Prevent cache directory from building into the tree, will add all its leafs to root.
             bool forceIntoRoot = false;
-            _log.Debug("Processing path: {0}", songInfo.path);
+            //_log.Debug("Processing path: {0}", songInfo.path);
             if (paths.Length > 2)
             {
                 forceIntoRoot = paths[1].Contains(".cache");
@@ -355,7 +355,7 @@ namespace SongBrowserPlugin
 
                 if (path == Path.GetFileName(songInfo.path))
                 {
-                    _log.Debug("\tLevel Found Adding {0}->{1}", currentNode.Key, level.levelID);
+                    //_log.Debug("\tLevel Found Adding {0}->{1}", currentNode.Key, level.levelID);
                     currentNode.Levels.Add(level);
                     break;
                 }
@@ -369,7 +369,7 @@ namespace SongBrowserPlugin
                     FolderLevel folderLevel = new FolderLevel();
                     folderLevel.Init(relPath, path, folderIcon);
 
-                    _log.Debug("\tAdding folder level {0}->{1}", currentNode.Key, path);
+                    //_log.Debug("\tAdding folder level {0}->{1}", currentNode.Key, path);
                     currentNode.Levels.Add(folderLevel);
 
                     _cachedLastWriteTimes[folderLevel.levelID] = (File.GetLastWriteTimeUtc(relPath) - EPOCH).TotalMilliseconds;

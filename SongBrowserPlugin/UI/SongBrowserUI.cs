@@ -109,8 +109,8 @@ namespace SongBrowserPlugin.UI
                     _levelListTableView = this._levelListViewController.GetComponentInChildren<StandardLevelListTableView>();
                 }
 
-                _playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PlayButton"));
-                               
+                _playButton = _levelDetailViewController.GetComponentsInChildren<Button>().FirstOrDefault(x => x.name == "PlayButton");
+
                 _simpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
 
                 this._deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(this._simpleDialogPromptViewControllerPrefab);

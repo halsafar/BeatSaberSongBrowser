@@ -13,9 +13,6 @@ namespace SongBrowserPlugin
 {
     public class SongBrowserApplication : MonoBehaviour
     {
-        // Which scene index to load into
-        public const int MenuIndex = 1;
-
         public static SongBrowserApplication Instance;
 
         private Logger _log = new Logger("SongBrowserApplication");
