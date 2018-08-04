@@ -210,6 +210,7 @@ namespace SongBrowserPlugin.UI
             textMesh.font = Resources.Load<TMP_FontAsset>("Teko-Medium SDF No Glow");
             textMesh.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             textMesh.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            //textMesh.rectTransform.sizeDelta = size;
             textMesh.rectTransform.sizeDelta = new Vector2(60f, 10f);
             textMesh.rectTransform.anchoredPosition = position;
 

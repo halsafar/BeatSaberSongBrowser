@@ -14,8 +14,24 @@ namespace SongBrowserPlugin.UI
         
         public static Sprite Base64ToSprite(string base64)
         {
-            Texture2D tex = Base64ToTexture2D(base64);
-            return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), (Vector2.one / 2f));
+            if (base64.StartsWith("data:image/png;base64,"))
+            {
+                base64 = base64.Remove(0, "data:image/png;base64,".Length);
+            }
+
+            Sprite s = null;
+            try
+            {
+                Texture2D tex = Base64ToTexture2D(base64);
+                s = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), (Vector2.one / 2f));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Exception loading texture from base64 data.");
+                s = null;
+            }
+
+            return s;
         }
 
         public static Texture2D Base64ToTexture2D(string encodedData)

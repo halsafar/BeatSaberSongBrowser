@@ -165,17 +165,17 @@ namespace SongBrowserPlugin.UI
 
                 string[] buttonNames = new string[]
                 {
-                    "Favorite", "Song", "Author", "Original", "Newest", "Plays", "Difficult", "Random", "Search"
+                    "Favorite", "Song", "Author", "Original", "Newest", "Plays", "Difficult", "Random", "Playlist", "Search"
                 };
 
                 SongSortMode[] sortModes = new SongSortMode[]
                 {
-                    SongSortMode.Favorites, SongSortMode.Default, SongSortMode.Author, SongSortMode.Original, SongSortMode.Newest, SongSortMode.PlayCount, SongSortMode.Difficulty, SongSortMode.Random, SongSortMode.Search
+                    SongSortMode.Favorites, SongSortMode.Default, SongSortMode.Author, SongSortMode.Original, SongSortMode.Newest, SongSortMode.PlayCount, SongSortMode.Difficulty, SongSortMode.Random, SongSortMode.Playlist, SongSortMode.Search
                 };
 
                 System.Action<SongSortMode>[] onClickEvents = new Action<SongSortMode>[]
                 {
-                    onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSearchButtonClickEvent
+                    onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onPlaylistButtonClickEvent, onSearchButtonClickEvent
                 };
 
                 _sortButtonGroup = new List<SongSortButton>();
@@ -293,6 +293,20 @@ namespace SongBrowserPlugin.UI
             _model.Settings.Save();
 
             this.ShowSearchKeyboard();
+        }
+
+        /// <summary>
+        /// Display the playlist selector.
+        /// </summary>
+        /// <param name="sortMode"></param>
+        private void onPlaylistButtonClickEvent(SongSortMode sortMode)
+        {
+            _log.Debug("Sort button - {0} - pressed.", sortMode.ToString());
+            _model.LastSelectedLevelId = null;
+
+            PlaylistFlowCoordinator view = UIBuilder.CreateFlowCoordinator<PlaylistFlowCoordinator>("PlaylistFlowCoordinator");
+            view.didSelectPlaylist += HandleDidSelectPlaylist;
+            view.Present(_levelSelectionNavigationController);
         }
 
         /// <summary>
@@ -477,6 +491,20 @@ namespace SongBrowserPlugin.UI
                     return hash;
                 }
             }
+        }
+
+        /// <summary>
+        /// Handle selection of a playlist.  Show just the songs in the playlist.
+        /// </summary>
+        /// <param name="p"></param>
+        private void HandleDidSelectPlaylist(Playlist p)
+        {
+            _log.Debug("Showing songs for playlist: {0}", p.playlistTitle);
+            _model.Settings.sortMode = SongSortMode.Playlist;
+            _model.CurrentPlaylist = p;
+            _model.Settings.Save();
+            this.UpdateSongList();
+            this.RefreshSongList();
         }
 
         /// <summary>
@@ -753,6 +781,12 @@ namespace SongBrowserPlugin.UI
                 if (Input.GetKeyDown(KeyCode.Y))
                 {
                     _sortButtonGroup[_sortButtonLastPushedIndex].Button.onClick.Invoke();
+                }
+
+                // playlists
+                if (Input.GetKeyDown(KeyCode.P))
+                {
+                    _sortButtonGroup[_sortButtonGroup.Count - 2].Button.onClick.Invoke();
                 }
 
                 // delete

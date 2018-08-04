@@ -156,6 +156,14 @@ namespace SongBrowserPlugin
         /// </summary>
         private void LateUpdate()
         {
+            // playlists
+            if (Input.GetKeyDown(KeyCode.P))
+            {
+                MainMenuViewController mainView = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First();
+                PlaylistFlowCoordinator view = UIBuilder.CreateFlowCoordinator<PlaylistFlowCoordinator>("PlaylistFlowCoordinator");
+                view.Present(mainView);
+            }
+
             // z,x,c,v can be used to get into a song, b will hit continue button after song ends
             if (Input.GetKeyDown(KeyCode.Z))
             {

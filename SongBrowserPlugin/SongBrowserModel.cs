@@ -93,6 +93,7 @@ namespace SongBrowserPlugin
         private Dictionary<string, int> _weights;
         private Dictionary<String, DirectoryNode> _directoryTree;
         private Stack<DirectoryNode> _directoryStack = new Stack<DirectoryNode>();
+
         private GameplayMode _currentGamePlayMode;
 
         /// <summary>
@@ -161,6 +162,9 @@ namespace SongBrowserPlugin
             }
         }
 
+        /// <summary>
+        /// Get the last known directory the user visited.
+        /// </summary>
         public String CurrentDirectory
         {
             get
@@ -172,6 +176,30 @@ namespace SongBrowserPlugin
             {
                 _settings.currentDirectory = value;
                 _settings.Save();
+            }
+        }
+
+        private Playlist _currentPlaylist;
+
+        /// <summary>
+        /// Manage the current playlist if one exists.
+        /// </summary>
+        public Playlist CurrentPlaylist
+        {
+            get
+            {
+                if (_currentPlaylist == null)
+                {
+                    _currentPlaylist = PlaylistsReader.ParsePlaylist(this._settings.currentPlaylistFile);
+                }
+
+                return _currentPlaylist;
+            }
+
+            set
+            {
+                _settings.currentPlaylistFile = value.playlistPath;
+                _currentPlaylist = value;
             }
         }
 
@@ -453,11 +481,19 @@ namespace SongBrowserPlugin
                 }
             }*/
             
-            Stopwatch stopwatch = Stopwatch.StartNew();
+            Stopwatch stopwatch = Stopwatch.StartNew();           
 
-            _log.Debug("Showing songs for directory: {0}", _directoryStack.Peek().Key);
-            List<StandardLevelSO> songList = _directoryStack.Peek().Levels;
-
+            List<StandardLevelSO> songList = null;
+            if (this._settings.sortMode == SongSortMode.Playlist && this.CurrentPlaylist != null)
+            {                
+                songList = null;
+            }
+            else
+            {
+                _log.Debug("Showing songs for directory: {0}", _directoryStack.Peek().Key);
+                songList = _directoryStack.Peek().Levels;
+            }
+            
             switch (_settings.sortMode)
             {
                 case SongSortMode.Favorites:
@@ -483,6 +519,9 @@ namespace SongBrowserPlugin
                     break;
                 case SongSortMode.Search:
                     SortSearch(songList);
+                    break;
+                case SongSortMode.Playlist:
+                    SortPlaylist();
                     break;
                 case SongSortMode.Default:
                 default:
@@ -673,6 +712,20 @@ namespace SongBrowserPlugin
                 .AsQueryable()
                 .OrderBy(x => x.songName)
                 .ThenBy(x => x.songAuthorName)
+                .ToList();
+        }
+
+        private void SortPlaylist()
+        {
+            _log.Debug("Showing songs for playlist: {0}", this.CurrentPlaylist);
+            List<String> playlistNameListOrdered = this.CurrentPlaylist.songs.Select(x => x.songName).ToList();
+            Dictionary<String, int> songNameToIndex = playlistNameListOrdered.Select((val, index) => new { Index = index, Value = val }).ToDictionary(i => i.Value, i => i.Index);
+            HashSet<String> songNames = new HashSet<String>(playlistNameListOrdered);
+            SongLoaderPlugin.OverrideClasses.CustomLevelCollectionsForGameplayModes collections = SongLoaderPlugin.SongLoader.Instance.GetPrivateField<SongLoaderPlugin.OverrideClasses.CustomLevelCollectionsForGameplayModes>("_customLevelCollectionsForGameplayModes");
+            List<StandardLevelSO> songList = collections.GetLevels(_currentGamePlayMode).Where(x => songNames.Contains(x.songName)).ToList();
+            _sortedSongs = songList
+                .AsQueryable()
+                .OrderBy(x => songNameToIndex[x.songName])
                 .ToList();
         }
     }

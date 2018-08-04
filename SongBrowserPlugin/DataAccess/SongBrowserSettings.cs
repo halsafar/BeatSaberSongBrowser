@@ -13,10 +13,11 @@ namespace SongBrowserPlugin.DataAccess
         Author,
         Favorites,
         Original,
-        Newest,
+        Newest,        
         PlayCount,
         Difficulty,
         Random,
+        Playlist,
         Search
     }
 
@@ -29,7 +30,7 @@ namespace SongBrowserPlugin.DataAccess
 
         public String currentLevelId = default(String);
         public String currentDirectory = default(String);
-
+        public String currentPlaylistFile = default(String);
 
         [NonSerialized]
         private static Logger Log = new Logger("SongBrowserSettings");
