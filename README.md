@@ -8,6 +8,10 @@ A plugin for customizing the in-game song browser.
 ![Alt text](/Screenshot.png?raw=true "Screenshot")
 
 ## Features
+- Playlist!
+  - BeatDrop playlists!
+  - Search: BeatSaber_InstallationFolder/Playlists
+  - Search: BeatDrop Playlist Folder
 - Folders!  Organize your songs into folders.
 - Marking a song as favorite!
 - Currently supports these sorting methods:
