@@ -33,6 +33,7 @@ namespace SongBrowserPlugin.DataAccess
         public String currentPlaylistFile = default(String);
 
         public bool folderSupportEnabled = false;
+        public bool randomInstantQueue = false;
 
         [NonSerialized]
         private static Logger Log = new Logger("SongBrowserSettings");

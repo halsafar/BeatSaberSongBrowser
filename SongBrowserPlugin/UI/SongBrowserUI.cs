@@ -163,8 +163,8 @@ namespace SongBrowserPlugin.UI
                 
                 Sprite arrowIcon = SongBrowserApplication.Instance.CachedIcons["ArrowIcon"];
 
-                float fontSize = 2.5f;
-                float buttonWidth = 14.0f;
+                float fontSize = 2.35f;
+                float buttonWidth = 13.5f;
                 float buttonHeight = 5.0f;
                 float buttonX = -61;
                 float buttonY = 74.5f;
@@ -200,7 +200,6 @@ namespace SongBrowserPlugin.UI
                 }
 
                 // Create Add to Favorites Button
-                _log.Debug("Creating add to favorites button...");
                 Vector2 addFavoritePos = new Vector2(40f, (sortButtonTemplate.transform as RectTransform).anchoredPosition.y);
                 _addFavoriteButton = UIBuilder.CreateIconButton(otherButtonTransform, otherButtonTemplate, null, 
                     new Vector2(addFavoritePos.x, addFavoritePos.y), 
@@ -223,7 +222,6 @@ namespace SongBrowserPlugin.UI
                 }
 
                 // Create delete button
-                _log.Debug("Creating delete button...");
                 _deleteButton = UIBuilder.CreateButton(otherButtonTransform, otherButtonTemplate, "Delete", fontSize, 46f, 0f, 15f, 5f);                
                 _deleteButton.onClick.AddListener(delegate () {
                     HandleDeleteSelectedLevel();
@@ -288,7 +286,7 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
-        /// 
+        /// Sort button clicked.
         /// </summary>
         private void onSortButtonClickEvent(SongSortMode sortMode)
         {
@@ -305,10 +303,25 @@ namespace SongBrowserPlugin.UI
 
             UpdateSongList();
             RefreshSongList();
+
+            // Handle instant queue logic, avoid picking a folder.
+            if (_model.Settings.randomInstantQueue)
+            {
+                for (int i = 0; i < _model.SortedSongList.Count; i++)
+                {
+                    if (!_model.SortedSongList[i].levelID.StartsWith("Folder_"))
+                    {
+                        this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[i].levelID);
+                        this._levelDifficultyViewController.HandleDifficultyTableViewDidSelectRow(null, _model.SortedSongList[i].difficultyBeatmaps.Length-1);
+                        _playButton.onClick.Invoke();
+                        break;
+                    }
+                }                                                    
+            }
         }
 
         /// <summary>
-        /// Saerch button clicked.  
+        /// Search button clicked.  
         /// </summary>
         /// <param name="sortMode"></param>
         private void onSearchButtonClickEvent(SongSortMode sortMode)
@@ -750,6 +763,7 @@ namespace SongBrowserPlugin.UI
             TableView tableView = table.GetComponentInChildren<TableView>();
             tableView.SelectRow(row, true);
             tableView.ScrollToRow(row, true);
+            _lastRow = row;
         }
 
         /// <summary>
