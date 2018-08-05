@@ -497,6 +497,7 @@ namespace SongBrowserPlugin.UI
                     }
                 }
 
+                _model.LastSelectedLevelId = null;
                 SongLoaderPlugin.SongLoader.Instance.RemoveSongWithPath(songPath);
                 this.UpdateSongList();
                 this.RefreshSongList();
@@ -783,7 +784,6 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         public void LateUpdate()
         {
-            if (!this._levelListViewController.isActiveAndEnabled) return;
             CheckDebugUserInput();
         }
 
@@ -794,106 +794,112 @@ namespace SongBrowserPlugin.UI
         {
             try
             {
-                bool isShiftKeyDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-
-                // back
-                if (Input.GetKeyDown(KeyCode.Escape))
+                if (this._levelListViewController.isActiveAndEnabled)
                 {
-                    this._levelSelectionNavigationController.DismissButtonWasPressed();
-                }
+                    bool isShiftKeyDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
 
-                // cycle sort modes
-                if (Input.GetKeyDown(KeyCode.T))
-                {
-                    _sortButtonLastPushedIndex = (_sortButtonLastPushedIndex + 1) % _sortButtonGroup.Count;
-                    _sortButtonGroup[_sortButtonLastPushedIndex].Button.onClick.Invoke();
-                }
-
-                if (Input.GetKeyDown(KeyCode.S))
-                {
-                    onSortButtonClickEvent(SongSortMode.Search);
-                }
-
-                // select current sort mode again (toggle inverting)
-                if (Input.GetKeyDown(KeyCode.Y))
-                {
-                    _sortButtonGroup[_sortButtonLastPushedIndex].Button.onClick.Invoke();
-                }
-
-                // playlists
-                if (Input.GetKeyDown(KeyCode.P))
-                {
-                    _sortButtonGroup[_sortButtonGroup.Count - 2].Button.onClick.Invoke();
-                }
-
-                // delete
-                if (Input.GetKeyDown(KeyCode.D))
-                {
-                    if (_deleteDialog.isInViewControllerHierarchy)
+                    // back
+                    if (Input.GetKeyDown(KeyCode.Escape))
                     {
-                        return;
+                        this._levelSelectionNavigationController.DismissButtonWasPressed();
                     }
-                    _deleteButton.onClick.Invoke();
-                }
 
-                // accept delete
-                if (Input.GetKeyDown(KeyCode.B) && _deleteDialog.isInViewControllerHierarchy)
-                {
-                    _deleteDialog.GetPrivateField<TextMeshProButton>("_okButton").button.onClick.Invoke();
-                }
-
-                // c - select difficulty for top song
-                if (Input.GetKeyDown(KeyCode.C))
-                {
-                    this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[0].levelID);                 
-                    this._levelDifficultyViewController.HandleDifficultyTableViewDidSelectRow(null, 0);
-                    this._levelSelectionFlowCoordinator.HandleDifficultyViewControllerDidSelectDifficulty(_levelDifficultyViewController, _model.SortedSongList[0].GetDifficultyLevel(LevelDifficulty.Easy));
-                }
-
-                // v start a song or enter a folder
-                if (Input.GetKeyDown(KeyCode.Return))
-                {
-                    if (_playButton.isActiveAndEnabled)
+                    // cycle sort modes
+                    if (Input.GetKeyDown(KeyCode.T))
                     {
-                        _playButton.onClick.Invoke();
+                        _sortButtonLastPushedIndex = (_sortButtonLastPushedIndex + 1) % _sortButtonGroup.Count;
+                        _sortButtonGroup[_sortButtonLastPushedIndex].Button.onClick.Invoke();
                     }
-                    else if (_enterFolderButton.isActiveAndEnabled)
+
+                    if (Input.GetKeyDown(KeyCode.S))
                     {
-                        _enterFolderButton.onClick.Invoke();
+                        onSortButtonClickEvent(SongSortMode.Search);
+                    }
+
+                    // select current sort mode again (toggle inverting)
+                    if (Input.GetKeyDown(KeyCode.Y))
+                    {
+                        _sortButtonGroup[_sortButtonLastPushedIndex].Button.onClick.Invoke();
+                    }
+
+                    // playlists
+                    if (Input.GetKeyDown(KeyCode.P))
+                    {
+                        _sortButtonGroup[_sortButtonGroup.Count - 2].Button.onClick.Invoke();
+                    }
+
+                    // delete
+                    if (Input.GetKeyDown(KeyCode.D))
+                    {
+                        _deleteButton.onClick.Invoke();
+                    }
+
+                    // c - select difficulty for top song
+                    if (Input.GetKeyDown(KeyCode.C))
+                    {
+                        this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[0].levelID);
+                        this._levelDifficultyViewController.HandleDifficultyTableViewDidSelectRow(null, 0);
+                        this._levelSelectionFlowCoordinator.HandleDifficultyViewControllerDidSelectDifficulty(_levelDifficultyViewController, _model.SortedSongList[0].GetDifficultyLevel(LevelDifficulty.Easy));
+                    }
+
+                    // v start a song or enter a folder
+                    if (Input.GetKeyDown(KeyCode.Return))
+                    {
+                        if (_playButton.isActiveAndEnabled)
+                        {
+                            _playButton.onClick.Invoke();
+                        }
+                        else if (_enterFolderButton.isActiveAndEnabled)
+                        {
+                            _enterFolderButton.onClick.Invoke();
+                        }
+                    }
+
+                    // backspace - up a folder
+                    if (Input.GetKeyDown(KeyCode.Backspace))
+                    {
+                        _upFolderButton.onClick.Invoke();
+                    }
+
+                    // change song index
+                    if (isShiftKeyDown && Input.GetKeyDown(KeyCode.N))
+                    {
+                        _pageUpTenPercent.onClick.Invoke();
+                    }
+                    else if (Input.GetKeyDown(KeyCode.N))
+                    {
+                        _lastRow = (_lastRow - 1) != -1 ? (_lastRow - 1) % this._model.SortedSongList.Count : 0;
+                        this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[_lastRow].levelID);
+                    }
+
+                    if (isShiftKeyDown && Input.GetKeyDown(KeyCode.M))
+                    {
+                        _pageDownTenPercent.onClick.Invoke();
+                    }
+                    else if (Input.GetKeyDown(KeyCode.M))
+                    {
+                        _lastRow = (_lastRow + 1) % this._model.SortedSongList.Count;
+                        this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[_lastRow].levelID);
+                    }
+
+                    // add to favorites
+                    if (Input.GetKeyDown(KeyCode.F))
+                    {
+                        ToggleSongInFavorites();
                     }
                 }
+                else if (_deleteDialog.isInViewControllerHierarchy)
+                {
+                    // accept delete
+                    if (Input.GetKeyDown(KeyCode.Return))
+                    {
+                        _deleteDialog.GetPrivateField<TextMeshProButton>("_okButton").button.onClick.Invoke();
+                    }
 
-                // backspace - up a folder
-                if (Input.GetKeyDown(KeyCode.Backspace))
-                {
-                    _upFolderButton.onClick.Invoke();
-                }
-
-                // change song index
-                if (isShiftKeyDown && Input.GetKeyDown(KeyCode.N))
-                {
-                    _pageUpTenPercent.onClick.Invoke();
-                }
-                else if (Input.GetKeyDown(KeyCode.N))
-                {
-                    _lastRow = (_lastRow - 1) != -1 ? (_lastRow - 1) % this._model.SortedSongList.Count : 0;
-                    this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[_lastRow].levelID);
-                }
-
-                if (isShiftKeyDown && Input.GetKeyDown(KeyCode.M))
-                {
-                    _pageDownTenPercent.onClick.Invoke();
-                }
-                else if (Input.GetKeyDown(KeyCode.M))
-                {
-                    _lastRow = (_lastRow + 1) % this._model.SortedSongList.Count;
-                    this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[_lastRow].levelID);
-                }
-
-                // add to favorites
-                if (Input.GetKeyDown(KeyCode.F))
-                {
-                    ToggleSongInFavorites();
+                    if (Input.GetKeyDown(KeyCode.Escape))
+                    {
+                        _deleteDialog.GetPrivateField<TextMeshProButton>("_cancelButton").button.onClick.Invoke();
+                    }
                 }
             }
             catch (Exception e)

@@ -305,6 +305,7 @@ namespace SongBrowserPlugin
         {
             // Determine folder mapping
             Uri customSongDirUri = new Uri(customSongsPath);
+
             _directoryTree = new Dictionary<string, DirectoryNode>();
             _directoryTree[CUSTOM_SONGS_DIR] = new DirectoryNode(CUSTOM_SONGS_DIR);
 
@@ -319,25 +320,21 @@ namespace SongBrowserPlugin
             {
                 _directoryTree[CUSTOM_SONGS_DIR].Levels = _originalSongs;
             }
-            
-        
+                    
             // Determine starting location
-            if (_directoryStack.Count < 1)
-            {
-                DirectoryNode currentNode = _directoryTree[CUSTOM_SONGS_DIR];
-                _directoryStack.Push(currentNode);
+            DirectoryNode currentNode = _directoryTree[CUSTOM_SONGS_DIR];
+            _directoryStack.Push(currentNode);
 
-                // Try to navigate directory path
-                if (!String.IsNullOrEmpty(this.CurrentDirectory))
+            // Try to navigate directory path
+            if (!String.IsNullOrEmpty(this.CurrentDirectory))
+            {
+                String[] paths = this.CurrentDirectory.Split('/');
+                for (int i = 1; i < paths.Length; i++)
                 {
-                    String[] paths = this.CurrentDirectory.Split('/');
-                    for (int i = 1; i < paths.Length; i++)
+                    if (currentNode.Nodes.ContainsKey(paths[i]))
                     {
-                        if (currentNode.Nodes.ContainsKey(paths[i]))
-                        {
-                            currentNode = currentNode.Nodes[paths[i]];
-                            _directoryStack.Push(currentNode);
-                        }
+                        currentNode = currentNode.Nodes[paths[i]];
+                        _directoryStack.Push(currentNode);
                     }
                 }
             }
