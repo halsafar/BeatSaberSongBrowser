@@ -155,13 +155,13 @@ namespace SongBrowserPlugin.UI
         /// <param name="iconHeight"></param>
         /// <param name="iconRotation"></param>
         /// <returns></returns>
-        public static Button CreatePageButton(RectTransform parent, Button buttonTemplate, Sprite iconSprite, float x, float y, float w, float h, float iconWidth, float iconHeight, float iconRotation)
+        public static Button CreateIconButton(RectTransform parent, Button buttonTemplate, Sprite iconSprite, Vector2 pos, Vector2 size, Vector2 iconPos, Vector2 iconSize, Vector2 iconScale, float iconRotation)
         {
             Button newButton = UIBuilder.CreateUIButton(parent, buttonTemplate);
 
             newButton.interactable = true;
-            (newButton.transform as RectTransform).anchoredPosition = new Vector2(x, y);
-            (newButton.transform as RectTransform).sizeDelta = new Vector2(w, h);
+            (newButton.transform as RectTransform).anchoredPosition = new Vector2(pos.x, pos.y);
+            (newButton.transform as RectTransform).sizeDelta = new Vector2(size.x, size.y);
 
             RectTransform iconTransform = newButton.GetComponentsInChildren<RectTransform>(true).First(c => c.name == "Icon");
             iconTransform.gameObject.SetActive(true);
@@ -169,13 +169,14 @@ namespace SongBrowserPlugin.UI
             HorizontalLayoutGroup hgroup = iconTransform.parent.GetComponent<HorizontalLayoutGroup>();
             UnityEngine.Object.Destroy(hgroup);
 
-            iconTransform.sizeDelta = new Vector2(iconWidth, iconHeight);
-            iconTransform.localScale = new Vector2(2f, 2f);
-            iconTransform.anchoredPosition = new Vector2(0, 0);
+            iconTransform.anchoredPosition = new Vector2(iconPos.x, iconPos.y);
+            iconTransform.sizeDelta = new Vector2(iconSize.x, iconSize.y);
+            iconTransform.localScale = new Vector2(iconScale.x, iconScale.y);            
             iconTransform.Rotate(0, 0, iconRotation);
 
             UnityEngine.Object.Destroy(newButton.GetComponentsInChildren<RectTransform>(true).First(c => c.name == "Text").gameObject);
 
+            UIBuilder.SetButtonBorder(ref newButton, Color.clear);
             UIBuilder.SetButtonIcon(ref newButton, iconSprite);
 
             return newButton;

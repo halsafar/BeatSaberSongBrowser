@@ -40,7 +40,6 @@ namespace SongBrowserPlugin.UI
         // New UI Elements
         private List<SongSortButton> _sortButtonGroup;
         private Button _addFavoriteButton;
-        private String _addFavoriteButtonText = null;
         private SimpleDialogPromptViewController _simpleDialogPromptViewControllerPrefab;
         private SimpleDialogPromptViewController _deleteDialog;
         private Button _deleteButton;        
@@ -50,6 +49,10 @@ namespace SongBrowserPlugin.UI
         private Button _upFolderButton;
         private SearchKeyboardViewController _searchViewController;
 
+        // Cached items
+        private Sprite _addFavoriteSprite;
+        private Sprite _removeFavoriteSprite;
+        private Sprite _currentAddFavoriteButtonSprite;
 
         // Debug
         private int _sortButtonLastPushedIndex = 0;
@@ -116,6 +119,9 @@ namespace SongBrowserPlugin.UI
                 this._deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(this._simpleDialogPromptViewControllerPrefab);
                 this._deleteDialog.gameObject.SetActive(false);
 
+                this._addFavoriteSprite = Base64Sprites.Base64ToSprite(Base64Sprites.AddToFavorites);
+                this._removeFavoriteSprite = Base64Sprites.Base64ToSprite(Base64Sprites.RemoveFromFavorites);
+
                 this.CreateUIElements();
 
                 _levelListViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
@@ -181,24 +187,33 @@ namespace SongBrowserPlugin.UI
                 _sortButtonGroup = new List<SongSortButton>();
                 for (int i = 0; i < buttonNames.Length; i++)
                 {
-                    _sortButtonGroup.Add(UIBuilder.CreateSortButton(sortButtonTransform, sortButtonTemplate, arrowIcon, buttonNames[i], fontSize, buttonX, buttonY, buttonWidth, buttonHeight, sortModes[i], onClickEvents[i]));
+                    _sortButtonGroup.Add(UIBuilder.CreateSortButton(sortButtonTransform, sortButtonTemplate, arrowIcon, 
+                        buttonNames[i], 
+                        fontSize, 
+                        buttonX, 
+                        buttonY, 
+                        buttonWidth, 
+                        buttonHeight, 
+                        sortModes[i], 
+                        onClickEvents[i]));
                     buttonX += buttonWidth;
                 }
 
                 // Create Add to Favorites Button
-                _log.Debug("Creating add to favorites button...");                
-                _addFavoriteButton = UIBuilder.CreateUIButton(otherButtonTransform, otherButtonTemplate);
-                (_addFavoriteButton.transform as RectTransform).anchoredPosition = new Vector2(40f, (sortButtonTemplate.transform as RectTransform).anchoredPosition.y);
-                (_addFavoriteButton.transform as RectTransform).sizeDelta = new Vector2(10f, 10f);
-                UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);
-                UIBuilder.SetButtonTextSize(ref _addFavoriteButton, fontSize);
-                UIBuilder.SetButtonIconEnabled(ref _addFavoriteButton, false);
-                _addFavoriteButton.onClick.RemoveAllListeners();
+                _log.Debug("Creating add to favorites button...");
+                Vector2 addFavoritePos = new Vector2(40f, (sortButtonTemplate.transform as RectTransform).anchoredPosition.y);
+                _addFavoriteButton = UIBuilder.CreateIconButton(otherButtonTransform, otherButtonTemplate, null, 
+                    new Vector2(addFavoritePos.x, addFavoritePos.y), 
+                    new Vector2(10.0f, 10.0f), 
+                    new Vector2(2f, -1.5f),
+                    new Vector2(7.0f, 7.0f), 
+                    new Vector2(1.0f, 1.0f),
+                    0.0f);
                 _addFavoriteButton.onClick.AddListener(delegate () {
                     ToggleSongInFavorites();
                 });
 
-                if (_addFavoriteButtonText == null)
+                if (_currentAddFavoriteButtonSprite == null)
                 {
                     IStandardLevel level = this._levelListViewController.selectedLevel;
                     if (level != null)
@@ -209,33 +224,36 @@ namespace SongBrowserPlugin.UI
 
                 // Create delete button
                 _log.Debug("Creating delete button...");
-                _deleteButton = UIBuilder.CreateUIButton(otherButtonTransform, otherButtonTemplate);
-                (_deleteButton.transform as RectTransform).anchoredPosition = new Vector2(46f, 0f);
-                (_deleteButton.transform as RectTransform).sizeDelta = new Vector2(15f, 5f);
-                UIBuilder.SetButtonText(ref _deleteButton, "Delete");
-                UIBuilder.SetButtonTextSize(ref _deleteButton, fontSize);
-                UIBuilder.SetButtonIconEnabled(ref _deleteButton, false);
-                _deleteButton.onClick.RemoveAllListeners();
+                _deleteButton = UIBuilder.CreateButton(otherButtonTransform, otherButtonTemplate, "Delete", fontSize, 46f, 0f, 15f, 5f);                
                 _deleteButton.onClick.AddListener(delegate () {
                     HandleDeleteSelectedLevel();
                 });
 
                 // Create fast scroll buttons
-                _pageUpTenPercent = UIBuilder.CreatePageButton(sortButtonTransform, otherButtonTemplate, arrowIcon, 15, 67.5f, 6.0f, 5.5f, 1.5f, 1.5f, 180);
-                _pageUpTenPercent.onClick.RemoveAllListeners();
+                _pageUpTenPercent = UIBuilder.CreateIconButton(sortButtonTransform, otherButtonTemplate, arrowIcon,
+                    new Vector2(15, 67.5f),
+                    new Vector2(6.0f, 5.5f),
+                    new Vector2(0f, 0f),
+                    new Vector2(1.5f, 1.5f),
+                    new Vector2(2.0f, 2.0f), 
+                    180);
                 _pageUpTenPercent.onClick.AddListener(delegate () {
                     this.JumpSongList(-1, SEGMENT_PERCENT);
                 });
 
-                _pageDownTenPercent = UIBuilder.CreatePageButton(sortButtonTransform, otherButtonTemplate, arrowIcon, 15, 0.5f, 6.0f, 5.5f, 1.5f, 1.5f, 0);
-                _pageDownTenPercent.onClick.RemoveAllListeners();
+                _pageDownTenPercent = UIBuilder.CreateIconButton(sortButtonTransform, otherButtonTemplate, arrowIcon,
+                    new Vector2(15, 0.5f),
+                    new Vector2(6.0f, 5.5f),
+                    new Vector2(0f, 0f),
+                    new Vector2(1.5f, 1.5f),
+                    new Vector2(2.0f, 2.0f), 
+                    0);
                 _pageDownTenPercent.onClick.AddListener(delegate () {
                     this.JumpSongList(1, SEGMENT_PERCENT);
                 });
 
                 // Create enter folder button
                 _enterFolderButton = UIBuilder.CreateUIButton(otherButtonTransform, _playButton);
-                _enterFolderButton.onClick.RemoveAllListeners();
                 _enterFolderButton.onClick.AddListener(delegate()
                 {
                     _model.PushDirectory(_levelListViewController.selectedLevel);
@@ -245,7 +263,13 @@ namespace SongBrowserPlugin.UI
                 UIBuilder.SetButtonText(ref _enterFolderButton, "Enter");
 
                 // Create up folder button
-                _upFolderButton = UIBuilder.CreatePageButton(sortButtonTransform, sortButtonTemplate, arrowIcon, buttonX-4.0f, buttonY, 5.5f, buttonHeight, 0.85f, 0.85f, 180);
+                _upFolderButton = UIBuilder.CreateIconButton(sortButtonTransform, sortButtonTemplate, arrowIcon,
+                    new Vector2(buttonX -4.0f, buttonY),
+                    new Vector2(5.5f, buttonHeight),
+                    new Vector2(0f, 0f),
+                    new Vector2(0.85f, 0.85f),
+                    new Vector2(2.0f, 2.0f), 
+                    180);
                 _upFolderButton.onClick.RemoveAllListeners();
                 _upFolderButton.onClick.AddListener(delegate ()
                 {
@@ -579,16 +603,14 @@ namespace SongBrowserPlugin.UI
             {
                 _log.Info("Remove {0} from favorites", songInfo.songName);
                 _model.Settings.favorites.Remove(songInfo.levelID);
-                _addFavoriteButtonText = "+1";
             }
             else
             {
                 _log.Info("Add {0} to favorites", songInfo.songName);
                 _model.Settings.favorites.Add(songInfo.levelID);
-                _addFavoriteButtonText = "-1";                
             }
 
-            UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);
+            RefreshAddFavoriteButton(songInfo.levelID);
 
             _model.Settings.Save();
         }
@@ -613,20 +635,21 @@ namespace SongBrowserPlugin.UI
         {
             if (levelId == null)
             {
-                _addFavoriteButtonText = "0";
-                return;
-            }
-
-            if (_model.Settings.favorites.Contains(levelId))
-            {
-                _addFavoriteButtonText = "-1";
+                _currentAddFavoriteButtonSprite = null;
             }
             else
             {
-                _addFavoriteButtonText = "+1";                
+                if (_model.Settings.favorites.Contains(levelId))
+                {
+                    _currentAddFavoriteButtonSprite = _removeFavoriteSprite;
+                }
+                else
+                {
+                    _currentAddFavoriteButtonSprite = _addFavoriteSprite;
+                }
             }
 
-            UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);
+            UIBuilder.SetButtonIcon(ref _addFavoriteButton, _currentAddFavoriteButtonSprite);
         }
 
         /// <summary>
