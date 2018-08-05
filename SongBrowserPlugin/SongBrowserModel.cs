@@ -265,9 +265,6 @@ namespace SongBrowserPlugin
             // Get LastWriteTimes            
             foreach (var level in SongLoader.CustomLevels)
             {
-                // Flip slashes, match SongLoaderPlugin
-                //string slashed_dir = dir.Replace("\\", "/");
-
                 //_log.Debug("Fetching LastWriteTime for {0}", slashed_dir);
                 _cachedLastWriteTimes[level.levelID] = (File.GetLastWriteTimeUtc(level.customSongInfo.path) - EPOCH).TotalMilliseconds;
             }
@@ -309,13 +306,21 @@ namespace SongBrowserPlugin
             // Determine folder mapping
             Uri customSongDirUri = new Uri(customSongsPath);
             _directoryTree = new Dictionary<string, DirectoryNode>();
-            _directoryTree[CUSTOM_SONGS_DIR] = new DirectoryNode(CUSTOM_SONGS_DIR);                      
+            _directoryTree[CUSTOM_SONGS_DIR] = new DirectoryNode(CUSTOM_SONGS_DIR);
 
-            foreach (StandardLevelSO level in _originalSongs)
+            if (_settings.folderSupportEnabled)
             {
-                AddItemToDirectoryTree(customSongDirUri, level);
+                foreach (StandardLevelSO level in _originalSongs)
+                {
+                    AddItemToDirectoryTree(customSongDirUri, level);
+                }
             }
-
+            else
+            {
+                _directoryTree[CUSTOM_SONGS_DIR].Levels = _originalSongs;
+            }
+            
+        
             // Determine starting location
             if (_directoryStack.Count < 1)
             {

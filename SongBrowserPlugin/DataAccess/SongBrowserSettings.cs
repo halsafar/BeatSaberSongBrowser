@@ -32,6 +32,8 @@ namespace SongBrowserPlugin.DataAccess
         public String currentDirectory = default(String);
         public String currentPlaylistFile = default(String);
 
+        public bool folderSupportEnabled = false;
+
         [NonSerialized]
         private static Logger Log = new Logger("SongBrowserSettings");
 
