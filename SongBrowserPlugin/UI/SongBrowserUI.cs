@@ -305,7 +305,7 @@ namespace SongBrowserPlugin.UI
             RefreshSongList();
 
             // Handle instant queue logic, avoid picking a folder.
-            if (_model.Settings.randomInstantQueue)
+            if (_model.Settings.sortMode == SongSortMode.Random && _model.Settings.randomInstantQueue)
             {
                 for (int i = 0; i < _model.SortedSongList.Count; i++)
                 {
