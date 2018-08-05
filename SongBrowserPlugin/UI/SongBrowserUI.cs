@@ -39,6 +39,7 @@ namespace SongBrowserPlugin.UI
 
         // New UI Elements
         private List<SongSortButton> _sortButtonGroup;
+        private Button _searchButton;
         private Button _addFavoriteButton;
         private SimpleDialogPromptViewController _simpleDialogPromptViewControllerPrefab;
         private SimpleDialogPromptViewController _deleteDialog;
@@ -119,8 +120,8 @@ namespace SongBrowserPlugin.UI
                 this._deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(this._simpleDialogPromptViewControllerPrefab);
                 this._deleteDialog.gameObject.SetActive(false);
 
-                this._addFavoriteSprite = Base64Sprites.Base64ToSprite(Base64Sprites.AddToFavorites);
-                this._removeFavoriteSprite = Base64Sprites.Base64ToSprite(Base64Sprites.RemoveFromFavorites);
+                this._addFavoriteSprite = Base64Sprites.Base64ToSprite(Base64Sprites.AddToFavoritesIcon);
+                this._removeFavoriteSprite = Base64Sprites.Base64ToSprite(Base64Sprites.RemoveFromFavoritesIcon);
 
                 this.CreateUIElements();
 
@@ -171,17 +172,17 @@ namespace SongBrowserPlugin.UI
 
                 string[] buttonNames = new string[]
                 {
-                    "Favorite", "Song", "Author", "Original", "Newest", "Plays", "Difficult", "Random", "Playlist", "Search"
+                    "Favorite", "Song", "Author", "Original", "Newest", "Plays", "Difficult", "Random", "Playlist"
                 };
 
                 SongSortMode[] sortModes = new SongSortMode[]
                 {
-                    SongSortMode.Favorites, SongSortMode.Default, SongSortMode.Author, SongSortMode.Original, SongSortMode.Newest, SongSortMode.PlayCount, SongSortMode.Difficulty, SongSortMode.Random, SongSortMode.Playlist, SongSortMode.Search
+                    SongSortMode.Favorites, SongSortMode.Default, SongSortMode.Author, SongSortMode.Original, SongSortMode.Newest, SongSortMode.PlayCount, SongSortMode.Difficulty, SongSortMode.Random, SongSortMode.Playlist
                 };
 
                 System.Action<SongSortMode>[] onClickEvents = new Action<SongSortMode>[]
                 {
-                    onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onPlaylistButtonClickEvent, onSearchButtonClickEvent
+                    onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onPlaylistButtonClickEvent
                 };
 
                 _sortButtonGroup = new List<SongSortButton>();
@@ -190,14 +191,30 @@ namespace SongBrowserPlugin.UI
                     _sortButtonGroup.Add(UIBuilder.CreateSortButton(sortButtonTransform, sortButtonTemplate, arrowIcon, 
                         buttonNames[i], 
                         fontSize, 
-                        buttonX, 
+                        buttonX + (buttonWidth * i), 
                         buttonY, 
                         buttonWidth, 
                         buttonHeight, 
                         sortModes[i], 
                         onClickEvents[i]));
-                    buttonX += buttonWidth;
                 }
+
+                // Create search button
+                Vector2 searchButtonSize = new Vector2(5.5f, buttonHeight);
+                float searchbuttonX = buttonX + (buttonWidth * (buttonNames.Length - 1)) + (buttonWidth / 2.0f) + 2.5f;
+                Sprite searchSprite = Base64Sprites.Base64ToSprite(Base64Sprites.SearchIcon);
+                _searchButton = UIBuilder.CreateIconButton(sortButtonTransform, sortButtonTemplate, searchSprite,
+                    new Vector2(searchbuttonX, buttonY),
+                    new Vector2(searchButtonSize.x, searchButtonSize.y),
+                    new Vector2(0, 0),
+                    new Vector2(3f, 3f),
+                    new Vector2(1.0f, 1.0f),
+                    0.0f);
+                _searchButton.onClick.AddListener(delegate()
+                {
+                    onSearchButtonClickEvent(SongSortMode.Search);
+                });
+                buttonX += searchButtonSize.x;
 
                 // Create Add to Favorites Button
                 Vector2 addFavoritePos = new Vector2(40f, (sortButtonTemplate.transform as RectTransform).anchoredPosition.y);
@@ -251,30 +268,33 @@ namespace SongBrowserPlugin.UI
                 });
 
                 // Create enter folder button
-                _enterFolderButton = UIBuilder.CreateUIButton(otherButtonTransform, _playButton);
-                _enterFolderButton.onClick.AddListener(delegate()
+                if (_model.Settings.folderSupportEnabled)
                 {
-                    _model.PushDirectory(_levelListViewController.selectedLevel);
-                    this.RefreshSongList();
-                    this.RefreshDirectoryButtons();
-                });
-                UIBuilder.SetButtonText(ref _enterFolderButton, "Enter");
+                    _enterFolderButton = UIBuilder.CreateUIButton(otherButtonTransform, _playButton);
+                    _enterFolderButton.onClick.AddListener(delegate ()
+                    {
+                        _model.PushDirectory(_levelListViewController.selectedLevel);
+                        this.RefreshSongList();
+                        this.RefreshDirectoryButtons();
+                    });
+                    UIBuilder.SetButtonText(ref _enterFolderButton, "Enter");
 
-                // Create up folder button
-                _upFolderButton = UIBuilder.CreateIconButton(sortButtonTransform, sortButtonTemplate, arrowIcon,
-                    new Vector2(buttonX -4.0f, buttonY),
-                    new Vector2(5.5f, buttonHeight),
-                    new Vector2(0f, 0f),
-                    new Vector2(0.85f, 0.85f),
-                    new Vector2(2.0f, 2.0f), 
-                    180);
-                _upFolderButton.onClick.RemoveAllListeners();
-                _upFolderButton.onClick.AddListener(delegate ()
-                {
-                    _model.PopDirectory();
-                    this.RefreshSongList();
-                    this.RefreshDirectoryButtons();
-                });
+                    // Create up folder button
+                    _upFolderButton = UIBuilder.CreateIconButton(sortButtonTransform, sortButtonTemplate, arrowIcon,
+                        new Vector2(buttonX - 4.0f, buttonY),
+                        new Vector2(5.5f, buttonHeight),
+                        new Vector2(0f, 0f),
+                        new Vector2(0.85f, 0.85f),
+                        new Vector2(2.0f, 2.0f),
+                        180);
+                    _upFolderButton.onClick.RemoveAllListeners();
+                    _upFolderButton.onClick.AddListener(delegate ()
+                    {
+                        _model.PopDirectory();
+                        this.RefreshSongList();
+                        this.RefreshDirectoryButtons();
+                    });
+                }
 
                 RefreshSortButtonUI();
                 RefreshDirectoryButtons();
@@ -403,7 +423,10 @@ namespace SongBrowserPlugin.UI
         /// <param name="level"></param>
         private void HandleDidSelectLevelRow(IStandardLevel level)
         {
-            _enterFolderButton.gameObject.SetActive(false);
+            if (_enterFolderButton != null)
+            {
+                _enterFolderButton.gameObject.SetActive(false);
+            }
             _playButton.gameObject.SetActive(true);
         }
 
@@ -557,6 +580,7 @@ namespace SongBrowserPlugin.UI
                 _searchViewController.backButtonPressed += SearchViewControllerbackButtonPressed;
             }
 
+            _log.Debug("Presenting keyboard");
             _levelListViewController.navigationController.PresentModalViewController(_searchViewController, null, false);
         }
 
@@ -686,7 +710,16 @@ namespace SongBrowserPlugin.UI
                         UIBuilder.SetButtonBorder(ref sortButton.Button, Color.green);
                     }
                 }
-            }            
+            }    
+            
+            if (_model.Settings.sortMode == SongSortMode.Search)
+            {
+                UIBuilder.SetButtonBorder(ref _searchButton, Color.green);
+            }
+            else
+            {
+                UIBuilder.SetButtonBorder(ref _searchButton, Color.clear);
+            }
         }
 
         /// <summary>
@@ -694,6 +727,12 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         public void RefreshDirectoryButtons()
         {
+            // bail if no button, likely folder support not enabled.
+            if (_upFolderButton == null)
+            {
+                return;
+            }
+
             if (_model.DirStackSize > 1)
             {
                 _upFolderButton.interactable = true;
@@ -813,7 +852,7 @@ namespace SongBrowserPlugin.UI
 
                     if (Input.GetKeyDown(KeyCode.S))
                     {
-                        onSortButtonClickEvent(SongSortMode.Search);
+                        onSearchButtonClickEvent(SongSortMode.Search);
                     }
 
                     // select current sort mode again (toggle inverting)

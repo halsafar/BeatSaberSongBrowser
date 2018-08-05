@@ -364,7 +364,7 @@ namespace SongBrowserPlugin
             Uri pathDiff = customSongDirUri.MakeRelativeUri(customSongUri);
             string relPath = Uri.UnescapeDataString(pathDiff.OriginalString);
             string[] paths = relPath.Split('/');
-            Sprite folderIcon = Base64Sprites.Base64ToSprite(Base64Sprites.Folder);
+            Sprite folderIcon = Base64Sprites.Base64ToSprite(Base64Sprites.FolderIcon);
 
             // Prevent cache directory from building into the tree, will add all its leafs to root.
             bool forceIntoRoot = false;
