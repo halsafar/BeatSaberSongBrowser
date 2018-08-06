@@ -30,8 +30,10 @@ namespace SongBrowserPlugin.DataAccess
             // Hack, add beatdrop location
             String localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             String beatDropPlaylistPath = Path.Combine(localAppDataPath, "Programs", "BeatDrop", "playlists");
+            String beatDropCuratorPlaylistPath = Path.Combine(localAppDataPath, "Programs", "BeatDropCurator", "playlists");
 
             _PlaylistsDirectories.Add(beatDropPlaylistPath);
+            _PlaylistsDirectories.Add(beatDropCuratorPlaylistPath);
         }
         
         public void UpdatePlaylists()
