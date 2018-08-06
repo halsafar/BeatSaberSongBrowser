@@ -380,14 +380,13 @@ namespace SongBrowserPlugin.UI
             if (_model.Settings.filterMode != SongFilterMode.Search)
             {
                 _model.Settings.filterMode = SongFilterMode.Search;
+                this.ShowSearchKeyboard();
             }
             else
             {
                 _model.Settings.filterMode = SongFilterMode.None;
             }
-            _model.Settings.Save();
-
-            this.ShowSearchKeyboard();
+            _model.Settings.Save();            
         }
 
         /// <summary>
