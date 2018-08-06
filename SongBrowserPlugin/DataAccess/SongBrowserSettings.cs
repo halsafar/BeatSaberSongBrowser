@@ -12,12 +12,23 @@ namespace SongBrowserPlugin.DataAccess
     {
         Default,
         Author,
-        Favorites,
         Original,
         Newest,        
         PlayCount,
         Difficulty,
         Random,
+
+        // Deprecated
+        Favorites,
+        Playlist,
+        Search
+    }
+
+    [Serializable]
+    public enum SongFilterMode
+    {
+        None,
+        Favorites,
         Playlist,
         Search
     }
@@ -26,6 +37,7 @@ namespace SongBrowserPlugin.DataAccess
     public class SongBrowserSettings
     {
         public SongSortMode sortMode = default(SongSortMode);
+        public SongFilterMode filterMode = default(SongFilterMode);
 
         // Deprecated        
         private List<String> _oldFavorites = default(List<String>);
@@ -45,10 +57,6 @@ namespace SongBrowserPlugin.DataAccess
         [NonSerialized]
         [XmlIgnore]
         private HashSet<String> _favorites;
-
-        [NonSerialized]
-        [XmlIgnore]
-        private int _lastFavoritesCount = 0;
 
         [XmlArray(@"favorites")]
         public List<String> OldFavorites

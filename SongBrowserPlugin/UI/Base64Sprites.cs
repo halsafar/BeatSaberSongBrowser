@@ -35,7 +35,7 @@ namespace SongBrowserPlugin.UI
                 Texture2D tex = Base64ToTexture2D(base64);
                 s = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), (Vector2.one / 2f));
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Console.WriteLine("Exception loading texture from base64 data.");
                 s = null;

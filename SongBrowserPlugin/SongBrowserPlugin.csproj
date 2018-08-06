@@ -119,6 +119,7 @@
     <Compile Include="UI\CustomUIKeyboard.cs" />
     <Compile Include="UI\SearchKeyboardViewController.cs" />
     <Compile Include="UI\SongBrowserUI.cs" />
+    <Compile Include="UI\SongFilterButton.cs" />
     <Compile Include="UI\SongSortButton.cs" />
     <Compile Include="UI\UIBuilder.cs" />
   </ItemGroup>

@@ -85,6 +85,7 @@ namespace SongBrowserPlugin
         private SongBrowserSettings _settings;
 
         // song list management
+        private List<StandardLevelSO> _filteredSongs;
         private List<StandardLevelSO> _sortedSongs;
         private List<StandardLevelSO> _originalSongs;
         private Dictionary<String, SongLoaderPlugin.OverrideClasses.CustomLevel> _levelIdToCustomLevel;
@@ -482,52 +483,70 @@ namespace SongBrowserPlugin
                     _log.Debug("Missing KEY: {0}", level.levelID);
                 }
             }*/
-            
-            Stopwatch stopwatch = Stopwatch.StartNew();           
 
-            List<StandardLevelSO> songList = null;
-            if (this._settings.sortMode == SongSortMode.Playlist && this.CurrentPlaylist != null)
-            {                
-                songList = null;
+            // Playlist filter will load the original songs.
+            if (this._settings.filterMode == SongFilterMode.Playlist && this.CurrentPlaylist != null)
+            {
+                _originalSongs = null;
             }
             else
             {
                 _log.Debug("Showing songs for directory: {0}", _directoryStack.Peek().Key);
-                songList = _directoryStack.Peek().Levels;
+                _originalSongs = _directoryStack.Peek().Levels;
             }
-            
+
+            // filter
+            _log.Debug("Starting filtering songs...");
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
+            switch (_settings.filterMode)
+            {
+                case SongFilterMode.Favorites:
+                    FilterFavorites(_originalSongs);
+                    break;
+                case SongFilterMode.Search:
+                    FilterSearch(_originalSongs);
+                    break;
+                case SongFilterMode.Playlist:
+                    FilterPlaylist();
+                    break;
+                case SongFilterMode.None:
+                default:
+                    _log.Info("No song filter selected...");
+                    _filteredSongs = _originalSongs;
+                    break;
+            }
+
+            stopwatch.Stop();
+            _log.Info("Filtering songs took {0}ms", stopwatch.ElapsedMilliseconds);
+
+            // sort
+            _log.Debug("Starting to sort songs...");
+            stopwatch = Stopwatch.StartNew();
+
             switch (_settings.sortMode)
             {
-                case SongSortMode.Favorites:
-                    SortFavorites(songList);
-                    break;
                 case SongSortMode.Original:
-                    SortOriginal(songList);
+                    SortOriginal(_filteredSongs);
                     break;
                 case SongSortMode.Newest:
-                    SortNewest(songList);
+                    SortNewest(_filteredSongs);
                     break;
                 case SongSortMode.Author:
-                    SortAuthor(songList);
+                    SortAuthor(_filteredSongs);
                     break;
                 case SongSortMode.PlayCount:
-                    SortPlayCount(songList, _currentGamePlayMode);
+                    SortPlayCount(_filteredSongs, _currentGamePlayMode);
                     break;
                 case SongSortMode.Difficulty:
-                    SortDifficulty(songList);
+                    SortDifficulty(_filteredSongs);
                     break;
                 case SongSortMode.Random:
-                    SortRandom(songList);
-                    break;
-                case SongSortMode.Search:
-                    SortSearch(songList);
-                    break;
-                case SongSortMode.Playlist:
-                    SortPlaylist();
+                    SortRandom(_filteredSongs);
                     break;
                 case SongSortMode.Default:
                 default:
-                    SortSongName(songList);
+                    SortSongName(_filteredSongs);
                     break;
             }
 
@@ -540,30 +559,62 @@ namespace SongBrowserPlugin
             _log.Info("Sorting songs took {0}ms", stopwatch.ElapsedMilliseconds);
         }    
         
-        private void SortFavorites(List<StandardLevelSO> levels)
+        private void FilterFavorites(List<StandardLevelSO> levels)
         {
-            _log.Info("Sorting song list as favorites");
-            /*_sortedSongs = levels
-                .AsQueryable()
-                .OrderBy(x => _settings.Favorites.Contains(x.levelID) == false)
-                .ThenBy(x => x.songName)
-                .ThenBy(x => x.songAuthorName)
-                .ToList();*/
-            _sortedSongs = levels
-                .AsQueryable()
+            _log.Info("Filtering song list as favorites");
+            _filteredSongs = levels
                 .Where(x => _settings.Favorites.Contains(x.levelID))
-                .OrderBy(x => x.songName)
+                .ToList();
+        }
+
+        private void FilterSearch(List<StandardLevelSO> levels)
+        {
+            // Make sure we can actually search.
+            if (this._settings.searchTerms.Count <= 0)
+            {
+                _log.Error("Tried to search for a song with no valid search terms...");
+                SortSongName(levels);
+                return;
+            }
+            string searchTerm = this._settings.searchTerms[0];
+            if (String.IsNullOrEmpty(searchTerm))
+            {
+                _log.Error("Empty search term entered.");
+                SortSongName(levels);
+                return;
+            }
+
+            _log.Info("Filtering song list by search term: {0}", searchTerm);
+            //_originalSongs.ForEach(x => _log.Debug($"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()).ToString()));
+
+            _filteredSongs = levels
+                .Where(x => $"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()))
+                .ToList();
+        }
+
+        private void FilterPlaylist()
+        {
+            _log.Debug("Filtering songs for playlist: {0}", this.CurrentPlaylist);
+            List<String> playlistNameListOrdered = this.CurrentPlaylist.songs.Select(x => x.songName).Distinct().ToList();
+            Dictionary<String, int> songNameToIndex = playlistNameListOrdered.Select((val, index) => new { Index = index, Value = val }).ToDictionary(i => i.Value, i => i.Index);
+            HashSet<String> songNames = new HashSet<String>(playlistNameListOrdered);
+            SongLoaderPlugin.OverrideClasses.CustomLevelCollectionsForGameplayModes collections = SongLoaderPlugin.SongLoader.Instance.GetPrivateField<SongLoaderPlugin.OverrideClasses.CustomLevelCollectionsForGameplayModes>("_customLevelCollectionsForGameplayModes");
+            List<StandardLevelSO> songList = collections.GetLevels(_currentGamePlayMode).Where(x => songNames.Contains(x.songName)).ToList();
+            _log.Debug("\tMatching songs found for playlist: {0}", songList.Count);
+            _originalSongs = songList;
+            _filteredSongs = songList
+                .OrderBy(x => songNameToIndex[x.songName])
                 .ToList();
         }
 
         private void SortOriginal(List<StandardLevelSO> levels)
         {
             _log.Info("Sorting song list as original");
-            _sortedSongs = levels
+            _sortedSongs = levels;/*levels
                 .AsQueryable()
                 .OrderByDescending(x => _weights.ContainsKey(x.levelID) ? _weights[x.levelID] : 0)
                 .ThenBy(x => x.songName)
-                .ToList();
+                .ToList();*/
         }
 
         private void SortNewest(List<StandardLevelSO> levels)
@@ -683,34 +734,7 @@ namespace SongBrowserPlugin
                 .AsQueryable()
                 .OrderBy(x => rnd.Next())
                 .ToList();
-        }
-
-        private void SortSearch(List<StandardLevelSO> levels)
-        {
-            // Make sure we can actually search.
-            if (this._settings.searchTerms.Count <= 0)
-            {
-                _log.Error("Tried to search for a song with no valid search terms...");
-                SortSongName(levels);
-                return;
-            }
-            string searchTerm = this._settings.searchTerms[0];
-            if (String.IsNullOrEmpty(searchTerm))
-            {
-                _log.Error("Empty search term entered.");
-                SortSongName(levels);
-                return;
-            }
-
-            _log.Info("Sorting song list by search term: {0}", searchTerm);
-            //_originalSongs.ForEach(x => _log.Debug($"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()).ToString()));
-
-            _sortedSongs = levels
-                .AsQueryable()
-                .Where(x => $"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()))
-                .ToList();
-            //_sortedSongs.ForEach(x => _log.Debug(x.levelID));
-        }
+        }        
 
         private void SortSongName(List<StandardLevelSO> levels)
         {
@@ -719,21 +743,6 @@ namespace SongBrowserPlugin
                 .AsQueryable()
                 .OrderBy(x => x.songName)
                 .ThenBy(x => x.songAuthorName)
-                .ToList();
-        }
-
-        private void SortPlaylist()
-        {
-            _log.Debug("Showing songs for playlist: {0}", this.CurrentPlaylist);
-            List<String> playlistNameListOrdered = this.CurrentPlaylist.songs.Select(x => x.songName).Distinct().ToList();
-            Dictionary<String, int> songNameToIndex = playlistNameListOrdered.Select((val, index) => new { Index = index, Value = val }).ToDictionary(i => i.Value, i => i.Index);
-            HashSet<String> songNames = new HashSet<String>(playlistNameListOrdered);
-            SongLoaderPlugin.OverrideClasses.CustomLevelCollectionsForGameplayModes collections = SongLoaderPlugin.SongLoader.Instance.GetPrivateField<SongLoaderPlugin.OverrideClasses.CustomLevelCollectionsForGameplayModes>("_customLevelCollectionsForGameplayModes");
-            List<StandardLevelSO> songList = collections.GetLevels(_currentGamePlayMode).Where(x => songNames.Contains(x.songName)).ToList();
-            _log.Debug("\tMatching songs found for playlist: {0}", songList.Count);
-            _sortedSongs = songList
-                .AsQueryable()
-                .OrderBy(x => songNameToIndex[x.songName])
                 .ToList();
         }
     }
