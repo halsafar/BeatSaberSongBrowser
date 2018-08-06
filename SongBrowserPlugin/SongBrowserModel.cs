@@ -720,11 +720,12 @@ namespace SongBrowserPlugin
         private void SortPlaylist()
         {
             _log.Debug("Showing songs for playlist: {0}", this.CurrentPlaylist);
-            List<String> playlistNameListOrdered = this.CurrentPlaylist.songs.Select(x => x.songName).ToList();
+            List<String> playlistNameListOrdered = this.CurrentPlaylist.songs.Select(x => x.songName).Distinct().ToList();
             Dictionary<String, int> songNameToIndex = playlistNameListOrdered.Select((val, index) => new { Index = index, Value = val }).ToDictionary(i => i.Value, i => i.Index);
             HashSet<String> songNames = new HashSet<String>(playlistNameListOrdered);
             SongLoaderPlugin.OverrideClasses.CustomLevelCollectionsForGameplayModes collections = SongLoaderPlugin.SongLoader.Instance.GetPrivateField<SongLoaderPlugin.OverrideClasses.CustomLevelCollectionsForGameplayModes>("_customLevelCollectionsForGameplayModes");
             List<StandardLevelSO> songList = collections.GetLevels(_currentGamePlayMode).Where(x => songNames.Contains(x.songName)).ToList();
+            _log.Debug("\tMatching songs found for playlist: {0}", songList.Count);
             _sortedSongs = songList
                 .AsQueryable()
                 .OrderBy(x => songNameToIndex[x.songName])
