@@ -543,11 +543,16 @@ namespace SongBrowserPlugin
         private void SortFavorites(List<StandardLevelSO> levels)
         {
             _log.Info("Sorting song list as favorites");
-            _sortedSongs = levels
+            /*_sortedSongs = levels
                 .AsQueryable()
                 .OrderBy(x => _settings.Favorites.Contains(x.levelID) == false)
                 .ThenBy(x => x.songName)
                 .ThenBy(x => x.songAuthorName)
+                .ToList();*/
+            _sortedSongs = levels
+                .AsQueryable()
+                .Where(x => _settings.Favorites.Contains(x.levelID))
+                .OrderBy(x => x.songName)
                 .ToList();
         }
 
