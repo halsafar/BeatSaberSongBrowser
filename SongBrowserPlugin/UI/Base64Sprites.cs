@@ -2,6 +2,7 @@
 using IllusionPlugin;
 using SimpleJSON;
 using System;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 
@@ -21,10 +22,9 @@ namespace SongBrowserPlugin.UI
 
         public static Sprite Base64ToSprite(string base64)
         {
-            if (base64.StartsWith("data:image/png;base64,"))
-            {
-                base64 = base64.Remove(0, "data:image/png;base64,".Length);
-            }
+            // prune base64 encoded image header
+            Regex r = new Regex(@"data:image.*base64,");
+            base64 = r.Replace(base64, "");            
 
             Sprite s = null;
             try
