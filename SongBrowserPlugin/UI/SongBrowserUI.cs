@@ -35,18 +35,25 @@ namespace SongBrowserPlugin.UI
         private RectTransform _tableViewRectTransform;
         private Button _tableViewPageUpButton;
         private Button _tableViewPageDownButton;
+        private Button _playButton;
 
         // New UI Elements
         private List<SongSortButton> _sortButtonGroup;
+        private List<SongFilterButton> _filterButtonGroup;
         private Button _addFavoriteButton;
-        private String _addFavoriteButtonText = null;
         private SimpleDialogPromptViewController _simpleDialogPromptViewControllerPrefab;
         private SimpleDialogPromptViewController _deleteDialog;
         private Button _deleteButton;        
         private Button _pageUpTenPercent;
         private Button _pageDownTenPercent;
+        private Button _enterFolderButton;
+        private Button _upFolderButton;
         private SearchKeyboardViewController _searchViewController;
 
+        // Cached items
+        private Sprite _addFavoriteSprite;
+        private Sprite _removeFavoriteSprite;
+        private Sprite _currentAddFavoriteButtonSprite;
 
         // Debug
         private int _sortButtonLastPushedIndex = 0;
@@ -106,10 +113,15 @@ namespace SongBrowserPlugin.UI
                     _levelListTableView = this._levelListViewController.GetComponentInChildren<StandardLevelListTableView>();
                 }
 
+                _playButton = _levelDetailViewController.GetComponentsInChildren<Button>().FirstOrDefault(x => x.name == "PlayButton");
+
                 _simpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
 
                 this._deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(this._simpleDialogPromptViewControllerPrefab);
                 this._deleteDialog.gameObject.SetActive(false);
+
+                this._addFavoriteSprite = Base64Sprites.Base64ToSprite(Base64Sprites.AddToFavoritesIcon);
+                this._removeFavoriteSprite = Base64Sprites.Base64ToSprite(Base64Sprites.RemoveFromFavoritesIcon);
 
                 this.CreateUIElements();
 
@@ -133,8 +145,9 @@ namespace SongBrowserPlugin.UI
                 // Gather some transforms and templates to use.
                 RectTransform sortButtonTransform = this._levelSelectionNavigationController.transform as RectTransform;
                 RectTransform otherButtonTransform = this._levelDetailViewController.transform as RectTransform;
-                Button sortButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PlayButton"));
+                Button sortButtonTemplate = _playButton;
                 Button otherButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "QuitButton"));
+                Sprite arrowIcon = SongBrowserApplication.Instance.CachedIcons["ArrowIcon"];
 
                 // Resize some of the UI
                 _tableViewRectTransform = _levelListViewController.GetComponentsInChildren<RectTransform>().First(x => x.name == "TableViewContainer");
@@ -149,51 +162,83 @@ namespace SongBrowserPlugin.UI
 
                 // Create Sorting Songs By-Buttons
                 _log.Debug("Creating sort by buttons...");
-                
-                Sprite arrowIcon = SongBrowserApplication.Instance.CachedIcons["ArrowIcon"];
+                                
+                float fontSize = 2.35f;
+                float buttonWidth = 13.50f;
+                float buttonHeight = 5.5f;
+                float buttonX = -61;
+                float buttonY = 74.0f;
 
-                float fontSize = 2.5f;
-                float buttonWidth = 14.0f;
-                float buttonHeight = 5.0f;
-                float buttonX = -68;
-                float buttonY = 74.5f;
-
-                string[] buttonNames = new string[]
+                string[] sortButtonNames = new string[]
                 {
-                    "Favorite", "Song", "Author", "Original", "Newest", "Plays", "Random", "Search"
+                    "Song", "Author", "Original", "Newest", "Plays", "Difficult", "Random"
                 };
 
                 SongSortMode[] sortModes = new SongSortMode[]
                 {
-                    SongSortMode.Favorites, SongSortMode.Default, SongSortMode.Author, SongSortMode.Original, SongSortMode.Newest, SongSortMode.PlayCount, SongSortMode.Random, SongSortMode.Search
-                };
-
-                System.Action<SongSortMode>[] onClickEvents = new Action<SongSortMode>[]
-                {
-                    onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSortButtonClickEvent, onSearchButtonClickEvent
+                    SongSortMode.Default, SongSortMode.Author, SongSortMode.Original, SongSortMode.Newest, SongSortMode.PlayCount, SongSortMode.Difficulty, SongSortMode.Random
                 };
 
                 _sortButtonGroup = new List<SongSortButton>();
-                for (int i = 0; i < buttonNames.Length; i++)
+                for (int i = 0; i < sortButtonNames.Length; i++)
                 {
-                    _sortButtonGroup.Add(UIBuilder.CreateSortButton(sortButtonTransform, sortButtonTemplate, arrowIcon, buttonNames[i], fontSize, buttonX, buttonY, buttonWidth, buttonHeight, sortModes[i], onClickEvents[i]));
-                    buttonX += buttonWidth;
+                    _sortButtonGroup.Add(UIBuilder.CreateSortButton(sortButtonTransform, sortButtonTemplate, arrowIcon,
+                        sortButtonNames[i], 
+                        fontSize, 
+                        buttonX + (buttonWidth * i), 
+                        buttonY, 
+                        buttonWidth, 
+                        buttonHeight, 
+                        sortModes[i],
+                        onSortButtonClickEvent));
                 }
 
+                // Create filter buttons
+                float filterButtonX = buttonX + (buttonWidth * (sortButtonNames.Length - 1)) + (buttonWidth / 2.0f) + 2.5f;
+                Vector2 iconButtonSize = new Vector2(5.5f, buttonHeight);
+                Sprite playlistSprite = Base64Sprites.Base64ToSprite(Base64Sprites.PlaylistIcon);
+                Sprite searchSprite = Base64Sprites.Base64ToSprite(Base64Sprites.SearchIcon);
+
+                List<Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>> filterButtonSetup = new List<Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>>()
+                {
+                    Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Favorites, onFavoriteFilterButtonClickEvent, _addFavoriteSprite),
+                    Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Playlist, onPlaylistButtonClickEvent, playlistSprite),
+                    Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Search, onSearchButtonClickEvent, searchSprite),
+                };
+
+                _filterButtonGroup = new List<SongFilterButton>();
+                for (int i = 0; i < filterButtonSetup.Count; i++)
+                {
+                    Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite> t = filterButtonSetup[i];
+                    Button b = UIBuilder.CreateIconButton(sortButtonTransform, sortButtonTemplate,
+                        t.Item3,
+                        new Vector2(filterButtonX + (iconButtonSize.x * i), buttonY),
+                        new Vector2(iconButtonSize.x, iconButtonSize.y),
+                        new Vector2(0, 0),
+                        new Vector2(3.5f, 3.5f),
+                        new Vector2(1.0f, 1.0f),
+                        0);
+                    SongFilterButton filterButton = new SongFilterButton();
+                    filterButton.Button = b;
+                    filterButton.FilterMode = t.Item1;
+                    b.onClick.AddListener(t.Item2);
+                    _filterButtonGroup.Add(filterButton);
+                }
+               
                 // Create Add to Favorites Button
-                _log.Debug("Creating add to favorites button...");                
-                _addFavoriteButton = UIBuilder.CreateUIButton(otherButtonTransform, otherButtonTemplate);
-                (_addFavoriteButton.transform as RectTransform).anchoredPosition = new Vector2(40f, (sortButtonTemplate.transform as RectTransform).anchoredPosition.y);
-                (_addFavoriteButton.transform as RectTransform).sizeDelta = new Vector2(10f, 10f);
-                UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);
-                UIBuilder.SetButtonTextSize(ref _addFavoriteButton, fontSize);
-                UIBuilder.SetButtonIconEnabled(ref _addFavoriteButton, false);
-                _addFavoriteButton.onClick.RemoveAllListeners();
+                Vector2 addFavoritePos = new Vector2(40f, (sortButtonTemplate.transform as RectTransform).anchoredPosition.y);
+                _addFavoriteButton = UIBuilder.CreateIconButton(otherButtonTransform, otherButtonTemplate, null, 
+                    new Vector2(addFavoritePos.x, addFavoritePos.y), 
+                    new Vector2(10.0f, 10.0f), 
+                    new Vector2(2f, -1.5f),
+                    new Vector2(7.0f, 7.0f), 
+                    new Vector2(1.0f, 1.0f),
+                    0.0f);
                 _addFavoriteButton.onClick.AddListener(delegate () {
                     ToggleSongInFavorites();
                 });
 
-                if (_addFavoriteButtonText == null)
+                if (_currentAddFavoriteButtonSprite == null)
                 {
                     IStandardLevel level = this._levelListViewController.selectedLevel;
                     if (level != null)
@@ -203,30 +248,65 @@ namespace SongBrowserPlugin.UI
                 }
 
                 // Create delete button
-                _log.Debug("Creating delete button...");
-                _deleteButton = UIBuilder.CreateUIButton(otherButtonTransform, otherButtonTemplate);
-                (_deleteButton.transform as RectTransform).anchoredPosition = new Vector2(46f, 0f);
-                (_deleteButton.transform as RectTransform).sizeDelta = new Vector2(15f, 5f);
-                UIBuilder.SetButtonText(ref _deleteButton, "Delete");
-                UIBuilder.SetButtonTextSize(ref _deleteButton, fontSize);
-                UIBuilder.SetButtonIconEnabled(ref _deleteButton, false);
-                _deleteButton.onClick.RemoveAllListeners();
+                _deleteButton = UIBuilder.CreateButton(otherButtonTransform, otherButtonTemplate, "Delete", fontSize, 46f, 0f, 15f, 5f);                
                 _deleteButton.onClick.AddListener(delegate () {
                     HandleDeleteSelectedLevel();
                 });
 
                 // Create fast scroll buttons
-                _pageUpTenPercent = UIBuilder.CreatePageButton(sortButtonTransform, otherButtonTemplate, arrowIcon, 15, 67.5f, 6.0f, 5.5f, 1.5f, 1.5f, 180);
+                _pageUpTenPercent = UIBuilder.CreateIconButton(sortButtonTransform, otherButtonTemplate, arrowIcon,
+                    new Vector2(15, 67.5f),
+                    new Vector2(6.0f, 5.5f),
+                    new Vector2(0f, 0f),
+                    new Vector2(1.5f, 1.5f),
+                    new Vector2(2.0f, 2.0f), 
+                    180);
                 _pageUpTenPercent.onClick.AddListener(delegate () {
                     this.JumpSongList(-1, SEGMENT_PERCENT);
                 });
 
-                _pageDownTenPercent = UIBuilder.CreatePageButton(sortButtonTransform, otherButtonTemplate, arrowIcon, 15, 0.5f, 6.0f, 5.5f, 1.5f, 1.5f, 0);
+                _pageDownTenPercent = UIBuilder.CreateIconButton(sortButtonTransform, otherButtonTemplate, arrowIcon,
+                    new Vector2(15, 0.5f),
+                    new Vector2(6.0f, 5.5f),
+                    new Vector2(0f, 0f),
+                    new Vector2(1.5f, 1.5f),
+                    new Vector2(2.0f, 2.0f), 
+                    0);
                 _pageDownTenPercent.onClick.AddListener(delegate () {
                     this.JumpSongList(1, SEGMENT_PERCENT);
                 });
 
+                // Create enter folder button
+                if (_model.Settings.folderSupportEnabled)
+                {
+                    _enterFolderButton = UIBuilder.CreateUIButton(otherButtonTransform, _playButton);
+                    _enterFolderButton.onClick.AddListener(delegate ()
+                    {
+                        _model.PushDirectory(_levelListViewController.selectedLevel);
+                        this.RefreshSongList();
+                        this.RefreshDirectoryButtons();
+                    });
+                    UIBuilder.SetButtonText(ref _enterFolderButton, "Enter");
+
+                    // Create up folder button
+                    _upFolderButton = UIBuilder.CreateIconButton(sortButtonTransform, sortButtonTemplate, arrowIcon,
+                        new Vector2(filterButtonX + (iconButtonSize.x* filterButtonSetup.Count), buttonY),
+                        new Vector2(iconButtonSize.x, iconButtonSize.y),
+                        new Vector2(0f, 0f),
+                        new Vector2(0.85f, 0.85f),
+                        new Vector2(2.0f, 2.0f),
+                        180);
+                    _upFolderButton.onClick.RemoveAllListeners();
+                    _upFolderButton.onClick.AddListener(delegate ()
+                    {
+                        _model.PopDirectory();
+                        this.RefreshSongList();
+                        this.RefreshDirectoryButtons();
+                    });
+                }
+
                 RefreshSortButtonUI();
+                RefreshDirectoryButtons();
             }
             catch (Exception e)
             {
@@ -235,12 +315,12 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
-        /// 
+        /// Sort button clicked.
         /// </summary>
         private void onSortButtonClickEvent(SongSortMode sortMode)
         {
             _log.Debug("Sort button - {0} - pressed.", sortMode.ToString());
-            SongBrowserModel.LastSelectedLevelId = null;
+            _model.LastSelectedLevelId = null;
 
             if (_model.Settings.sortMode == sortMode)
             {
@@ -252,18 +332,85 @@ namespace SongBrowserPlugin.UI
 
             UpdateSongList();
             RefreshSongList();
+
+            // Handle instant queue logic, avoid picking a folder.
+            if (_model.Settings.sortMode == SongSortMode.Random && _model.Settings.randomInstantQueue)
+            {
+                for (int i = 0; i < _model.SortedSongList.Count; i++)
+                {
+                    if (!_model.SortedSongList[i].levelID.StartsWith("Folder_"))
+                    {
+                        this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[i].levelID);
+                        this._levelDifficultyViewController.HandleDifficultyTableViewDidSelectRow(null, _model.SortedSongList[i].difficultyBeatmaps.Length-1);
+                        _playButton.onClick.Invoke();
+                        break;
+                    }
+                }                                                    
+            }
         }
 
         /// <summary>
-        /// Saerch button clicked.  
+        /// Filter by favorites.
         /// </summary>
-        /// <param name="sortMode"></param>
-        private void onSearchButtonClickEvent(SongSortMode sortMode)
+        private void onFavoriteFilterButtonClickEvent()
         {
-            _model.Settings.sortMode = sortMode;
+            _log.Debug("Filter button - {0} - pressed.", SongFilterMode.Favorites.ToString());
+
+            if (_model.Settings.filterMode != SongFilterMode.Favorites)
+            {
+                _model.Settings.filterMode = SongFilterMode.Favorites;
+            }
+            else
+            {
+                _model.Settings.filterMode = SongFilterMode.None;
+            }
             _model.Settings.Save();
 
-            this.ShowSearchKeyboard();
+            UpdateSongList();
+            RefreshSongList();
+        }
+
+        /// <summary>
+        /// Filter button clicked.  
+        /// </summary>
+        /// <param name="sortMode"></param>
+        private void onSearchButtonClickEvent()
+        {
+            _log.Debug("Filter button - {0} - pressed.", SongFilterMode.Search.ToString());
+            if (_model.Settings.filterMode != SongFilterMode.Search)
+            {
+                _model.Settings.filterMode = SongFilterMode.Search;
+                this.ShowSearchKeyboard();
+            }
+            else
+            {
+                _model.Settings.filterMode = SongFilterMode.None;
+            }
+            _model.Settings.Save();            
+        }
+
+        /// <summary>
+        /// Display the playlist selector.
+        /// </summary>
+        /// <param name="sortMode"></param>
+        private void onPlaylistButtonClickEvent()
+        {
+            _log.Debug("Filter button - {0} - pressed.", SongFilterMode.Playlist.ToString());
+            _model.LastSelectedLevelId = null;
+
+            if (_model.Settings.filterMode != SongFilterMode.Playlist)
+            {
+                PlaylistFlowCoordinator view = UIBuilder.CreateFlowCoordinator<PlaylistFlowCoordinator>("PlaylistFlowCoordinator");
+                view.didSelectPlaylist += HandleDidSelectPlaylist;
+                view.Present(_levelSelectionNavigationController);
+            }
+            else
+            {
+                _model.Settings.filterMode = SongFilterMode.None;
+                _model.Settings.Save();
+                UpdateSongList();
+                RefreshSongList();
+            }
         }
 
         /// <summary>
@@ -271,7 +418,7 @@ namespace SongBrowserPlugin.UI
         /// Various ways of detecting if a level is not properly selected.  Seems most hit the first one.
         /// </summary>
         private void OnDidSelectLevelEvent(StandardLevelListViewController view, IStandardLevel level)
-        {
+        {            
             try
             {
                 _log.Trace("OnDidSelectLevelEvent()");
@@ -287,15 +434,47 @@ namespace SongBrowserPlugin.UI
                     return;
                 }
 
-                SongBrowserModel.LastSelectedLevelId = level.levelID;
+                _model.LastSelectedLevelId = level.levelID;
 
                 RefreshAddFavoriteButton(level.levelID);
                 RefreshQuickScrollButtons();
+
+                if (level.levelID.StartsWith("Folder_"))
+                {
+                    _log.Debug("Folder selected!  Adjust PlayButton logic...");
+                    HandleDidSelectFolderRow(level);
+                }
+                else
+                {
+                    HandleDidSelectLevelRow(level);
+                }
             }
             catch (Exception e)
             {
                 _log.Exception("Exception selecting song:", e);
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void HandleDidSelectFolderRow(IStandardLevel level)
+        {
+            _enterFolderButton.gameObject.SetActive(true);
+            _playButton.gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="level"></param>
+        private void HandleDidSelectLevelRow(IStandardLevel level)
+        {
+            if (_enterFolderButton != null)
+            {
+                _enterFolderButton.gameObject.SetActive(false);
+            }
+            _playButton.gameObject.SetActive(true);
         }
 
         /// <summary>
@@ -313,6 +492,12 @@ namespace SongBrowserPlugin.UI
             if (level.levelID.StartsWith("Level"))
             {
                 _log.Debug("Cannot delete non-custom levels.");
+                return;
+            }
+
+            if (level.levelID.StartsWith("Folder"))
+            {
+                _log.Debug("Cannot delete folders.");
                 return;
             }
 
@@ -382,6 +567,7 @@ namespace SongBrowserPlugin.UI
                     }
                 }
 
+                _model.LastSelectedLevelId = null;
                 SongLoaderPlugin.SongLoader.Instance.RemoveSongWithPath(songPath);
                 this.UpdateSongList();
                 this.RefreshSongList();
@@ -416,6 +602,20 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
+        /// Handle selection of a playlist.  Show just the songs in the playlist.
+        /// </summary>
+        /// <param name="p"></param>
+        private void HandleDidSelectPlaylist(Playlist p)
+        {
+            _log.Debug("Showing songs for playlist: {0}", p.playlistTitle);
+            _model.Settings.filterMode = SongFilterMode.Playlist;
+            _model.CurrentPlaylist = p;
+            _model.Settings.Save();
+            this.UpdateSongList();
+            this.RefreshSongList();
+        }
+
+        /// <summary>
         /// Display the search keyboard
         /// </summary>
         void ShowSearchKeyboard()
@@ -427,6 +627,7 @@ namespace SongBrowserPlugin.UI
                 _searchViewController.backButtonPressed += SearchViewControllerbackButtonPressed;
             }
 
+            _log.Debug("Presenting keyboard");
             _levelListViewController.navigationController.PresentModalViewController(_searchViewController, null, false);
         }
 
@@ -448,7 +649,7 @@ namespace SongBrowserPlugin.UI
 
             _model.Settings.searchTerms.Insert(0, searchFor);
             _model.Settings.Save();
-            SongBrowserModel.LastSelectedLevelId = null;
+            _model.LastSelectedLevelId = null;
             this.UpdateSongList();
             this.RefreshSongList();
         }
@@ -483,22 +684,20 @@ namespace SongBrowserPlugin.UI
         private void ToggleSongInFavorites()
         {
             IStandardLevel songInfo = this._levelListViewController.selectedLevel;
-            if (_model.Settings.favorites.Contains(songInfo.levelID))
+            if (_model.Settings.Favorites.Contains(songInfo.levelID))
             {
                 _log.Info("Remove {0} from favorites", songInfo.songName);
-                _model.Settings.favorites.Remove(songInfo.levelID);
-                _addFavoriteButtonText = "+1";
+                _model.Settings.Favorites.Remove(songInfo.levelID);
             }
             else
             {
                 _log.Info("Add {0} to favorites", songInfo.songName);
-                _model.Settings.favorites.Add(songInfo.levelID);
-                _addFavoriteButtonText = "-1";                
+                _model.Settings.Favorites.Add(songInfo.levelID);
             }
 
-            UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);
+            RefreshAddFavoriteButton(songInfo.levelID);
 
-            _model.Settings.Save();
+            _model.Settings.SaveFavorites();
         }
 
         /// <summary>
@@ -521,20 +720,21 @@ namespace SongBrowserPlugin.UI
         {
             if (levelId == null)
             {
-                _addFavoriteButtonText = "0";
-                return;
-            }
-
-            if (_model.Settings.favorites.Contains(levelId))
-            {
-                _addFavoriteButtonText = "-1";
+                _currentAddFavoriteButtonSprite = null;
             }
             else
             {
-                _addFavoriteButtonText = "+1";                
+                if (_model.Settings.Favorites.Contains(levelId))
+                {
+                    _currentAddFavoriteButtonSprite = _removeFavoriteSprite;
+                }
+                else
+                {
+                    _currentAddFavoriteButtonSprite = _addFavoriteSprite;
+                }
             }
 
-            UIBuilder.SetButtonText(ref _addFavoriteButton, _addFavoriteButtonText);
+            UIBuilder.SetButtonIcon(ref _addFavoriteButton, _currentAddFavoriteButtonSprite);
         }
 
         /// <summary>
@@ -557,7 +757,38 @@ namespace SongBrowserPlugin.UI
                         UIBuilder.SetButtonBorder(ref sortButton.Button, Color.green);
                     }
                 }
-            }            
+            }    
+            
+            // refresh filter buttons
+            foreach (SongFilterButton filterButton in _filterButtonGroup)
+            {
+                UIBuilder.SetButtonBorder(ref filterButton.Button, Color.clear);
+                if (filterButton.FilterMode == _model.Settings.filterMode)
+                {
+                    UIBuilder.SetButtonBorder(ref filterButton.Button, Color.green);
+                }
+            }           
+        }
+
+        /// <summary>
+        /// Refresh the UI state of any directory buttons.
+        /// </summary>
+        public void RefreshDirectoryButtons()
+        {
+            // bail if no button, likely folder support not enabled.
+            if (_upFolderButton == null)
+            {
+                return;
+            }
+
+            if (_model.DirStackSize > 1)
+            {
+                _upFolderButton.interactable = true;
+            }
+            else
+            {
+                _upFolderButton.interactable = false;
+            }
         }
 
         /// <summary>
@@ -582,9 +813,9 @@ namespace SongBrowserPlugin.UI
                 tableView.ReloadData();                
 
                 String selectedLevelID = null;
-                if (SongBrowserModel.LastSelectedLevelId != null)
+                if (_model.LastSelectedLevelId != null)
                 {
-                    selectedLevelID = SongBrowserModel.LastSelectedLevelId;
+                    selectedLevelID = _model.LastSelectedLevelId;
                     _log.Debug("Scrolling to row for level ID: {0}", selectedLevelID);                    
                 }
                 else
@@ -602,6 +833,7 @@ namespace SongBrowserPlugin.UI
                 }
 
                 RefreshSortButtonUI();
+                RefreshQuickScrollButtons();
             }
             catch (Exception e)
             {
@@ -620,6 +852,7 @@ namespace SongBrowserPlugin.UI
             TableView tableView = table.GetComponentInChildren<TableView>();
             tableView.SelectRow(row, true);
             tableView.ScrollToRow(row, true);
+            _lastRow = row;
         }
 
         /// <summary>
@@ -630,7 +863,8 @@ namespace SongBrowserPlugin.UI
             _log.Trace("UpdateSongList()");
 
             GameplayMode gameplayMode = _levelSelectionFlowCoordinator.GetPrivateField<GameplayMode>("_gameplayMode");
-            _model.UpdateSongLists(gameplayMode);                        
+            _model.UpdateSongLists(gameplayMode);
+            this.RefreshDirectoryButtons();
         }
 
         /// <summary>
@@ -638,7 +872,6 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         public void LateUpdate()
         {
-            if (!this._levelListViewController.isActiveAndEnabled) return;
             CheckDebugUserInput();
         }
 
@@ -649,86 +882,119 @@ namespace SongBrowserPlugin.UI
         {
             try
             {
-                bool isShiftKeyDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-
-                // back
-                if (Input.GetKeyDown(KeyCode.Escape))
+                if (this._levelListViewController != null && this._levelListViewController.isActiveAndEnabled)
                 {
-                    this._levelSelectionNavigationController.DismissButtonWasPressed();
-                }
+                    bool isShiftKeyDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
 
-                // cycle sort modes
-                if (Input.GetKeyDown(KeyCode.T))
-                {
-                    _sortButtonLastPushedIndex = (_sortButtonLastPushedIndex + 1) % _sortButtonGroup.Count;
-                    _sortButtonGroup[_sortButtonLastPushedIndex].Button.onClick.Invoke();
-                }
-
-                if (Input.GetKeyDown(KeyCode.S))
-                {
-                    onSortButtonClickEvent(SongSortMode.Search);
-                }
-
-                // select current sort mode again (toggle inverting)
-                if (Input.GetKeyDown(KeyCode.Y))
-                {
-                    _sortButtonGroup[_sortButtonLastPushedIndex].Button.onClick.Invoke();
-                }
-
-                // delete
-                if (Input.GetKeyDown(KeyCode.D))
-                {
-                    if (_deleteDialog.isInViewControllerHierarchy)
+                    // back
+                    if (Input.GetKeyDown(KeyCode.Escape))
                     {
-                        return;
+                        this._levelSelectionNavigationController.DismissButtonWasPressed();
                     }
-                    _deleteButton.onClick.Invoke();
-                }
 
-                // accept delete
-                if (Input.GetKeyDown(KeyCode.B) && _deleteDialog.isInViewControllerHierarchy)
-                {
-                    _deleteDialog.GetPrivateField<TextMeshProButton>("_okButton").button.onClick.Invoke();
-                }
+                    // cycle sort modes
+                    if (Input.GetKeyDown(KeyCode.T))
+                    {
+                        _sortButtonLastPushedIndex = (_sortButtonLastPushedIndex + 1) % _sortButtonGroup.Count;
+                        _sortButtonGroup[_sortButtonLastPushedIndex].Button.onClick.Invoke();
+                    }
 
-                // c,v can be used to get into a song
-                if (Input.GetKeyDown(KeyCode.C))
-                {
-                    this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[0].levelID);                 
-                    this._levelDifficultyViewController.HandleDifficultyTableViewDidSelectRow(null, 0);
-                    this._levelSelectionFlowCoordinator.HandleDifficultyViewControllerDidSelectDifficulty(_levelDifficultyViewController, _model.SortedSongList[0].GetDifficultyLevel(LevelDifficulty.Easy));
-                }
+                    // select current sort mode again (toggle inverting)
+                    if (Input.GetKeyDown(KeyCode.Y))
+                    {
+                        _sortButtonGroup[_sortButtonLastPushedIndex].Button.onClick.Invoke();
+                    }
 
-                if (Input.GetKeyDown(KeyCode.V))
-                {
-                    this._levelSelectionFlowCoordinator.HandleLevelDetailViewControllerDidPressPlayButton(this._levelDetailViewController);
-                }
+                    // filter playlists
+                    if (Input.GetKeyDown(KeyCode.P))
+                    {
+                        onPlaylistButtonClickEvent();
+                    }
 
-                // change song index
-                if (isShiftKeyDown && Input.GetKeyDown(KeyCode.N))
-                {
-                    _pageUpTenPercent.onClick.Invoke();
-                }
-                else if (Input.GetKeyDown(KeyCode.N))
-                {
-                    _lastRow = (_lastRow - 1) != -1 ? (_lastRow - 1) % this._model.SortedSongList.Count : 0;
-                    this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[_lastRow].levelID);
-                }
+                    // filter search
+                    if (Input.GetKeyDown(KeyCode.S))
+                    {
+                        onSearchButtonClickEvent();
+                    }
 
-                if (isShiftKeyDown && Input.GetKeyDown(KeyCode.M))
-                {
-                    _pageDownTenPercent.onClick.Invoke();
-                }
-                else if (Input.GetKeyDown(KeyCode.M))
-                {
-                    _lastRow = (_lastRow + 1) % this._model.SortedSongList.Count;
-                    this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[_lastRow].levelID);
-                }
+                    // filter favorites
+                    if (Input.GetKeyDown(KeyCode.F))
+                    {
+                        onFavoriteFilterButtonClickEvent();
+                    }
 
-                // add to favorites
-                if (Input.GetKeyDown(KeyCode.F))
+                    // delete
+                    if (Input.GetKeyDown(KeyCode.D))
+                    {
+                        _deleteButton.onClick.Invoke();
+                    }
+
+                    // c - select difficulty for top song
+                    if (Input.GetKeyDown(KeyCode.C))
+                    {
+                        this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[0].levelID);
+                        this._levelDifficultyViewController.HandleDifficultyTableViewDidSelectRow(null, 0);
+                        this._levelSelectionFlowCoordinator.HandleDifficultyViewControllerDidSelectDifficulty(_levelDifficultyViewController, _model.SortedSongList[0].GetDifficultyLevel(LevelDifficulty.Easy));
+                    }
+
+                    // v start a song or enter a folder
+                    if (Input.GetKeyDown(KeyCode.Return))
+                    {
+                        if (_playButton.isActiveAndEnabled)
+                        {
+                            _playButton.onClick.Invoke();
+                        }
+                        else if (_enterFolderButton.isActiveAndEnabled)
+                        {
+                            _enterFolderButton.onClick.Invoke();
+                        }
+                    }
+
+                    // backspace - up a folder
+                    if (Input.GetKeyDown(KeyCode.Backspace))
+                    {
+                        _upFolderButton.onClick.Invoke();
+                    }
+
+                    // change song index
+                    if (isShiftKeyDown && Input.GetKeyDown(KeyCode.N))
+                    {
+                        _pageUpTenPercent.onClick.Invoke();
+                    }
+                    else if (Input.GetKeyDown(KeyCode.N))
+                    {
+                        _lastRow = (_lastRow - 1) != -1 ? (_lastRow - 1) % this._model.SortedSongList.Count : 0;
+                        this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[_lastRow].levelID);
+                    }
+
+                    if (isShiftKeyDown && Input.GetKeyDown(KeyCode.M))
+                    {
+                        _pageDownTenPercent.onClick.Invoke();
+                    }
+                    else if (Input.GetKeyDown(KeyCode.M))
+                    {
+                        _lastRow = (_lastRow + 1) % this._model.SortedSongList.Count;
+                        this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[_lastRow].levelID);
+                    }
+
+                    // add to favorites
+                    if (Input.GetKeyDown(KeyCode.KeypadPlus))
+                    {
+                        ToggleSongInFavorites();
+                    }
+                }
+                else if (_deleteDialog != null && _deleteDialog.isInViewControllerHierarchy)
                 {
-                    ToggleSongInFavorites();
+                    // accept delete
+                    if (Input.GetKeyDown(KeyCode.Return))
+                    {
+                        _deleteDialog.GetPrivateField<TextMeshProButton>("_okButton").button.onClick.Invoke();
+                    }
+
+                    if (Input.GetKeyDown(KeyCode.Escape))
+                    {
+                        _deleteDialog.GetPrivateField<TextMeshProButton>("_cancelButton").button.onClick.Invoke();
+                    }
                 }
             }
             catch (Exception e)

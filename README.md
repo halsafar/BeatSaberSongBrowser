@@ -8,24 +8,25 @@ A plugin for customizing the in-game song browser.
 ![Alt text](/Screenshot.png?raw=true "Screenshot")
 
 ## Features
-- Marking a song as favorite
-- Currently supports these sorting methods:
-  - Favorite: Anything marked favorite followed by the Default method.
+- Playlist support:
+  - BeatDrop playlists!
+- Filters:
+  - Playlist (with a playlist selector).
+  - Search (with keyboard support).
+  - Favorites (all songs you have marked as a favorite).
+- Optional folder support:
+  - Disabled by default.  See the settings file.
+- Sorting methods:
   - Song: By song name (default).
   - Author: By song author name then by song name.  
   - Original: Match the original sorting you would normally get after SongLoaderPlugin.
   - Newest: Sort songs by their last write time.
   - PlayCount: Sort by playcount (sum of play counts across all difficulties for a given song).
   - Random: Randomize the song list each time.
-  - Search: Enter a search term.
-- Clicking a sorting method will resort the song list immediately.
 - Sort buttons can be pressed a second time to invert the sorting.
 - Fast scroll buttons (jumps 10% of your song list in each press).
 
 ## Status
-- Working!
+- Working with BeatSaber 0.11.1
 
-### Known Issues
-- Might be some issues with game modes other than SoloStandard.
-- Some issues might occur if a new song is added in-game.
 

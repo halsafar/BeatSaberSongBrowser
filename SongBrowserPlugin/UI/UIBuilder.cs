@@ -78,6 +78,32 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
+        /// Very generic helper create button method.
+        /// </summary>
+        /// <param name="parent"></param>
+        /// <param name="buttonTemplate"></param>
+        /// <param name="buttonText"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="w"></param>
+        /// <param name="h"></param>
+        /// <returns></returns>
+        static public Button CreateButton(RectTransform parent, Button buttonTemplate, String buttonText, float fontSize, float x, float y, float w, float h)
+        {
+            Button newButton = UIBuilder.CreateUIButton(parent, buttonTemplate);
+
+            newButton.interactable = true;
+            (newButton.transform as RectTransform).anchoredPosition = new Vector2(x, y);
+            (newButton.transform as RectTransform).sizeDelta = new Vector2(w, h);
+
+            UIBuilder.SetButtonText(ref newButton, buttonText);
+            UIBuilder.SetButtonIconEnabled(ref newButton, false);
+            UIBuilder.SetButtonTextSize(ref newButton, fontSize);
+
+            return newButton;
+        }
+
+        /// <summary>
         /// Generic create sort button.
         /// </summary>
         /// <param name="rect"></param>
@@ -129,13 +155,13 @@ namespace SongBrowserPlugin.UI
         /// <param name="iconHeight"></param>
         /// <param name="iconRotation"></param>
         /// <returns></returns>
-        public static Button CreatePageButton(RectTransform parent, Button buttonTemplate, Sprite iconSprite, float x, float y, float w, float h, float iconWidth, float iconHeight, float iconRotation)
+        public static Button CreateIconButton(RectTransform parent, Button buttonTemplate, Sprite iconSprite, Vector2 pos, Vector2 size, Vector2 iconPos, Vector2 iconSize, Vector2 iconScale, float iconRotation)
         {
             Button newButton = UIBuilder.CreateUIButton(parent, buttonTemplate);
 
             newButton.interactable = true;
-            (newButton.transform as RectTransform).anchoredPosition = new Vector2(x, y);
-            (newButton.transform as RectTransform).sizeDelta = new Vector2(w, h);
+            (newButton.transform as RectTransform).anchoredPosition = new Vector2(pos.x, pos.y);
+            (newButton.transform as RectTransform).sizeDelta = new Vector2(size.x, size.y);
 
             RectTransform iconTransform = newButton.GetComponentsInChildren<RectTransform>(true).First(c => c.name == "Icon");
             iconTransform.gameObject.SetActive(true);
@@ -143,13 +169,14 @@ namespace SongBrowserPlugin.UI
             HorizontalLayoutGroup hgroup = iconTransform.parent.GetComponent<HorizontalLayoutGroup>();
             UnityEngine.Object.Destroy(hgroup);
 
-            iconTransform.sizeDelta = new Vector2(iconWidth, iconHeight);
-            iconTransform.localScale = new Vector2(2f, 2f);
-            iconTransform.anchoredPosition = new Vector2(0, 0);
+            iconTransform.anchoredPosition = new Vector2(iconPos.x, iconPos.y);
+            iconTransform.sizeDelta = new Vector2(iconSize.x, iconSize.y);
+            iconTransform.localScale = new Vector2(iconScale.x, iconScale.y);            
             iconTransform.Rotate(0, 0, iconRotation);
 
             UnityEngine.Object.Destroy(newButton.GetComponentsInChildren<RectTransform>(true).First(c => c.name == "Text").gameObject);
 
+            UIBuilder.SetButtonBorder(ref newButton, Color.clear);
             UIBuilder.SetButtonIcon(ref newButton, iconSprite);
 
             return newButton;
@@ -162,7 +189,7 @@ namespace SongBrowserPlugin.UI
         /// <returns></returns>
         public static Button CreateBackButton(RectTransform parent)
         {
-            Button dismissButton = CreateUIButton(parent, "BackArrowButton");  //UnityEngine.Object.Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "BackArrowButton")), parent, false);
+            Button dismissButton = CreateUIButton(parent, "BackArrowButton");
             dismissButton.onClick.RemoveAllListeners();            
             return dismissButton;
         }
@@ -184,6 +211,7 @@ namespace SongBrowserPlugin.UI
             textMesh.font = Resources.Load<TMP_FontAsset>("Teko-Medium SDF No Glow");
             textMesh.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             textMesh.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            //textMesh.rectTransform.sizeDelta = size;
             textMesh.rectTransform.sizeDelta = new Vector2(60f, 10f);
             textMesh.rectTransform.anchoredPosition = position;
 
