@@ -621,7 +621,6 @@ namespace SongBrowserPlugin
         {
             _log.Info("Sorting song list as newest.");
             _sortedSongs = levels
-                .AsQueryable()
                 .OrderBy(x => _weights.ContainsKey(x.levelID) ? _weights[x.levelID] : 0)
                 .ThenByDescending(x => x.levelID.StartsWith("Level") ? _weights[x.levelID] : _cachedLastWriteTimes[x.levelID])
                 .ToList();
@@ -631,7 +630,6 @@ namespace SongBrowserPlugin
         {
             _log.Info("Sorting song list by author");
             _sortedSongs = levels
-                .AsQueryable()
                 .OrderBy(x => x.songAuthorName)
                 .ThenBy(x => x.songName)
                 .ToList();
@@ -668,7 +666,6 @@ namespace SongBrowserPlugin
             }
 
             _sortedSongs = levels
-                .AsQueryable()
                 .OrderByDescending(x => levelIdToPlayCount[x.levelID])
                 .ThenBy(x => x.songName)
                 .ToList();
@@ -718,7 +715,6 @@ namespace SongBrowserPlugin
             }
 
             _sortedSongs = levels
-                .AsQueryable()
                 .OrderBy(x => levelIdToDifficultyValue[x.levelID])
                 .ThenBy(x => x.songName)
                 .ToList();
@@ -731,7 +727,6 @@ namespace SongBrowserPlugin
             System.Random rnd = new System.Random(Guid.NewGuid().GetHashCode());
 
             _sortedSongs = levels
-                .AsQueryable()
                 .OrderBy(x => rnd.Next())
                 .ToList();
         }        
@@ -740,7 +735,6 @@ namespace SongBrowserPlugin
         {
             _log.Info("Sorting song list as default (songName)");
             _sortedSongs = levels
-                .AsQueryable()
                 .OrderBy(x => x.songName)
                 .ThenBy(x => x.songAuthorName)
                 .ToList();
