@@ -656,20 +656,20 @@ namespace SongBrowserPlugin.UI
         private void ToggleSongInFavorites()
         {
             IStandardLevel songInfo = this._levelListViewController.selectedLevel;
-            if (_model.Settings.favorites.Contains(songInfo.levelID))
+            if (_model.Settings.Favorites.Contains(songInfo.levelID))
             {
                 _log.Info("Remove {0} from favorites", songInfo.songName);
-                _model.Settings.favorites.Remove(songInfo.levelID);
+                _model.Settings.Favorites.Remove(songInfo.levelID);
             }
             else
             {
                 _log.Info("Add {0} to favorites", songInfo.songName);
-                _model.Settings.favorites.Add(songInfo.levelID);
+                _model.Settings.Favorites.Add(songInfo.levelID);
             }
 
             RefreshAddFavoriteButton(songInfo.levelID);
 
-            _model.Settings.Save();
+            _model.Settings.SaveFavorites();
         }
 
         /// <summary>
@@ -696,7 +696,7 @@ namespace SongBrowserPlugin.UI
             }
             else
             {
-                if (_model.Settings.favorites.Contains(levelId))
+                if (_model.Settings.Favorites.Contains(levelId))
                 {
                     _currentAddFavoriteButtonSprite = _removeFavoriteSprite;
                 }
@@ -861,7 +861,7 @@ namespace SongBrowserPlugin.UI
         {
             try
             {
-                if (this._levelListViewController.isActiveAndEnabled)
+                if (this._levelListViewController != null && this._levelListViewController.isActiveAndEnabled)
                 {
                     bool isShiftKeyDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
 
@@ -955,7 +955,7 @@ namespace SongBrowserPlugin.UI
                         ToggleSongInFavorites();
                     }
                 }
-                else if (_deleteDialog.isInViewControllerHierarchy)
+                else if (_deleteDialog != null && _deleteDialog.isInViewControllerHierarchy)
                 {
                     // accept delete
                     if (Input.GetKeyDown(KeyCode.Return))

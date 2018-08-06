@@ -545,7 +545,7 @@ namespace SongBrowserPlugin
             _log.Info("Sorting song list as favorites");
             _sortedSongs = levels
                 .AsQueryable()
-                .OrderBy(x => _settings.favorites.Contains(x.levelID) == false)
+                .OrderBy(x => _settings.Favorites.Contains(x.levelID) == false)
                 .ThenBy(x => x.songName)
                 .ThenBy(x => x.songAuthorName)
                 .ToList();
