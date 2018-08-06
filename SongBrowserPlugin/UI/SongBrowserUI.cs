@@ -167,7 +167,7 @@ namespace SongBrowserPlugin.UI
                 float buttonWidth = 13.50f;
                 float buttonHeight = 5.5f;
                 float buttonX = -61;
-                float buttonY = 74.5f;
+                float buttonY = 74.0f;
 
                 string[] sortButtonNames = new string[]
                 {
@@ -290,7 +290,7 @@ namespace SongBrowserPlugin.UI
 
                     // Create up folder button
                     _upFolderButton = UIBuilder.CreateIconButton(sortButtonTransform, sortButtonTemplate, arrowIcon,
-                        new Vector2(filterButtonX + iconButtonSize.x, buttonY),
+                        new Vector2(filterButtonX + (iconButtonSize.x* filterButtonSetup.Count), buttonY),
                         new Vector2(iconButtonSize.x, iconButtonSize.y),
                         new Vector2(0f, 0f),
                         new Vector2(0.85f, 0.85f),
