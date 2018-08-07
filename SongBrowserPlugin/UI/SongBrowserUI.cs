@@ -385,6 +385,8 @@ namespace SongBrowserPlugin.UI
             else
             {
                 _model.Settings.filterMode = SongFilterMode.None;
+                UpdateSongList();
+                RefreshSongList();
             }
             _model.Settings.Save();            
         }

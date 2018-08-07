@@ -594,6 +594,14 @@ namespace SongBrowserPlugin
 
         private void FilterPlaylist()
         {
+            // bail if no playlist, usually means the settings stored one the user then moved.
+            if (this.CurrentPlaylist == null)
+            {
+                _log.Error("Trying to load a null playlist...");
+                _filteredSongs = _originalSongs;
+                return;
+            }
+
             _log.Debug("Filtering songs for playlist: {0}", this.CurrentPlaylist);
             List<String> playlistNameListOrdered = this.CurrentPlaylist.songs.Select(x => x.songName).Distinct().ToList();
             Dictionary<String, int> songNameToIndex = playlistNameListOrdered.Select((val, index) => new { Index = index, Value = val }).ToDictionary(i => i.Value, i => i.Index);
