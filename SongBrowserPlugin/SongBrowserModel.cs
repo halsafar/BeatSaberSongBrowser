@@ -227,7 +227,13 @@ namespace SongBrowserPlugin
                 ["Level1"] = 4,
                 ["Level3"] = 3,
                 ["Level8"] = 2,
-                ["Level11"] = 1
+                ["Level11"] = 1,
+
+                ["Level4OneSaber"] = 12,
+                ["Level1OneSaber"] = 11,
+                ["Level2OneSaber"] = 10,
+                ["Level9OneSaber"] = 9,
+                ["Level7OneSaber"] = 8,
             };
         }
 
@@ -295,7 +301,7 @@ namespace SongBrowserPlugin
                     _levelIdToCustomLevel.Add(level.levelID, level);
             }
 
-            _log.Debug("Song Browser knows about {0} songs from SongLoader...", _sortedSongs.Count);
+            _log.Debug("Song Browser knows about {0} songs from SongLoader...", _originalSongs.Count);
         }
 
         /// <summary>
@@ -557,6 +563,8 @@ namespace SongBrowserPlugin
 
             stopwatch.Stop();
             _log.Info("Sorting songs took {0}ms", stopwatch.ElapsedMilliseconds);
+
+            //_sortedSongs.ForEach(x => _log.Debug(x.levelID));
         }    
         
         private void FilterFavorites(List<StandardLevelSO> levels)

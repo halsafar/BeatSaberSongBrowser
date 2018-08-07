@@ -137,7 +137,8 @@ namespace SongBrowserPlugin
         /// <param name="arg2"></param>
         private void HandleSoloModeSelectionViewControllerDidSelectMode(SoloModeSelectionViewController arg1, SoloModeSelectionViewController.SubMenuType arg2)
         {
-            _log.Trace("HandleSoloModeSelectionViewControllerDidSelectMode()");
+            _log.Trace("HandleSoloModeSelectionViewControllerDidSelectMode() - GameplayMode={0}", arg2);
+            this._songBrowserUI.UpdateSongList();
             this._songBrowserUI.RefreshSongList();
         }
 
@@ -170,7 +171,11 @@ namespace SongBrowserPlugin
                 InvokeBeatSaberButton("SoloButton");
             }
 
-            if (Input.GetKeyDown(KeyCode.X))
+            if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.X))
+            {
+                InvokeBeatSaberButton("OneSaberButton");
+            }
+            else if (Input.GetKeyDown(KeyCode.X))
             {
                 InvokeBeatSaberButton("StandardButton");
             }
