@@ -1,13 +1,12 @@
-﻿using UnityEngine;
-using System.Linq;
-using System;
-using SongLoaderPlugin.OverrideClasses;
-using UnityEngine.SceneManagement;
+﻿using SongBrowserPlugin.UI;
 using SongLoaderPlugin;
-using UnityEngine.UI;
-using SongBrowserPlugin.UI;
+using SongLoaderPlugin.OverrideClasses;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace SongBrowserPlugin
 {
