@@ -116,8 +116,8 @@
     <Compile Include="UI\Playlists\PlaylistSelectionNavigationController.cs" />
     <Compile Include="UI\Playlists\PlaylistTableView.cs" />
     <Compile Include="UI\Base64Sprites.cs" />
-    <Compile Include="UI\CustomUIKeyboard.cs" />
-    <Compile Include="UI\SearchKeyboardViewController.cs" />
+    <Compile Include="UI\Keyboard\CustomUIKeyboard.cs" />
+    <Compile Include="UI\Keyboard\SearchKeyboardViewController.cs" />
     <Compile Include="UI\SongBrowserUI.cs" />
     <Compile Include="UI\SongFilterButton.cs" />
     <Compile Include="UI\SongSortButton.cs" />
