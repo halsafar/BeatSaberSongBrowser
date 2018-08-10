@@ -1,19 +1,18 @@
-﻿using HMUI;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using TMPro;
+﻿using System;
 using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
 
 namespace SongBrowserPlugin.UI
 {
-    class PlaylistSelectionMasterViewController : VRUINavigationController
+    class PlaylistSelectionNavigationController : VRUINavigationController
     {
-        private Button _dismissButton;
         public const String Name = "PlaylistSelectionMasterViewController";
+
+        public Action didDismissEvent;
+
+        private Button _dismissButton;        
+
         private Logger _log = new Logger(Name);
 
         /// <summary>
@@ -32,8 +31,7 @@ namespace SongBrowserPlugin.UI
             if (activationType == VRUIViewController.ActivationType.AddedToHierarchy)
             {
                 _log.Debug("Adding Dismiss Button");
-                _dismissButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "BackArrowButton")), this.rectTransform, false);
-                _dismissButton.onClick.RemoveAllListeners();
+                _dismissButton = UIBuilder.CreateBackButton(this.rectTransform);
                 _dismissButton.onClick.AddListener(HandleDismissButton);               
             }
         }
@@ -43,8 +41,15 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         private void HandleDismissButton()
         {
-            _log.Debug("Dismissing!");
-            this.DismissModalViewController(null, false);
+            try
+            {
+                _log.Debug("Dismissing...");
+                didDismissEvent.Invoke();
+            }
+            catch (Exception e)
+            {
+                _log.Exception("HandleDismissButton Exception: ", e);
+            }
         }
 
         /// <summary>

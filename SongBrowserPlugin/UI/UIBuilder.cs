@@ -190,7 +190,10 @@ namespace SongBrowserPlugin.UI
         public static Button CreateBackButton(RectTransform parent)
         {
             Button dismissButton = CreateUIButton(parent, "BackArrowButton");
-            dismissButton.onClick.RemoveAllListeners();            
+            UnityEngine.Object.DestroyImmediate(dismissButton.GetComponent<GameEventOnUIButtonClick>());
+            dismissButton.onClick = new Button.ButtonClickedEvent();
+            dismissButton.name = "CustomUIButton";
+
             return dismissButton;
         }
 

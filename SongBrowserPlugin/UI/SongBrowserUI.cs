@@ -49,6 +49,7 @@ namespace SongBrowserPlugin.UI
         private Button _enterFolderButton;
         private Button _upFolderButton;
         private SearchKeyboardViewController _searchViewController;
+        private PlaylistFlowCoordinator _playListFlowCoordinator;
 
         // Cached items
         private Sprite _addFavoriteSprite;
@@ -402,9 +403,12 @@ namespace SongBrowserPlugin.UI
 
             if (_model.Settings.filterMode != SongFilterMode.Playlist)
             {
-                PlaylistFlowCoordinator view = UIBuilder.CreateFlowCoordinator<PlaylistFlowCoordinator>("PlaylistFlowCoordinator");
-                view.didSelectPlaylist += HandleDidSelectPlaylist;
-                view.Present(_levelSelectionNavigationController);
+                if (_playListFlowCoordinator == null || !_playListFlowCoordinator.isActiveAndEnabled)
+                {
+                    _playListFlowCoordinator = UIBuilder.CreateFlowCoordinator<PlaylistFlowCoordinator>("PlaylistFlowCoordinator");
+                    _playListFlowCoordinator.didSelectPlaylist += HandleDidSelectPlaylist;
+                    _playListFlowCoordinator.Present(_levelSelectionNavigationController);
+                }                
             }
             else
             {
@@ -609,10 +613,25 @@ namespace SongBrowserPlugin.UI
         /// <param name="p"></param>
         private void HandleDidSelectPlaylist(Playlist p)
         {
-            _log.Debug("Showing songs for playlist: {0}", p.playlistTitle);
-            _model.Settings.filterMode = SongFilterMode.Playlist;
-            _model.CurrentPlaylist = p;
-            _model.Settings.Save();
+            if (_playListFlowCoordinator != null)
+            {
+                _levelSelectionNavigationController.PopViewControllerImmediately();
+                _playListFlowCoordinator.gameObject.SetActive(false);
+                UnityEngine.Object.DestroyImmediate(_playListFlowCoordinator);
+            }
+
+            if (p != null)
+            {
+                _log.Debug("Showing songs for playlist: {0}", p.playlistTitle);
+                _model.Settings.filterMode = SongFilterMode.Playlist;
+                _model.CurrentPlaylist = p;
+                _model.Settings.Save();
+            }
+            else
+            {
+                _log.Debug("No playlist selected");
+            }
+
             this.UpdateSongList();
             this.RefreshSongList();
         }

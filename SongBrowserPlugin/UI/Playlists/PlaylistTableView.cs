@@ -40,6 +40,12 @@ namespace SongBrowserPlugin.UI
             
         }
 
+        public virtual void OnDestroy()
+        {
+            _log.Trace("OnDestroy()");
+            Destroy(this._tableView);
+        }
+
         /// <summary>
         /// Setup the tableview.
         /// </summary>

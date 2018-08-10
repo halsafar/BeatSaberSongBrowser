@@ -1,9 +1,6 @@
 ﻿using SongBrowserPlugin.DataAccess;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 using VRUI;
 
@@ -15,14 +12,19 @@ namespace SongBrowserPlugin.UI
 
         private Logger _log = new Logger(Name);
 
-        private PlaylistTableView _tableView;
+        private PlaylistTableView _playlistTableView;
 
-        PlaylistsReader _playlistsReader;        
+        private PlaylistsReader _playlistsReader;        
 
-        public Action<PlaylistSelectionListViewController> didSelectPlaylistEvent;
+        public Action<PlaylistSelectionListViewController> didSelectPlaylistRowEvent;
 
         public Playlist SelectedPlaylist { get; private set; }
 
+        /// <summary>
+        /// Instantiate the playlist table view.
+        /// </summary>
+        /// <param name="firstActivation"></param>
+        /// <param name="activationType"></param>
         protected override void DidActivate(bool firstActivation, VRUIViewController.ActivationType activationType)
         {
             _log.Debug("DidActivate()");
@@ -37,21 +39,38 @@ namespace SongBrowserPlugin.UI
 
             base.DidActivate(firstActivation, activationType);
 
-            if (_tableView == null)
+            if (_playlistTableView == null)
             {
-                _tableView = new GameObject(name).AddComponent<PlaylistTableView>();
-                _tableView.Init(rectTransform, _playlistsReader);
+                _playlistTableView = new GameObject(name).AddComponent<PlaylistTableView>();
+                _playlistTableView.Init(rectTransform, _playlistsReader);
 
-                _tableView.didSelectPlaylistEvent += HandlePlaylistListTableViewDidSelectRow;
+                _playlistTableView.didSelectPlaylistEvent += HandlePlaylistListTableViewDidSelectRow;
             }
         }
 
+        /// <summary>
+        /// Deactivate - Destroy!
+        /// </summary>
+        /// <param name="deactivationType"></param>
+        protected override void DidDeactivate(VRUIViewController.DeactivationType deactivationType)
+        {
+            _log.Debug("DidDeactivate()");
+            this._playlistTableView.gameObject.SetActive(false);
+            Destroy(this._playlistTableView);
+            base.DidDeactivate(deactivationType);
+        }
+
+        /// <summary>
+        /// Did select a playlist row.
+        /// </summary>
+        /// <param name="tableView"></param>
+        /// <param name="row"></param>
         public virtual void HandlePlaylistListTableViewDidSelectRow(PlaylistTableView tableView, int row)
         {
             this.SelectedPlaylist = _playlistsReader.Playlists[row];
-            if (this.didSelectPlaylistEvent != null)
+            if (this.didSelectPlaylistRowEvent != null)
             {
-                this.didSelectPlaylistEvent(this);
+                this.didSelectPlaylistRowEvent(this);
             }
         }
     }
