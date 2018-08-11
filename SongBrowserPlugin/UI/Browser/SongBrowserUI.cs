@@ -718,7 +718,7 @@ namespace SongBrowserPlugin.UI
 
             RefreshAddFavoriteButton(songInfo.levelID);
 
-            _model.Settings.SaveFavorites();
+            _model.Settings.Save();
         }
 
         /// <summary>

@@ -38,9 +38,8 @@ namespace SongBrowserPlugin.DataAccess
     {
         public SongSortMode sortMode = default(SongSortMode);
         public SongFilterMode filterMode = default(SongFilterMode);
-
-        // Deprecated        
-        private List<String> _oldFavorites = default(List<String>);
+       
+        private HashSet<String> _favorites = default(HashSet<String>);
 
         public List<String> searchTerms = default(List<String>);
 
@@ -54,25 +53,7 @@ namespace SongBrowserPlugin.DataAccess
         [NonSerialized]
         private static Logger Log = new Logger("SongBrowserSettings");
 
-        [NonSerialized]
-        [XmlIgnore]
-        private HashSet<String> _favorites;
-
         [XmlArray(@"favorites")]
-        public List<String> OldFavorites
-        {
-            get
-            {
-                return _oldFavorites;
-            }
-
-            set
-            {
-                _oldFavorites = value;
-            }
-        }
-
-        [XmlIgnore]
         public HashSet<String> Favorites
         {
             get
@@ -86,7 +67,6 @@ namespace SongBrowserPlugin.DataAccess
         /// </summary>
         public SongBrowserSettings()
         {
-            _oldFavorites = new List<String>();
             searchTerms = new List<string>();
             _favorites = new HashSet<String>();
         }
@@ -104,7 +84,7 @@ namespace SongBrowserPlugin.DataAccess
         /// Path to the common favorites file location.
         /// </summary>
         /// <returns></returns>
-        public static String FavoritesFilePath()
+        public static String DownloaderFavoritesFilePath()
         {
             return Path.Combine(Environment.CurrentDirectory, "favoriteSongs.cfg");
         }
@@ -148,18 +128,10 @@ namespace SongBrowserPlugin.DataAccess
             }
 
             // Load favorites
-            if (File.Exists(SongBrowserSettings.FavoritesFilePath()))
+            if (File.Exists(SongBrowserSettings.DownloaderFavoritesFilePath()))
             {
-                retVal.Favorites.UnionWith(File.ReadAllLines(SongBrowserSettings.FavoritesFilePath()));
-            }
-
-            // if we have old favorites then this file has not been merged with favoriteSongs.cfg yet.
-            Log.Debug("Old favorites, count={0}", retVal._oldFavorites.Count);
-            if (retVal._oldFavorites.Count > 0)
-            {                
-                retVal.Favorites.UnionWith(retVal._oldFavorites);
-                retVal._oldFavorites.Clear();
-                retVal.SaveFavorites();
+                String[] downloaderFavorites = File.ReadAllLines(SongBrowserSettings.DownloaderFavoritesFilePath());
+                retVal.Favorites.UnionWith(downloaderFavorites);
             }
 
             return retVal;
@@ -180,12 +152,6 @@ namespace SongBrowserPlugin.DataAccess
             XmlSerializer serializer = new XmlSerializer(typeof(SongBrowserSettings));           
             serializer.Serialize(fs, this);            
             fs.Close();
-        }
-
-        public void SaveFavorites()
-        {
-            // dump favorites
-            File.WriteAllLines(SongBrowserSettings.FavoritesFilePath(), this.Favorites);
         }
     }
 }
