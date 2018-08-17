@@ -10,6 +10,7 @@ using System.IO;
 using SongLoaderPlugin;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace SongBrowserPlugin.UI
 {
@@ -565,11 +566,26 @@ namespace SongBrowserPlugin.UI
                 }
                 else
                 {
+                    // Just delete the song we know about.
                     FileAttributes attr = File.GetAttributes(songPath);
                     if (attr.HasFlag(FileAttributes.Directory))
                     {
                         _log.Debug("Deleting song: {0}", songPath);
                         Directory.Delete(songPath, true);
+                    }
+
+                    // check if this is in the BeatSaberDownloader format
+                    String[] splitPath = songPath.Split('/');
+                    if (splitPath.Length > 2)
+                    {
+                        String numberedDir = splitPath[splitPath.Length - 2];
+                        Regex r = new Regex(@"^\d{1,}-\d{1,}");
+                        if (r.Match(numberedDir).Success)
+                        {
+                            DirectoryInfo songNumberedDirPath = Directory.GetParent(songPath);
+                            _log.Debug("Deleting song numbered folder: {0}", songNumberedDirPath.FullName);
+                            Directory.Delete(songNumberedDirPath.FullName, true);
+                        }
                     }
                 }
 
