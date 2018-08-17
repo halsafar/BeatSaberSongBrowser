@@ -573,7 +573,16 @@ namespace SongBrowserPlugin.UI
                     }
                 }
 
-                _model.LastSelectedLevelId = null;
+                int newRow = _model.SortedSongList.FindIndex(x => x.levelID == level.levelID) - 1;
+                if (newRow > 0 && newRow < _model.SortedSongList.Count)
+                {
+                    _model.LastSelectedLevelId = _model.SortedSongList[newRow].levelID;
+                }
+                else
+                {
+                    _model.LastSelectedLevelId = null;
+                }
+
                 SongLoaderPlugin.SongLoader.Instance.RemoveSongWithPath(songPath);
                 this.UpdateSongList();
                 this.RefreshSongList();
