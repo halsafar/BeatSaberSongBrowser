@@ -57,6 +57,10 @@ namespace SongBrowserPlugin.UI
         private Sprite _removeFavoriteSprite;
         private Sprite _currentAddFavoriteButtonSprite;
 
+        // Plugin Compat checks
+        private bool _detectedTwitchPluginQueue = false;
+        private bool _checkedForTwitchPlugin = false;
+
         // Debug
         private int _sortButtonLastPushedIndex = 0;
         private int _lastRow = 0;
@@ -894,6 +898,26 @@ namespace SongBrowserPlugin.UI
         /// <param name="levelID"></param>
         private void SelectAndScrollToLevel(StandardLevelListTableView table, string levelID)
         {
+            // Check once per load
+            if (!_checkedForTwitchPlugin)
+            {
+                _log.Info("Checking for BeatSaber Twitch Integration Plugin...");
+
+                // Try to detect BeatSaber Twitch Integration Plugin
+                _detectedTwitchPluginQueue = Resources.FindObjectsOfTypeAll<VRUIViewController>().Any(x => x.name == "RequestInfo");
+
+                _log.Info("BeatSaber Twitch Integration plugin detected: " + _detectedTwitchPluginQueue);
+
+                _checkedForTwitchPlugin = true;
+            }
+
+            // Skip scrolling to level if twitch plugin has queue active.
+            if (_detectedTwitchPluginQueue)
+            {
+                _log.Debug("Skipping SelectAndScrollToLevel() because we detected Twitch Integrtion Plugin has a Queue active...");
+                return;
+            }
+
             int row = table.RowNumberForLevelID(levelID);
             TableView tableView = table.GetComponentInChildren<TableView>();
             tableView.SelectRow(row, true);
