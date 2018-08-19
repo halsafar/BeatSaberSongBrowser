@@ -579,16 +579,19 @@ namespace SongBrowserPlugin.UI
                     }
 
                     // check if this is in the BeatSaberDownloader format
-                    String[] splitPath = songPath.Split('/');
-                    if (splitPath.Length > 2)
-                    {
-                        String numberedDir = splitPath[splitPath.Length - 2];
-                        Regex r = new Regex(@"^\d{1,}-\d{1,}");
-                        if (r.Match(numberedDir).Success)
+                    if (_model.Settings.deleteNumberedSongFolder)
+                    {                        
+                        String[] splitPath = songPath.Split('/');
+                        if (splitPath.Length > 2)
                         {
-                            DirectoryInfo songNumberedDirPath = Directory.GetParent(songPath);
-                            _log.Debug("Deleting song numbered folder: {0}", songNumberedDirPath.FullName);
-                            Directory.Delete(songNumberedDirPath.FullName, true);
+                            String numberedDir = splitPath[splitPath.Length - 2];
+                            Regex r = new Regex(@"^\d{1,}-\d{1,}");
+                            if (r.Match(numberedDir).Success)
+                            {
+                                DirectoryInfo songNumberedDirPath = Directory.GetParent(songPath);
+                                _log.Debug("Deleting song numbered folder: {0}", songNumberedDirPath.FullName);
+                                Directory.Delete(songNumberedDirPath.FullName, true);
+                            }
                         }
                     }
                 }

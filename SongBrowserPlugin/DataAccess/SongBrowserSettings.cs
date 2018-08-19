@@ -49,6 +49,7 @@ namespace SongBrowserPlugin.DataAccess
 
         public bool folderSupportEnabled = false;
         public bool randomInstantQueue = false;
+        public bool deleteNumberedSongFolder = true;
 
         [NonSerialized]
         private static Logger Log = new Logger("SongBrowserSettings");
