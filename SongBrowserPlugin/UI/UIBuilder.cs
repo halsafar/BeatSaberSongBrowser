@@ -70,7 +70,7 @@ namespace SongBrowserPlugin.UI
         static public Button CreateUIButton(RectTransform parent, Button buttonTemplate)
         {
             Button btn = UnityEngine.Object.Instantiate(buttonTemplate, parent, false);
-            UnityEngine.Object.DestroyImmediate(btn.GetComponent<GameEventOnUIButtonClick>());
+            UnityEngine.Object.DestroyImmediate(btn.GetComponent<SignalOnUIButtonClick>());
             btn.onClick = new Button.ButtonClickedEvent();
             btn.name = "CustomUIButton";
 
@@ -190,7 +190,7 @@ namespace SongBrowserPlugin.UI
         public static Button CreateBackButton(RectTransform parent)
         {
             Button dismissButton = CreateUIButton(parent, "BackArrowButton");
-            UnityEngine.Object.DestroyImmediate(dismissButton.GetComponent<GameEventOnUIButtonClick>());
+            UnityEngine.Object.DestroyImmediate(dismissButton.GetComponent<SignalOnUIButtonClick>());
             dismissButton.onClick = new Button.ButtonClickedEvent();
             dismissButton.name = "CustomUIButton";
 

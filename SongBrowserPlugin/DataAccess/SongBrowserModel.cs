@@ -290,10 +290,12 @@ namespace SongBrowserPlugin
             _log.Trace("UpdateSongInfos for Gameplay Mode {0}", gameplayMode);
 
             // Get the level collection from song loader
-            SongLoaderPlugin.OverrideClasses.CustomLevelCollectionsForGameplayModes collections = SongLoaderPlugin.SongLoader.Instance.GetPrivateField<SongLoaderPlugin.OverrideClasses.CustomLevelCollectionsForGameplayModes>("_customLevelCollectionsForGameplayModes");
-            _gameplayModeCollection = collections.GetCollection(gameplayMode) as SongLoaderPlugin.OverrideClasses.CustomLevelCollectionSO;
-            _originalSongs = collections.GetLevels(gameplayMode).ToList();
+            LevelCollectionsForGameplayModes levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionsForGameplayModes>().FirstOrDefault();            
+            List<LevelCollectionsForGameplayModes.LevelCollectionForGameplayMode> levelCollectionsForGameModes = ReflectionUtil.GetPrivateField<LevelCollectionsForGameplayModes.LevelCollectionForGameplayMode[]>(levelCollections, "_collections").ToList();
+
+            _originalSongs = levelCollections.GetLevels(gameplayMode).ToList();
             _sortedSongs = _originalSongs;
+
             _levelIdToCustomLevel = new Dictionary<string, SongLoaderPlugin.OverrideClasses.CustomLevel>();
             foreach (var level in SongLoader.CustomLevels)
             {
@@ -614,8 +616,8 @@ namespace SongBrowserPlugin
             List<String> playlistNameListOrdered = this.CurrentPlaylist.songs.Select(x => x.songName).Distinct().ToList();
             Dictionary<String, int> songNameToIndex = playlistNameListOrdered.Select((val, index) => new { Index = index, Value = val }).ToDictionary(i => i.Value, i => i.Index);
             HashSet<String> songNames = new HashSet<String>(playlistNameListOrdered);
-            SongLoaderPlugin.OverrideClasses.CustomLevelCollectionsForGameplayModes collections = SongLoaderPlugin.SongLoader.Instance.GetPrivateField<SongLoaderPlugin.OverrideClasses.CustomLevelCollectionsForGameplayModes>("_customLevelCollectionsForGameplayModes");
-            List<StandardLevelSO> songList = collections.GetLevels(_currentGamePlayMode).Where(x => songNames.Contains(x.songName)).ToList();
+            LevelCollectionsForGameplayModes levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionsForGameplayModes>().FirstOrDefault();
+            List<StandardLevelSO> songList = levelCollections.GetLevels(_currentGamePlayMode).Where(x => songNames.Contains(x.songName)).ToList();
             _log.Debug("\tMatching songs found for playlist: {0}", songList.Count);
             _originalSongs = songList;
             _filteredSongs = songList

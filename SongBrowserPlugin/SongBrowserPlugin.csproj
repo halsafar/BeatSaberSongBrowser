@@ -99,8 +99,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BeatSaverApi\BeatSaverApi.cs" />
-    <Compile Include="BeatSaverApi\BeatSaverAPIResults.cs" />
     <Compile Include="DataAccess\Playlist.cs" />
     <Compile Include="DataAccess\PlaylistReader.cs" />
     <Compile Include="DataAccess\PlaylistSong.cs" />

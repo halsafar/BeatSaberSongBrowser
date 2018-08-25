@@ -134,7 +134,7 @@ namespace SongBrowserPlugin
         /// </summary>
         /// <param name="arg1"></param>
         /// <param name="arg2"></param>
-        private void HandleSoloModeSelectionViewControllerDidSelectMode(SoloModeSelectionViewController arg1, SoloModeSelectionViewController.SubMenuType arg2)
+        private void HandleSoloModeSelectionViewControllerDidSelectMode(SoloModeSelectionViewController arg1, SoloModeSelectionViewController.MenuType arg2)
         {
             _log.Trace("HandleSoloModeSelectionViewControllerDidSelectMode() - GameplayMode={0}", arg2);
             this._songBrowserUI.UpdateSongList();

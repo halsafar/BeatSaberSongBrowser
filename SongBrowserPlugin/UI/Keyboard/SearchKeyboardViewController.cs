@@ -32,8 +32,8 @@ namespace SongBrowserPlugin.UI
 
                 _searchKeyboard = _searchKeyboardGO.AddComponent<CustomUIKeyboard>();
 
-                _searchKeyboard.uiKeyboardKeyEvent = delegate (char input) { _inputString += input; UpdateInputText(); };
-                _searchKeyboard.uiKeyboardDeleteEvent = delegate () { _inputString = _inputString.Substring(0, _inputString.Length - 1); UpdateInputText(); };
+                _searchKeyboard.uiKeyboardKeyEvent += delegate (char input) { _inputString += input; UpdateInputText(); };
+                _searchKeyboard.uiKeyboardDeleteEvent += delegate () { _inputString = _inputString.Substring(0, _inputString.Length - 1); UpdateInputText(); };
             }
 
             if (_inputText == null)
@@ -50,13 +50,12 @@ namespace SongBrowserPlugin.UI
 
             if (_searchButton == null)
             {
-                _searchButton = UIBuilder.CreateUIButton(rectTransform, "ApplyButton");
+                _searchButton = UIBuilder.CreateUIButton(rectTransform, "SettingsButton");
                 UIBuilder.SetButtonText(ref _searchButton, "Search");
                 (_searchButton.transform as RectTransform).sizeDelta = new Vector2(30f, 10f);
-                (_searchButton.transform as RectTransform).anchoredPosition = new Vector2(-15f, 1.5f);
+                (_searchButton.transform as RectTransform).anchoredPosition = new Vector2(-65f, 1.5f);
                 _searchButton.onClick.RemoveAllListeners();
-                _searchButton.onClick.AddListener(delegate ()
-                {
+                _searchButton.onClick.AddListener(delegate () {
                     searchButtonPressed?.Invoke(_inputString);
                     DismissModalViewController(null, false);
                 });
