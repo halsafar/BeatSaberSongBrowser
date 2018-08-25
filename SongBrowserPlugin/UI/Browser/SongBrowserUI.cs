@@ -23,6 +23,7 @@ namespace SongBrowserPlugin.UI
         public const String Name = "SongBrowserUI";
 
         private const float SEGMENT_PERCENT = 0.1f;
+        private const int LIST_ITEMS_VISIBLE_AT_ONCE = 6;
 
         private Logger _log = new Logger(Name);
 
@@ -45,8 +46,8 @@ namespace SongBrowserPlugin.UI
         private SimpleDialogPromptViewController _simpleDialogPromptViewControllerPrefab;
         private SimpleDialogPromptViewController _deleteDialog;
         private Button _deleteButton;        
-        private Button _pageUpTenPercent;
-        private Button _pageDownTenPercent;
+        private Button _pageUpFastButton;
+        private Button _pageDownFastButton;
         private Button _enterFolderButton;
         private Button _upFolderButton;
         private SearchKeyboardViewController _searchViewController;
@@ -132,6 +133,9 @@ namespace SongBrowserPlugin.UI
                 this.CreateUIElements();
 
                 _levelListViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
+
+                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelListTableView, "_tableView");
+                tableView.didSelectRowEvent += HandleDidSelectTableViewRow;
             }
             catch (Exception e)
             {
@@ -260,25 +264,25 @@ namespace SongBrowserPlugin.UI
                 });
 
                 // Create fast scroll buttons
-                _pageUpTenPercent = UIBuilder.CreateIconButton(sortButtonTransform, otherButtonTemplate, arrowIcon,
+                _pageUpFastButton = UIBuilder.CreateIconButton(sortButtonTransform, otherButtonTemplate, arrowIcon,
                     new Vector2(15, 67.5f),
                     new Vector2(6.0f, 5.5f),
                     new Vector2(0f, 0f),
                     new Vector2(1.5f, 1.5f),
                     new Vector2(2.0f, 2.0f), 
                     180);
-                _pageUpTenPercent.onClick.AddListener(delegate () {
+                _pageUpFastButton.onClick.AddListener(delegate () {
                     this.JumpSongList(-1, SEGMENT_PERCENT);
                 });
 
-                _pageDownTenPercent = UIBuilder.CreateIconButton(sortButtonTransform, otherButtonTemplate, arrowIcon,
+                _pageDownFastButton = UIBuilder.CreateIconButton(sortButtonTransform, otherButtonTemplate, arrowIcon,
                     new Vector2(15, 0.5f),
                     new Vector2(6.0f, 5.5f),
                     new Vector2(0f, 0f),
                     new Vector2(1.5f, 1.5f),
                     new Vector2(2.0f, 2.0f), 
                     0);
-                _pageDownTenPercent.onClick.AddListener(delegate () {
+                _pageDownFastButton.onClick.AddListener(delegate () {
                     this.JumpSongList(1, SEGMENT_PERCENT);
                 });
 
@@ -467,7 +471,7 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
-        /// 
+        /// Turn play button into enter folder button.
         /// </summary>
         private void HandleDidSelectFolderRow(IStandardLevel level)
         {
@@ -476,7 +480,7 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
-        /// 
+        /// Turn enter folder button into play button.
         /// </summary>
         /// <param name="level"></param>
         private void HandleDidSelectLevelRow(IStandardLevel level)
@@ -486,6 +490,17 @@ namespace SongBrowserPlugin.UI
                 _enterFolderButton.gameObject.SetActive(false);
             }
             _playButton.gameObject.SetActive(true);
+        }
+
+        /// <summary>
+        /// Track the current row.
+        /// </summary>
+        /// <param name="tableView"></param>
+        /// <param name="row"></param>
+        private void HandleDidSelectTableViewRow(TableView tableView, int row)
+        {
+            _log.Trace("HandleDidSelectTableViewRow({0})", row);
+            _lastRow = row;
         }
 
         /// <summary>
@@ -716,18 +731,27 @@ namespace SongBrowserPlugin.UI
             int totalSize = _model.SortedSongList.Count;
             int segmentSize = (int)(totalSize * segmentPercent);
 
-            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelListTableView, "_tableView");
-            HashSet<int> rows = tableView.GetPrivateField<HashSet<int>>("_selectedRows");
-            int listSegment = (rows.First() / segmentSize);
-            int newSegment = listSegment + numJumps;
-            int newRow = 0;
-            if (newSegment > 0)
+            // Jump at least one scree size.
+            if (segmentSize < LIST_ITEMS_VISIBLE_AT_ONCE)
             {
-                newRow = Math.Min(newSegment * segmentSize, totalSize - 1);
-            }                       
+                segmentSize = LIST_ITEMS_VISIBLE_AT_ONCE;
+            }
 
-            _log.Debug("ListSegment: {0}, newRow: {1}", listSegment, newRow);
-
+            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelListTableView, "_tableView");
+            int jumpDirection = Math.Sign(numJumps);
+            int newRow = _lastRow + (jumpDirection * segmentSize);
+            
+            if (newRow <= 0)
+            {
+                newRow = 0;
+            }
+            else if (newRow >= totalSize)
+            {
+                newRow = totalSize - 1;
+            }
+            
+            _log.Debug("jumpDirection: {0}, newRow: {1}", jumpDirection, newRow);
+            _lastRow = newRow;
             this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[newRow].levelID);
         }
 
@@ -759,10 +783,10 @@ namespace SongBrowserPlugin.UI
         private void RefreshQuickScrollButtons()
         {
             // Refresh the fast scroll buttons
-            _pageUpTenPercent.interactable = _tableViewPageUpButton.interactable;
-            _pageUpTenPercent.gameObject.SetActive(_tableViewPageUpButton.IsActive());
-            _pageDownTenPercent.interactable = _tableViewPageDownButton.interactable;
-            _pageDownTenPercent.gameObject.SetActive(_tableViewPageDownButton.IsActive());
+            _pageUpFastButton.interactable = _tableViewPageUpButton.interactable;
+            _pageUpFastButton.gameObject.SetActive(_tableViewPageUpButton.IsActive());
+            _pageDownFastButton.interactable = _tableViewPageDownButton.interactable;
+            _pageDownFastButton.gameObject.SetActive(_tableViewPageDownButton.IsActive());
         }
 
         /// <summary>
@@ -1032,7 +1056,7 @@ namespace SongBrowserPlugin.UI
                     // change song index
                     if (isShiftKeyDown && Input.GetKeyDown(KeyCode.N))
                     {
-                        _pageUpTenPercent.onClick.Invoke();
+                        _pageUpFastButton.onClick.Invoke();
                     }
                     else if (Input.GetKeyDown(KeyCode.N))
                     {
@@ -1042,7 +1066,7 @@ namespace SongBrowserPlugin.UI
 
                     if (isShiftKeyDown && Input.GetKeyDown(KeyCode.M))
                     {
-                        _pageDownTenPercent.onClick.Invoke();
+                        _pageDownFastButton.onClick.Invoke();
                     }
                     else if (Input.GetKeyDown(KeyCode.M))
                     {
