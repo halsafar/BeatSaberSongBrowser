@@ -27,6 +27,6 @@ A plugin for customizing the in-game song browser.
 - Fast scroll buttons (jumps 10% of your song list in each press).
 
 ## Status
-- Working with BeatSaber 0.11.1
+- Working with BeatSaber 0.11.2
 
 
