@@ -67,9 +67,14 @@ namespace SongBrowserPlugin.UI
 
                     _tableView.dataSource = this;
 
+                    Mask viewportMask = Instantiate(Resources.FindObjectsOfTypeAll<Mask>().First(), _tableView.transform, false);
+                    viewportMask.transform.DetachChildren();
+                    _tableView.GetComponentsInChildren<RectTransform>().First(x => x.name == "Content").transform.SetParent(viewportMask.rectTransform, false);
+
+
                     (_tableView.transform as RectTransform).anchorMin = new Vector2(0f, 0.5f);
                     (_tableView.transform as RectTransform).anchorMax = new Vector2(1f, 0.5f);
-                    (_tableView.transform as RectTransform).sizeDelta = new Vector2(0f, 50f);
+                    (_tableView.transform as RectTransform).sizeDelta = new Vector2(0f, 60f);
                     (_tableView.transform as RectTransform).position = new Vector3(0f, 0f, 2.4f);
                     (_tableView.transform as RectTransform).anchoredPosition = new Vector3(0f, 3f);
 
@@ -82,11 +87,19 @@ namespace SongBrowserPlugin.UI
                     (pageUpButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 1f);
                     (pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -14f);
                     pageUpButton.interactable = true;
+                    pageUpButton.onClick.AddListener(delegate ()
+                    {
+                        _tableView.PageScrollUp();
+                    });
 
                     (pageDownButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0f);
                     (pageDownButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0f);
                     (pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 8f);
                     pageDownButton.interactable = true;
+                    pageDownButton.onClick.AddListener(delegate ()
+                    {
+                        _tableView.PageScrollDown();
+                    });
 
                     _tableView.SetPrivateField("_pageUpButton", pageUpButton);
                     _tableView.SetPrivateField("_pageDownButton", pageDownButton);
