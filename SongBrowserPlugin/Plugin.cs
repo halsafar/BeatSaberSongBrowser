@@ -13,7 +13,7 @@ namespace SongBrowserPlugin
 
         public string Version
         {
-            get { return "v2.2.7"; }
+            get { return "v2.2.8"; }
         }
 
         public void OnApplicationStart()
