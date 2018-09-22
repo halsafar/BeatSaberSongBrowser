@@ -76,7 +76,7 @@ namespace SongBrowserPlugin.UI
                     (_tableView.transform as RectTransform).anchorMax = new Vector2(1f, 0.5f);
                     (_tableView.transform as RectTransform).sizeDelta = new Vector2(0f, 60f);
                     (_tableView.transform as RectTransform).position = new Vector3(0f, 0f, 2.4f);
-                    (_tableView.transform as RectTransform).anchoredPosition = new Vector3(0f, 3f);
+                    (_tableView.transform as RectTransform).anchoredPosition = new Vector3(0f, -3f);
 
                     _tableView.didSelectRowEvent += HandleDidSelectRowEvent;
 
