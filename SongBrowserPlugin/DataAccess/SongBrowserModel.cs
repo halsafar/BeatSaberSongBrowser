@@ -89,9 +89,10 @@ namespace SongBrowserPlugin
         private List<StandardLevelSO> _sortedSongs;
         private List<StandardLevelSO> _originalSongs;
         private Dictionary<String, SongLoaderPlugin.OverrideClasses.CustomLevel> _levelIdToCustomLevel;
-        private SongLoaderPlugin.OverrideClasses.CustomLevelCollectionSO _gameplayModeCollection;
+        //private SongLoaderPlugin.OverrideClasses.CustomLevelCollectionSO _gameplayModeCollection;
         private Dictionary<String, double> _cachedLastWriteTimes;
         private Dictionary<string, int> _weights;
+        private Dictionary<string, ScoreSaberData> _ppMapping = null;
         private Dictionary<String, DirectoryNode> _directoryTree;
         private Stack<DirectoryNode> _directoryStack = new Stack<DirectoryNode>();
 
@@ -132,6 +133,14 @@ namespace SongBrowserPlugin
             get
             {
                 return _levelIdToCustomLevel;
+            }
+        }
+
+        public Dictionary<string, ScoreSaberData> PpMapping
+        {
+            get
+            {
+                return _ppMapping;
             }
         }
 
@@ -278,8 +287,9 @@ namespace SongBrowserPlugin
 
             // Update song Infos, directory tree, and sort
             this.UpdateSongInfos(_currentGamePlayMode);
+            this.UpdatePpMappings();
             this.UpdateDirectoryTree(customSongsPath);
-            this.ProcessSongList();                       
+            this.ProcessSongList();
         }
 
         /// <summary>
@@ -290,7 +300,7 @@ namespace SongBrowserPlugin
             _log.Trace("UpdateSongInfos for Gameplay Mode {0}", gameplayMode);
 
             // Get the level collection from song loader
-            LevelCollectionsForGameplayModes levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionsForGameplayModes>().FirstOrDefault();            
+            LevelCollectionsForGameplayModes levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionsForGameplayModes>().FirstOrDefault();
             List<LevelCollectionsForGameplayModes.LevelCollectionForGameplayMode> levelCollectionsForGameModes = ReflectionUtil.GetPrivateField<LevelCollectionsForGameplayModes.LevelCollectionForGameplayMode[]>(levelCollections, "_collections").ToList();
 
             _originalSongs = levelCollections.GetLevels(gameplayMode).ToList();
@@ -304,6 +314,55 @@ namespace SongBrowserPlugin
             }
 
             _log.Debug("Song Browser knows about {0} songs from SongLoader...", _originalSongs.Count);
+        }
+
+        /// <summary>
+        /// Parse the current pp data file.
+        /// </summary>
+        private void UpdatePpMappings()
+        {
+            _log.Trace("UpdatePpMappings()");
+
+            ScoreSaberDataFile ppDataFile = ScoreSaberDatabaseDownloader.Instance.ScoreSaberDataFile;
+
+            _ppMapping = new Dictionary<string, ScoreSaberData>();
+
+            // bail
+            if (ppDataFile == null)
+            {
+                _log.Warning("Cannot fetch song difficulty data tsv file from DuoVR");
+                return;
+            }
+
+            foreach (var level in SongLoader.CustomLevels)
+            {
+                ScoreSaberData ppData = null;
+
+                Regex versionRegex = new Regex(@".*/(?<version>[0-9]*-[0-9]*)/");
+                Match m = versionRegex.Match(level.customSongInfo.path);
+                if (m.Success)
+                {
+                    String version = m.Groups["version"].Value;
+                    if (ppDataFile.SongVersionToPp.ContainsKey(version))
+                    {
+                        ppData = ppDataFile.SongVersionToPp[version];
+                    }
+                }
+
+                if (ppData == null)
+                {
+                    if (ppDataFile.SongVersionToPp.ContainsKey(level.songName))
+                    {
+                        ppData = ppDataFile.SongVersionToPp[level.songName];
+                    }
+                }
+
+                if (ppData != null)
+                {
+                    //_log.Debug("{0} = {1}pp", level.songName, pp);
+                    _ppMapping.Add(level.levelID, ppData);
+                }
+            }            
         }
 
         /// <summary>
@@ -475,7 +534,7 @@ namespace SongBrowserPlugin
         /// <summary>
         /// Sort the song list based on the settings.
         /// </summary>
-        private void ProcessSongList()
+        public void ProcessSongList()
         {
             _log.Trace("ProcessSongList()");
 
@@ -545,6 +604,9 @@ namespace SongBrowserPlugin
                     break;
                 case SongSortMode.PlayCount:
                     SortPlayCount(_filteredSongs, _currentGamePlayMode);
+                    break;
+                case SongSortMode.PP:
+                    SortPerformancePoints(_filteredSongs);
                     break;
                 case SongSortMode.Difficulty:
                     SortDifficulty(_filteredSongs);
@@ -628,11 +690,7 @@ namespace SongBrowserPlugin
         private void SortOriginal(List<StandardLevelSO> levels)
         {
             _log.Info("Sorting song list as original");
-            _sortedSongs = levels;/*levels
-                .AsQueryable()
-                .OrderByDescending(x => _weights.ContainsKey(x.levelID) ? _weights[x.levelID] : 0)
-                .ThenBy(x => x.songName)
-                .ToList();*/
+            _sortedSongs = levels;
         }
 
         private void SortNewest(List<StandardLevelSO> levels)
@@ -686,6 +744,15 @@ namespace SongBrowserPlugin
             _sortedSongs = levels
                 .OrderByDescending(x => levelIdToPlayCount[x.levelID])
                 .ThenBy(x => x.songName)
+                .ToList();
+        }
+
+        private void SortPerformancePoints(List<StandardLevelSO> levels)
+        {
+            _log.Info("Sorting song list by performance points...");
+
+            _sortedSongs = levels
+                .OrderByDescending(x => _ppMapping.ContainsKey(x.levelID) ? _ppMapping[x.levelID].maxPp : 0)
                 .ToList();
         }
 

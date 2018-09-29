@@ -17,6 +17,7 @@ namespace SongBrowserPlugin.DataAccess
         PlayCount,
         Difficulty,
         Random,
+        PP,
 
         // Deprecated
         Favorites,

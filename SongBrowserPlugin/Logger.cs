@@ -86,7 +86,7 @@ namespace SongBrowserPlugin
         public void Exception(string message, Exception e)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("[" + loggerName + " @ " + DateTime.Now.ToString("HH:mm") + "] " + String.Format("{0}-{1}\n{2}", message, e.Message, e.StackTrace));
+            Console.WriteLine("[" + loggerName + " @ " + DateTime.Now.ToString("HH:mm") + "] " + String.Format("{0}-{1}-{2}\n{3}", message, e.GetType().FullName, e.Message, e.StackTrace));
             ResetForegroundColor();
         }
 

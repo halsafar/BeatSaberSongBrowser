@@ -38,7 +38,7 @@ namespace SongBrowserPlugin.UI
 
             if (_inputText == null)
             {
-                _inputText = UIBuilder.CreateText(rectTransform, "Search...", new Vector2(0f, -11.5f));
+                _inputText = UIBuilder.CreateText(rectTransform, "Search...", new Vector2(0f, -11.5f), new Vector2(60f, 10f));
                 _inputText.alignment = TextAlignmentOptions.Center;
                 _inputText.fontSize = 6f;
             }

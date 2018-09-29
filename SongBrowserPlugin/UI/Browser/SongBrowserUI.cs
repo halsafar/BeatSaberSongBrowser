@@ -11,6 +11,7 @@ using SongLoaderPlugin;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using TMPro;
 
 namespace SongBrowserPlugin.UI
 {
@@ -52,6 +53,8 @@ namespace SongBrowserPlugin.UI
         private Button _upFolderButton;
         private SearchKeyboardViewController _searchViewController;
         private PlaylistFlowCoordinator _playListFlowCoordinator;
+        private TextMeshProUGUI _ppText;
+        private TextMeshProUGUI _starText;
 
         // Cached items
         private Sprite _addFavoriteSprite;
@@ -181,12 +184,12 @@ namespace SongBrowserPlugin.UI
 
                 string[] sortButtonNames = new string[]
                 {
-                    "Song", "Author", "Original", "Newest", "Plays", "Difficult", "Random"
+                    "Song", "Author", "Original", "Newest", "Plays", "PP", "Difficult", "Random"
                 };
 
                 SongSortMode[] sortModes = new SongSortMode[]
                 {
-                    SongSortMode.Default, SongSortMode.Author, SongSortMode.Original, SongSortMode.Newest, SongSortMode.PlayCount, SongSortMode.Difficulty, SongSortMode.Random
+                    SongSortMode.Default, SongSortMode.Author, SongSortMode.Original, SongSortMode.Newest, SongSortMode.PlayCount, SongSortMode.PP, SongSortMode.Difficulty, SongSortMode.Random
                 };
 
                 _sortButtonGroup = new List<SongSortButton>();
@@ -314,7 +317,7 @@ namespace SongBrowserPlugin.UI
                         this.RefreshDirectoryButtons();
                     });
                 }
-
+                
                 RefreshSortButtonUI();
                 RefreshDirectoryButtons();
             }
@@ -340,6 +343,7 @@ namespace SongBrowserPlugin.UI
             _model.Settings.sortMode = sortMode;
             _model.Settings.Save();
 
+            //this._model.ProcessSongList();
             UpdateSongList();
             RefreshSongList();
 
@@ -485,11 +489,67 @@ namespace SongBrowserPlugin.UI
         /// <param name="level"></param>
         private void HandleDidSelectLevelRow(IStandardLevel level)
         {
+            // deal with enter folder button
             if (_enterFolderButton != null)
             {
                 _enterFolderButton.gameObject.SetActive(false);
             }
             _playButton.gameObject.SetActive(true);
+
+            // display pp potentially
+            if (this._model.PpMapping != null && this._levelDifficultyViewController.selectedDifficultyLevel != null)
+            {
+                if (this._ppText == null)
+                {
+                    // Create the PP and Star rating labels
+                    //RectTransform bmpTextRect = Resources.FindObjectsOfTypeAll<RectTransform>().First(x => x.name == "BPMText");
+                    var text = UIBuilder.CreateText(this._levelDetailViewController.rectTransform, "PP", new Vector2(-5, -41), new Vector2(20f, 10f));
+                    text.fontSize = 3.5f;
+                    text.alignment = TextAlignmentOptions.Left;
+                    text = UIBuilder.CreateText(this._levelDetailViewController.rectTransform, "STAR", new Vector2(-5, -22), new Vector2(20f, 10f));
+                    text.fontSize = 3.5f;
+                    text.alignment = TextAlignmentOptions.Left;
+
+                    RectTransform bmpValueTextRect = Resources.FindObjectsOfTypeAll<RectTransform>().First(x => x.name == "BPMValueText");
+
+                    _ppText = UIBuilder.CreateText(this._levelDetailViewController.rectTransform, "?", new Vector2(bmpValueTextRect.anchoredPosition.x, -41), new Vector2(39f, 10f));
+                    _ppText.fontSize = 3.5f;
+                    _ppText.alignment = TextAlignmentOptions.Right;
+
+                    _starText = UIBuilder.CreateText(this._levelDetailViewController.rectTransform, "", new Vector2(bmpValueTextRect.anchoredPosition.x, -22), new Vector2(39f, 10f));
+                    _starText.fontSize = 3.5f;
+                    _starText.alignment = TextAlignmentOptions.Right;
+                }
+
+                LevelDifficulty difficulty = this._levelDifficultyViewController.selectedDifficultyLevel.difficulty;
+                string difficultyString = difficulty.ToString();
+
+                _log.Debug("Checking if have info for song {0}", level.songName);
+                if (this._model.PpMapping.ContainsKey(level.levelID))
+                {
+                    _log.Debug("Checking if have difficulty for song {0} difficulty {1}", level.songName, difficultyString);
+                    ScoreSaberData ppData = this._model.PpMapping[level.levelID];
+                    if (ppData.difficultyToSaberDifficulty.ContainsKey(difficultyString))
+                    {
+                        _log.Debug("Display pp for song.");
+                        float pp = ppData.difficultyToSaberDifficulty[difficultyString].pp;
+                        float star = ppData.difficultyToSaberDifficulty[difficultyString].star;
+
+                        _ppText.SetText(String.Format("{0:0.##}", pp));
+                        _starText.SetText(String.Format("{0:0.##}", star));
+                    }
+                    else
+                    {
+                        _ppText.SetText("?");
+                        _starText.SetText("?");
+                    }
+                }
+                else
+                {
+                    _ppText.SetText("?");
+                    _starText.SetText("?");
+                }
+            }            
         }
 
         /// <summary>

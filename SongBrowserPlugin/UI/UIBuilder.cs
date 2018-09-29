@@ -204,7 +204,7 @@ namespace SongBrowserPlugin.UI
         /// <param name="text"></param>
         /// <param name="position"></param>
         /// <returns></returns>
-        static public TextMeshProUGUI CreateText(RectTransform parent, string text, Vector2 position)
+        static public TextMeshProUGUI CreateText(RectTransform parent, string text, Vector2 position, Vector2 width)
         {
             TextMeshProUGUI textMesh = new GameObject("TextMeshProUGUI_GO").AddComponent<TextMeshProUGUI>();
             textMesh.rectTransform.SetParent(parent, false);
@@ -215,7 +215,7 @@ namespace SongBrowserPlugin.UI
             textMesh.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             textMesh.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             //textMesh.rectTransform.sizeDelta = size;
-            textMesh.rectTransform.sizeDelta = new Vector2(60f, 10f);
+            textMesh.rectTransform.sizeDelta = width;
             textMesh.rectTransform.anchoredPosition = position;
 
             return textMesh;

@@ -18,6 +18,8 @@ namespace SongBrowserPlugin
 
         // Song Browser UI Elements
         private SongBrowserUI _songBrowserUI;
+        private ScoreSaberDatabaseDownloader _ppDownloader;
+
         public Dictionary<String, Sprite> CachedIcons;
 
         /// <summary>
@@ -29,7 +31,7 @@ namespace SongBrowserPlugin
             {
                 return;
             }
-            new GameObject("BeatSaber SongBrowser Mod").AddComponent<SongBrowserApplication>();
+            new GameObject("BeatSaber SongBrowser Mod").AddComponent<SongBrowserApplication>();            
         }
 
         /// <summary>
@@ -42,6 +44,7 @@ namespace SongBrowserPlugin
             Instance = this;
 
             _songBrowserUI = gameObject.AddComponent<SongBrowserUI>();
+            _ppDownloader = gameObject.AddComponent<ScoreSaberDatabaseDownloader>();
         }
 
         /// <summary>

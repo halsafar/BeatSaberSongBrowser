@@ -26,19 +26,22 @@ namespace SongBrowserPlugin.UI
         {
             _playlistTitleText = UIBuilder.CreateText(this.transform as RectTransform,
                 playlist.playlistTitle,
-                new Vector2(0, -20)                
+                new Vector2(0, -20),
+                new Vector2(60f, 10f)
             );
             _playlistTitleText.alignment = TextAlignmentOptions.Center;
 
             _playlistAuthorText = UIBuilder.CreateText(this.transform as RectTransform,
                 playlist.playlistAuthor,
-                new Vector2(0, -30)
+                new Vector2(0, -30),
+                new Vector2(60f, 10f)
             );
             _playlistAuthorText.alignment = TextAlignmentOptions.Center;
 
             _playlistNumberOfSongs = UIBuilder.CreateText(this.transform as RectTransform,
                 playlist.songs.Count.ToString(),
-                new Vector2(0, -40)
+                new Vector2(0, -40),
+                new Vector2(60f, 10f)
             );
             _playlistNumberOfSongs.alignment = TextAlignmentOptions.Center;
 
