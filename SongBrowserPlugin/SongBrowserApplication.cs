@@ -22,6 +22,8 @@ namespace SongBrowserPlugin
 
         public Dictionary<String, Sprite> CachedIcons;
 
+        public static SongBrowserPlugin.UI.ProgressBar MainProgressBar;
+
         /// <summary>
         /// 
         /// </summary>
@@ -31,7 +33,8 @@ namespace SongBrowserPlugin
             {
                 return;
             }
-            new GameObject("BeatSaber SongBrowser Mod").AddComponent<SongBrowserApplication>();            
+            new GameObject("BeatSaber SongBrowser Mod").AddComponent<SongBrowserApplication>();
+            SongBrowserApplication.MainProgressBar = SongBrowserPlugin.UI.ProgressBar.Create();
         }
 
         /// <summary>

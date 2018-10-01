@@ -107,6 +107,7 @@
     <Compile Include="DataAccess\PlaylistSong.cs" />
     <Compile Include="DataAccess\ScoreSaberDatabase.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="UI\ProgressBar.cs" />
     <Compile Include="UI\ScoreSaberDatabaseDownloader.cs" />
     <Compile Include="SongBrowserApplication.cs" />
     <Compile Include="Plugin.cs" />

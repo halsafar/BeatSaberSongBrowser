@@ -98,6 +98,8 @@ namespace SongBrowserPlugin
 
         private GameplayMode _currentGamePlayMode;
 
+        public static Action<List<CustomLevel>> didFinishProcessingSongs;
+
         /// <summary>
         /// Toggle whether inverting the results.
         /// </summary>
@@ -271,6 +273,11 @@ namespace SongBrowserPlugin
         /// </summary>
         public void UpdateSongLists(GameplayMode gameplayMode)
         {
+            if (SongLoader.CustomLevels.Count > 0)
+            {
+                SongBrowserApplication.MainProgressBar.ShowMessage("Processing songs...");
+            }
+
             _currentGamePlayMode = gameplayMode;
 
             String customSongsPath = Path.Combine(Environment.CurrentDirectory, CUSTOM_SONGS_DIR);
@@ -290,6 +297,11 @@ namespace SongBrowserPlugin
             this.UpdatePpMappings();
             this.UpdateDirectoryTree(customSongsPath);
             this.ProcessSongList();
+
+            if (SongLoader.CustomLevels.Count > 0)
+            {
+                didFinishProcessingSongs?.Invoke(SongLoader.CustomLevels);
+            }
         }
 
         /// <summary>

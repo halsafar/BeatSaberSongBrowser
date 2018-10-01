@@ -49,6 +49,8 @@ namespace SongBrowserPlugin.UI
         /// <returns></returns>
         private IEnumerator WaitForDownload()
         {
+            SongBrowserApplication.MainProgressBar.ShowMessage("Downloading DuoVR ScoreSaber data...");
+
             _log.Info("Attempting to download: {0}", ScoreSaberDatabaseDownloader.PP_DATA_URL);
             using (UnityWebRequest www = UnityWebRequest.Get(ScoreSaberDatabaseDownloader.PP_DATA_URL))
             {
@@ -61,7 +63,8 @@ namespace SongBrowserPlugin.UI
                 try
                 {
                     this.ScoreSaberDataFile = (www.downloadHandler as CacheableDownloadHandlerScoreSaberData).ScoreSaberDataFile;
-                    _log.Info("Success!");
+                    _log.Info("Success downloading DuoVR ScoreSaber data!");
+                    SongBrowserApplication.MainProgressBar.ShowMessage("Success downloading DuoVR ScoreSaber data...");
                     onScoreSaberDataDownloaded?.Invoke();
                 }
                 catch (System.InvalidOperationException)
