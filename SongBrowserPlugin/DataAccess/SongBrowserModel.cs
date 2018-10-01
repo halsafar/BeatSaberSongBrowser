@@ -1,4 +1,5 @@
 ﻿using SongBrowserPlugin.DataAccess;
+using SongBrowserPlugin.DataAccess.FileSystem;
 using SongBrowserPlugin.UI;
 using SongLoaderPlugin;
 using SongLoaderPlugin.OverrideClasses;
@@ -12,67 +13,6 @@ using UnityEngine;
 
 namespace SongBrowserPlugin
 {
-    class FolderBeatMapData : BeatmapData
-    {
-        public FolderBeatMapData(BeatmapLineData[] beatmapLinesData, BeatmapEventData[] beatmapEventData) :
-            base(beatmapLinesData, beatmapEventData)
-        {
-        }
-    }
-
-    class FolderBeatMapDataSO : BeatmapDataSO
-    {
-        public FolderBeatMapDataSO()
-        {
-            BeatmapLineData lineData = new BeatmapLineData();
-            lineData.beatmapObjectsData = new BeatmapObjectData[0];
-            this._beatmapData = new FolderBeatMapData(
-                new BeatmapLineData[1]
-                {
-                    lineData
-                },
-                new BeatmapEventData[1]
-                {
-                    new BeatmapEventData(0, BeatmapEventType.Event0, 0)
-                });
-        }
-    }
-
-    class FolderLevel : StandardLevelSO
-    {
-        public void Init(String relativePath, String name, Sprite coverImage)
-        {
-            _songName = name;
-            _songSubName = "";
-            _songAuthorName = "Folder";
-
-            _levelID = $"Folder_{relativePath}";
-
-            var beatmapData = new FolderBeatMapDataSO();
-            var difficultyBeatmaps = new List<CustomLevel.CustomDifficultyBeatmap>();
-            var newDiffBeatmap = new CustomLevel.CustomDifficultyBeatmap(this, LevelDifficulty.Easy, 0, 0, beatmapData);
-            difficultyBeatmaps.Add(newDiffBeatmap);
-
-            var sceneInfo = Resources.Load<SceneInfo>("SceneInfo/" + "DefaultEnvironment" + "SceneInfo");
-            this.InitFull(_levelID, _songName, _songSubName, _songAuthorName, SongLoaderPlugin.SongLoader.TemporaryAudioClip, 1, 1, 1, 1, 1, 1, 1, coverImage, difficultyBeatmaps.ToArray(), sceneInfo);
-            this.InitData();
-        }
-    }
-
-    class DirectoryNode
-    {
-        public string Key { get; private set; }
-        public Dictionary<String, DirectoryNode> Nodes;
-        public List<StandardLevelSO> Levels;
-
-        public DirectoryNode(String key)
-        {
-            Key = key;
-            Nodes = new Dictionary<string, DirectoryNode>();
-            Levels = new List<StandardLevelSO>();
-        }
-    }
-
     public class SongBrowserModel
     {
         private const String CUSTOM_SONGS_DIR = "CustomSongs";
@@ -89,7 +29,6 @@ namespace SongBrowserPlugin
         private List<StandardLevelSO> _sortedSongs;
         private List<StandardLevelSO> _originalSongs;
         private Dictionary<String, SongLoaderPlugin.OverrideClasses.CustomLevel> _levelIdToCustomLevel;
-        //private SongLoaderPlugin.OverrideClasses.CustomLevelCollectionSO _gameplayModeCollection;
         private Dictionary<String, double> _cachedLastWriteTimes;
         private Dictionary<string, int> _weights;
         private Dictionary<string, ScoreSaberData> _ppMapping = null;
@@ -273,10 +212,13 @@ namespace SongBrowserPlugin
         /// </summary>
         public void UpdateSongLists(GameplayMode gameplayMode)
         {
-            if (SongLoader.CustomLevels.Count > 0)
+            /*if (SongLoader.CustomLevels.Count > 0)
             {
                 SongBrowserApplication.MainProgressBar.ShowMessage("Processing songs...");
-            }
+            }*/
+
+            Stopwatch timer = new Stopwatch();
+            timer.Start();
 
             _currentGamePlayMode = gameplayMode;
 
@@ -302,6 +244,9 @@ namespace SongBrowserPlugin
             {
                 didFinishProcessingSongs?.Invoke(SongLoader.CustomLevels);
             }
+
+            timer.Stop();
+            _log.Info("Updating songs infos took {0}ms", timer.ElapsedMilliseconds);
         }
 
         /// <summary>

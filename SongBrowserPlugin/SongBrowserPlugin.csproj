@@ -100,6 +100,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataAccess\FileSystem\Directory.cs" />
+    <Compile Include="DataAccess\FileSystem\Folder.cs" />
     <Compile Include="DataAccess\Network\CacheableDownloadHandler.cs" />
     <Compile Include="DataAccess\Network\CacheableDownloadHandlerScoreSaberData.cs" />
     <Compile Include="DataAccess\Playlist.cs" />
