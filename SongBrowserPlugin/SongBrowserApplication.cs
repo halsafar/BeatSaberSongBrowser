@@ -45,6 +45,7 @@ namespace SongBrowserPlugin
 
             _songBrowserUI = gameObject.AddComponent<SongBrowserUI>();
             _ppDownloader = gameObject.AddComponent<ScoreSaberDatabaseDownloader>();
+            _ppDownloader.onScoreSaberDataDownloaded += OnScoreSaberDataDownloaded;
         }
 
         /// <summary>
@@ -93,6 +94,24 @@ namespace SongBrowserPlugin
         private void OnSongLoaderLoadedSongs(SongLoader loader, List<CustomLevel> levels)
         {
             _log.Trace("OnSongLoaderLoadedSongs");
+            try
+            {
+                _songBrowserUI.UpdateSongList();
+            }
+            catch (Exception e)
+            {
+                _log.Exception("Exception during OnSongLoaderLoadedSongs: ", e);
+            }
+        }
+
+        /// <summary>
+        /// Inform browser score saber data is available.
+        /// </summary>
+        /// <param name="loader"></param>
+        /// <param name="levels"></param>
+        private void OnScoreSaberDataDownloaded()
+        {
+            _log.Trace("OnScoreSaberDataDownloaded");
             try
             {
                 _songBrowserUI.UpdateSongList();

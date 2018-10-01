@@ -18,6 +18,8 @@ namespace SongBrowserPlugin.UI
 
         public ScoreSaberDataFile ScoreSaberDataFile;
 
+        public Action onScoreSaberDataDownloaded;
+
         /// <summary>
         /// Awake.
         /// </summary>
@@ -25,7 +27,10 @@ namespace SongBrowserPlugin.UI
         {
             _log.Trace("Awake()");
 
-            Instance = this;
+            if (Instance == null)
+            {
+                Instance = this;
+            }
         }
 
         /// <summary>
@@ -57,6 +62,7 @@ namespace SongBrowserPlugin.UI
                 {
                     this.ScoreSaberDataFile = (www.downloadHandler as CacheableDownloadHandlerScoreSaberData).ScoreSaberDataFile;
                     _log.Info("Success!");
+                    onScoreSaberDataDownloaded?.Invoke();
                 }
                 catch (System.InvalidOperationException)
                 {
