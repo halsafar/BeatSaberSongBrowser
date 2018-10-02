@@ -33,6 +33,7 @@ namespace SongBrowserPlugin
         private Dictionary<String, double> _cachedLastWriteTimes;
         private Dictionary<string, int> _weights;
         private Dictionary<string, ScoreSaberData> _levelIdToScoreSaberData = null;
+        private Dictionary<string, int> _levelIdToPlayCount;
         private Dictionary<String, DirectoryNode> _directoryTree;
         private Stack<DirectoryNode> _directoryStack = new Stack<DirectoryNode>();
 
@@ -161,8 +162,10 @@ namespace SongBrowserPlugin
         /// </summary>
         public SongBrowserModel()
         {
+            _levelIdToCustomLevel = new Dictionary<string, SongLoaderPlugin.OverrideClasses.CustomLevel>();
             _cachedLastWriteTimes = new Dictionary<String, double>();
             _levelIdToScoreSaberData = new Dictionary<string, ScoreSaberData>();
+            _levelIdToPlayCount = new Dictionary<string, int>();
 
             // Weights used for keeping the original songs in order
             // Invert the weights from the game so we can order by descending and make LINQ work with us...
@@ -222,10 +225,18 @@ namespace SongBrowserPlugin
             Stopwatch timer = new Stopwatch();
             timer.Start();
 
+
+            // Get the level collection from song loader
+            LevelCollectionsForGameplayModes levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionsForGameplayModes>().FirstOrDefault();
+            List<LevelCollectionsForGameplayModes.LevelCollectionForGameplayMode> levelCollectionsForGameModes = ReflectionUtil.GetPrivateField<LevelCollectionsForGameplayModes.LevelCollectionForGameplayMode[]>(levelCollections, "_collections").ToList();
+
+            // Stash everything we need
+            _originalSongs = levelCollections.GetLevels(gameplayMode).ToList();
+            _sortedSongs = _originalSongs;
             _currentGamePlayMode = gameplayMode;
 
+            // Calculate some information about the custom song dir
             String customSongsPath = Path.Combine(Environment.CurrentDirectory, CUSTOM_SONGS_DIR);
-            String cachedSongsPath = Path.Combine(customSongsPath, ".cache");
             double currentCustomSongDirLastWriteTIme = (File.GetLastWriteTimeUtc(customSongsPath) - EPOCH).TotalMilliseconds;
             bool customSongDirChanged = false;
             if (_customSongDirLastWriteTime != currentCustomSongDirLastWriteTIme)
@@ -247,13 +258,18 @@ namespace SongBrowserPlugin
                 {
                     _cachedLastWriteTimes[level.levelID] = (File.GetLastWriteTimeUtc(level.customSongInfo.path) - EPOCH).TotalMilliseconds;
                 }
-            }
+
+                if (!_levelIdToCustomLevel.Keys.Contains(level.levelID))
+                {
+                    _levelIdToCustomLevel.Add(level.levelID, level);
+                }
+            } 
             lastWriteTimer.Stop();
             _log.Info("Determining song download time took {0}ms", lastWriteTimer.ElapsedMilliseconds);
 
             // Update song Infos, directory tree, and sort
-            this.UpdateSongInfos(_currentGamePlayMode);
             this.UpdateScoreSaberDataMapping();
+            this.UpdatePlayCounts(_currentGamePlayMode);
             this.UpdateDirectoryTree(customSongsPath);
             this.ProcessSongList();
 
@@ -264,32 +280,40 @@ namespace SongBrowserPlugin
 
             timer.Stop();
             _log.Info("Updating songs infos took {0}ms", timer.ElapsedMilliseconds);
+            _log.Debug("Song Browser knows about {0} songs from SongLoader...", _originalSongs.Count);
         }
 
         /// <summary>
-        /// Get the song infos from SongLoaderPluging
+        /// Update the gameplay play counts.
         /// </summary>
-        private void UpdateSongInfos(GameplayMode gameplayMode)
+        /// <param name="gameplayMode"></param>
+        private void UpdatePlayCounts(GameplayMode gameplayMode)
         {
-            _log.Trace("UpdateSongInfos for Gameplay Mode {0}", gameplayMode);
+            // Build a map of levelId to sum of all playcounts and sort.
+            PlayerDynamicData playerData = GameDataModel.instance.gameDynamicData.GetCurrentPlayerDynamicData();
+            IEnumerable<LevelDifficulty> difficultyIterator = Enum.GetValues(typeof(LevelDifficulty)).Cast<LevelDifficulty>();
 
-            // Get the level collection from song loader
-            LevelCollectionsForGameplayModes levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionsForGameplayModes>().FirstOrDefault();
-            List<LevelCollectionsForGameplayModes.LevelCollectionForGameplayMode> levelCollectionsForGameModes = ReflectionUtil.GetPrivateField<LevelCollectionsForGameplayModes.LevelCollectionForGameplayMode[]>(levelCollections, "_collections").ToList();
-
-            _originalSongs = levelCollections.GetLevels(gameplayMode).ToList();
-            _sortedSongs = _originalSongs;
-
-            _levelIdToCustomLevel = new Dictionary<string, SongLoaderPlugin.OverrideClasses.CustomLevel>();
-            foreach (var level in SongLoader.CustomLevels)
+            foreach (var level in _originalSongs)
             {
-                if (!_levelIdToCustomLevel.Keys.Contains(level.levelID))
+                if (!_levelIdToPlayCount.ContainsKey(level.levelID))
                 {
-                    _levelIdToCustomLevel.Add(level.levelID, level);
+                    // Skip folders
+                    if (level.levelID.StartsWith("Folder_"))
+                    {
+                        _levelIdToPlayCount.Add(level.levelID, 0);
+                    }
+                    else
+                    {
+                        int playCountSum = 0;
+                        foreach (LevelDifficulty difficulty in difficultyIterator)
+                        {
+                            PlayerLevelStatsData stats = playerData.GetPlayerLevelStatsData(level.levelID, difficulty, gameplayMode);
+                            playCountSum += stats.playCount;
+                        }
+                        _levelIdToPlayCount.Add(level.levelID, playCountSum);
+                    }
                 }
             }
-
-            _log.Debug("Song Browser knows about {0} songs from SongLoader...", _originalSongs.Count);
         }
 
         /// <summary>
@@ -694,35 +718,8 @@ namespace SongBrowserPlugin
         private void SortPlayCount(List<StandardLevelSO> levels, GameplayMode gameplayMode)
         {
             _log.Info("Sorting song list by playcount");
-            // Build a map of levelId to sum of all playcounts and sort.
-            PlayerDynamicData playerData = GameDataModel.instance.gameDynamicData.GetCurrentPlayerDynamicData();
-            IEnumerable<LevelDifficulty> difficultyIterator = Enum.GetValues(typeof(LevelDifficulty)).Cast<LevelDifficulty>();
-
-            Dictionary<string, int>  levelIdToPlayCount = new Dictionary<string, int>();
-            foreach (var level in levels)
-            {
-                if (!levelIdToPlayCount.ContainsKey(level.levelID))
-                {
-                    // Skip folders
-                    if (level.levelID.StartsWith("Folder_"))
-                    {
-                        levelIdToPlayCount.Add(level.levelID, 0);
-                    }
-                    else
-                    {
-                        int playCountSum = 0;
-                        foreach (LevelDifficulty difficulty in difficultyIterator)
-                        {
-                            PlayerLevelStatsData stats = playerData.GetPlayerLevelStatsData(level.levelID, difficulty, gameplayMode);
-                            playCountSum += stats.playCount;
-                        }
-                        levelIdToPlayCount.Add(level.levelID, playCountSum);
-                    }
-                }
-            }
-
             _sortedSongs = levels
-                .OrderByDescending(x => levelIdToPlayCount[x.levelID])
+                .OrderByDescending(x => _levelIdToPlayCount[x.levelID])
                 .ThenBy(x => x.songName)
                 .ToList();
         }
