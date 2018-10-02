@@ -79,6 +79,9 @@ namespace SongBrowserPlugin
             }
         }
 
+        /// <summary>
+        /// Map LevelID to score saber data.
+        /// </summary>
         public Dictionary<string, ScoreSaberData> LevelIdToScoreSaberData
         {
             get
