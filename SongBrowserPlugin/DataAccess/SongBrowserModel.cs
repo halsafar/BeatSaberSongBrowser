@@ -25,13 +25,14 @@ namespace SongBrowserPlugin
         private SongBrowserSettings _settings;
 
         // song list management
+        private double _customSongDirLastWriteTime = 0;
         private List<StandardLevelSO> _filteredSongs;
         private List<StandardLevelSO> _sortedSongs;
         private List<StandardLevelSO> _originalSongs;
         private Dictionary<String, SongLoaderPlugin.OverrideClasses.CustomLevel> _levelIdToCustomLevel;
         private Dictionary<String, double> _cachedLastWriteTimes;
         private Dictionary<string, int> _weights;
-        private Dictionary<string, ScoreSaberData> _ppMapping = null;
+        private Dictionary<string, ScoreSaberData> _levelIdToScoreSaberData = null;
         private Dictionary<String, DirectoryNode> _directoryTree;
         private Stack<DirectoryNode> _directoryStack = new Stack<DirectoryNode>();
 
@@ -77,11 +78,11 @@ namespace SongBrowserPlugin
             }
         }
 
-        public Dictionary<string, ScoreSaberData> PpMapping
+        public Dictionary<string, ScoreSaberData> LevelIdToScoreSaberData
         {
             get
             {
-                return _ppMapping;
+                return _levelIdToScoreSaberData;
             }
         }
 
@@ -161,6 +162,7 @@ namespace SongBrowserPlugin
         public SongBrowserModel()
         {
             _cachedLastWriteTimes = new Dictionary<String, double>();
+            _levelIdToScoreSaberData = new Dictionary<string, ScoreSaberData>();
 
             // Weights used for keeping the original songs in order
             // Invert the weights from the game so we can order by descending and make LINQ work with us...
@@ -224,19 +226,34 @@ namespace SongBrowserPlugin
 
             String customSongsPath = Path.Combine(Environment.CurrentDirectory, CUSTOM_SONGS_DIR);
             String cachedSongsPath = Path.Combine(customSongsPath, ".cache");
-            DateTime currentLastWriteTIme = File.GetLastWriteTimeUtc(customSongsPath);
+            double currentCustomSongDirLastWriteTIme = (File.GetLastWriteTimeUtc(customSongsPath) - EPOCH).TotalMilliseconds;
+            bool customSongDirChanged = false;
+            if (_customSongDirLastWriteTime != currentCustomSongDirLastWriteTIme)
+            {
+                customSongDirChanged = true;
+                _customSongDirLastWriteTime = currentCustomSongDirLastWriteTIme;
+            }
+
+            // This operation scales well
             IEnumerable<string> directories = Directory.EnumerateDirectories(customSongsPath, "*.*", SearchOption.AllDirectories);
 
-            // Get LastWriteTimes            
+            // Get LastWriteTimes   
+            Stopwatch lastWriteTimer = new Stopwatch();
+            lastWriteTimer.Start();
             foreach (var level in SongLoader.CustomLevels)
             {
-                //_log.Debug("Fetching LastWriteTime for {0}", slashed_dir);
-                _cachedLastWriteTimes[level.levelID] = (File.GetLastWriteTimeUtc(level.customSongInfo.path) - EPOCH).TotalMilliseconds;
+                // If we already know this levelID, don't both updating it.
+                if (!_cachedLastWriteTimes.ContainsKey(level.levelID) || customSongDirChanged)
+                {
+                    _cachedLastWriteTimes[level.levelID] = (File.GetLastWriteTimeUtc(level.customSongInfo.path) - EPOCH).TotalMilliseconds;
+                }
             }
+            lastWriteTimer.Stop();
+            _log.Info("Determining song download time took {0}ms", lastWriteTimer.ElapsedMilliseconds);
 
             // Update song Infos, directory tree, and sort
             this.UpdateSongInfos(_currentGamePlayMode);
-            this.UpdatePpMappings();
+            this.UpdateScoreSaberDataMapping();
             this.UpdateDirectoryTree(customSongsPath);
             this.ProcessSongList();
 
@@ -267,7 +284,9 @@ namespace SongBrowserPlugin
             foreach (var level in SongLoader.CustomLevels)
             {
                 if (!_levelIdToCustomLevel.Keys.Contains(level.levelID))
+                {
                     _levelIdToCustomLevel.Add(level.levelID, level);
+                }
             }
 
             _log.Debug("Song Browser knows about {0} songs from SongLoader...", _originalSongs.Count);
@@ -276,48 +295,52 @@ namespace SongBrowserPlugin
         /// <summary>
         /// Parse the current pp data file.
         /// </summary>
-        private void UpdatePpMappings()
+        private void UpdateScoreSaberDataMapping()
         {
-            _log.Trace("UpdatePpMappings()");
+            _log.Trace("UpdateScoreSaberDataMapping()");
 
-            ScoreSaberDataFile ppDataFile = ScoreSaberDatabaseDownloader.Instance.ScoreSaberDataFile;
-
-            _ppMapping = new Dictionary<string, ScoreSaberData>();
+            ScoreSaberDataFile scoreSaberDataFile = ScoreSaberDatabaseDownloader.Instance.ScoreSaberDataFile;
 
             // bail
-            if (ppDataFile == null)
+            if (scoreSaberDataFile == null)
             {
                 _log.Warning("Cannot fetch song difficulty data tsv file from DuoVR");
                 return;
             }
 
+            Regex versionRegex = new Regex(@".*/(?<version>[0-9]*-[0-9]*)/");
             foreach (var level in SongLoader.CustomLevels)
             {
-                ScoreSaberData ppData = null;
+                // Skip
+                if (_levelIdToScoreSaberData.ContainsKey(level.levelID))
+                {
+                    continue;
+                }
 
-                Regex versionRegex = new Regex(@".*/(?<version>[0-9]*-[0-9]*)/");
+                ScoreSaberData scoreSaberData = null;
+                
                 Match m = versionRegex.Match(level.customSongInfo.path);
                 if (m.Success)
                 {
                     String version = m.Groups["version"].Value;
-                    if (ppDataFile.SongVersionToPp.ContainsKey(version))
+                    if (scoreSaberDataFile.SongVersionToScoreSaberData.ContainsKey(version))
                     {
-                        ppData = ppDataFile.SongVersionToPp[version];
+                        scoreSaberData = scoreSaberDataFile.SongVersionToScoreSaberData[version];
                     }
                 }
 
-                if (ppData == null)
+                if (scoreSaberData == null)
                 {
-                    if (ppDataFile.SongVersionToPp.ContainsKey(level.songName))
+                    if (scoreSaberDataFile.SongVersionToScoreSaberData.ContainsKey(level.songName))
                     {
-                        ppData = ppDataFile.SongVersionToPp[level.songName];
+                        scoreSaberData = scoreSaberDataFile.SongVersionToScoreSaberData[level.songName];
                     }
                 }
 
-                if (ppData != null)
+                if (scoreSaberData != null)
                 {
                     //_log.Debug("{0} = {1}pp", level.songName, pp);
-                    _ppMapping.Add(level.levelID, ppData);
+                    _levelIdToScoreSaberData.Add(level.levelID, scoreSaberData);
                 }
             }            
         }
@@ -709,7 +732,7 @@ namespace SongBrowserPlugin
             _log.Info("Sorting song list by performance points...");
 
             _sortedSongs = levels
-                .OrderByDescending(x => _ppMapping.ContainsKey(x.levelID) ? _ppMapping[x.levelID].maxPp : 0)
+                .OrderByDescending(x => _levelIdToScoreSaberData.ContainsKey(x.levelID) ? _levelIdToScoreSaberData[x.levelID].maxPp : 0)
                 .ToList();
         }
 

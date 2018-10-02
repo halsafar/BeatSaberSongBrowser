@@ -45,13 +45,13 @@ namespace SongBrowserPlugin.DataAccess
     {
         private Logger _log = new Logger("ScoreSaberDataFile");
 
-        public Dictionary<String, ScoreSaberData> SongNameToPp;
-        public Dictionary<String, ScoreSaberData> SongVersionToPp;
+        public Dictionary<String, ScoreSaberData> SongNameToScoreSaberData;
+        public Dictionary<String, ScoreSaberData> SongVersionToScoreSaberData;
 
         public ScoreSaberDataFile(byte[] data)
         {
-            SongNameToPp = new Dictionary<string, ScoreSaberData>();
-            SongVersionToPp = new Dictionary<string, ScoreSaberData>();
+            SongNameToScoreSaberData = new Dictionary<string, ScoreSaberData>();
+            SongVersionToScoreSaberData = new Dictionary<string, ScoreSaberData>();
 
             string result = System.Text.Encoding.UTF8.GetString(data);
             string[] lines = result.Split('\n');
@@ -89,22 +89,22 @@ namespace SongBrowserPlugin.DataAccess
                 string version = m.Groups["version"].Value;
 
                 ScoreSaberData ppData = null;
-                if (!SongVersionToPp.ContainsKey(version))
+                if (!SongVersionToScoreSaberData.ContainsKey(version))
                 {
                     ppData = new ScoreSaberData();
                     ppData.version = version;
                     ppData.name = name;
 
-                    SongVersionToPp.Add(version, ppData);
+                    SongVersionToScoreSaberData.Add(version, ppData);
                 }
                 else
                 {
-                    ppData = SongVersionToPp[version];
+                    ppData = SongVersionToScoreSaberData[version];
                 }
 
-                if (!SongNameToPp.ContainsKey(name))
+                if (!SongNameToScoreSaberData.ContainsKey(name))
                 {
-                    SongNameToPp.Add(name, ppData);
+                    SongNameToScoreSaberData.Add(name, ppData);
                 }
 
                 // add difficulty  

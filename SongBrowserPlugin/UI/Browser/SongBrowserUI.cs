@@ -497,7 +497,7 @@ namespace SongBrowserPlugin.UI
             _playButton.gameObject.SetActive(true);
 
             // display pp potentially
-            if (this._model.PpMapping != null && this._levelDifficultyViewController.selectedDifficultyLevel != null)
+            if (this._model.LevelIdToScoreSaberData != null && this._levelDifficultyViewController.selectedDifficultyLevel != null)
             {
                 if (this._ppText == null)
                 {
@@ -525,10 +525,10 @@ namespace SongBrowserPlugin.UI
                 string difficultyString = difficulty.ToString();
 
                 _log.Debug("Checking if have info for song {0}", level.songName);
-                if (this._model.PpMapping.ContainsKey(level.levelID))
+                if (this._model.LevelIdToScoreSaberData.ContainsKey(level.levelID))
                 {
                     _log.Debug("Checking if have difficulty for song {0} difficulty {1}", level.songName, difficultyString);
-                    ScoreSaberData ppData = this._model.PpMapping[level.levelID];
+                    ScoreSaberData ppData = this._model.LevelIdToScoreSaberData[level.levelID];
                     if (ppData.difficultyToSaberDifficulty.ContainsKey(difficultyString))
                     {
                         _log.Debug("Display pp for song.");
