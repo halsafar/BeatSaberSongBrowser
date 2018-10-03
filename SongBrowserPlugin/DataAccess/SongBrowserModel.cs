@@ -321,8 +321,9 @@ namespace SongBrowserPlugin
 
         /// <summary>
         /// Parse the current pp data file.
+        /// Public so controllers can decide when to update it.
         /// </summary>
-        private void UpdateScoreSaberDataMapping()
+        public void UpdateScoreSaberDataMapping()
         {
             _log.Trace("UpdateScoreSaberDataMapping()");
 
@@ -557,6 +558,12 @@ namespace SongBrowserPlugin
                     _log.Debug("Missing KEY: {0}", level.levelID);
                 }
             }*/
+
+            if (_directoryStack.Count <= 0)
+            {
+                _log.Debug("Cannot process songs yet, songs infos have not been processed...");
+                return;
+            }
 
             // Playlist filter will load the original songs.
             if (this._settings.filterMode == SongFilterMode.Playlist && this.CurrentPlaylist != null)

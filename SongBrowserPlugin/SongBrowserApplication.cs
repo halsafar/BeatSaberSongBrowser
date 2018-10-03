@@ -1,4 +1,5 @@
-﻿using SongBrowserPlugin.UI;
+﻿using SongBrowserPlugin.DataAccess;
+using SongBrowserPlugin.UI;
 using SongLoaderPlugin;
 using SongLoaderPlugin.OverrideClasses;
 using System;
@@ -117,7 +118,14 @@ namespace SongBrowserPlugin
             _log.Trace("OnScoreSaberDataDownloaded");
             try
             {
-                _songBrowserUI.UpdateSongList();
+                // TODO - this should be in the SongBrowserUI which is acting like the view controller for the SongBrowser
+                _songBrowserUI.Model.UpdateScoreSaberDataMapping();
+                _songBrowserUI.RefreshScoreSaberData(null);
+                if (_songBrowserUI.Model.Settings.sortMode == SongSortMode.PP)
+                {
+                    _songBrowserUI.Model.ProcessSongList();
+                    _songBrowserUI.RefreshSongList();
+                }
             }
             catch (Exception e)
             {

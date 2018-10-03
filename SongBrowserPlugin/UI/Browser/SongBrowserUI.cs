@@ -39,6 +39,7 @@ namespace SongBrowserPlugin.UI
         private Button _tableViewPageUpButton;
         private Button _tableViewPageDownButton;
         private Button _playButton;
+        private RectTransform _bmpValueTextRect;
 
         // New UI Elements
         private List<SongSortButton> _sortButtonGroup;
@@ -71,6 +72,14 @@ namespace SongBrowserPlugin.UI
 
         // Model
         private SongBrowserModel _model;
+
+        public SongBrowserModel Model
+        {
+            get
+            {
+                return _model;
+            }
+        }
 
         /// <summary>
         /// Constructor
@@ -123,6 +132,8 @@ namespace SongBrowserPlugin.UI
                     _levelListTableView = this._levelListViewController.GetComponentInChildren<StandardLevelListTableView>();
                 }
 
+                _bmpValueTextRect = Resources.FindObjectsOfTypeAll<RectTransform>().First(x => x.name == "BPMValueText");
+
                 _playButton = _levelDetailViewController.GetComponentsInChildren<Button>().FirstOrDefault(x => x.name == "PlayButton");
 
                 _simpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
@@ -139,6 +150,8 @@ namespace SongBrowserPlugin.UI
 
                 TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelListTableView, "_tableView");
                 tableView.didSelectRowEvent += HandleDidSelectTableViewRow;
+
+                _levelDifficultyViewController.didSelectDifficultyEvent += OnDidSelectDifficultyEvent;
             }
             catch (Exception e)
             {
@@ -475,6 +488,14 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
+        /// Handle difficulty level selection.
+        /// </summary>
+        private void OnDidSelectDifficultyEvent(StandardLevelDifficultyViewController view, IStandardLevelDifficultyBeatmap beatmap)
+        {
+            this.RefreshScoreSaberData(_levelListViewController.selectedLevel);
+        }
+
+        /// <summary>
         /// Turn play button into enter folder button.
         /// </summary>
         private void HandleDidSelectFolderRow(IStandardLevel level)
@@ -496,60 +517,7 @@ namespace SongBrowserPlugin.UI
             }
             _playButton.gameObject.SetActive(true);
 
-            // display pp potentially
-            if (this._model.LevelIdToScoreSaberData != null && this._levelDifficultyViewController.selectedDifficultyLevel != null)
-            {
-                if (this._ppText == null)
-                {
-                    // Create the PP and Star rating labels
-                    //RectTransform bmpTextRect = Resources.FindObjectsOfTypeAll<RectTransform>().First(x => x.name == "BPMText");
-                    var text = UIBuilder.CreateText(this._levelDetailViewController.rectTransform, "PP", new Vector2(-5, -41), new Vector2(20f, 10f));
-                    text.fontSize = 3.5f;
-                    text.alignment = TextAlignmentOptions.Left;
-                    text = UIBuilder.CreateText(this._levelDetailViewController.rectTransform, "STAR", new Vector2(-5, -22), new Vector2(20f, 10f));
-                    text.fontSize = 3.5f;
-                    text.alignment = TextAlignmentOptions.Left;
-
-                    RectTransform bmpValueTextRect = Resources.FindObjectsOfTypeAll<RectTransform>().First(x => x.name == "BPMValueText");
-
-                    _ppText = UIBuilder.CreateText(this._levelDetailViewController.rectTransform, "?", new Vector2(bmpValueTextRect.anchoredPosition.x, -41), new Vector2(39f, 10f));
-                    _ppText.fontSize = 3.5f;
-                    _ppText.alignment = TextAlignmentOptions.Right;
-
-                    _starText = UIBuilder.CreateText(this._levelDetailViewController.rectTransform, "", new Vector2(bmpValueTextRect.anchoredPosition.x, -22), new Vector2(39f, 10f));
-                    _starText.fontSize = 3.5f;
-                    _starText.alignment = TextAlignmentOptions.Right;
-                }
-
-                LevelDifficulty difficulty = this._levelDifficultyViewController.selectedDifficultyLevel.difficulty;
-                string difficultyString = difficulty.ToString();
-
-                _log.Debug("Checking if have info for song {0}", level.songName);
-                if (this._model.LevelIdToScoreSaberData.ContainsKey(level.levelID))
-                {
-                    _log.Debug("Checking if have difficulty for song {0} difficulty {1}", level.songName, difficultyString);
-                    ScoreSaberData ppData = this._model.LevelIdToScoreSaberData[level.levelID];
-                    if (ppData.difficultyToSaberDifficulty.ContainsKey(difficultyString))
-                    {
-                        _log.Debug("Display pp for song.");
-                        float pp = ppData.difficultyToSaberDifficulty[difficultyString].pp;
-                        float star = ppData.difficultyToSaberDifficulty[difficultyString].star;
-
-                        _ppText.SetText(String.Format("{0:0.##}", pp));
-                        _starText.SetText(String.Format("{0:0.##}", star));
-                    }
-                    else
-                    {
-                        _ppText.SetText("?");
-                        _starText.SetText("?");
-                    }
-                }
-                else
-                {
-                    _ppText.SetText("?");
-                    _starText.SetText("?");
-                }
-            }            
+            this.RefreshScoreSaberData(level);
         }
 
         /// <summary>
@@ -835,6 +803,80 @@ namespace SongBrowserPlugin.UI
             RefreshAddFavoriteButton(songInfo.levelID);
 
             _model.Settings.Save();
+        }
+
+        /// <summary>
+        /// Update GUI elements that show score saber data.
+        /// TODO - make better
+        /// </summary>
+        public void RefreshScoreSaberData(IStandardLevel level)
+        {
+            // TODO - fix this obvious mess...
+            // use controllers level...
+            if (level == null)
+            {
+                level = _levelListViewController.selectedLevel;
+            }
+
+            // abort!
+            if (level == null || _bmpValueTextRect == null)
+            {
+                _log.Debug("Aborting RefreshScoreSaberData()");
+                return;
+            }
+
+            // display pp potentially
+            if (this._model.LevelIdToScoreSaberData != null && this._levelDifficultyViewController.selectedDifficultyLevel != null)
+            {
+                if (this._ppText == null)
+                {
+                    // Create the PP and Star rating labels
+                    //RectTransform bmpTextRect = Resources.FindObjectsOfTypeAll<RectTransform>().First(x => x.name == "BPMText");
+                    var text = UIBuilder.CreateText(this._levelDetailViewController.rectTransform, "PP", new Vector2(-5, -41), new Vector2(20f, 10f));
+                    text.fontSize = 3.5f;
+                    text.alignment = TextAlignmentOptions.Left;
+                    text = UIBuilder.CreateText(this._levelDetailViewController.rectTransform, "STAR", new Vector2(-5, -22), new Vector2(20f, 10f));
+                    text.fontSize = 3.5f;
+                    text.alignment = TextAlignmentOptions.Left;
+
+                    _ppText = UIBuilder.CreateText(this._levelDetailViewController.rectTransform, "?", new Vector2(_bmpValueTextRect.anchoredPosition.x, -41), new Vector2(39f, 10f));
+                    _ppText.fontSize = 3.5f;
+                    _ppText.alignment = TextAlignmentOptions.Right;
+
+                    _starText = UIBuilder.CreateText(this._levelDetailViewController.rectTransform, "", new Vector2(_bmpValueTextRect.anchoredPosition.x, -22), new Vector2(39f, 10f));
+                    _starText.fontSize = 3.5f;
+                    _starText.alignment = TextAlignmentOptions.Right;
+                }
+
+                LevelDifficulty difficulty = this._levelDifficultyViewController.selectedDifficultyLevel.difficulty;
+                string difficultyString = difficulty.ToString();
+
+                _log.Debug("Checking if have info for song {0}", level.songName);
+                if (this._model.LevelIdToScoreSaberData.ContainsKey(level.levelID))
+                {
+                    _log.Debug("Checking if have difficulty for song {0} difficulty {1}", level.songName, difficultyString);
+                    ScoreSaberData ppData = this._model.LevelIdToScoreSaberData[level.levelID];
+                    if (ppData.difficultyToSaberDifficulty.ContainsKey(difficultyString))
+                    {
+                        _log.Debug("Display pp for song.");
+                        float pp = ppData.difficultyToSaberDifficulty[difficultyString].pp;
+                        float star = ppData.difficultyToSaberDifficulty[difficultyString].star;
+
+                        _ppText.SetText(String.Format("{0:0.##}", pp));
+                        _starText.SetText(String.Format("{0:0.##}", star));
+                    }
+                    else
+                    {
+                        _ppText.SetText("?");
+                        _starText.SetText("?");
+                    }
+                }
+                else
+                {
+                    _ppText.SetText("?");
+                    _starText.SetText("?");
+                }
+            }
         }
 
         /// <summary>
