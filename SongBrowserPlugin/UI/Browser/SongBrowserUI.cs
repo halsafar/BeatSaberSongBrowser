@@ -180,12 +180,6 @@ namespace SongBrowserPlugin.UI
                 _tableViewRectTransform.sizeDelta = new Vector2(0f, -20f);
                 _tableViewRectTransform.anchoredPosition = new Vector2(0f, -2.5f);
 
-                _tableViewPageUpButton = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageUpButton");
-                (_tableViewPageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -1f);
-
-                _tableViewPageDownButton = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageDownButton");
-                (_tableViewPageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 1f);
-
                 // Create Sorting Songs By-Buttons
                 _log.Debug("Creating sort by buttons...");
                                 
@@ -884,11 +878,48 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         private void RefreshQuickScrollButtons()
         {
+            // if you are ever viewing the song list with less than 5 songs the up/down buttons do not exist.
+            // just try and fetch them and ignore the exception.
+            if (_tableViewPageUpButton == null)
+            {
+                try
+                {
+                    _tableViewPageUpButton = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageUpButton");
+                    (_tableViewPageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -1f);
+                }
+                catch (Exception)
+                {
+                    // We don't care if this fails.
+                    return;
+                }
+            }
+
+            if (_tableViewPageDownButton == null)
+            {
+                try
+                {
+                    _tableViewPageDownButton = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageDownButton");
+                    (_tableViewPageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 1f);
+                }
+                catch (Exception)
+                {
+                    // We don't care if this fails.
+                    return;
+                }
+            }
+
             // Refresh the fast scroll buttons
-            _pageUpFastButton.interactable = _tableViewPageUpButton.interactable;
-            _pageUpFastButton.gameObject.SetActive(_tableViewPageUpButton.IsActive());
-            _pageDownFastButton.interactable = _tableViewPageDownButton.interactable;
-            _pageDownFastButton.gameObject.SetActive(_tableViewPageDownButton.IsActive());
+            if (_tableViewPageUpButton != null)
+            {
+                _pageUpFastButton.interactable = _tableViewPageUpButton.interactable;
+                _pageUpFastButton.gameObject.SetActive(_tableViewPageUpButton.IsActive());
+            }
+
+            if (_tableViewPageDownButton != null)
+            {
+                _pageDownFastButton.interactable = _tableViewPageDownButton.interactable;
+                _pageDownFastButton.gameObject.SetActive(_tableViewPageDownButton.IsActive());
+            }
         }
 
         /// <summary>
@@ -936,8 +967,7 @@ namespace SongBrowserPlugin.UI
                         UIBuilder.SetButtonBorder(ref sortButton.Button, Color.green);
                     }
                 }
-            }    
-            
+            }
             // refresh filter buttons
             foreach (SongFilterButton filterButton in _filterButtonGroup)
             {
@@ -946,7 +976,7 @@ namespace SongBrowserPlugin.UI
                 {
                     UIBuilder.SetButtonBorder(ref filterButton.Button, Color.green);
                 }
-            }           
+            }
         }
 
         /// <summary>
