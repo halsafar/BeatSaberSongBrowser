@@ -39,7 +39,7 @@ namespace SongBrowserPlugin.DataAccess
     public class SongBrowserSettings
     {
         public static readonly Encoding Utf8Encoding = Encoding.UTF8;
-        private XmlSerializer _SettingsSerializer = new XmlSerializer(typeof(SongBrowserSettings));
+        public static readonly XmlSerializer SettingsSerializer = new XmlSerializer(typeof(SongBrowserSettings));
 
         public SongSortMode sortMode = default(SongSortMode);
         public SongFilterMode filterMode = default(SongFilterMode);
