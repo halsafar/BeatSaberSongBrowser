@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Xml;
 using System.Xml.Serialization;
 
 
@@ -37,6 +38,9 @@ namespace SongBrowserPlugin.DataAccess
     [Serializable]
     public class SongBrowserSettings
     {
+        public static readonly Encoding Utf8Encoding = Encoding.UTF8;
+        private XmlSerializer _SettingsSerializer = new XmlSerializer(typeof(SongBrowserSettings));
+
         public SongSortMode sortMode = default(SongSortMode);
         public SongFilterMode filterMode = default(SongFilterMode);
        
@@ -51,6 +55,10 @@ namespace SongBrowserPlugin.DataAccess
         public bool folderSupportEnabled = false;
         public bool randomInstantQueue = false;
         public bool deleteNumberedSongFolder = true;
+
+        [XmlIgnore]
+        [NonSerialized]
+        public bool DisableSavingSettings = false;
 
         [NonSerialized]
         private static Logger Log = new Logger("SongBrowserSettings");
@@ -83,6 +91,15 @@ namespace SongBrowserPlugin.DataAccess
         }
 
         /// <summary>
+        /// Backup settings file location.
+        /// </summary>
+        /// <returns></returns>
+        public static String SettingsBackupPath()
+        {
+            return Path.Combine(Environment.CurrentDirectory, "song_browser_settings.xml.bak");
+        }
+
+        /// <summary>
         /// Path to the common favorites file location.
         /// </summary>
         /// <returns></returns>
@@ -112,11 +129,15 @@ namespace SongBrowserPlugin.DataAccess
                     fs = File.OpenRead(settingsFilePath);
                     XmlSerializer serializer = new XmlSerializer(typeof(SongBrowserSettings));
                     retVal = (SongBrowserSettings)serializer.Deserialize(fs);
+
+                    // Success loading, sane time to make a backup
+                    retVal.SaveBackup();
                 }
                 catch (Exception e)
                 {
-                    Log.Exception("Unable to deserialize song browser settings file: ", e);
-                    throw e;
+                    Log.Exception("Unable to deserialize song browser settings file, using default settings: ", e);
+                    retVal = new SongBrowserSettings();
+                    retVal.DisableSaving = true;
                 }
                 finally
                 {
@@ -143,17 +164,53 @@ namespace SongBrowserPlugin.DataAccess
         /// Save this Settings insance to file.
         /// </summary>
         public void Save()
-        {            
+        {
+            this._Save(SongBrowserSettings.SettingsPath());
+        }
+
+        /// <summary>
+        /// Save a backup.
+        /// </summary>
+        public void SaveBackup()
+        {
+            this._Save(SongBrowserSettings.SettingsBackupPath());
+        }
+
+        /// <summary>
+        /// Save helper.
+        /// </summary>
+        private void _Save(String path)
+        {
+            if (this.DisableSaving)
+            {
+                Log.Info("Saving settings has been disabled...");
+                return;
+            }
+
             // TODO - not here
             if (searchTerms.Count > 10)
             {
                 searchTerms.RemoveRange(10, searchTerms.Count - 10);
             }
 
-            FileStream fs = new FileStream(SongBrowserSettings.SettingsPath(), FileMode.Create, FileAccess.Write);            
+            var settings = new XmlWriterSettings();
+            settings.OmitXmlDeclaration = false;
+            settings.Indent = true;
+            settings.NewLineOnAttributes = true;
+            settings.NewLineHandling = System.Xml.NewLineHandling.Entitize;
+
+            using (var stream = new StreamWriter(path, false, Utf8Encoding))
+            {
+                using (var writer = XmlWriter.Create(stream, settings))
+                {
+                    SettingsSerializer.Serialize(writer, this);
+                }
+            }
+
+            /*FileStream fs = new FileStream(SongBrowserSettings.SettingsPath(), FileMode.Create, FileAccess.Write);            
             XmlSerializer serializer = new XmlSerializer(typeof(SongBrowserSettings));           
             serializer.Serialize(fs, this);            
-            fs.Close();
+            fs.Close();*/
         }
     }
 }
