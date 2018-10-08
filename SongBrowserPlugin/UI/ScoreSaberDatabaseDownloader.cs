@@ -77,6 +77,9 @@ namespace SongBrowserPlugin.UI
                     {
                         ScoreSaberDatabaseDownloader.ScoreSaberDataFile = (www.downloadHandler as CacheableDownloadHandlerScoreSaberData).ScoreSaberDataFile;
                         _log.Info("Success downloading DuoVR ScoreSaber data!");
+
+                        SongBrowserApplication.MainProgressBar.ShowMessage("Success downloading DuoVR ScoreSaber data...");
+                        onScoreSaberDataDownloaded?.Invoke();
                     }
                     catch (System.InvalidOperationException)
                     {
