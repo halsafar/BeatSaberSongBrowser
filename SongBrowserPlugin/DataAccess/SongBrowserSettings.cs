@@ -137,7 +137,7 @@ namespace SongBrowserPlugin.DataAccess
                 {
                     Log.Exception("Unable to deserialize song browser settings file, using default settings: ", e);
                     retVal = new SongBrowserSettings();
-                    retVal.DisableSaving = true;
+                    retVal.DisableSavingSettings = true;
                 }
                 finally
                 {
@@ -181,7 +181,7 @@ namespace SongBrowserPlugin.DataAccess
         /// </summary>
         private void _Save(String path)
         {
-            if (this.DisableSaving)
+            if (this.DisableSavingSettings)
             {
                 Log.Info("Saving settings has been disabled...");
                 return;
