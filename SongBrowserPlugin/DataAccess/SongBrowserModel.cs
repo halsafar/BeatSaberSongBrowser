@@ -327,7 +327,7 @@ namespace SongBrowserPlugin
         {
             _log.Trace("UpdateScoreSaberDataMapping()");
 
-            ScoreSaberDataFile scoreSaberDataFile = ScoreSaberDatabaseDownloader.Instance.ScoreSaberDataFile;
+            ScoreSaberDataFile scoreSaberDataFile = ScoreSaberDatabaseDownloader.ScoreSaberDataFile;
 
             // bail
             if (scoreSaberDataFile == null)
