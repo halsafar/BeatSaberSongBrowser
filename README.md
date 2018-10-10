@@ -21,10 +21,15 @@ A plugin for customizing the in-game song browser.
   - Author: By song author name then by song name.  
   - Original: Match the original sorting you would normally get after SongLoaderPlugin.
   - Newest: Sort songs by their last write time.
+  - PP: Performance points!  Using DuoVR's scraped score saber data.  
   - PlayCount: Sort by playcount (sum of play counts across all difficulties for a given song).
   - Random: Randomize the song list each time.
-- Sort buttons can be pressed a second time to invert the sorting.
-- Fast scroll buttons (jumps 10% of your song list in each press).
+- UI Enhancements:
+  - Display PP and STAR difficulty per song / difficulty.
+  - Fast scroll buttons (jumps 10% of your song list in each press).
+- Tips:
+ - Sort buttons can be pressed a second time to invert the sorting.
+ - Filters can be cancelled by selecting them again.
 
 ## Status
 - Working with BeatSaber 0.11.2
