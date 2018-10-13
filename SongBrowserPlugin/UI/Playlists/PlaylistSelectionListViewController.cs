@@ -34,7 +34,7 @@ namespace SongBrowserPlugin.UI
                 String playlistPath = Path.Combine(Environment.CurrentDirectory, "Playlists");
                 _playlistsReader = new PlaylistsReader(playlistPath);
                 _playlistsReader.UpdatePlaylists();
-                _log.Debug("Reader {0} playlists!", _playlistsReader.Playlists.Count);
+                _log.Debug("Reader found {0} playlists!", _playlistsReader.Playlists.Count);
             }
 
             base.DidActivate(firstActivation, activationType);
