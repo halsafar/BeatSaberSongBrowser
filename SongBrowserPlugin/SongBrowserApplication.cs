@@ -87,7 +87,7 @@ namespace SongBrowserPlugin
                 SongLoader.SongsLoadedEvent += OnSongLoaderLoadedSongs;
             }
 
-            _songBrowserUI.RefreshSongList();            
+            _songBrowserUI.RefreshSongList();
         }
 
         /// <summary>
