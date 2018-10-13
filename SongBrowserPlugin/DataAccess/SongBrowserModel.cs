@@ -19,6 +19,8 @@ namespace SongBrowserPlugin
 
         private DateTime EPOCH = new DateTime(1970, 1, 1);
 
+        private readonly Regex SONG_PATH_VERSION_REGEX = new Regex(@".*/(?<version>[0-9]*-[0-9]*)/");
+
         private Logger _log = new Logger("SongBrowserModel");
 
         // song_browser_settings.xml
@@ -262,7 +264,7 @@ namespace SongBrowserPlugin
                     _cachedLastWriteTimes[level.levelID] = (File.GetLastWriteTimeUtc(level.customSongInfo.path) - EPOCH).TotalMilliseconds;
                 }
 
-                if (!_levelIdToCustomLevel.Keys.Contains(level.levelID))
+                if (!_levelIdToCustomLevel.ContainsKey(level.levelID))
                 {
                     _levelIdToCustomLevel.Add(level.levelID, level);
                 }
@@ -336,7 +338,6 @@ namespace SongBrowserPlugin
                 return;
             }
 
-            Regex versionRegex = new Regex(@".*/(?<version>[0-9]*-[0-9]*)/");
             foreach (var level in SongLoader.CustomLevels)
             {
                 // Skip
@@ -347,7 +348,7 @@ namespace SongBrowserPlugin
 
                 ScoreSaberData scoreSaberData = null;
                 
-                Match m = versionRegex.Match(level.customSongInfo.path);
+                Match m = SONG_PATH_VERSION_REGEX.Match(level.customSongInfo.path);
                 if (m.Success)
                 {
                     String version = m.Groups["version"].Value;
@@ -359,9 +360,9 @@ namespace SongBrowserPlugin
 
                 if (scoreSaberData == null)
                 {
-                    if (scoreSaberDataFile.SongVersionToScoreSaberData.ContainsKey(level.songName))
+                    if (scoreSaberDataFile.SongNameToScoreSaberData.ContainsKey(level.songName))
                     {
-                        scoreSaberData = scoreSaberDataFile.SongVersionToScoreSaberData[level.songName];
+                        scoreSaberData = scoreSaberDataFile.SongNameToScoreSaberData[level.songName];
                     }
                 }
 
