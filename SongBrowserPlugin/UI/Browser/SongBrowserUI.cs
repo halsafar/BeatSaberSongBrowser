@@ -210,7 +210,7 @@ namespace SongBrowserPlugin.UI
                         buttonWidth, 
                         buttonHeight, 
                         sortModes[i],
-                        onSortButtonClickEvent));
+                        OnSortButtonClickEvent));
                 }
 
                 // Create filter buttons
@@ -221,9 +221,9 @@ namespace SongBrowserPlugin.UI
 
                 List<Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>> filterButtonSetup = new List<Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>>()
                 {
-                    Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Favorites, onFavoriteFilterButtonClickEvent, _addFavoriteSprite),
-                    Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Playlist, onPlaylistButtonClickEvent, playlistSprite),
-                    Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Search, onSearchButtonClickEvent, searchSprite),
+                    Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Favorites, OnFavoriteFilterButtonClickEvent, _addFavoriteSprite),
+                    Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Playlist, OnPlaylistButtonClickEvent, playlistSprite),
+                    Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Search, OnSearchButtonClickEvent, searchSprite),
                 };
 
                 _filterButtonGroup = new List<SongFilterButton>();
@@ -238,9 +238,11 @@ namespace SongBrowserPlugin.UI
                         new Vector2(3.5f, 3.5f),
                         new Vector2(1.0f, 1.0f),
                         0);
-                    SongFilterButton filterButton = new SongFilterButton();
-                    filterButton.Button = b;
-                    filterButton.FilterMode = t.Item1;
+                    SongFilterButton filterButton = new SongFilterButton
+                    {
+                        Button = b,
+                        FilterMode = t.Item1
+                    };
                     b.onClick.AddListener(t.Item2);
                     _filterButtonGroup.Add(filterButton);
                 }
@@ -337,7 +339,7 @@ namespace SongBrowserPlugin.UI
         /// <summary>
         /// Sort button clicked.
         /// </summary>
-        private void onSortButtonClickEvent(SongSortMode sortMode)
+        private void OnSortButtonClickEvent(SongSortMode sortMode)
         {
             _log.Debug("Sort button - {0} - pressed.", sortMode.ToString());
             _model.LastSelectedLevelId = null;
@@ -373,7 +375,7 @@ namespace SongBrowserPlugin.UI
         /// <summary>
         /// Filter by favorites.
         /// </summary>
-        private void onFavoriteFilterButtonClickEvent()
+        private void OnFavoriteFilterButtonClickEvent()
         {
             _log.Debug("Filter button - {0} - pressed.", SongFilterMode.Favorites.ToString());
 
@@ -395,7 +397,7 @@ namespace SongBrowserPlugin.UI
         /// Filter button clicked.  
         /// </summary>
         /// <param name="sortMode"></param>
-        private void onSearchButtonClickEvent()
+        private void OnSearchButtonClickEvent()
         {
             _log.Debug("Filter button - {0} - pressed.", SongFilterMode.Search.ToString());
             if (_model.Settings.filterMode != SongFilterMode.Search)
@@ -416,7 +418,7 @@ namespace SongBrowserPlugin.UI
         /// Display the playlist selector.
         /// </summary>
         /// <param name="sortMode"></param>
-        private void onPlaylistButtonClickEvent()
+        private void OnPlaylistButtonClickEvent()
         {
             _log.Debug("Filter button - {0} - pressed.", SongFilterMode.Playlist.ToString());
             _model.LastSelectedLevelId = null;
@@ -1137,19 +1139,19 @@ namespace SongBrowserPlugin.UI
                     // filter playlists
                     if (Input.GetKeyDown(KeyCode.P))
                     {
-                        onPlaylistButtonClickEvent();
+                        OnPlaylistButtonClickEvent();
                     }
 
                     // filter search
                     if (Input.GetKeyDown(KeyCode.S))
                     {
-                        onSearchButtonClickEvent();
+                        OnSearchButtonClickEvent();
                     }
 
                     // filter favorites
                     if (Input.GetKeyDown(KeyCode.F))
                     {
-                        onFavoriteFilterButtonClickEvent();
+                        OnFavoriteFilterButtonClickEvent();
                     }
 
                     // delete

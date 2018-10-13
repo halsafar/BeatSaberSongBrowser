@@ -8,7 +8,7 @@ namespace SongBrowserPlugin.DataAccess
 {
     public class PlaylistSong
     {
-        public int key { get; set; }
-        public String songName { get; set; }
+        public int Key { get; set; }
+        public String SongName { get; set; }
     }
 }

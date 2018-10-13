@@ -86,8 +86,8 @@ namespace SongBrowserPlugin.DataAccess
                 foreach (JSONNode node in playlistNode["songs"].AsArray)
                 {
                     PlaylistSong song = new PlaylistSong();
-                    song.key = node["key"];
-                    song.songName = node["songName"];
+                    song.Key = node["key"];
+                    song.SongName = node["songName"];
 
                     playlist.songs.Add(song);
                 }

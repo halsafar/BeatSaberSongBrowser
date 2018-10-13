@@ -14,14 +14,13 @@ namespace SongBrowserPlugin
 
     public class Logger
     {
-        private string loggerName;
-        private LogLevel _LogLevel = LogLevel.Info;
-        private ConsoleColor _defaultFgColor;
+        private readonly string loggerName;
+        private readonly LogLevel _LogLevel = LogLevel.Info;
+        private readonly ConsoleColor _defaultFgColor = ConsoleColor.Gray;
 
         public Logger(string _name)
         {
             loggerName = _name;
-            _defaultFgColor = ConsoleColor.Gray;
         }
 
         public void ResetForegroundColor()

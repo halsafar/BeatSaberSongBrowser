@@ -27,10 +27,12 @@ namespace SongBrowserPlugin.DataAccess
             {
                 return;
             }
-            ScoreSaberDifficulty ppDifficulty = new ScoreSaberDifficulty();
-            ppDifficulty.name = name;
-            ppDifficulty.star = star;
-            ppDifficulty.pp = pp;
+            ScoreSaberDifficulty ppDifficulty = new ScoreSaberDifficulty
+            {
+                name = name,
+                star = star,
+                pp = pp
+            };
             difficultyToSaberDifficulty.Add(ppDifficulty.name, ppDifficulty);
 
             if (pp > maxPp)
@@ -92,9 +94,11 @@ namespace SongBrowserPlugin.DataAccess
                     ScoreSaberData ppData = null;
                     if (!SongVersionToScoreSaberData.ContainsKey(version))
                     {
-                        ppData = new ScoreSaberData();
-                        ppData.version = version;
-                        ppData.name = name;
+                        ppData = new ScoreSaberData
+                        {
+                            version = version,
+                            name = name
+                        };
 
                         SongVersionToScoreSaberData.Add(version, ppData);
                     }

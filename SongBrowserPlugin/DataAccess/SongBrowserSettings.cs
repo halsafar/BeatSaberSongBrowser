@@ -136,8 +136,10 @@ namespace SongBrowserPlugin.DataAccess
                 catch (Exception e)
                 {
                     Log.Exception("Unable to deserialize song browser settings file, using default settings: ", e);
-                    retVal = new SongBrowserSettings();
-                    retVal.DisableSavingSettings = true;
+                    retVal = new SongBrowserSettings
+                    {
+                        DisableSavingSettings = true
+                    };
                 }
                 finally
                 {
@@ -193,11 +195,13 @@ namespace SongBrowserPlugin.DataAccess
                 searchTerms.RemoveRange(10, searchTerms.Count - 10);
             }
 
-            var settings = new XmlWriterSettings();
-            settings.OmitXmlDeclaration = false;
-            settings.Indent = true;
-            settings.NewLineOnAttributes = true;
-            settings.NewLineHandling = System.Xml.NewLineHandling.Entitize;
+            var settings = new XmlWriterSettings
+            {
+                OmitXmlDeclaration = false,
+                Indent = true,
+                NewLineOnAttributes = true,
+                NewLineHandling = System.Xml.NewLineHandling.Entitize
+            };
 
             using (var stream = new StreamWriter(path, false, Utf8Encoding))
             {

@@ -41,7 +41,7 @@ namespace Mobcast.Coffee.AssetSystem
 		/// <summary>
 		/// Returns the downloaded Texture, or null.
 		/// </summary>
-		public Texture2D texture
+		public Texture2D Texture
 		{
 			get
 			{

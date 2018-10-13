@@ -20,7 +20,7 @@ namespace SongBrowserPlugin.UI
 
         public Action onScoreSaberDataDownloaded;
 
-        private byte[] _buffer = new byte[4 * 1048576];
+        private readonly byte[] _buffer = new byte[4 * 1048576];
 
         /// <summary>
         /// Awake.

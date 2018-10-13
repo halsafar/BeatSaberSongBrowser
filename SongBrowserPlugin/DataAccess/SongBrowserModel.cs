@@ -17,7 +17,7 @@ namespace SongBrowserPlugin
     {
         private const String CUSTOM_SONGS_DIR = "CustomSongs";
 
-        private DateTime EPOCH = new DateTime(1970, 1, 1);
+        private readonly DateTime EPOCH = new DateTime(1970, 1, 1);
 
         private readonly Regex SONG_PATH_VERSION_REGEX = new Regex(@".*/(?<version>[0-9]*-[0-9]*)/");
 
@@ -34,8 +34,10 @@ namespace SongBrowserPlugin
         private Dictionary<String, SongLoaderPlugin.OverrideClasses.CustomLevel> _levelIdToCustomLevel;
         private Dictionary<String, double> _cachedLastWriteTimes;
         private Dictionary<string, int> _weights;
+        private Dictionary<LevelDifficulty, int> _difficultyWeights;
         private Dictionary<string, ScoreSaberData> _levelIdToScoreSaberData = null;
         private Dictionary<string, int> _levelIdToPlayCount;
+        private Dictionary<string, string> _levelIdToSongVersion;
         private Dictionary<String, DirectoryNode> _directoryTree;
         private Stack<DirectoryNode> _directoryStack = new Stack<DirectoryNode>();
 
@@ -171,6 +173,7 @@ namespace SongBrowserPlugin
             _cachedLastWriteTimes = new Dictionary<String, double>();
             _levelIdToScoreSaberData = new Dictionary<string, ScoreSaberData>();
             _levelIdToPlayCount = new Dictionary<string, int>();
+            _levelIdToSongVersion = new Dictionary<string, string>();
 
             // Weights used for keeping the original songs in order
             // Invert the weights from the game so we can order by descending and make LINQ work with us...
@@ -194,6 +197,15 @@ namespace SongBrowserPlugin
                 ["Level2OneSaber"] = 10,
                 ["Level9OneSaber"] = 9,
                 ["Level7OneSaber"] = 8,
+            };
+
+            _difficultyWeights = new Dictionary<LevelDifficulty, int>
+            {
+                [LevelDifficulty.Easy] = int.MaxValue - 4,
+                [LevelDifficulty.Normal] = int.MaxValue - 3,
+                [LevelDifficulty.Hard] = int.MaxValue - 2,
+                [LevelDifficulty.Expert] = int.MaxValue - 1,
+                [LevelDifficulty.ExpertPlus] = int.MaxValue,
             };
         }
 
@@ -259,6 +271,8 @@ namespace SongBrowserPlugin
             foreach (var level in SongLoader.CustomLevels)
             {
                 // If we already know this levelID, don't both updating it.
+                // SongLoader should filter duplicates but in case of failure we don't want to crash
+
                 if (!_cachedLastWriteTimes.ContainsKey(level.levelID) || customSongDirChanged)
                 {
                     _cachedLastWriteTimes[level.levelID] = (File.GetLastWriteTimeUtc(level.customSongInfo.path) - EPOCH).TotalMilliseconds;
@@ -268,9 +282,19 @@ namespace SongBrowserPlugin
                 {
                     _levelIdToCustomLevel.Add(level.levelID, level);
                 }
+
+                if (!_levelIdToSongVersion.ContainsKey(level.levelID))
+                {
+                    Match m = SONG_PATH_VERSION_REGEX.Match(level.customSongInfo.path);
+                    if (m.Success)
+                    {
+                        String version = m.Groups["version"].Value;
+                        _levelIdToSongVersion.Add(level.levelID, version);
+                    }
+                }
             } 
             lastWriteTimer.Stop();
-            _log.Info("Determining song download time took {0}ms", lastWriteTimer.ElapsedMilliseconds);
+            _log.Info("Determining song download time and determining mappings took {0}ms", lastWriteTimer.ElapsedMilliseconds);
 
             // Update song Infos, directory tree, and sort
             this.UpdateScoreSaberDataMapping();
@@ -348,16 +372,17 @@ namespace SongBrowserPlugin
 
                 ScoreSaberData scoreSaberData = null;
                 
-                Match m = SONG_PATH_VERSION_REGEX.Match(level.customSongInfo.path);
-                if (m.Success)
+                // try to version match first
+                if (_levelIdToSongVersion.ContainsKey(level.levelID))
                 {
-                    String version = m.Groups["version"].Value;
+                    String version = _levelIdToSongVersion[level.levelID];
                     if (scoreSaberDataFile.SongVersionToScoreSaberData.ContainsKey(version))
                     {
                         scoreSaberData = scoreSaberDataFile.SongVersionToScoreSaberData[version];
                     }
                 }
 
+                // fallback to name matching 
                 if (scoreSaberData == null)
                 {
                     if (scoreSaberDataFile.SongNameToScoreSaberData.ContainsKey(level.songName))
@@ -383,8 +408,10 @@ namespace SongBrowserPlugin
             // Determine folder mapping
             Uri customSongDirUri = new Uri(customSongsPath);
 
-            _directoryTree = new Dictionary<string, DirectoryNode>();
-            _directoryTree[CUSTOM_SONGS_DIR] = new DirectoryNode(CUSTOM_SONGS_DIR);
+            _directoryTree = new Dictionary<string, DirectoryNode>
+            {
+                [CUSTOM_SONGS_DIR] = new DirectoryNode(CUSTOM_SONGS_DIR)
+            };
 
             if (_settings.folderSupportEnabled)
             {
@@ -690,7 +717,7 @@ namespace SongBrowserPlugin
             }
 
             _log.Debug("Filtering songs for playlist: {0}", this.CurrentPlaylist);
-            List<String> playlistNameListOrdered = this.CurrentPlaylist.songs.Select(x => x.songName).Distinct().ToList();
+            List<String> playlistNameListOrdered = this.CurrentPlaylist.songs.Select(x => x.SongName).Distinct().ToList();
             Dictionary<String, int> songNameToIndex = playlistNameListOrdered.Select((val, index) => new { Index = index, Value = val }).ToDictionary(i => i.Value, i => i.Index);
             HashSet<String> songNames = new HashSet<String>(playlistNameListOrdered);
             LevelCollectionsForGameplayModes levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionsForGameplayModes>().FirstOrDefault();
@@ -746,18 +773,7 @@ namespace SongBrowserPlugin
 
         private void SortDifficulty(List<StandardLevelSO> levels)
         {
-            _log.Info("Sorting song list by random");
-
-            System.Random rnd = new System.Random(Guid.NewGuid().GetHashCode());
-
-            Dictionary<LevelDifficulty, int> difficultyWeights = new Dictionary<LevelDifficulty, int>
-            {
-                [LevelDifficulty.Easy] = int.MaxValue - 4,
-                [LevelDifficulty.Normal] = int.MaxValue - 3,
-                [LevelDifficulty.Hard] = int.MaxValue - 2,
-                [LevelDifficulty.Expert] = int.MaxValue - 1,
-                [LevelDifficulty.ExpertPlus] = int.MaxValue,
-            };
+            _log.Info("Sorting song list by difficulty...");
 
             IEnumerable<LevelDifficulty> difficultyIterator = Enum.GetValues(typeof(LevelDifficulty)).Cast<LevelDifficulty>();
             Dictionary<string, int>  levelIdToDifficultyValue = new Dictionary<string, int>();
@@ -778,7 +794,7 @@ namespace SongBrowserPlugin
                             IStandardLevelDifficultyBeatmap beatmap = level.GetDifficultyLevel(difficulty);
                             if (beatmap != null)
                             {
-                                difficultyValue += difficultyWeights[difficulty];
+                                difficultyValue += _difficultyWeights[difficulty];
                                 break;
                             }
                         }
@@ -795,7 +811,7 @@ namespace SongBrowserPlugin
 
         private void SortRandom(List<StandardLevelSO> levels)
         {
-            _log.Info("Sorting song list by random");
+            _log.Info("Sorting song list by random...");
 
             System.Random rnd = new System.Random(Guid.NewGuid().GetHashCode());
 
