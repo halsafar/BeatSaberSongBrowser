@@ -61,54 +61,60 @@ namespace SongBrowserPlugin.DataAccess
             {
                 // Example: Freedom Dive - v2	367.03	Expert+	9.19★	[src='https://beatsaver.com/storage/songs/3037/3037-2154.jpg']                
                 //_log.Trace(s);
-
-                string[] split = s.Split('\t');                
-                float pp = float.Parse(split[1]);
-
-                int lastDashIndex = split[0].LastIndexOf('-');
-                string name = split[0].Substring(0, lastDashIndex).Trim();
-                string author = split[0].Substring(lastDashIndex+1, split[0].Length - (lastDashIndex+1)).Trim();
-                //_log.Debug("name={0}", name);
-                //_log.Debug("author={0}", author);
-                
-                string difficultyName = split[2];
-                if (difficultyName == "Expert+")
+                try
                 {
-                    difficultyName = "ExpertPlus";
-                }
+                    string[] split = s.Split('\t');
+                    float pp = float.Parse(split[1]);
 
-                float starDifficulty = 0;
-                string fixedStarDifficultyString = split[3].Remove(split[3].Length -1);
-                
-                if (fixedStarDifficultyString.Length >= 1 && Char.IsNumber(fixedStarDifficultyString[0]))
+                    int lastDashIndex = split[0].LastIndexOf('-');
+                    string name = split[0].Substring(0, lastDashIndex).Trim();
+                    string author = split[0].Substring(lastDashIndex + 1, split[0].Length - (lastDashIndex + 1)).Trim();
+                    //_log.Debug("name={0}", name);
+                    //_log.Debug("author={0}", author);
+
+                    string difficultyName = split[2];
+                    if (difficultyName == "Expert+")
+                    {
+                        difficultyName = "ExpertPlus";
+                    }
+
+                    float starDifficulty = 0;
+                    string fixedStarDifficultyString = split[3].Remove(split[3].Length - 1);
+
+                    if (fixedStarDifficultyString.Length >= 1 && Char.IsNumber(fixedStarDifficultyString[0]))
+                    {
+                        starDifficulty = float.Parse(fixedStarDifficultyString);
+                    }
+
+                    Match m = versionRegex.Match(split[4]);
+                    string version = m.Groups["version"].Value;
+
+                    ScoreSaberData ppData = null;
+                    if (!SongVersionToScoreSaberData.ContainsKey(version))
+                    {
+                        ppData = new ScoreSaberData();
+                        ppData.version = version;
+                        ppData.name = name;
+
+                        SongVersionToScoreSaberData.Add(version, ppData);
+                    }
+                    else
+                    {
+                        ppData = SongVersionToScoreSaberData[version];
+                    }
+
+                    if (!SongNameToScoreSaberData.ContainsKey(name))
+                    {
+                        SongNameToScoreSaberData.Add(name, ppData);
+                    }
+
+                    // add difficulty  
+                    ppData.AddDifficultyRating(difficultyName, pp, starDifficulty);
+                }
+                catch (FormatException e)
                 {
-                    starDifficulty = float.Parse(fixedStarDifficultyString);
+                    _log.Exception(String.Format("Could not process line {0}\n", s), e);
                 }
-                
-                Match m = versionRegex.Match(split[4]);
-                string version = m.Groups["version"].Value;
-
-                ScoreSaberData ppData = null;
-                if (!SongVersionToScoreSaberData.ContainsKey(version))
-                {
-                    ppData = new ScoreSaberData();
-                    ppData.version = version;
-                    ppData.name = name;
-
-                    SongVersionToScoreSaberData.Add(version, ppData);
-                }
-                else
-                {
-                    ppData = SongVersionToScoreSaberData[version];
-                }
-
-                if (!SongNameToScoreSaberData.ContainsKey(name))
-                {
-                    SongNameToScoreSaberData.Add(name, ppData);
-                }
-
-                // add difficulty  
-                ppData.AddDifficultyRating(difficultyName, pp, starDifficulty);
             }
         }
     }
