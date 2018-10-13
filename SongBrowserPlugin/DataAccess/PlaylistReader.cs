@@ -1,6 +1,7 @@
 ﻿using SimpleJSON;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -40,6 +41,8 @@ namespace SongBrowserPlugin.DataAccess
         {           
             _CachedPlaylists = new List<Playlist>();
 
+            Stopwatch timer = new Stopwatch();
+            timer.Start();
             foreach (String path in _PlaylistsDirectories)
             {
                 _log.Debug("Reading playlists located at: {0}", path);
@@ -60,6 +63,8 @@ namespace SongBrowserPlugin.DataAccess
                     }
                 }
             }
+            timer.Stop();
+            _log.Debug("Processing playlists took {0}ms", timer.ElapsedMilliseconds);
         }
 
         public static Playlist ParsePlaylist(String path)
