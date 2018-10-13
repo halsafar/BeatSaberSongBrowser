@@ -25,7 +25,6 @@ namespace SongBrowserPlugin.DataAccess.Network
                 if (_scoreSaberDataFile == null)
                 {
                     _scoreSaberDataFile = new ScoreSaberDataFile(GetData());
-
                 }
                 return _scoreSaberDataFile;
             }
