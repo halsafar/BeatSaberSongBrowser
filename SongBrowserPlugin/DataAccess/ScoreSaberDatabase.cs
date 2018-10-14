@@ -64,6 +64,8 @@ namespace SongBrowserPlugin.DataAccess
             string[] lines = result.Split('\n');
 
             Regex versionRegex = new Regex(@".*/(?<version>.*)\.(?<extension>jpg|JPG|png|PNG)");
+            System.Globalization.NumberStyles style = System.Globalization.NumberStyles.AllowDecimalPoint;
+
             foreach (string s in lines)
             {
                 // Example: Freedom Dive - v2	367.03	Expert+	9.19★	[src='https://beatsaver.com/storage/songs/3037/3037-2154.jpg']                
@@ -71,8 +73,12 @@ namespace SongBrowserPlugin.DataAccess
                 try
                 {
                     string[] split = s.Split('\t');
-                    float pp = float.Parse(split[1]);
+                    //_log.Debug("Trying to parse pp string: =={0}==", split[1]);
+                    float pp = 0;
+                    float.TryParse(split[1], style, System.Globalization.CultureInfo.InvariantCulture, out pp);
+                    //_log.Debug("Parsed PP: {0}", pp);
 
+                    //_log.Debug("Trying to parse name and author: =={0}==", split[0]);
                     int lastDashIndex = split[0].LastIndexOf('-');
                     string name = split[0].Substring(0, lastDashIndex).Trim();
                     string author = split[0].Substring(lastDashIndex + 1, split[0].Length - (lastDashIndex + 1)).Trim();
@@ -87,13 +93,17 @@ namespace SongBrowserPlugin.DataAccess
 
                     float starDifficulty = 0;
                     string fixedStarDifficultyString = Regex.Replace(split[3], "[^.0-9]", "");
+                    //string fixedStarDifficultyString = new string(split[3].Where(x => char.IsDigit(x)).ToArray());
                     if (fixedStarDifficultyString.Length >= 1 && Char.IsDigit(fixedStarDifficultyString[0]))
                     {
-                        starDifficulty = float.Parse(fixedStarDifficultyString);
+                        //_log.Debug("Trying to parse star difficulty string: =={0}==", fixedStarDifficultyString);
+                        float.TryParse(fixedStarDifficultyString, style, System.Globalization.CultureInfo.InvariantCulture, out starDifficulty);                        
+                        //_log.Debug("Parsed star difficulty: {0}", starDifficulty);
                     }
 
                     Match m = versionRegex.Match(split[4]);
                     string version = m.Groups["version"].Value;
+                    //_log.Debug("Found version: =={0}==", version);
 
                     ScoreSaberData ppData = null;
                     if (!SongVersionToScoreSaberData.ContainsKey(version))
