@@ -13,7 +13,7 @@ namespace SongBrowserPlugin.UI
 {
     public class PlaylistTableView : MonoBehaviour, TableView.IDataSource
     {
-        public const String Name = "PlaylistSelectionListViewController";
+        public const String Name = "PlaylistTableView";
 
         private Logger _log = new Logger(Name);
 
@@ -65,20 +65,15 @@ namespace SongBrowserPlugin.UI
                     _tableView.Awake();
                     _tableView.transform.SetParent(parent, false);
 
-                    _tableView.dataSource = this;
-
                     Mask viewportMask = Instantiate(Resources.FindObjectsOfTypeAll<Mask>().First(), _tableView.transform, false);
                     viewportMask.transform.DetachChildren();
                     _tableView.GetComponentsInChildren<RectTransform>().First(x => x.name == "Content").transform.SetParent(viewportMask.rectTransform, false);
-
 
                     (_tableView.transform as RectTransform).anchorMin = new Vector2(0f, 0.5f);
                     (_tableView.transform as RectTransform).anchorMax = new Vector2(1f, 0.5f);
                     (_tableView.transform as RectTransform).sizeDelta = new Vector2(0f, 60f);
                     (_tableView.transform as RectTransform).position = new Vector3(0f, 0f, 2.4f);
                     (_tableView.transform as RectTransform).anchoredPosition = new Vector3(0f, -3f);
-
-                    _tableView.didSelectRowEvent += HandleDidSelectRowEvent;
 
                     Button pageUpButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageUpButton")), parent, false);
                     Button pageDownButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageDownButton")), parent, false);
@@ -104,17 +99,9 @@ namespace SongBrowserPlugin.UI
                     _tableView.SetPrivateField("_pageUpButton", pageUpButton);
                     _tableView.SetPrivateField("_pageDownButton", pageDownButton);
                 }
-                else
-                {
-                    this._tableView.ReloadData();
-                }
 
                 this._tableView.didSelectRowEvent += this.HandleDidSelectRowEvent;
-
                 this._tableView.dataSource = this;
-                this._tableView.ScrollToRow(0, false);
-
-                this._tableView.ReloadData();
 
                 _log.Debug("Initialized PlaylistTableView");
             }
