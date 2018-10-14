@@ -402,7 +402,6 @@ namespace SongBrowserPlugin.UI
             _log.Debug("Filter button - {0} - pressed.", SongFilterMode.Search.ToString());
             if (_model.Settings.filterMode != SongFilterMode.Search)
             {
-                _model.Settings.filterMode = SongFilterMode.Search;
                 this.ShowSearchKeyboard();
             }
             else
@@ -728,7 +727,9 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         private void SearchViewControllerbackButtonPressed()
         {
- 
+            // force disable search filter.
+            this._model.Settings.filterMode = SongFilterMode.None;
+            this._model.Settings.Save();
         }
 
         /// <summary>
@@ -738,7 +739,7 @@ namespace SongBrowserPlugin.UI
         private void SearchViewControllerSearchButtonPressed(string searchFor)
         {
             _log.Debug("Searching for \"{0}\"...", searchFor);
-
+            _model.Settings.filterMode = SongFilterMode.Search;
             _model.Settings.searchTerms.Insert(0, searchFor);
             _model.Settings.Save();
             _model.LastSelectedLevelId = null;

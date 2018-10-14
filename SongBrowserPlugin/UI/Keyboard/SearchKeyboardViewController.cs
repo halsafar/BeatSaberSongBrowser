@@ -67,12 +67,17 @@ namespace SongBrowserPlugin.UI
 
                 _backButton.onClick.AddListener(delegate ()
                 {
-                    _inputString = "";
-                    backButtonPressed?.Invoke();
-                    DismissModalViewController(null, false);
+                    Back();
                 });
             }
 
+        }
+
+        void Back()
+        {
+            _inputString = "";
+            backButtonPressed?.Invoke();
+            DismissModalViewController(null, false);
         }
 
         void UpdateInputText()
@@ -106,6 +111,10 @@ namespace SongBrowserPlugin.UI
             else if (Input.GetKeyDown(KeyCode.Space))
             {
                 this._searchKeyboard.SpaceButtonWasPressed();
+            }
+            else if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                this.Back();
             }
 
             IEnumerable<KeyCode> keycodeIterator = Enum.GetValues(typeof(KeyCode)).Cast<KeyCode>();
