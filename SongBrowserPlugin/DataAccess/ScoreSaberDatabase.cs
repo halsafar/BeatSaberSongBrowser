@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 
@@ -52,6 +54,9 @@ namespace SongBrowserPlugin.DataAccess
 
         public ScoreSaberDataFile(byte[] data)
         {
+            Stopwatch timer = new Stopwatch();
+            timer.Start();
+
             SongNameToScoreSaberData = new Dictionary<string, ScoreSaberData>();
             SongVersionToScoreSaberData = new Dictionary<string, ScoreSaberData>();
 
@@ -81,9 +86,8 @@ namespace SongBrowserPlugin.DataAccess
                     }
 
                     float starDifficulty = 0;
-                    string fixedStarDifficultyString = split[3].Remove(split[3].Length - 1);
-
-                    if (fixedStarDifficultyString.Length >= 1 && Char.IsNumber(fixedStarDifficultyString[0]))
+                    string fixedStarDifficultyString = Regex.Replace(split[3], "[^.0-9]", "");
+                    if (fixedStarDifficultyString.Length >= 1 && Char.IsDigit(fixedStarDifficultyString[0]))
                     {
                         starDifficulty = float.Parse(fixedStarDifficultyString);
                     }
@@ -120,6 +124,9 @@ namespace SongBrowserPlugin.DataAccess
                     _log.Exception(String.Format("Could not process line {0}\n", s), e);
                 }
             }
+
+            timer.Stop();
+            _log.Debug("Processing DuoVR ScoreSaber TSV file took {0}ms", timer.ElapsedMilliseconds);
         }
     }
 }
