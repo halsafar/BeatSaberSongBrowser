@@ -2,6 +2,7 @@
 using System.Linq;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using UnityEngine.UI;
 using HMUI;
 using VRUI;
@@ -12,7 +13,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using TMPro;
-
 namespace SongBrowserPlugin.UI
 {
     /// <summary>
@@ -56,7 +56,7 @@ namespace SongBrowserPlugin.UI
         private PlaylistFlowCoordinator _playListFlowCoordinator;
         private TextMeshProUGUI _ppText;
         private TextMeshProUGUI _starText;
-
+        private TextMeshProUGUI _nText;
         // Cached items
         private Sprite _addFavoriteSprite;
         private Sprite _removeFavoriteSprite;
@@ -835,6 +835,10 @@ namespace SongBrowserPlugin.UI
                     text = UIBuilder.CreateText(this._levelDetailViewController.rectTransform, "STAR", new Vector2(-5, -22), new Vector2(20f, 10f));
                     text.fontSize = 3.5f;
                     text.alignment = TextAlignmentOptions.Left;
+                    //NJS Display
+                    _nText = UIBuilder.CreateText(this._levelDetailViewController.rectTransform, "", new Vector2(_bmpValueTextRect.anchoredPosition.x, -29.6f), new Vector2(58f, 10f));
+                    _nText.fontSize = 3.5f;
+                    _nText.alignment = TextAlignmentOptions.Right;
 
                     _ppText = UIBuilder.CreateText(this._levelDetailViewController.rectTransform, "?", new Vector2(_bmpValueTextRect.anchoredPosition.x, -41), new Vector2(39f, 10f));
                     _ppText.fontSize = 3.5f;
@@ -843,10 +847,33 @@ namespace SongBrowserPlugin.UI
                     _starText = UIBuilder.CreateText(this._levelDetailViewController.rectTransform, "", new Vector2(_bmpValueTextRect.anchoredPosition.x, -22), new Vector2(39f, 10f));
                     _starText.fontSize = 3.5f;
                     _starText.alignment = TextAlignmentOptions.Right;
-                }
+                }  
 
                 LevelDifficulty difficulty = this._levelDifficultyViewController.selectedDifficultyLevel.difficulty;
+                string njsText;
                 string difficultyString = difficulty.ToString();
+                //Grab NJS for difficulty
+                //Default to 10 if a standard level
+                float njs = 0;
+                if (level.levelID.StartsWith("Level"))
+                {
+                    njsText = "OST";
+                }
+                else
+                {//Grab njs from custom level
+                    SongLoaderPlugin.OverrideClasses.CustomLevel customLevel = _model.LevelIdToCustomSongInfos[level.levelID];
+                    foreach (var diffLevel in customLevel.customSongInfo.difficultyLevels)
+                    {
+
+                        if (diffLevel.difficulty == difficultyString)
+                        {
+                            GetNoteJump(diffLevel.json, out njs);
+                        }
+                    }
+                    //Show note jump speedS
+                    njsText = "NJS " + njs.ToString();
+                }
+                _nText.text = njsText;
 
                 _log.Debug("Checking if have info for song {0}", level.songName);
                 if (this._model.LevelIdToScoreSaberData.ContainsKey(level.levelID))
@@ -1106,6 +1133,22 @@ namespace SongBrowserPlugin.UI
         {
             CheckDebugUserInput();
         }
+
+        //Pull njs from a difficulty, based on private function from SongLoader
+        public void GetNoteJump(string json, out float noteJumpSpeed)
+        {
+            noteJumpSpeed = 0;
+            var split = json.Split(':');
+            for (var i = 0; i < split.Length; i++)
+            {
+                if (split[i].Contains("_noteJumpSpeed"))
+                {
+                    noteJumpSpeed = Convert.ToSingle(split[i + 1].Split(',')[0], CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+
 
         /// <summary>
         /// Map some key presses directly to UI interactions to make testing easier.
