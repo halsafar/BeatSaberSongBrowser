@@ -13,7 +13,7 @@ namespace SongBrowserPlugin
 
         public string Version
         {
-            get { return "v2.3.0"; }
+            get { return "v2.3.1"; }
         }
 
         public void OnApplicationStart()
@@ -28,7 +28,7 @@ namespace SongBrowserPlugin
 
         private void SceneManagerOnActiveSceneChanged(Scene arg0, Scene scene)
         {
-
+        
         }
 
         private void SceneManager_sceneLoaded(Scene arg0, LoadSceneMode arg1)
