@@ -242,7 +242,6 @@ namespace SongBrowserPlugin
             Stopwatch timer = new Stopwatch();
             timer.Start();
 
-
             // Get the level collection from song loader
             LevelCollectionsForGameplayModes levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionsForGameplayModes>().FirstOrDefault();
             List<LevelCollectionsForGameplayModes.LevelCollectionForGameplayMode> levelCollectionsForGameModes = ReflectionUtil.GetPrivateField<LevelCollectionsForGameplayModes.LevelCollectionForGameplayMode[]>(levelCollections, "_collections").ToList();
@@ -292,7 +291,8 @@ namespace SongBrowserPlugin
                         _levelIdToSongVersion.Add(level.levelID, version);
                     }
                 }
-            } 
+            }
+
             lastWriteTimer.Stop();
             _log.Info("Determining song download time and determining mappings took {0}ms", lastWriteTimer.ElapsedMilliseconds);
 
@@ -716,17 +716,20 @@ namespace SongBrowserPlugin
                 return;
             }
 
-            _log.Debug("Filtering songs for playlist: {0}", this.CurrentPlaylist);
-            List<String> playlistNameListOrdered = this.CurrentPlaylist.songs.Select(x => x.SongName).Distinct().ToList();
-            Dictionary<String, int> songNameToIndex = playlistNameListOrdered.Select((val, index) => new { Index = index, Value = val }).ToDictionary(i => i.Value, i => i.Index);
-            HashSet<String> songNames = new HashSet<String>(playlistNameListOrdered);
+            _log.Debug("Filtering songs for playlist: {0}", this.CurrentPlaylist.playlistTitle);            
+            List<String> playlistKeysOrdered = this.CurrentPlaylist.songs.Select(x => x.Key).Distinct().ToList();
+            Dictionary<String, int>playlistKeyToIndex = playlistKeysOrdered.Select((val, index) => new { Index = index, Value = val }).ToDictionary(i => i.Value, i => i.Index);
             LevelCollectionsForGameplayModes levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionsForGameplayModes>().FirstOrDefault();
-            List<StandardLevelSO> songList = levelCollections.GetLevels(_currentGamePlayMode).Where(x => songNames.Contains(x.songName)).ToList();
-            _log.Debug("\tMatching songs found for playlist: {0}", songList.Count);
+            var levels = levelCollections.GetLevels(_currentGamePlayMode);
+
+            var songList = levels.Where(x => !x.levelID.StartsWith("Level_") && _levelIdToSongVersion.ContainsKey(x.levelID) && playlistKeyToIndex.ContainsKey(_levelIdToSongVersion[x.levelID])).ToList();
+            
             _originalSongs = songList;
-            _filteredSongs = songList
-                .OrderBy(x => songNameToIndex[x.songName])
+            _filteredSongs = _originalSongs
+                .OrderBy(x => playlistKeyToIndex[_levelIdToSongVersion[x.levelID]])
                 .ToList();
+            
+            _log.Debug("Playlist filtered song count: {0}", _filteredSongs.Count);
         }
 
         private void SortOriginal(List<StandardLevelSO> levels)
