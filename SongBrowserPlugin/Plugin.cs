@@ -40,6 +40,7 @@ namespace SongBrowserPlugin
             if (SceneManager.GetSceneByBuildIndex(level).name == "Menu")
             {
                 SongBrowserApplication.OnLoad();
+                Downloader.OnLoad();
             }
         }
 
