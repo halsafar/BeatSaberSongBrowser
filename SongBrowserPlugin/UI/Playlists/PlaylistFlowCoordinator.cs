@@ -96,14 +96,17 @@ namespace SongBrowserPlugin.UI
         public virtual void HandlePlaylistListDidSelectPlaylist(PlaylistSelectionListViewController playlistListViewController)
         {
             _log.Debug("Selected Playlist: {0}", playlistListViewController.SelectedPlaylist.playlistTitle);
+
+            int missingCount = CountMissingSongs(playlistListViewController.SelectedPlaylist);
+
             if (!this._playlistDetailViewController.isInViewControllerHierarchy)
             {
-                this._playlistDetailViewController.Init(playlistListViewController.SelectedPlaylist);
+                this._playlistDetailViewController.Init(playlistListViewController.SelectedPlaylist, missingCount);
                 this._playlistNavigationController.PushViewController(this._playlistDetailViewController, playlistListViewController.isRebuildingHierarchy);
             }
             else
             {
-                this._playlistDetailViewController.SetContent(playlistListViewController.SelectedPlaylist);
+                this._playlistDetailViewController.SetContent(playlistListViewController.SelectedPlaylist, missingCount);
                 this._playlistDetailViewController.UpdateButtons(!_downloadingPlaylist, !_downloadingPlaylist);
             }
         }
@@ -171,6 +174,16 @@ namespace SongBrowserPlugin.UI
                     }
                 });
             }
+        }
+
+        /// <summary>
+        /// Count missing songs for display.
+        /// </summary>
+        /// <param name="playlist"></param>
+        /// <returns></returns>
+        private int CountMissingSongs(Playlist playlist)
+        {
+            return playlist.songs.Count - playlist.songs.Count(x => SongLoader.CustomLevels.Any(y => y.customSongInfo.path.Contains(x.Key)));
         }
 
         /// <summary>

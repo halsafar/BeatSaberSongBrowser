@@ -19,6 +19,7 @@ namespace SongBrowserPlugin.UI
         private TextMeshProUGUI _playlistTitleText;
         private TextMeshProUGUI _playlistAuthorText;
         private TextMeshProUGUI _playlistNumberOfSongs;
+        private TextMeshProUGUI _playlistMissingSongCount;
 
         private Button _selectButton;
         Button _downloadButton;
@@ -43,7 +44,7 @@ namespace SongBrowserPlugin.UI
         /// Initialize the UI Elements.
         /// </summary>
         /// <param name="playlist"></param>
-        public void Init(Playlist playlist)
+        public void Init(Playlist playlist, int missingCount)
         {
             _playlistTitleText = UIBuilder.CreateText(this.transform as RectTransform,
                 playlist.playlistTitle,
@@ -66,32 +67,38 @@ namespace SongBrowserPlugin.UI
             );
             _playlistNumberOfSongs.alignment = TextAlignmentOptions.Center;
 
+            _playlistMissingSongCount = UIBuilder.CreateText(this.transform as RectTransform,
+                missingCount.ToString(),
+                new Vector2(0, -50),
+                new Vector2(60f, 10f)
+            );
+            _playlistMissingSongCount.alignment = TextAlignmentOptions.Center;
+
             Button buttonTemplate = Resources.FindObjectsOfTypeAll<Button>().FirstOrDefault(x => x.name == "PlayButton");
-            _selectButton = UIBuilder.CreateButton(this.transform as RectTransform, buttonTemplate, "Select", 3, 0, 3.5f, 25, 6);
+            _selectButton = UIBuilder.CreateButton(this.transform as RectTransform, buttonTemplate, "Select Playlist", 3, 0, 3.5f, 45, 6);
             _selectButton.onClick.AddListener(delegate ()
             {
                 didPressPlayPlaylist.Invoke(_selectedPlaylist);
             });
 
-            _downloadButton = UIBuilder.CreateUIButton((RectTransform)_selectButton.transform.parent, "PlayButton");
-            (_downloadButton.transform as RectTransform).sizeDelta = new Vector2(30f, 10f);
-            (_downloadButton.transform as RectTransform).anchoredPosition = new Vector2(2f, 24f);
+            _downloadButton = UIBuilder.CreateButton(this.transform as RectTransform, buttonTemplate, "Download All Songs", 3, 0, 11.5f, 45, 6);
             UIBuilder.SetButtonText(ref _downloadButton, "Download");
             _downloadButton.onClick.AddListener(delegate () { didPressDownloadPlaylist?.Invoke(); });
 
-            SetContent(playlist);
+            SetContent(playlist, missingCount);
         }
 
         /// <summary>
         /// Set the content.
         /// </summary>
         /// <param name="p"></param>
-        public virtual void SetContent(Playlist p)
+        public virtual void SetContent(Playlist p, int missingCount)
         {
             _selectedPlaylist = p;
             _playlistTitleText.text = _selectedPlaylist.playlistTitle;
             _playlistAuthorText.text = _selectedPlaylist.playlistAuthor;
             _playlistNumberOfSongs.text = "Song Count: " + _selectedPlaylist.songs.Count.ToString();
+            _playlistMissingSongCount.text = "Missing Count: " + missingCount;
         }
 
         /// <summary>
