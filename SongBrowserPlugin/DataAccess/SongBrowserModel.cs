@@ -38,7 +38,6 @@ namespace SongBrowserPlugin
         private Dictionary<string, ScoreSaberData> _levelIdToScoreSaberData = null;
         private Dictionary<string, int> _levelIdToPlayCount;
         private Dictionary<string, string> _levelIdToSongVersion;
-        private Dictionary<string, StandardLevelSO> _songVersionToStandardLevel;
         private Dictionary<String, DirectoryNode> _directoryTree;
         private Stack<DirectoryNode> _directoryStack = new Stack<DirectoryNode>();
 
@@ -291,7 +290,6 @@ namespace SongBrowserPlugin
                     {
                         String version = m.Groups["version"].Value;
                         _levelIdToSongVersion.Add(level.levelID, version);
-                        _songVersionToStandardLevel.Add(version, level);
                     }
                 }
             } 
