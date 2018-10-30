@@ -25,8 +25,9 @@ namespace SongBrowserPlugin
 
         public static SongBrowserPlugin.UI.ProgressBar MainProgressBar;
 
+
         /// <summary>
-        /// 
+        /// Load the main song browser app.
         /// </summary>
         internal static void OnLoad()
         {            
@@ -39,7 +40,7 @@ namespace SongBrowserPlugin
         }
 
         /// <summary>
-        /// 
+        /// It has awaken!
         /// </summary>
         private void Awake()
         {
