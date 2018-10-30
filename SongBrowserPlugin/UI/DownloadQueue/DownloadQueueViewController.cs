@@ -10,7 +10,8 @@ using UnityEngine.UI;
 using VRUI;
 
 
-// From: https://github.com/andruzzzhka/BeatSaverDownloader
+// Modified From: https://github.com/andruzzzhka/BeatSaverDownloader
+// - Adding queue count
 namespace SongBrowserPlugin.UI.DownloadQueue
 {
     public class DownloadQueueViewController : VRUIViewController, TableView.IDataSource
@@ -21,6 +22,7 @@ namespace SongBrowserPlugin.UI.DownloadQueue
         public List<Song> _queuedSongs = new List<Song>();
 
         TextMeshProUGUI _titleText;
+        TextMeshProUGUI _queueCountText;
 
         Button _abortButton;
         TableView _queuedSongsTableView;
@@ -36,6 +38,14 @@ namespace SongBrowserPlugin.UI.DownloadQueue
                 _titleText = UIBuilder.CreateText(rectTransform, "DOWNLOAD QUEUE", new Vector2(0f, -6f), new Vector2(60f, 10f));
                 _titleText.alignment = TextAlignmentOptions.Top;
                 _titleText.fontSize = 8;
+            }
+
+            if (_queueCountText == null)
+            {
+                _queueCountText = UIBuilder.CreateText(rectTransform, "Queue Count", new Vector2(20f, -50f), new Vector2(60f, 10f));
+                _queueCountText.alignment = TextAlignmentOptions.Right;
+                _queueCountText.fontSize = 5;
+                _queueCountText.text = "Queue Count: 0";
             }
 
             if (_queuedSongsTableView == null)
@@ -88,6 +98,7 @@ namespace SongBrowserPlugin.UI.DownloadQueue
         public void EnqueueSong(Song song, bool startDownload = true)
         {
             _queuedSongs.Add(song);
+            
             song.songQueueState = SongQueueState.Queued;
 
             Refresh();
@@ -135,6 +146,8 @@ namespace SongBrowserPlugin.UI.DownloadQueue
 
             _queuedSongsTableView.ReloadData();
             _queuedSongsTableView.ScrollToRow(0, true);
+
+            _queueCountText.text = "Queue Count: " + _queuedSongs.Count;
         }
 
         public float RowHeight()

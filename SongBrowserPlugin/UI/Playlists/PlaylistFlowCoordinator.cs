@@ -302,6 +302,11 @@ namespace SongBrowserPlugin.UI
             }
         }
 
+        /// <summary>
+        /// Useful playlist navigation.
+        /// Shift+Enter downloads.
+        /// Enter selects.
+        /// </summary>
         public void LateUpdate()
         {
             if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.Return))
