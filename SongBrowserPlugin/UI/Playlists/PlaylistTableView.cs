@@ -185,7 +185,11 @@ namespace SongBrowserPlugin.UI
             else if (Input.GetKeyDown(KeyCode.N))
             {
                 _selectedRow = (_selectedRow - 1) % this._reader.Playlists.Count;
-                _tableView.SelectRow(_selectedRow);
+                if (_selectedRow < 0)
+                {
+                    _selectedRow = this._reader.Playlists.Count-1;
+                }
+                _tableView.ScrollToRow(_selectedRow, true);
                 this.HandleDidSelectRowEvent(_tableView, _selectedRow);
             }
 
@@ -196,7 +200,7 @@ namespace SongBrowserPlugin.UI
             else if (Input.GetKeyDown(KeyCode.M))
             {
                 _selectedRow = (_selectedRow + 1) % this._reader.Playlists.Count;
-                _tableView.SelectRow(_selectedRow);
+                _tableView.ScrollToRow(_selectedRow, true);
                 this.HandleDidSelectRowEvent(_tableView, _selectedRow);
             }
         }

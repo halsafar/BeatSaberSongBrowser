@@ -8,7 +8,15 @@ namespace SongBrowserPlugin.DataAccess
 {
     public class PlaylistSong
     {
-        public int Key { get; set; }
+        public String Key { get; set; }
         public String SongName { get; set; }
+
+        // Set by playlist downloading
+        [NonSerialized]
+        public IStandardLevel Level;
+        [NonSerialized]
+        public bool OneSaber;
+        [NonSerialized]
+        public string Path;
     }
 }
