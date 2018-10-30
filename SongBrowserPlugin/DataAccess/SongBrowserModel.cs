@@ -158,7 +158,7 @@ namespace SongBrowserPlugin
 
             set
             {
-                _settings.currentPlaylistFile = value.playlistPath;
+                _settings.currentPlaylistFile = value.Path;
                 _currentPlaylist = value;
             }
         }
@@ -716,8 +716,8 @@ namespace SongBrowserPlugin
                 return;
             }
 
-            _log.Debug("Filtering songs for playlist: {0}", this.CurrentPlaylist.playlistTitle);            
-            List<String> playlistKeysOrdered = this.CurrentPlaylist.songs.Select(x => x.Key).Distinct().ToList();
+            _log.Debug("Filtering songs for playlist: {0}", this.CurrentPlaylist.Title);            
+            List<String> playlistKeysOrdered = this.CurrentPlaylist.Songs.Select(x => x.Key).Distinct().ToList();
             Dictionary<String, int>playlistKeyToIndex = playlistKeysOrdered.Select((val, index) => new { Index = index, Value = val }).ToDictionary(i => i.Value, i => i.Index);
             LevelCollectionsForGameplayModes levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionsForGameplayModes>().FirstOrDefault();
             var levels = levelCollections.GetLevels(_currentGamePlayMode);
