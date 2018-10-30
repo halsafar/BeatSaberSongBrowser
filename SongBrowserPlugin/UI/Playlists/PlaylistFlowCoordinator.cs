@@ -138,7 +138,7 @@ namespace SongBrowserPlugin.UI
         {
             try
             {
-                if (!this.DownloadQueueViewController._queuedSongs.Any(x => x.songQueueState == SongQueueState.Queued || x.songQueueState == SongQueueState.Downloading) && !_downloadingPlaylist)
+                if (this.DownloadQueueViewController._queuedSongs.Any(x => x.songQueueState == SongQueueState.Queued || x.songQueueState == SongQueueState.Downloading))
                 {
                     _log.Debug("Aborting downloads...");
                     this.DownloadQueueViewController.AbortDownloads();
