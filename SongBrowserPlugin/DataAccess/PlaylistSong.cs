@@ -10,6 +10,7 @@ namespace SongBrowserPlugin.DataAccess
     {
         public String Key { get; set; }
         public String SongName { get; set; }
+        public string LevelId { get; set; }
 
         // Set by playlist downloading
         [NonSerialized]

@@ -159,9 +159,9 @@ namespace SongBrowserPlugin.UI
             {
                 Playlist p = _reader.Playlists[row];
                 StandardLevelListTableCell tableCell = Instantiate(_cellInstanceTemplate, this._tableView.transform, false);
-                tableCell.coverImage = Base64Sprites.Base64ToSprite(p.image);
-                tableCell.songName = p.playlistTitle;
-                tableCell.author = p.playlistAuthor;
+                tableCell.coverImage = Base64Sprites.Base64ToSprite(p.Image);
+                tableCell.songName = p.Title;
+                tableCell.author = p.Author;
 
                 return tableCell;
             }

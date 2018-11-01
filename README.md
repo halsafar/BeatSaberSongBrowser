@@ -31,6 +31,32 @@ A plugin for customizing the in-game song browser.
  - Sort buttons can be pressed a second time to invert the sorting.
  - Filters can be cancelled by selecting them again.
 
+## Playlist Format
+```json
+{
+  "playlistTitle": "My Songs",
+  "playlistAuthor": "Me",
+  "image": "",
+  "customArchiveUrl": "",
+  "customDetailUrl": "",
+  "songs": [
+    {
+      "songName": "SomeCoolSong",
+      "key": "0000-0000"
+    },
+    {
+      "songName": "AnotherCoolSong",
+      "key": "0000-0000"
+    }    
+  ]
+}
+```
+
+- `image` (optional): Base64 JPEG or PNG
+- `customArchiveUrl` (optional): Expects a URL directly to an archive with a wildcard [KEY] which is replace with the song key.
+  - Example: `"customArchiveUrl": "http://website/dlsongs/[KEY].zip"`
+- `customDetailUrl` (optional): Expects a response equivalent to BeatSaver.com API.
+
 ## Status
 - Working with BeatSaber 0.11.2
 

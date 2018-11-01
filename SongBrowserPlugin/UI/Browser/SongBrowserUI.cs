@@ -692,7 +692,7 @@ namespace SongBrowserPlugin.UI
 
             if (p != null)
             {
-                _log.Debug("Showing songs for playlist: {0}", p.playlistTitle);
+                _log.Debug("Showing songs for playlist: {0}", p.Title);
                 _model.Settings.filterMode = SongFilterMode.Playlist;
                 _model.CurrentPlaylist = p;
                 _model.Settings.Save();

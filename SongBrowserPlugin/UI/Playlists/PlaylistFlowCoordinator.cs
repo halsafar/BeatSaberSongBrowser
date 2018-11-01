@@ -19,8 +19,7 @@ namespace SongBrowserPlugin.UI
     {
         public static string beatsaverURL = "https://beatsaver.com";
 
-        public const String Name = "PlaylistFlowCoordinator";
-        private Logger _log = new Logger(Name);
+        private Logger _log = new Logger("PlaylistFlowCoordinator");
 
         private PlaylistSelectionNavigationController _playlistNavigationController;
         private PlaylistSelectionListViewController _playlistListViewController;
@@ -95,7 +94,7 @@ namespace SongBrowserPlugin.UI
         /// <param name="songListViewController"></param>
         public virtual void HandlePlaylistListDidSelectPlaylist(PlaylistSelectionListViewController playlistListViewController)
         {
-            _log.Debug("Selected Playlist: {0}", playlistListViewController.SelectedPlaylist.playlistTitle);
+            _log.Debug("Selected Playlist: {0}", playlistListViewController.SelectedPlaylist.Title);
 
             int missingCount = CountMissingSongs(playlistListViewController.SelectedPlaylist);
 
@@ -164,13 +163,13 @@ namespace SongBrowserPlugin.UI
         /// <returns></returns>
         private void FilterSongsForPlaylist(Playlist playlist)
         {
-            if (!playlist.songs.All(x => x.Level != null))
+            if (!playlist.Songs.All(x => x.Level != null))
             {
-                playlist.songs.ForEach(x =>
+                playlist.Songs.ForEach(x =>
                 {
                     if (x.Level == null)
                     {
-                        x.Level = SongLoader.CustomLevels.FirstOrDefault(y => y.customSongInfo.path.Contains(x.Key) && Directory.Exists(y.customSongInfo.path));
+                        x.Level = SongLoader.CustomLevels.FirstOrDefault(y => (y.customSongInfo.path.Contains(x.Key) && Directory.Exists(y.customSongInfo.path)) || (string.IsNullOrEmpty(x.LevelId) ? false : y.levelID.StartsWith(x.LevelId)));
                     }
                 });
             }
@@ -183,7 +182,7 @@ namespace SongBrowserPlugin.UI
         /// <returns></returns>
         private int CountMissingSongs(Playlist playlist)
         {
-            return playlist.songs.Count - playlist.songs.Count(x => SongLoader.CustomLevels.Any(y => y.customSongInfo.path.Contains(x.Key)));
+            return playlist.Songs.Count - playlist.Songs.Count(x => SongLoader.CustomLevels.Any(y => y.customSongInfo.path.Contains(x.Key)));
         }
 
         /// <summary>
@@ -208,9 +207,8 @@ namespace SongBrowserPlugin.UI
         /// <returns></returns>
         public IEnumerator DownloadPlaylist(Playlist playlist)
         {
-            Playlist selectedPlaylist = this._playlistListViewController.SelectedPlaylist;
-            this.FilterSongsForPlaylist(selectedPlaylist);
-            List<PlaylistSong> playlistSongsToDownload = selectedPlaylist.songs.Where(x => x.Level == null).ToList();
+            this.FilterSongsForPlaylist(playlist);
+            List<PlaylistSong> playlistSongsToDownload = playlist.Songs.Where(x => x.Level == null).ToList();
 
             List<Song> beatSaverSongs = new List<Song>();
 
@@ -220,10 +218,28 @@ namespace SongBrowserPlugin.UI
 
             foreach (var item in playlistSongsToDownload)
             {
-                _log.Debug("Obtaining hash and url for " + item.Key + ": " + item.SongName);
-                yield return GetSongByPlaylistSong(item);
+                if (String.IsNullOrEmpty(playlist.CustomArchiveUrl))
+                {
+                    _log.Debug("Obtaining hash and url for " + item.Key + ": " + item.SongName);
+                    yield return GetSongByPlaylistSong(playlist, item);
 
-                _log.Debug("Song is null: " + (_lastRequestedSong == null) + "\n Level is downloaded: " + (SongLoader.CustomLevels.Any(x => x.levelID.Substring(0, 32) == _lastRequestedSong.hash.ToUpper())));
+                    _log.Debug("Song is null: " + (_lastRequestedSong == null) + "\n Level is downloaded: " + (SongLoader.CustomLevels.Any(x => x.levelID.Substring(0, 32) == _lastRequestedSong.hash.ToUpper())));
+                }
+                else
+                {
+                    // stamp archive url
+                    String archiveUrl = playlist.CustomArchiveUrl.Replace("[KEY]", item.Key);
+
+                    // Create fake song with what we know...
+                    // TODO - update this if we ever know more...
+                    _lastRequestedSong = new Song()
+                    {
+                        songName = item.SongName,
+                        downloadingProgress = 0f,
+                        hash = "",
+                        downloadUrl = archiveUrl
+                    };
+                }
 
                 if (_lastRequestedSong != null && !SongLoader.CustomLevels.Any(x => x.levelID.Substring(0, 32) == _lastRequestedSong.hash.ToUpper()))
                 {
@@ -270,12 +286,18 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         /// <param name="song"></param>
         /// <returns></returns>
-        public IEnumerator GetSongByPlaylistSong(PlaylistSong song)
+        public IEnumerator GetSongByPlaylistSong(Playlist playlist, PlaylistSong song)
         {
             UnityWebRequest wwwId = null;
             try
             {
                 wwwId = UnityWebRequest.Get($"{PlaylistFlowCoordinator.beatsaverURL}/api/songs/detail/" + song.Key);
+                string url = PlaylistFlowCoordinator.beatsaverURL + $"/api/songs/detail/" + song.Key;
+                if (!string.IsNullOrEmpty(playlist.CustomDetailUrl))
+                {
+                    url = playlist.CustomDetailUrl + song.Key;
+                }
+                wwwId = UnityWebRequest.Get(url);
                 wwwId.timeout = 10;
             }
             catch
@@ -290,7 +312,7 @@ namespace SongBrowserPlugin.UI
             if (wwwId.isNetworkError || wwwId.isHttpError)
             {
                 _log.Error(wwwId.error);
-                _log.Error($"Song {song.SongName} doesn't exist on BeatSaver!");
+                _log.Error($"Song {song.Key}({song.SongName}) doesn't exist!");
                 _lastRequestedSong = new Song() { songName = song.SongName, songQueueState = SongQueueState.Error, downloadingProgress = 1f, hash = "" };
             }
             else

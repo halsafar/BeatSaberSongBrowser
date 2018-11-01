@@ -83,21 +83,33 @@ namespace SongBrowserPlugin.DataAccess
 
                 JSONNode playlistNode = JSON.Parse(json);
 
-                playlist.image = playlistNode["image"];
-                playlist.playlistTitle = playlistNode["playlistTitle"];
-                playlist.playlistAuthor = playlistNode["playlistAuthor"];
-                playlist.songs = new List<PlaylistSong>();
-
+                playlist.Image = playlistNode["image"];
+                playlist.Title = playlistNode["playlistTitle"];
+                playlist.Author = playlistNode["playlistAuthor"];
+                playlist.Songs = new List<PlaylistSong>();
+                playlist.CustomDetailUrl = playlistNode["customDetailUrl"];
+                playlist.CustomArchiveUrl = playlistNode["customArchiveUrl"];
+                if (!string.IsNullOrEmpty(playlist.CustomDetailUrl))
+                {
+                    if (!playlist.CustomDetailUrl.EndsWith("/"))
+                    {
+                        playlist.CustomDetailUrl += "/";
+                    }
+                    _log.Debug("Found playlist with custom URL! Name: " + playlist.Title + ", CustomDetailURL: " + playlist.CustomDetailUrl);
+                }
                 foreach (JSONNode node in playlistNode["songs"].AsArray)
                 {
-                    PlaylistSong song = new PlaylistSong();
-                    song.Key = node["key"];
-                    song.SongName = node["songName"];
+                    PlaylistSong song = new PlaylistSong
+                    {
+                        Key = node["key"],
+                        SongName = node["songName"],
+                        LevelId = node["levelId"]
+                    };
 
-                    playlist.songs.Add(song);
+                    playlist.Songs.Add(song);
                 }
 
-                playlist.playlistPath = path;
+                playlist.Path = path;
                 return playlist;
             }
             catch (Exception e)

@@ -8,11 +8,14 @@ namespace SongBrowserPlugin.DataAccess
 {
     public class Playlist
     {
-        public String playlistTitle { get; set; }
-        public String playlistAuthor { get; set; }
-        public string image { get; set; }
-        public List<PlaylistSong> songs { get; set; }
+        public String Title { get; set; }
+        public String Author { get; set; }
+        public string Image { get; set; }
+        public List<PlaylistSong> Songs { get; set; }
 
-        public String playlistPath;
+        public String Path;
+
+        public string CustomDetailUrl { get; set; }
+        public string CustomArchiveUrl { get; set; }
     }
 }

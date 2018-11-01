@@ -47,21 +47,21 @@ namespace SongBrowserPlugin.UI
         public void Init(Playlist playlist, int missingCount)
         {
             _playlistTitleText = UIBuilder.CreateText(this.transform as RectTransform,
-                playlist.playlistTitle,
+                playlist.Title,
                 new Vector2(0, -20),
                 new Vector2(60f, 10f)
             );
             _playlistTitleText.alignment = TextAlignmentOptions.Center;
 
             _playlistAuthorText = UIBuilder.CreateText(this.transform as RectTransform,
-                playlist.playlistAuthor,
+                playlist.Author,
                 new Vector2(0, -30),
                 new Vector2(60f, 10f)
             );
             _playlistAuthorText.alignment = TextAlignmentOptions.Center;
 
             _playlistNumberOfSongs = UIBuilder.CreateText(this.transform as RectTransform,
-                playlist.songs.Count.ToString(),
+                playlist.Songs.Count.ToString(),
                 new Vector2(0, -40),
                 new Vector2(60f, 10f)
             );
@@ -95,9 +95,9 @@ namespace SongBrowserPlugin.UI
         public virtual void SetContent(Playlist p, int missingCount)
         {
             _selectedPlaylist = p;
-            _playlistTitleText.text = _selectedPlaylist.playlistTitle;
-            _playlistAuthorText.text = _selectedPlaylist.playlistAuthor;
-            _playlistNumberOfSongs.text = "Song Count: " + _selectedPlaylist.songs.Count.ToString();
+            _playlistTitleText.text = _selectedPlaylist.Title;
+            _playlistAuthorText.text = _selectedPlaylist.Author;
+            _playlistNumberOfSongs.text = "Song Count: " + _selectedPlaylist.Songs.Count.ToString();
             _playlistMissingSongCount.text = "Missing Count: " + missingCount;
         }
 
