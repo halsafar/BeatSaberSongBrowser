@@ -32,7 +32,7 @@ namespace SongBrowserPlugin.UI
         private static readonly Vector2 CanvasSize = new Vector2(200, 50);
 
         private static readonly Vector2 CreditPosition = new Vector2(50, 22);
-        private const string CreditText = "Song Browser Plugin <size=75%>by Halsafar</size>";
+        private const string CreditText = "Song Browser Plugin <size=75%>" + Plugin.VERSION_NUMBER + "by Halsafar</size>";
         private const float CreditFontSize = 9f;
         private static readonly Vector2 HeaderPosition = new Vector2(50, 15);
         private static readonly Vector2 HeaderSize = new Vector2(200, 20);
