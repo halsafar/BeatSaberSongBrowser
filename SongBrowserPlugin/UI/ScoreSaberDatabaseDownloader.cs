@@ -10,7 +10,7 @@ namespace SongBrowserPlugin.UI
 {
     public class ScoreSaberDatabaseDownloader : MonoBehaviour
     {
-        public const String PP_DATA_URL = "https://raw.githubusercontent.com/DuoVR/PPFarming/master/js/songlist.tsv";
+        public const String SCRAPED_SCORE_SABER_JSON_URL = "https://raw.githubusercontent.com/halsafar/beat-saber-scraped-data/master/scoresaber/score_saber_data_v1.json";
 
         private Logger _log = new Logger("ScoreSaberDatabaseDownloader");
 
@@ -64,8 +64,8 @@ namespace SongBrowserPlugin.UI
             {
                 SongBrowserApplication.MainProgressBar.ShowMessage("Downloading DuoVR ScoreSaber data...");
 
-                _log.Info("Attempting to download: {0}", ScoreSaberDatabaseDownloader.PP_DATA_URL);
-                using (UnityWebRequest www = UnityWebRequest.Get(ScoreSaberDatabaseDownloader.PP_DATA_URL))
+                _log.Info("Attempting to download: {0}", ScoreSaberDatabaseDownloader.SCRAPED_SCORE_SABER_JSON_URL);
+                using (UnityWebRequest www = UnityWebRequest.Get(ScoreSaberDatabaseDownloader.SCRAPED_SCORE_SABER_JSON_URL))
                 {
                     // Use 4MB cache, large enough for this file to grow for awhile.
                     www.SetCacheable(new CacheableDownloadHandlerScoreSaberData(www, _buffer));
