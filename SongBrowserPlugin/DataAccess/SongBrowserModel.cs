@@ -360,7 +360,7 @@ namespace SongBrowserPlugin
             // bail
             if (scoreSaberDataFile == null)
             {
-                _log.Warning("Cannot fetch song difficulty data tsv file from DuoVR");
+                _log.Warning("Cannot fetch song difficulty for score saber data...");
                 return;
             }
 

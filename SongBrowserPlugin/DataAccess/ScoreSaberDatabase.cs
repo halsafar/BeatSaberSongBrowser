@@ -106,7 +106,7 @@ namespace SongBrowserPlugin.DataAccess
             }
             
             timer.Stop();
-            _log.Debug("Processing DuoVR ScoreSaber TSV file took {0}ms", timer.ElapsedMilliseconds);
+            _log.Debug("Processing ScoreSaber data took {0}ms", timer.ElapsedMilliseconds);
         }
     }
 }
