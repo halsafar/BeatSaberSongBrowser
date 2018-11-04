@@ -6,6 +6,8 @@ namespace SongBrowserPlugin
 {
     public class Plugin : IPlugin
     {
+        public const string VersionNumber = "v2.3.3";
+
         public string Name
         {
             get { return "Song Browser"; }
@@ -13,7 +15,7 @@ namespace SongBrowserPlugin
 
         public string Version
         {
-            get { return "v2.3.3"; }
+            get { return VersionNumber; }
         }
 
         public void OnApplicationStart()
