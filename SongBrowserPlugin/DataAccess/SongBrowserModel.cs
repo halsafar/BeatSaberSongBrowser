@@ -287,8 +287,6 @@ namespace SongBrowserPlugin
                     string currentDirectoryName = info.Name;
 
                     String version = level.customSongInfo.path.Replace(revSlashCustomSongPath, "").Replace(currentDirectoryName, "").Replace("/", "");
-                    _log.Debug(version);
-
                     if (!String.IsNullOrEmpty(version))
                     {
                         //_log.Debug("MATCH");
