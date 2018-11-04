@@ -10,7 +10,7 @@ namespace SongBrowserPlugin.UI
 {
     public class ScoreSaberDatabaseDownloader : MonoBehaviour
     {
-        public const String PP_DATA_URL = "https://raw.githubusercontent.com/DuoVR/PPFarming/master/js/songlist.tsv";
+        public const String SCRAPED_SCORE_SABER_JSON_URL = "https://raw.githubusercontent.com/halsafar/beat-saber-scraped-data/master/scoresaber/score_saber_data_v1.json";
 
         private Logger _log = new Logger("ScoreSaberDatabaseDownloader");
 
@@ -51,21 +51,21 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
-        /// Wait for the tsv file from DuoVR to download.
+        /// Wait for score saber related files to download.
         /// </summary>
         /// <returns></returns>
         private IEnumerator WaitForDownload()
         {
             if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile != null)
             {
-                _log.Info("Using cached copy of DuoVR ScoreSaberData...");
+                _log.Info("Using cached copy of ScoreSaberData...");
             }
             else
             {
-                SongBrowserApplication.MainProgressBar.ShowMessage("Downloading DuoVR ScoreSaber data...");
+                SongBrowserApplication.MainProgressBar.ShowMessage("Downloading ScoreSaber data...");
 
-                _log.Info("Attempting to download: {0}", ScoreSaberDatabaseDownloader.PP_DATA_URL);
-                using (UnityWebRequest www = UnityWebRequest.Get(ScoreSaberDatabaseDownloader.PP_DATA_URL))
+                _log.Info("Attempting to download: {0}", ScoreSaberDatabaseDownloader.SCRAPED_SCORE_SABER_JSON_URL);
+                using (UnityWebRequest www = UnityWebRequest.Get(ScoreSaberDatabaseDownloader.SCRAPED_SCORE_SABER_JSON_URL))
                 {
                     // Use 4MB cache, large enough for this file to grow for awhile.
                     www.SetCacheable(new CacheableDownloadHandlerScoreSaberData(www, _buffer));
@@ -76,18 +76,18 @@ namespace SongBrowserPlugin.UI
                     try
                     {
                         ScoreSaberDatabaseDownloader.ScoreSaberDataFile = (www.downloadHandler as CacheableDownloadHandlerScoreSaberData).ScoreSaberDataFile;
-                        _log.Info("Success downloading DuoVR ScoreSaber data!");
+                        _log.Info("Success downloading ScoreSaber data!");
 
-                        SongBrowserApplication.MainProgressBar.ShowMessage("Success downloading DuoVR ScoreSaber data...");
+                        SongBrowserApplication.MainProgressBar.ShowMessage("Success downloading ScoreSaber data...");
                         onScoreSaberDataDownloaded?.Invoke();
                     }
                     catch (System.InvalidOperationException)
                     {
-                        _log.Error("Failed to download DuoVR ScoreSaber data file...");
+                        _log.Error("Failed to download ScoreSaber data file...");
                     }
                     catch (Exception e)
                     {
-                        _log.Exception("Exception trying to download DuoVR ScoreSaber data file...", e);
+                        _log.Exception("Exception trying to download ScoreSaber data file...", e);
                     }
                 }
             }
