@@ -19,8 +19,6 @@ namespace SongBrowserPlugin
 
         private readonly DateTime EPOCH = new DateTime(1970, 1, 1);
 
-        private readonly Regex SONG_PATH_VERSION_REGEX = new Regex(@".*/(?<version>[0-9]*-[0-9]*)/");
-
         private Logger _log = new Logger("SongBrowserModel");
 
         // song_browser_settings.xml
@@ -253,6 +251,7 @@ namespace SongBrowserPlugin
 
             // Calculate some information about the custom song dir
             String customSongsPath = Path.Combine(Environment.CurrentDirectory, CUSTOM_SONGS_DIR);
+            String revSlashCustomSongPath = customSongsPath.Replace('\\', '/');
             double currentCustomSongDirLastWriteTIme = (File.GetLastWriteTimeUtc(customSongsPath) - EPOCH).TotalMilliseconds;
             bool customSongDirChanged = false;
             if (_customSongDirLastWriteTime != currentCustomSongDirLastWriteTIme)
@@ -284,10 +283,15 @@ namespace SongBrowserPlugin
 
                 if (!_levelIdToSongVersion.ContainsKey(level.levelID))
                 {
-                    Match m = SONG_PATH_VERSION_REGEX.Match(level.customSongInfo.path);
-                    if (m.Success)
+                    DirectoryInfo info = new DirectoryInfo(level.customSongInfo.path);
+                    string currentDirectoryName = info.Name;
+
+                    String version = level.customSongInfo.path.Replace(revSlashCustomSongPath, "").Replace(currentDirectoryName, "").Replace("/", "");
+                    _log.Debug(version);
+
+                    if (!String.IsNullOrEmpty(version))
                     {
-                        String version = m.Groups["version"].Value;
+                        //_log.Debug("MATCH");
                         _levelIdToSongVersion.Add(level.levelID, version);
                     }
                 }
@@ -382,7 +386,7 @@ namespace SongBrowserPlugin
                     }
                 }
 
-                // fallback to name matching 
+                // fallback to name matching
                 if (scoreSaberData == null)
                 {
                     if (scoreSaberDataFile.SongNameToScoreSaberData.ContainsKey(level.songName))
