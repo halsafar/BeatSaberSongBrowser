@@ -386,15 +386,6 @@ namespace SongBrowserPlugin
                     }
                 }
 
-                // fallback to name matching
-                if (scoreSaberData == null)
-                {
-                    if (scoreSaberDataFile.SongNameToScoreSaberData.ContainsKey(level.songName))
-                    {
-                        scoreSaberData = scoreSaberDataFile.SongNameToScoreSaberData[level.songName];
-                    }
-                }
-
                 if (scoreSaberData != null)
                 {
                     //_log.Debug("{0} = {1}pp", level.songName, pp);
