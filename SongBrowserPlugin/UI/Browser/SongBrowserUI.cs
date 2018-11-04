@@ -352,7 +352,13 @@ namespace SongBrowserPlugin.UI
             _model.Settings.sortMode = sortMode;
             _model.Settings.Save();
 
-            //this._model.ProcessSongList();
+            // update the seed
+            if (_model.Settings.sortMode == SongSortMode.Random)
+            {
+                this.Model.Settings.randomSongSeed = Guid.NewGuid().GetHashCode();
+                this.Model.Settings.Save();
+            }
+
             UpdateSongList();
             RefreshSongList();
 

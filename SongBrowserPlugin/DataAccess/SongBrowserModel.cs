@@ -807,9 +807,9 @@ namespace SongBrowserPlugin
 
         private void SortRandom(List<StandardLevelSO> levels)
         {
-            _log.Info("Sorting song list by random...");
+            _log.Info("Sorting song list by random (seed={0})...", this.Settings.randomSongSeed);
 
-            System.Random rnd = new System.Random(Guid.NewGuid().GetHashCode());
+            System.Random rnd = new System.Random(this.Settings.randomSongSeed);
 
             _sortedSongs = levels
                 .OrderBy(x => rnd.Next())
