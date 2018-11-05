@@ -44,11 +44,6 @@ namespace SongBrowserPlugin
         public static Action<List<CustomLevel>> didFinishProcessingSongs;
 
         /// <summary>
-        /// Toggle whether inverting the results.
-        /// </summary>
-        public bool InvertingResults { get; private set; }
-
-        /// <summary>
         /// Get the settings the model is using.
         /// </summary>
         public SongBrowserSettings Settings
@@ -223,7 +218,7 @@ namespace SongBrowserPlugin
         /// </summary>
         public void ToggleInverting()
         {
-            this.InvertingResults = !this.InvertingResults;
+            this.Settings.invertSortResults = !this.Settings.invertSortResults;
         }
 
         /// <summary>
@@ -655,7 +650,7 @@ namespace SongBrowserPlugin
                     break;
             }
 
-            if (this.InvertingResults && _settings.sortMode != SongSortMode.Random)
+            if (this.Settings.invertSortResults && _settings.sortMode != SongSortMode.Random)
             {
                 _sortedSongs.Reverse();
             }

@@ -994,7 +994,7 @@ namespace SongBrowserPlugin.UI
                 UIBuilder.SetButtonBorder(ref sortButton.Button, Color.black);
                 if (sortButton.SortMode == _model.Settings.sortMode)
                 {
-                    if (_model.InvertingResults)
+                    if (this._model.Settings.invertSortResults)
                     {
                         UIBuilder.SetButtonBorder(ref sortButton.Button, Color.red);
                     }

@@ -56,6 +56,7 @@ namespace SongBrowserPlugin.DataAccess
         public bool randomInstantQueue = false;
         public bool deleteNumberedSongFolder = true;
         public int randomSongSeed;
+        public bool invertSortResults = false;
 
         [XmlIgnore]
         [NonSerialized]
