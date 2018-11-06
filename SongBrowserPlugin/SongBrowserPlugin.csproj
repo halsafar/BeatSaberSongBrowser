@@ -110,6 +110,7 @@
     <Compile Include="DataAccess\Playlist.cs" />
     <Compile Include="DataAccess\PlaylistReader.cs" />
     <Compile Include="DataAccess\PlaylistSong.cs" />
+    <Compile Include="DataAccess\PlaylistWriter.cs" />
     <Compile Include="DataAccess\ScoreSaberDatabase.cs" />
     <Compile Include="Downloader.cs" />
     <Compile Include="Logger.cs" />

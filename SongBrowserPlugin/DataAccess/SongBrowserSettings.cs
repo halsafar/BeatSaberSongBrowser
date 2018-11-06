@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SongBrowserPlugin.UI;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -40,6 +41,7 @@ namespace SongBrowserPlugin.DataAccess
     {
         public static readonly Encoding Utf8Encoding = Encoding.UTF8;
         public static readonly XmlSerializer SettingsSerializer = new XmlSerializer(typeof(SongBrowserSettings));
+        public static readonly String DefaultConvertedFavoritesPlaylistName = "SongBrowserPluginFavorites.json";
 
         public SongSortMode sortMode = default(SongSortMode);
         public SongFilterMode filterMode = default(SongFilterMode);
@@ -51,6 +53,7 @@ namespace SongBrowserPlugin.DataAccess
         public String currentLevelId = default(String);
         public String currentDirectory = default(String);
         public String currentPlaylistFile = default(String);
+        public String currentEditingPlaylistFile = default(String);
 
         public bool folderSupportEnabled = false;
         public bool randomInstantQueue = false;
@@ -154,14 +157,90 @@ namespace SongBrowserPlugin.DataAccess
                 retVal = new SongBrowserSettings();
             }
 
-            // Load favorites
-            if (File.Exists(SongBrowserSettings.DownloaderFavoritesFilePath()))
+            // Load Downloader favorites but only once, we'll convert them once, empty the song_browser_setting.xml favorites and never load it again.
+            if (retVal.Favorites.Count > 0)
             {
-                String[] downloaderFavorites = File.ReadAllLines(SongBrowserSettings.DownloaderFavoritesFilePath());
-                retVal.Favorites.UnionWith(downloaderFavorites);
+                if (File.Exists(SongBrowserSettings.DownloaderFavoritesFilePath()))
+                {
+                    String[] downloaderFavorites = File.ReadAllLines(SongBrowserSettings.DownloaderFavoritesFilePath());
+                    retVal.Favorites.UnionWith(downloaderFavorites);
+                }
             }
 
             return retVal;
+        }
+
+        /// <summary>
+        /// Favorites used to exist as part of the song_browser_settings.xml
+        /// This makes little sense now.  This is the upgrade path.
+        /// Convert all existing favorites to the best of our effort into a playlist.
+        /// </summary>
+        /// <param name="levelIdToCustomLevel"></param>
+        /// <param name="levelIdToSongVersion"></param>
+        public void ConvertFavoritesToPlaylist(Dictionary<String, SongLoaderPlugin.OverrideClasses.CustomLevel> levelIdToCustomLevel,
+                                               Dictionary<string, string> levelIdToSongVersion)
+        {
+            // Check if we have favorites to convert to the playlist
+            if (this.Favorites.Count <= 0)
+            {
+                return;
+            }
+
+            Log.Info("Converting {0} Favorites in song_browser_settings.xml to a Playlist...", this.Favorites.Count);
+
+            // check if the playlist exists
+            String playlistPath = Path.Combine(Environment.CurrentDirectory, "Playlists", DefaultConvertedFavoritesPlaylistName);
+
+            Playlist p = null;
+            if (File.Exists(playlistPath))
+            {
+                p = PlaylistsReader.ParsePlaylist(playlistPath);
+            }
+            else
+            {
+                p = new Playlist
+                {
+                    Title = "Song Browser Favorites",
+                    Author = "SongBrowserPlugin",
+                    Path = "",
+                    Image = Base64Sprites.PlaylistIcon,
+                    Songs = new List<PlaylistSong>(),
+                };
+            }
+
+            List<String> successfullyRemoved = new List<string>();
+            this.Favorites.RemoveWhere(levelId =>
+            {
+                PlaylistSong playlistSong = new PlaylistSong
+                {
+                    LevelId = levelId
+                };
+
+                if (levelIdToCustomLevel.ContainsKey(levelId) && levelIdToSongVersion.ContainsKey(levelId))
+                {
+                    playlistSong.SongName = levelIdToCustomLevel[levelId].songName;
+                    playlistSong.Key = levelIdToSongVersion[levelId];
+                }
+                else
+                {
+                    // No easy way to look up original songs... They will still work but have wrong song name in playlist.  
+                    playlistSong.SongName = levelId;
+                    playlistSong.Key = "";
+                }
+
+                p.Songs.Add(playlistSong);
+
+                return true;
+            });
+            
+            PlaylistWriter.WritePlaylist(p, playlistPath);
+
+            if (String.IsNullOrEmpty(this.currentEditingPlaylistFile))
+            {
+                this.currentEditingPlaylistFile = playlistPath;
+            }
+
+            this.Save();
         }
 
         /// <summary>

@@ -156,6 +156,10 @@ namespace SongBrowserPlugin
             }
         }
 
+        public Playlist CurrentEditingPlaylist;
+
+        public HashSet<String> CurrentEditingPlaylistLevelIds;
+
 
         /// <summary>
         /// Constructor.
@@ -297,14 +301,42 @@ namespace SongBrowserPlugin
             this.UpdateScoreSaberDataMapping();
             this.UpdatePlayCounts(_currentGamePlayMode);
             this.UpdateDirectoryTree(customSongsPath);
+
+            // Check if we need to upgrade settings file favorites
+            try
+            {
+                this.Settings.ConvertFavoritesToPlaylist(_levelIdToCustomLevel, _levelIdToSongVersion);
+            }
+            catch (Exception e)
+            {
+                _log.Exception("FAILED TO CONVERT FAVORITES TO PLAYLIST!", e);
+            }
+
+            // load the current editing playlist
+            if (!String.IsNullOrEmpty(this.Settings.currentEditingPlaylistFile))
+            {
+                CurrentEditingPlaylist = PlaylistsReader.ParsePlaylist(this.Settings.currentEditingPlaylistFile);
+                if (CurrentEditingPlaylist != null)
+                {
+                    CurrentEditingPlaylistLevelIds = new HashSet<string>();
+                    foreach (PlaylistSong ps in CurrentEditingPlaylist.Songs)
+                    {
+                        CurrentEditingPlaylistLevelIds.Add(ps.LevelId);
+                    }
+                }
+            }
+
+            // Actually sort and filter
             this.ProcessSongList();
 
+            // Signal complete
             if (SongLoader.CustomLevels.Count > 0)
             {
                 didFinishProcessingSongs?.Invoke(SongLoader.CustomLevels);
             }
 
             timer.Stop();
+
             _log.Info("Updating songs infos took {0}ms", timer.ElapsedMilliseconds);
             _log.Debug("Song Browser knows about {0} songs from SongLoader...", _originalSongs.Count);
         }
@@ -554,6 +586,46 @@ namespace SongBrowserPlugin
                 PrintDirectory(childNode.Value, depth + 1);
             }            
         }
+
+        /// <summary>
+        /// Add Song to Editing Playlist
+        /// </summary>
+        /// <param name="songInfo"></param>
+        public void AddSongToEditingPlaylist(IStandardLevel songInfo)
+        {
+            if (this.CurrentEditingPlaylist == null)
+            {
+                return;
+            }
+
+            this.CurrentEditingPlaylist.Songs.Add(new PlaylistSong()
+            {
+                SongName = songInfo.songName,
+                LevelId = songInfo.levelID,
+                Key = _levelIdToSongVersion.ContainsKey(songInfo.levelID) ? _levelIdToSongVersion[songInfo.levelID] : songInfo.levelID,                
+            });
+
+            this.CurrentEditingPlaylistLevelIds.Add(songInfo.levelID);
+
+            PlaylistWriter.WritePlaylist(this.CurrentEditingPlaylist, this.CurrentEditingPlaylist.Path);
+        }
+
+        /// <summary>
+        /// Remove Song from editing playlist
+        /// </summary>
+        /// <param name="levelId"></param>
+        public void RemoveSongFromEditingPlaylist(IStandardLevel songInfo)
+        {
+            if (this.CurrentEditingPlaylist == null)
+            {
+                return;
+            }
+
+            this.CurrentEditingPlaylist.Songs.RemoveAll(x => x.LevelId == songInfo.levelID);
+            this.CurrentEditingPlaylistLevelIds.Remove(songInfo.levelID);
+
+            PlaylistWriter.WritePlaylist(this.CurrentEditingPlaylist, this.CurrentEditingPlaylist.Path);
+        }
         
         /// <summary>
         /// Sort the song list based on the settings.
@@ -599,7 +671,7 @@ namespace SongBrowserPlugin
             switch (_settings.filterMode)
             {
                 case SongFilterMode.Favorites:
-                    FilterFavorites(_originalSongs);
+                    FilterFavorites();
                     break;
                 case SongFilterMode.Search:
                     FilterSearch(_originalSongs);
@@ -661,12 +733,18 @@ namespace SongBrowserPlugin
             //_sortedSongs.ForEach(x => _log.Debug(x.levelID));
         }    
         
-        private void FilterFavorites(List<StandardLevelSO> levels)
+        /// <summary>
+        /// For now the editing playlist will be considered the favorites playlist.
+        /// Users can edit the settings file themselves.
+        /// </summary>
+        private void FilterFavorites()
         {
-            _log.Info("Filtering song list as favorites");
-            _filteredSongs = levels
-                .Where(x => _settings.Favorites.Contains(x.levelID))
-                .ToList();
+            _log.Info("Filtering song list as favorites playlist...");
+            if (this.CurrentEditingPlaylist != null)
+            {
+                this.CurrentPlaylist = this.CurrentEditingPlaylist;
+            }
+            this.FilterPlaylist();
         }
 
         private void FilterSearch(List<StandardLevelSO> levels)

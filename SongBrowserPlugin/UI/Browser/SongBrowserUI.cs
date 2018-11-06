@@ -257,7 +257,7 @@ namespace SongBrowserPlugin.UI
                     new Vector2(1.0f, 1.0f),
                     0.0f);
                 _addFavoriteButton.onClick.AddListener(delegate () {
-                    ToggleSongInFavorites();
+                    ToggleSongInPlaylist();
                 });
 
                 if (_currentAddFavoriteButtonSprite == null)
@@ -789,18 +789,21 @@ namespace SongBrowserPlugin.UI
         /// <summary>
         /// Add/Remove song from favorites depending on if it already exists.
         /// </summary>
-        private void ToggleSongInFavorites()
+        private void ToggleSongInPlaylist()
         {
             IStandardLevel songInfo = this._levelListViewController.selectedLevel;
-            if (_model.Settings.Favorites.Contains(songInfo.levelID))
+            if (_model.CurrentEditingPlaylist != null)
             {
-                _log.Info("Remove {0} from favorites", songInfo.songName);
-                _model.Settings.Favorites.Remove(songInfo.levelID);
-            }
-            else
-            {
-                _log.Info("Add {0} to favorites", songInfo.songName);
-                _model.Settings.Favorites.Add(songInfo.levelID);
+                if (_model.CurrentEditingPlaylistLevelIds.Contains(songInfo.levelID))
+                {
+                    _log.Info("Remove {0} from editing playlist", songInfo.songName);
+                    _model.RemoveSongFromEditingPlaylist(songInfo);
+                }
+                else
+                {
+                    _log.Info("Add {0} to editing playlist", songInfo.songName);
+                    _model.AddSongToEditingPlaylist(songInfo);
+                }
             }
 
             RefreshAddFavoriteButton(songInfo.levelID);
@@ -970,7 +973,7 @@ namespace SongBrowserPlugin.UI
             }
             else
             {
-                if (_model.Settings.Favorites.Contains(levelId))
+                if (_model.CurrentEditingPlaylistLevelIds.Contains(levelId))
                 {
                     _currentAddFavoriteButtonSprite = _removeFavoriteSprite;
                 }
@@ -1261,7 +1264,7 @@ namespace SongBrowserPlugin.UI
                     // add to favorites
                     if (Input.GetKeyDown(KeyCode.KeypadPlus))
                     {
-                        ToggleSongInFavorites();
+                        ToggleSongInPlaylist();
                     }
                 }
                 else if (_deleteDialog != null && _deleteDialog.isInViewControllerHierarchy)
