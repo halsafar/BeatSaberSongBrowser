@@ -186,13 +186,27 @@ namespace SongBrowserPlugin.DataAccess
                 return;
             }
 
-            Log.Info("Converting {0} Favorites in song_browser_settings.xml to a Playlist...", this.Favorites.Count);
-
             // check if the playlist exists
             String playlistPath = Path.Combine(Environment.CurrentDirectory, "Playlists", DefaultConvertedFavoritesPlaylistName);
 
-            Playlist p = null;
+            bool playlistExists = false;
             if (File.Exists(playlistPath))
+            {
+                playlistExists = true;
+            }
+
+            // abort here if playlist already exits.
+            if (playlistExists)
+            {
+                Log.Info("Not converting song_browser_setting.xml favorites because {0} already exists...", playlistPath);
+                return;
+            }
+
+            Log.Info("Converting {0} Favorites in song_browser_settings.xml to {1}...", this.Favorites.Count, playlistPath);
+
+            // written like this in case we ever want to support adding to this playlist
+            Playlist p = null;
+            if (playlistExists)
             {
                 p = PlaylistsReader.ParsePlaylist(playlistPath);
             }

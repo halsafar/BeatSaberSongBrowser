@@ -32,9 +32,8 @@ namespace SongBrowserPlugin.DataAccess
 
                 songs.Add(jsonSong);
             }
-            _log.Debug("FUCK1");
-            File.WriteAllText(fileName, root.ToString());
-            _log.Debug("FUCK2");
+
+            File.WriteAllText(fileName, root.ToString(4));        
             return true;
         }
     }

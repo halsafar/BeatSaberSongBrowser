@@ -36,6 +36,7 @@ namespace SongBrowserPlugin
         private Dictionary<string, ScoreSaberData> _levelIdToScoreSaberData = null;
         private Dictionary<string, int> _levelIdToPlayCount;
         private Dictionary<string, string> _levelIdToSongVersion;
+        private Dictionary<string, StandardLevelSO> _keyToSong;
         private Dictionary<String, DirectoryNode> _directoryTree;
         private Stack<DirectoryNode> _directoryStack = new Stack<DirectoryNode>();
 
@@ -171,6 +172,7 @@ namespace SongBrowserPlugin
             _levelIdToScoreSaberData = new Dictionary<string, ScoreSaberData>();
             _levelIdToPlayCount = new Dictionary<string, int>();
             _levelIdToSongVersion = new Dictionary<string, string>();
+            _keyToSong = new Dictionary<string, StandardLevelSO>();
 
             // Weights used for keeping the original songs in order
             // Invert the weights from the game so we can order by descending and make LINQ work with us...
@@ -290,6 +292,7 @@ namespace SongBrowserPlugin
                     {
                         //_log.Debug("MATCH");
                         _levelIdToSongVersion.Add(level.levelID, version);
+                        _keyToSong.Add(version, level);
                     }
                 }
             }
@@ -779,21 +782,33 @@ namespace SongBrowserPlugin
             {
                 _log.Error("Trying to load a null playlist...");
                 _filteredSongs = _originalSongs;
+                this.Settings.filterMode = SongFilterMode.None;
                 return;
             }
 
             _log.Debug("Filtering songs for playlist: {0}", this.CurrentPlaylist.Title);            
-            List<String> playlistKeysOrdered = this.CurrentPlaylist.Songs.Select(x => x.Key).Distinct().ToList();
-            Dictionary<String, int>playlistKeyToIndex = playlistKeysOrdered.Select((val, index) => new { Index = index, Value = val }).ToDictionary(i => i.Value, i => i.Index);
             LevelCollectionsForGameplayModes levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionsForGameplayModes>().FirstOrDefault();
             var levels = levelCollections.GetLevels(_currentGamePlayMode);
 
-            var songList = levels.Where(x => !x.levelID.StartsWith("Level_") && _levelIdToSongVersion.ContainsKey(x.levelID) && playlistKeyToIndex.ContainsKey(_levelIdToSongVersion[x.levelID])).ToList();
-            
+            Dictionary<String, StandardLevelSO> levelDict = levels.Select((val, index) => new { LevelId = val.levelID, Level = val }).ToDictionary(i => i.LevelId, i => i.Level);
+            List<StandardLevelSO> songList = new List<StandardLevelSO>();
+            foreach (PlaylistSong ps in this.CurrentPlaylist.Songs)
+            {
+                if (!String.IsNullOrEmpty(ps.LevelId))
+                {
+                    if (levelDict.ContainsKey(ps.LevelId))
+                    {
+                        songList.Add(levelDict[ps.LevelId]);
+                    }
+                }
+                else if (!ps.Key.StartsWith("Level_") && _keyToSong.ContainsKey(ps.Key))
+                {
+                    songList.Add(_keyToSong[ps.Key]);
+                }
+            }
+
             _originalSongs = songList;
-            _filteredSongs = _originalSongs
-                .OrderBy(x => playlistKeyToIndex[_levelIdToSongVersion[x.levelID]])
-                .ToList();
+            _filteredSongs = _originalSongs;
             
             _log.Debug("Playlist filtered song count: {0}", _filteredSongs.Count);
         }
