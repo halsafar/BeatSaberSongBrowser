@@ -158,13 +158,19 @@ namespace SongBrowserPlugin.DataAccess
             }
 
             // Load Downloader favorites but only once, we'll convert them once, empty the song_browser_setting.xml favorites and never load it again.
-            if (retVal.Favorites.Count > 0)
+            String playlistPath = Path.Combine(Environment.CurrentDirectory, "Playlists", DefaultConvertedFavoritesPlaylistName);
+            if (!File.Exists(playlistPath))
             {
                 if (File.Exists(SongBrowserSettings.DownloaderFavoritesFilePath()))
                 {
                     String[] downloaderFavorites = File.ReadAllLines(SongBrowserSettings.DownloaderFavoritesFilePath());
                     retVal.Favorites.UnionWith(downloaderFavorites);
                 }
+            }
+
+            if (String.IsNullOrEmpty(retVal.currentEditingPlaylistFile))
+            {
+                retVal.currentEditingPlaylistFile = playlistPath;
             }
 
             return retVal;

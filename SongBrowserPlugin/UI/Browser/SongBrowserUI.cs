@@ -260,14 +260,15 @@ namespace SongBrowserPlugin.UI
                     ToggleSongInPlaylist();
                 });
 
+                /* TODO - address, this code now coupled with model load, oops.
                 if (_currentAddFavoriteButtonSprite == null)
                 {
-                    IStandardLevel level = this._levelListViewController.selectedLevel;
-                    if (level != null)
-                    {
-                        RefreshAddFavoriteButton(level.levelID);
-                    }                    
-                }
+                   IStandardLevel level = this._levelListViewController.selectedLevel;
+                   if (level != null)
+                   {
+                       RefreshAddFavoriteButton(level.levelID);
+                   }                    
+                }*/
 
                 // Create delete button
                 _deleteButton = UIBuilder.CreateButton(otherButtonTransform, otherButtonTemplate, "Delete", fontSize, 46f, 0f, 15f, 5f);                

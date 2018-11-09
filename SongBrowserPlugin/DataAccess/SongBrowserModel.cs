@@ -315,19 +315,29 @@ namespace SongBrowserPlugin
                 _log.Exception("FAILED TO CONVERT FAVORITES TO PLAYLIST!", e);
             }
 
-            // load the current editing playlist
+            // load the current editing playlist or make one
             if (!String.IsNullOrEmpty(this.Settings.currentEditingPlaylistFile))
             {
                 CurrentEditingPlaylist = PlaylistsReader.ParsePlaylist(this.Settings.currentEditingPlaylistFile);
-                if (CurrentEditingPlaylist != null)
-                {
-                    CurrentEditingPlaylistLevelIds = new HashSet<string>();
-                    foreach (PlaylistSong ps in CurrentEditingPlaylist.Songs)
-                    {
-                        CurrentEditingPlaylistLevelIds.Add(ps.LevelId);
-                    }
-                }
             }
+
+            if (CurrentEditingPlaylist == null)
+            {
+                CurrentEditingPlaylist = new Playlist
+                {
+                    Title = "Song Browser Favorites",
+                    Author = "SongBrowserPlugin",
+                    Path = this.Settings.currentEditingPlaylistFile,
+                    Image = Base64Sprites.PlaylistIcon,
+                    Songs = new List<PlaylistSong>(),
+                };
+            }
+
+            CurrentEditingPlaylistLevelIds = new HashSet<string>();
+            foreach (PlaylistSong ps in CurrentEditingPlaylist.Songs)
+            {
+                CurrentEditingPlaylistLevelIds.Add(ps.LevelId);
+            }            
 
             // Actually sort and filter
             this.ProcessSongList();
