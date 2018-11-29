@@ -206,13 +206,6 @@ namespace SongBrowserPlugin
             {
                 InvokeBeatSaberButton("SoloFreePlayButton");
             }
-
-            if (Input.GetKeyDown(KeyCode.B))
-            {
-                //InvokeBeatSaberButton("ContinueButton");
-                _log.Debug("Invoking OK Button");
-                InvokeBeatSaberButton("Ok");
-            }
         }
     }
 }

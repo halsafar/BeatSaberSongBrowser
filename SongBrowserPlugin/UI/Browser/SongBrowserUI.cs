@@ -40,7 +40,6 @@ namespace SongBrowserPlugin.UI
         private Button _tableViewPageUpButton;
         private Button _tableViewPageDownButton;
         private Button _playButton;
-        private RectTransform _bmpValueTextRect;
 
         // New UI Elements
         private List<SongSortButton> _sortButtonGroup;
@@ -138,7 +137,6 @@ namespace SongBrowserPlugin.UI
                     _levelListTableView = this._levelListViewController.GetComponentInChildren<LevelListTableView>();
                 }
 
-                _bmpValueTextRect = Resources.FindObjectsOfTypeAll<RectTransform>().First(x => x.name == "BPM");
                 _playButton = _levelDetailViewController.GetComponentsInChildren<Button>().FirstOrDefault(x => x.name == "PlayButton");
 
                 _simpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
@@ -840,7 +838,7 @@ namespace SongBrowserPlugin.UI
             }
 
             // abort!
-            if (level == null || _bmpValueTextRect == null)
+            if (level == null)
             {
                 _log.Debug("Aborting RefreshScoreSaberData()");
                 return;
@@ -1167,6 +1165,15 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         public void LateUpdate()
         {
+            if (Input.GetKeyDown(KeyCode.B))
+            {
+                //InvokeBeatSaberButton("ContinueButton");
+                _log.Debug("Invoking OK Button");
+                VRUIViewController view = Resources.FindObjectsOfTypeAll<VRUIViewController>().First(x => x.name == "StandardLevelResultsViewController");
+                view.GetComponentsInChildren<Button>().First(x => x.name == "Ok").onClick.Invoke();
+                //InvokeBeatSaberButton("Ok");
+            }
+
             CheckDebugUserInput();
         }
 
@@ -1183,8 +1190,6 @@ namespace SongBrowserPlugin.UI
                 }
             }
         }
-
-
 
         /// <summary>
         /// Map some key presses directly to UI interactions to make testing easier.
