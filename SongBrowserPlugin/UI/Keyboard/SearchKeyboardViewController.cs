@@ -32,8 +32,8 @@ namespace SongBrowserPlugin.UI
 
                 _searchKeyboard = _searchKeyboardGO.AddComponent<CustomUIKeyboard>();
 
-                _searchKeyboard.uiKeyboardKeyEvent += delegate (char input) { _inputString += input; UpdateInputText(); };
-                _searchKeyboard.uiKeyboardDeleteEvent += delegate () { _inputString = _inputString.Substring(0, _inputString.Length - 1); UpdateInputText(); };
+                _searchKeyboard.textKeyWasPressedEvent += delegate (char input) { _inputString += input; UpdateInputText(); };
+                _searchKeyboard.deleteButtonWasPressedEvent += delegate () { _inputString = _inputString.Substring(0, _inputString.Length - 1); UpdateInputText(); };
             }
 
             if (_inputText == null)
@@ -57,7 +57,7 @@ namespace SongBrowserPlugin.UI
                 _searchButton.onClick.RemoveAllListeners();
                 _searchButton.onClick.AddListener(delegate () {
                     searchButtonPressed?.Invoke(_inputString);
-                    DismissModalViewController(null, false);
+                    DismissViewControllerCoroutine(null, false);
                 });
             }
 
@@ -77,7 +77,7 @@ namespace SongBrowserPlugin.UI
         {
             _inputString = "";
             backButtonPressed?.Invoke();
-            DismissModalViewController(null, false);
+            DismissViewControllerCoroutine(null, false);
         }
 
         void UpdateInputText()
@@ -98,7 +98,7 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         private void LateUpdate()
         {
-            if (!this.isInViewControllerHierarchy) return;
+            /*if (!this.isInViewControllerHierarchy) return;
 
             if (Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Return))
             {
@@ -107,6 +107,7 @@ namespace SongBrowserPlugin.UI
             else if (Input.GetKeyDown(KeyCode.Backspace))
             {
                 this._searchKeyboard.DeleteButtonWasPressed();
+                this._searchKeyboard.deleteButtonWasPressedEvent.Invoke();
             }
             else if (Input.GetKeyDown(KeyCode.Space))
             {
@@ -125,7 +126,7 @@ namespace SongBrowserPlugin.UI
                 {
                     this._searchKeyboard.KeyButtonWasPressed(keycode.ToString());
                 }
-            }            
+            }  */          
         }
     }
 }

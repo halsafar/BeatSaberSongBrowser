@@ -14,7 +14,7 @@ namespace SongBrowserPlugin.DataAccess
 
         // Set by playlist downloading
         [NonSerialized]
-        public IStandardLevel Level;
+        public IBeatmapLevel Level;
         [NonSerialized]
         public bool OneSaber;
         [NonSerialized]

@@ -43,7 +43,8 @@
     <Reference Include="IllusionPlugin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\IllusionPlugin.dll</HintPath>
     </Reference>
-    <Reference Include="SongLoaderPlugin">
+    <Reference Include="SongLoaderPlugin, Version=5.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Plugins\SongLoaderPlugin.dll</HintPath>
     </Reference>
     <Reference Include="System" />
@@ -114,6 +115,7 @@
     <Compile Include="DataAccess\ScoreSaberDatabase.cs" />
     <Compile Include="Downloader.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="SceneEvents.cs" />
     <Compile Include="UI\DownloadQueue\DownloadQueueTableCell.cs" />
     <Compile Include="UI\DownloadQueue\DownloadQueueViewController.cs" />
     <Compile Include="UI\ProgressBar.cs" />

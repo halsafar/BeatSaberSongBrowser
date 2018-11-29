@@ -1,12 +1,12 @@
 ﻿using UnityEngine.SceneManagement;
 using IllusionPlugin;
-
+using UnityEngine;
 
 namespace SongBrowserPlugin
 {
     public class Plugin : IPlugin
     {
-        public const string VERSION_NUMBER = "v2.3.4";
+        public const string VERSION_NUMBER = "v2.4.0-Beta1";
 
         public string Name
         {
@@ -20,7 +20,15 @@ namespace SongBrowserPlugin
 
         public void OnApplicationStart()
         {
+            SceneEvents _sceneEvents;
+            _sceneEvents = new GameObject("menu-signal").AddComponent<SceneEvents>();
+            _sceneEvents.MenuSceneEnabled += OnMenuSceneEnabled;
+        }
 
+        private void OnMenuSceneEnabled()
+        {
+            SongBrowserApplication.OnLoad();
+            Downloader.OnLoad();
         }
 
         public void OnApplicationQuit()
@@ -39,11 +47,11 @@ namespace SongBrowserPlugin
 
         public void OnLevelWasLoaded(int level)
         {
-            if (SceneManager.GetSceneByBuildIndex(level).name == "Menu")
+            /*if (SceneManager.GetSceneByBuildIndex(level).name == "Menu")
             {
                 SongBrowserApplication.OnLoad();
                 Downloader.OnLoad();
-            }
+            }*/
         }
 
         public void OnLevelWasInitialized(int level)

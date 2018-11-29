@@ -33,12 +33,12 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         /// <param name="leftScreenViewController"></param>
         /// <param name="rightScreenViewController"></param>
-        protected override void LeftAndRightScreenViewControllers(out VRUIViewController leftScreenViewController, out VRUIViewController rightScreenViewController)
+        /*TODO protected override void LeftAndRightScreenViewControllers(out VRUIViewController leftScreenViewController, out VRUIViewController rightScreenViewController)
         {
             PlaylistFlowCoordinator playlistFlowCoordinator = Resources.FindObjectsOfTypeAll<PlaylistFlowCoordinator>().First();
             leftScreenViewController = playlistFlowCoordinator.DownloadQueueViewController;
             rightScreenViewController = null;
-        }
+        }*/
 
         /// <summary>
         /// Initialize the UI Elements.

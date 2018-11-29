@@ -26,12 +26,12 @@ namespace SongBrowserPlugin.UI.DownloadQueue
 
         Button _abortButton;
         TableView _queuedSongsTableView;
-        StandardLevelListTableCell _songListTableCellInstance;
+        LevelListTableCell _songListTableCellInstance;
 
         protected override void DidActivate(bool firstActivation, ActivationType type)
         {
 
-            _songListTableCellInstance = Resources.FindObjectsOfTypeAll<StandardLevelListTableCell>().First(x => (x.name == "StandardLevelListTableCell"));
+            _songListTableCellInstance = Resources.FindObjectsOfTypeAll<LevelListTableCell>().First(x => (x.name == "LevelListTableCell"));
 
             if (_titleText == null)
             {
@@ -162,7 +162,7 @@ namespace SongBrowserPlugin.UI.DownloadQueue
 
         public TableCell CellForRow(int row)
         {
-            StandardLevelListTableCell _tableCell = Instantiate(_songListTableCellInstance);
+            LevelListTableCell _tableCell = Instantiate(_songListTableCellInstance);
 
             DownloadQueueTableCell _queueCell = _tableCell.gameObject.AddComponent<DownloadQueueTableCell>();
 

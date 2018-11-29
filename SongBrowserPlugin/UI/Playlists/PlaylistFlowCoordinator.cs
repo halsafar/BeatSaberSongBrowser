@@ -52,7 +52,7 @@ namespace SongBrowserPlugin.UI
         /// <param name="parentViewController"></param>
         /// <param name="levels"></param>
         /// <param name="gameplayMode"></param>
-        public virtual void Present(VRUIViewController parentViewController)
+        protected override void DidActivate(bool unknown, FlowCoordinator.ActivationType activationType)
         {
             _log.Trace("Presenting Playlist Selector! - initialized: {0}", this._initialized);
             if (!this._initialized)
@@ -64,7 +64,7 @@ namespace SongBrowserPlugin.UI
                 this.DownloadQueueViewController = UIBuilder.CreateViewController<DownloadQueueViewController>("DownloadQueueViewController");
 
                 // Set parent view controllers appropriately.
-                _playlistNavigationController.GetType().GetField("_parentViewController", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).SetValue(_playlistNavigationController, parentViewController);
+                //_playlistNavigationController.GetType().GetField("_parentViewController", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).SetValue(_playlistNavigationController, parentViewController);
                 _playlistListViewController.GetType().GetField("_parentViewController", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).SetValue(_playlistListViewController, _playlistNavigationController);
                 _playlistDetailViewController.GetType().GetField("_parentViewController", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).SetValue(_playlistDetailViewController, _playlistListViewController);
 
@@ -81,8 +81,9 @@ namespace SongBrowserPlugin.UI
                 _playlistDetailViewController.rectTransform.anchorMin = new Vector2(0.3f, 0f);
                 _playlistDetailViewController.rectTransform.anchorMax = new Vector2(0.7f, 1f);
 
-                parentViewController.PresentModalViewController(this._playlistNavigationController, null, parentViewController.isRebuildingHierarchy);
-                this._playlistNavigationController.PushViewController(this._playlistListViewController, parentViewController.isRebuildingHierarchy);
+                //parentViewController.PresentViewControllerCoroutine(this._playlistNavigationController, null, true);
+                this.PresentViewController(this._playlistNavigationController, null, true);
+                this._playlistNavigationController.PushViewControllerCoroutine(this._playlistListViewController, null, true);
 
                 this._initialized = true;
             }                        
@@ -101,7 +102,7 @@ namespace SongBrowserPlugin.UI
             if (!this._playlistDetailViewController.isInViewControllerHierarchy)
             {
                 this._playlistDetailViewController.Init(playlistListViewController.SelectedPlaylist, missingCount);
-                this._playlistNavigationController.PushViewController(this._playlistDetailViewController, playlistListViewController.isRebuildingHierarchy);
+                this._playlistNavigationController.PushViewControllerCoroutine(this._playlistDetailViewController, null, true);
             }
             else
             {
@@ -119,7 +120,7 @@ namespace SongBrowserPlugin.UI
             try
             {
                 _log.Debug("Playlist selector selected playlist...");
-                this._playlistNavigationController.DismissModalViewController(delegate ()                
+                this._playlistNavigationController.DismissViewControllerCoroutine(delegate ()                
                 {
                     didSelectPlaylist.Invoke(p);
                 }, true);
@@ -144,7 +145,7 @@ namespace SongBrowserPlugin.UI
                 }
 
                 _log.Debug("Playlist selector dismissed...");
-                this._playlistNavigationController.DismissModalViewController(delegate ()
+                this._playlistNavigationController.DismissViewControllerCoroutine(delegate ()
                 {
                     didSelectPlaylist.Invoke(null);
                 }, true);

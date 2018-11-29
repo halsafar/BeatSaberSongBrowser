@@ -35,8 +35,10 @@ namespace SongBrowserPlugin
             {
                 return;
             }
-            new GameObject("BeatSaber SongBrowser Mod").AddComponent<SongBrowserApplication>();
+            new GameObject("Beat Saber SongBrowser Plugin").AddComponent<SongBrowserApplication>();
             SongBrowserApplication.MainProgressBar = SongBrowserPlugin.UI.ProgressBar.Create();
+
+            Console.WriteLine("SongBrowser Plugin Loaded()");
         }
 
         /// <summary>
@@ -73,7 +75,7 @@ namespace SongBrowserPlugin
         {
             _log.Trace("WaitForSongListUI()");
 
-            yield return new WaitUntil(delegate () { return Resources.FindObjectsOfTypeAll<StandardLevelSelectionFlowCoordinator>().Any(); });
+            yield return new WaitUntil(delegate () { return Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().Any(); });
 
             _log.Debug("Found StandardLevelSelectionFlowCoordinator...");
 
@@ -149,13 +151,17 @@ namespace SongBrowserPlugin
                     {
                         continue;
                     }
+
+                    //_log.Debug("Adding Icon: {0}", sprite.name);
                     CachedIcons.Add(sprite.name, sprite);
                 }
-
                 // Append our own event to appropriate events so we can refresh the song list before the user sees it.
                 MainFlowCoordinator mainFlow = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-                SoloModeSelectionViewController view = Resources.FindObjectsOfTypeAll<SoloModeSelectionViewController>().First();                
-                view.didFinishEvent += HandleSoloModeSelectionViewControllerDidSelectMode;
+                Button soloFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloFreePlayButton");
+                Button partyFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PartyFreePlayButton");
+
+                soloFreePlayButton.onClick.AddListener(HandleModeSelection);
+                partyFreePlayButton.onClick.AddListener(HandleModeSelection);
             }
             catch (Exception e)
             {
@@ -168,9 +174,10 @@ namespace SongBrowserPlugin
         /// </summary>
         /// <param name="arg1"></param>
         /// <param name="arg2"></param>
-        private void HandleSoloModeSelectionViewControllerDidSelectMode(SoloModeSelectionViewController arg1, SoloModeSelectionViewController.MenuType arg2)
+        private void HandleModeSelection()
         {
-            _log.Trace("HandleSoloModeSelectionViewControllerDidSelectMode() - GameplayMode={0}", arg2);
+            _log.Trace("HandleModeSelection()");
+
             this._songBrowserUI.UpdateSongList();
             this._songBrowserUI.RefreshSongList();
         }
@@ -189,25 +196,22 @@ namespace SongBrowserPlugin
         /// Map some key presses directly to UI interactions to make testing easier.
         /// </summary>
         private void LateUpdate()
-        {
+        {            
             // z,x,c,v can be used to get into a song, b will hit continue button after song ends
-            if (Input.GetKeyDown(KeyCode.Z))
+            if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.Z))
             {
-                InvokeBeatSaberButton("SoloButton");
+                InvokeBeatSaberButton("PartyFreePlayButton");
             }
-
-            if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.X))
+            else if (Input.GetKeyDown(KeyCode.Z))
             {
-                InvokeBeatSaberButton("OneSaberButton");
-            }
-            else if (Input.GetKeyDown(KeyCode.X))
-            {
-                InvokeBeatSaberButton("StandardButton");
+                InvokeBeatSaberButton("SoloFreePlayButton");
             }
 
             if (Input.GetKeyDown(KeyCode.B))
             {
-                InvokeBeatSaberButton("ContinueButton");
+                //InvokeBeatSaberButton("ContinueButton");
+                _log.Debug("Invoking OK Button");
+                InvokeBeatSaberButton("Ok");
             }
         }
     }

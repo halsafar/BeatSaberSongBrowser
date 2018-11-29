@@ -122,6 +122,7 @@ namespace SongBrowserPlugin.UI
 
             newButton.interactable = true;
             (newButton.transform as RectTransform).anchoredPosition = new Vector2(x, y);
+            //(newButton.transform as RectTransform).position = new Vector2(x, y);
             (newButton.transform as RectTransform).sizeDelta = new Vector2(w, h);
 
             UIBuilder.SetButtonText(ref newButton, buttonText);
@@ -158,14 +159,14 @@ namespace SongBrowserPlugin.UI
         public static Button CreateIconButton(RectTransform parent, Button buttonTemplate, Sprite iconSprite, Vector2 pos, Vector2 size, Vector2 iconPos, Vector2 iconSize, Vector2 iconScale, float iconRotation)
         {
             Button newButton = UIBuilder.CreateUIButton(parent, buttonTemplate);
-
             newButton.interactable = true;
+
             (newButton.transform as RectTransform).anchoredPosition = new Vector2(pos.x, pos.y);
             (newButton.transform as RectTransform).sizeDelta = new Vector2(size.x, size.y);
 
             RectTransform iconTransform = newButton.GetComponentsInChildren<RectTransform>(true).First(c => c.name == "Icon");
             iconTransform.gameObject.SetActive(true);
-
+;
             HorizontalLayoutGroup hgroup = iconTransform.parent.GetComponent<HorizontalLayoutGroup>();
             UnityEngine.Object.Destroy(hgroup);
 
@@ -174,9 +175,13 @@ namespace SongBrowserPlugin.UI
             iconTransform.localScale = new Vector2(iconScale.x, iconScale.y);            
             iconTransform.Rotate(0, 0, iconRotation);
 
-            UnityEngine.Object.Destroy(newButton.GetComponentsInChildren<RectTransform>(true).First(c => c.name == "Text").gameObject);
+            RectTransform textRect = newButton.GetComponentsInChildren<RectTransform>(true).FirstOrDefault(c => c.name == "Text");
+            if (textRect != null)
+            {
+                UnityEngine.Object.Destroy(textRect.gameObject);
+            }
 
-            UIBuilder.SetButtonBorder(ref newButton, Color.clear);
+            UIBuilder.SetButtonBorder(ref newButton, Color.clear);        
             UIBuilder.SetButtonIcon(ref newButton, iconSprite);
 
             return newButton;
@@ -228,9 +233,11 @@ namespace SongBrowserPlugin.UI
         /// <param name="text"></param>
         static public void SetButtonText(ref Button button, string text)
         {
-            if (button.GetComponentInChildren<TextMeshProUGUI>() != null)
+            TextMeshProUGUI txt = button.GetComponentsInChildren<TextMeshProUGUI>().FirstOrDefault(x => x.name == "Text");
+            if (txt != null)
             {
-                button.GetComponentInChildren<TextMeshProUGUI>().text = text;
+                txt.text = text;
+                txt.verticalMapping = TextureMappingOptions.Line;
             }
         }
 
@@ -256,7 +263,11 @@ namespace SongBrowserPlugin.UI
         {
             if (button.GetComponentsInChildren<UnityEngine.UI.Image>().Count() > 1)
             {
-                button.GetComponentsInChildren<Image>().First(x => x.name == "Icon").sprite = icon;                
+                Image img = button.GetComponentsInChildren<Image>().FirstOrDefault(x => x.name == "Icon");
+                if (img != null)
+                {
+                    img.sprite = icon;
+                }
             }            
         }
 
@@ -267,9 +278,11 @@ namespace SongBrowserPlugin.UI
         /// <param name="enabled"></param>
         static public void SetButtonIconEnabled(ref Button button, bool enabled)
         {
-            if (button.GetComponentsInChildren<UnityEngine.UI.Image>().Count() > 1)
+            Image img = button.GetComponentsInChildren<Image>(true).FirstOrDefault(x => x.name == "Icon");
+            if (img != null)
             {
-                button.GetComponentsInChildren<UnityEngine.UI.Image>()[1].enabled = enabled;
+                img.enabled = enabled;
+                UnityEngine.Object.DestroyImmediate(img.gameObject);
             }
         }
 
@@ -280,11 +293,11 @@ namespace SongBrowserPlugin.UI
         /// <param name="background"></param>
         static public void SetButtonBackground(ref Button button, Sprite background)
         {
-            if (button.GetComponentsInChildren<Image>().Any())
+            Image img = button.GetComponentsInChildren<Image>().FirstOrDefault(x => x.name == "BG");
+            if (img != null)
             {
-                button.GetComponentsInChildren<UnityEngine.UI.Image>()[0].sprite = background;
+                img.sprite = background;
             }
-
         }
 
         /// <summary>

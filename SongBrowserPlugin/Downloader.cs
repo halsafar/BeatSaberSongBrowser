@@ -56,7 +56,7 @@ namespace SongBrowserPlugin
         {
             _log.Trace("Start()");
 
-            StandardLevelSelectionFlowCoordinator levelSelectionFlowCoordinator = Resources.FindObjectsOfTypeAll<StandardLevelSelectionFlowCoordinator>().First();
+            SoloFreePlayFlowCoordinator levelSelectionFlowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
             _levelDetailViewController = levelSelectionFlowCoordinator.GetPrivateField<StandardLevelDetailViewController>("_levelDetailViewController");            
         }
 

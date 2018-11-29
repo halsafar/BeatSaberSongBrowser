@@ -10,7 +10,11 @@ namespace SongBrowserPlugin.UI
     // https://github.com/andruzzzhka/BeatSaverDownloader/blob/master/BeatSaverDownloader/PluginUI/UIElements/CustomUIKeyboard.cs
     class CustomUIKeyboard : UIKeyboard
     {
-        public void Awake()
+        public void DeleteButtonWasPressed()
+        {
+            
+        }
+        /*public override void Awake()
         {
             UIKeyboard original = GetComponent<UIKeyboard>();
 
@@ -73,6 +77,7 @@ namespace SongBrowserPlugin.UI
                     textButton.button.onClick.AddListener(delegate ()
                     {
                         KeyButtonWasPressed(key);
+                        this.textKeyWasPressedEvent.Invoke();
                     });
                 }
                 else if (i == array.Length - 2)
@@ -132,6 +137,6 @@ namespace SongBrowserPlugin.UI
                 buttonRect.offsetMax = Vector2.zero;
             }
 
-        }
+        }*/
     }
 }

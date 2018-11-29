@@ -26,21 +26,21 @@ namespace SongBrowserPlugin
 
         // song list management
         private double _customSongDirLastWriteTime = 0;
-        private List<StandardLevelSO> _filteredSongs;
-        private List<StandardLevelSO> _sortedSongs;
-        private List<StandardLevelSO> _originalSongs;
+        private List<LevelSO> _filteredSongs;
+        private List<LevelSO> _sortedSongs;
+        private List<LevelSO> _originalSongs;
         private Dictionary<String, SongLoaderPlugin.OverrideClasses.CustomLevel> _levelIdToCustomLevel;
         private Dictionary<String, double> _cachedLastWriteTimes;
         private Dictionary<string, int> _weights;
-        private Dictionary<LevelDifficulty, int> _difficultyWeights;
+        private Dictionary<BeatmapDifficulty, int> _difficultyWeights;
         private Dictionary<string, ScoreSaberData> _levelIdToScoreSaberData = null;
         private Dictionary<string, int> _levelIdToPlayCount;
         private Dictionary<string, string> _levelIdToSongVersion;
-        private Dictionary<string, StandardLevelSO> _keyToSong;
+        private Dictionary<string, LevelSO> _keyToSong;
         private Dictionary<String, DirectoryNode> _directoryTree;
         private Stack<DirectoryNode> _directoryStack = new Stack<DirectoryNode>();
 
-        private GameplayMode _currentGamePlayMode;
+        public BeatmapCharacteristicSO CurrentBeatmapCharacteristicSO;
 
         public static Action<List<CustomLevel>> didFinishProcessingSongs;
 
@@ -58,7 +58,7 @@ namespace SongBrowserPlugin
         /// <summary>
         /// Get the sorted song list for the current working directory.
         /// </summary>
-        public List<StandardLevelSO> SortedSongList
+        public List<LevelSO> SortedSongList
         {
             get
             {
@@ -172,24 +172,24 @@ namespace SongBrowserPlugin
             _levelIdToScoreSaberData = new Dictionary<string, ScoreSaberData>();
             _levelIdToPlayCount = new Dictionary<string, int>();
             _levelIdToSongVersion = new Dictionary<string, string>();
-            _keyToSong = new Dictionary<string, StandardLevelSO>();
+            _keyToSong = new Dictionary<string, LevelSO>();
 
             // Weights used for keeping the original songs in order
             // Invert the weights from the game so we can order by descending and make LINQ work with us...
             /*  Level4, Level2, Level9, Level5, Level10, Level6, Level7, Level1, Level3, Level8, Level11 */
             _weights = new Dictionary<string, int>
             {
-                ["Level4"] = 11,
-                ["Level2"] = 10,
-                ["Level9"] = 9,
-                ["Level5"] = 8,
-                ["Level10"] = 7,
-                ["Level6"] = 6,
-                ["Level7"] = 5,
-                ["Level1"] = 4,
-                ["Level3"] = 3,
-                ["Level8"] = 2,
-                ["Level11"] = 1,
+                ["100Bills"] = 11,
+                ["Escape"] = 10,
+                ["Legend"] = 9,
+                ["BeatSaber"] = 8,
+                ["AngelVoices"] = 7,
+                ["CountryRounds"] = 6,
+                ["BalearicPumping"] = 5,
+                ["Breezer"] = 4,
+                ["CommercialPumping"] = 3,
+                ["TurnMeOn"] = 2,
+                ["LvlInsane"] = 1,
 
                 ["Level4OneSaber"] = 12,
                 ["Level1OneSaber"] = 11,
@@ -198,13 +198,13 @@ namespace SongBrowserPlugin
                 ["Level7OneSaber"] = 8,
             };
 
-            _difficultyWeights = new Dictionary<LevelDifficulty, int>
+            _difficultyWeights = new Dictionary<BeatmapDifficulty, int>
             {
-                [LevelDifficulty.Easy] = int.MaxValue - 4,
-                [LevelDifficulty.Normal] = int.MaxValue - 3,
-                [LevelDifficulty.Hard] = int.MaxValue - 2,
-                [LevelDifficulty.Expert] = int.MaxValue - 1,
-                [LevelDifficulty.ExpertPlus] = int.MaxValue,
+                [BeatmapDifficulty.Easy] = int.MaxValue - 4,
+                [BeatmapDifficulty.Normal] = int.MaxValue - 3,
+                [BeatmapDifficulty.Hard] = int.MaxValue - 2,
+                [BeatmapDifficulty.Expert] = int.MaxValue - 1,
+                [BeatmapDifficulty.ExpertPlus] = int.MaxValue,
             };
         }
 
@@ -231,24 +231,29 @@ namespace SongBrowserPlugin
         /// Get the song cache from the game.
         /// TODO: This might not even be necessary anymore.  Need to test interactions with BeatSaverDownloader.
         /// </summary>
-        public void UpdateSongLists(GameplayMode gameplayMode)
+        public void UpdateSongLists(BeatmapCharacteristicSO gameplayMode)
         {
-            /*if (SongLoader.CustomLevels.Count > 0)
+            // give up
+            if (gameplayMode == null)
             {
-                SongBrowserApplication.MainProgressBar.ShowMessage("Processing songs...");
-            }*/
+                _log.Debug("Always null first time if user waits for SongLoader event, which they should...");
+                return;
+            }
 
             Stopwatch timer = new Stopwatch();
             timer.Start();
 
             // Get the level collection from song loader
-            LevelCollectionsForGameplayModes levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionsForGameplayModes>().FirstOrDefault();
-            List<LevelCollectionsForGameplayModes.LevelCollectionForGameplayMode> levelCollectionsForGameModes = ReflectionUtil.GetPrivateField<LevelCollectionsForGameplayModes.LevelCollectionForGameplayMode[]>(levelCollections, "_collections").ToList();
+            LevelCollectionSO levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionSO>().FirstOrDefault();
 
             // Stash everything we need
-            _originalSongs = levelCollections.GetLevels(gameplayMode).ToList();
+            _originalSongs = levelCollections.GetLevelsWithBeatmapCharacteristic(gameplayMode).ToList();
+
+            _log.Debug("Got {0} songs from level collections...", _originalSongs.Count);
+            //_originalSongs.ForEach(x => _log.Debug("{0} by {1} = {2}", x.name, x.levelAuthorName, x.levelID));
+
             _sortedSongs = _originalSongs;
-            _currentGamePlayMode = gameplayMode;
+            CurrentBeatmapCharacteristicSO = gameplayMode;
 
             // Calculate some information about the custom song dir
             String customSongsPath = Path.Combine(Environment.CurrentDirectory, CUSTOM_SONGS_DIR);
@@ -262,6 +267,11 @@ namespace SongBrowserPlugin
             }
 
             // This operation scales well
+            if (!Directory.Exists(customSongsPath))
+            {
+                _log.Error("CustomSong directory is missing...");
+                return;
+            }
             IEnumerable<string> directories = Directory.EnumerateDirectories(customSongsPath, "*.*", SearchOption.AllDirectories);
 
             // Get LastWriteTimes   
@@ -302,7 +312,7 @@ namespace SongBrowserPlugin
 
             // Update song Infos, directory tree, and sort
             this.UpdateScoreSaberDataMapping();
-            this.UpdatePlayCounts(_currentGamePlayMode);
+            this.UpdatePlayCounts();
             this.UpdateDirectoryTree(customSongsPath);
 
             // Check if we need to upgrade settings file favorites
@@ -358,11 +368,11 @@ namespace SongBrowserPlugin
         /// Update the gameplay play counts.
         /// </summary>
         /// <param name="gameplayMode"></param>
-        private void UpdatePlayCounts(GameplayMode gameplayMode)
+        private void UpdatePlayCounts()
         {
             // Build a map of levelId to sum of all playcounts and sort.
-            PlayerDynamicData playerData = GameDataModel.instance.gameDynamicData.GetCurrentPlayerDynamicData();
-            IEnumerable<LevelDifficulty> difficultyIterator = Enum.GetValues(typeof(LevelDifficulty)).Cast<LevelDifficulty>();
+            PlayerDataModelSO playerData = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().FirstOrDefault();
+            IEnumerable<BeatmapDifficulty> difficultyIterator = Enum.GetValues(typeof(BeatmapDifficulty)).Cast<BeatmapDifficulty>();
 
             foreach (var level in _originalSongs)
             {
@@ -376,9 +386,9 @@ namespace SongBrowserPlugin
                     else
                     {
                         int playCountSum = 0;
-                        foreach (LevelDifficulty difficulty in difficultyIterator)
+                        foreach (BeatmapDifficulty difficulty in difficultyIterator)
                         {
-                            PlayerLevelStatsData stats = playerData.GetPlayerLevelStatsData(level.levelID, difficulty, gameplayMode);
+                            PlayerLevelStatsData stats = playerData.currentLocalPlayer.GetPlayerLevelStatsData(level.levelID, difficulty);
                             playCountSum += stats.playCount;
                         }
                         _levelIdToPlayCount.Add(level.levelID, playCountSum);
@@ -448,7 +458,7 @@ namespace SongBrowserPlugin
 
             if (_settings.folderSupportEnabled)
             {
-                foreach (StandardLevelSO level in _originalSongs)
+                foreach (LevelSO level in _originalSongs)
                 {
                     AddItemToDirectoryTree(customSongDirUri, level);
                 }
@@ -484,7 +494,7 @@ namespace SongBrowserPlugin
         /// </summary>
         /// <param name="customSongDirUri"></param>
         /// <param name="level"></param>
-        private void AddItemToDirectoryTree(Uri customSongDirUri, StandardLevelSO level)
+        private void AddItemToDirectoryTree(Uri customSongDirUri, LevelSO level)
         {
             //_log.Debug("Processing item into directory tree: {0}", level.levelID);
             DirectoryNode currentNode = _directoryTree[CUSTOM_SONGS_DIR];
@@ -549,7 +559,7 @@ namespace SongBrowserPlugin
         /// <summary>
         /// Push a dir onto the stack.
         /// </summary>
-        public void PushDirectory(IStandardLevel level)
+        public void PushDirectory(IBeatmapLevel level)
         {
             DirectoryNode currentNode = _directoryStack.Peek();
             _log.Debug("Pushing directory {0}", level.songName);
@@ -604,7 +614,7 @@ namespace SongBrowserPlugin
         /// Add Song to Editing Playlist
         /// </summary>
         /// <param name="songInfo"></param>
-        public void AddSongToEditingPlaylist(IStandardLevel songInfo)
+        public void AddSongToEditingPlaylist(IBeatmapLevel songInfo)
         {
             if (this.CurrentEditingPlaylist == null)
             {
@@ -627,7 +637,7 @@ namespace SongBrowserPlugin
         /// Remove Song from editing playlist
         /// </summary>
         /// <param name="levelId"></param>
-        public void RemoveSongFromEditingPlaylist(IStandardLevel songInfo)
+        public void RemoveSongFromEditingPlaylist(IBeatmapLevel songInfo)
         {
             if (this.CurrentEditingPlaylist == null)
             {
@@ -648,7 +658,7 @@ namespace SongBrowserPlugin
             _log.Trace("ProcessSongList()");
 
             // This has come in handy many times for debugging issues with Newest.
-            /*foreach (StandardLevelSO level in _originalSongs)
+            /*foreach (LevelSO level in _originalSongs)
             {
                 if (_levelIdToCustomLevel.ContainsKey(level.levelID))
                 {
@@ -718,7 +728,7 @@ namespace SongBrowserPlugin
                     SortAuthor(_filteredSongs);
                     break;
                 case SongSortMode.PlayCount:
-                    SortPlayCount(_filteredSongs, _currentGamePlayMode);
+                    SortPlayCount(_filteredSongs);
                     break;
                 case SongSortMode.PP:
                     SortPerformancePoints(_filteredSongs);
@@ -760,7 +770,7 @@ namespace SongBrowserPlugin
             this.FilterPlaylist();
         }
 
-        private void FilterSearch(List<StandardLevelSO> levels)
+        private void FilterSearch(List<LevelSO> levels)
         {
             // Make sure we can actually search.
             if (this._settings.searchTerms.Count <= 0)
@@ -778,7 +788,7 @@ namespace SongBrowserPlugin
             }
 
             _log.Info("Filtering song list by search term: {0}", searchTerm);
-            //_originalSongs.ForEach(x => _log.Debug($"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()).ToString()));
+            _originalSongs.ForEach(x => _log.Debug($"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()).ToString()));
 
             _filteredSongs = levels
                 .Where(x => $"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()))
@@ -797,11 +807,11 @@ namespace SongBrowserPlugin
             }
 
             _log.Debug("Filtering songs for playlist: {0}", this.CurrentPlaylist.Title);            
-            LevelCollectionsForGameplayModes levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionsForGameplayModes>().FirstOrDefault();
-            var levels = levelCollections.GetLevels(_currentGamePlayMode);
+            LevelCollectionSO levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionSO>().FirstOrDefault();
+            var levels = levelCollections.GetLevelsWithBeatmapCharacteristic(CurrentBeatmapCharacteristicSO);
 
-            Dictionary<String, StandardLevelSO> levelDict = levels.Select((val, index) => new { LevelId = val.levelID, Level = val }).ToDictionary(i => i.LevelId, i => i.Level);
-            List<StandardLevelSO> songList = new List<StandardLevelSO>();
+            Dictionary<String, LevelSO> levelDict = levels.Select((val, index) => new { LevelId = val.levelID, Level = val }).ToDictionary(i => i.LevelId, i => i.Level);
+            List<LevelSO> songList = new List<LevelSO>();
             foreach (PlaylistSong ps in this.CurrentPlaylist.Songs)
             {
                 if (!String.IsNullOrEmpty(ps.LevelId))
@@ -823,22 +833,22 @@ namespace SongBrowserPlugin
             _log.Debug("Playlist filtered song count: {0}", _filteredSongs.Count);
         }
 
-        private void SortOriginal(List<StandardLevelSO> levels)
+        private void SortOriginal(List<LevelSO> levels)
         {
             _log.Info("Sorting song list as original");
             _sortedSongs = levels;
         }
 
-        private void SortNewest(List<StandardLevelSO> levels)
+        private void SortNewest(List<LevelSO> levels)
         {
             _log.Info("Sorting song list as newest.");
             _sortedSongs = levels
                 .OrderBy(x => _weights.ContainsKey(x.levelID) ? _weights[x.levelID] : 0)
-                .ThenByDescending(x => x.levelID.StartsWith("Level") ? _weights[x.levelID] : _cachedLastWriteTimes[x.levelID])
+                .ThenByDescending(x => !_levelIdToCustomLevel.ContainsKey(x.levelID) ? _weights[x.levelID] : _cachedLastWriteTimes[x.levelID])
                 .ToList();
         }
 
-        private void SortAuthor(List<StandardLevelSO> levels)
+        private void SortAuthor(List<LevelSO> levels)
         {
             _log.Info("Sorting song list by author");
             _sortedSongs = levels
@@ -847,7 +857,7 @@ namespace SongBrowserPlugin
                 .ToList();
         }
 
-        private void SortPlayCount(List<StandardLevelSO> levels, GameplayMode gameplayMode)
+        private void SortPlayCount(List<LevelSO> levels)
         {
             _log.Info("Sorting song list by playcount");
             _sortedSongs = levels
@@ -856,7 +866,7 @@ namespace SongBrowserPlugin
                 .ToList();
         }
 
-        private void SortPerformancePoints(List<StandardLevelSO> levels)
+        private void SortPerformancePoints(List<LevelSO> levels)
         {
             _log.Info("Sorting song list by performance points...");
 
@@ -865,11 +875,11 @@ namespace SongBrowserPlugin
                 .ToList();
         }
 
-        private void SortDifficulty(List<StandardLevelSO> levels)
+        private void SortDifficulty(List<LevelSO> levels)
         {
             _log.Info("Sorting song list by difficulty...");
 
-            IEnumerable<LevelDifficulty> difficultyIterator = Enum.GetValues(typeof(LevelDifficulty)).Cast<LevelDifficulty>();
+            IEnumerable<BeatmapDifficulty> difficultyIterator = Enum.GetValues(typeof(BeatmapDifficulty)).Cast<BeatmapDifficulty>();
             Dictionary<string, int>  levelIdToDifficultyValue = new Dictionary<string, int>();
             foreach (var level in levels)
             {
@@ -883,9 +893,9 @@ namespace SongBrowserPlugin
                     else
                     {
                         int difficultyValue = 0;
-                        foreach (LevelDifficulty difficulty in difficultyIterator)
+                        foreach (BeatmapDifficulty difficulty in difficultyIterator)
                         {
-                            IStandardLevelDifficultyBeatmap beatmap = level.GetDifficultyLevel(difficulty);
+                            IDifficultyBeatmap beatmap = level.GetDifficultyBeatmap(difficulty);
                             if (beatmap != null)
                             {
                                 difficultyValue += _difficultyWeights[difficulty];
@@ -903,7 +913,7 @@ namespace SongBrowserPlugin
                 .ToList();
         }
 
-        private void SortRandom(List<StandardLevelSO> levels)
+        private void SortRandom(List<LevelSO> levels)
         {
             _log.Info("Sorting song list by random (seed={0})...", this.Settings.randomSongSeed);
 
@@ -914,7 +924,7 @@ namespace SongBrowserPlugin
                 .ToList();
         }        
 
-        private void SortSongName(List<StandardLevelSO> levels)
+        private void SortSongName(List<LevelSO> levels)
         {
             _log.Info("Sorting song list as default (songName)");
             _sortedSongs = levels

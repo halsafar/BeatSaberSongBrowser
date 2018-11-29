@@ -223,7 +223,7 @@ namespace SongBrowserPlugin.DataAccess.BeatSaverApi
         }
 
 
-        public DifficultyLevel[] ConvertDifficultyLevels(IStandardLevelDifficultyBeatmap[] _difficultyLevels)
+        public DifficultyLevel[] ConvertDifficultyLevels(IDifficultyBeatmap[] _difficultyLevels)
         {
             if (_difficultyLevels != null && _difficultyLevels.Length > 0)
             {

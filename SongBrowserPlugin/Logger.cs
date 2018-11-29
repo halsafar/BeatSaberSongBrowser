@@ -1,5 +1,5 @@
 ﻿using System;
-
+using UnityEngine;
 
 namespace SongBrowserPlugin
 {
@@ -15,7 +15,7 @@ namespace SongBrowserPlugin
     public class Logger
     {
         private readonly string loggerName;
-        private readonly LogLevel _LogLevel = LogLevel.Info;
+        private readonly LogLevel _LogLevel = LogLevel.Debug;
         private readonly ConsoleColor _defaultFgColor = ConsoleColor.Gray;
 
         public Logger(string _name)
@@ -88,6 +88,5 @@ namespace SongBrowserPlugin
             Console.WriteLine("[" + loggerName + " @ " + DateTime.Now.ToString("HH:mm") + "] " + String.Format("{0}-{1}-{2}\n{3}", message, e.GetType().FullName, e.Message, e.StackTrace));
             ResetForegroundColor();
         }
-
     }
 }

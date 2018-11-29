@@ -6,7 +6,7 @@ using UnityEngine;
 // From: https://github.com/andruzzzhka/BeatSaverDownloader
 namespace SongBrowserPlugin.UI.DownloadQueue
 {
-    class DownloadQueueTableCell : StandardLevelListTableCell
+    class DownloadQueueTableCell : LevelListTableCell
     {
         Song song;
 
@@ -18,7 +18,7 @@ namespace SongBrowserPlugin.UI.DownloadQueue
 
         public void Init(Song _song)
         {
-            StandardLevelListTableCell cell = GetComponent<StandardLevelListTableCell>();
+            LevelListTableCell cell = GetComponent<LevelListTableCell>();
 
             foreach (FieldInfo info in cell.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic))
             {

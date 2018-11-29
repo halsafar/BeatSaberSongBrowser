@@ -17,7 +17,7 @@ namespace SongBrowserPlugin.UI
 
         private Logger _log = new Logger(Name);
 
-        private StandardLevelListTableCell _cellInstanceTemplate;
+        private LevelListTableCell _cellInstanceTemplate;
 
         protected TableView _tableView;
 
@@ -57,7 +57,7 @@ namespace SongBrowserPlugin.UI
 
             try
             {
-                _cellInstanceTemplate = Resources.FindObjectsOfTypeAll<StandardLevelListTableCell>().First(x => (x.name == "StandardLevelListTableCell"));
+                _cellInstanceTemplate = Resources.FindObjectsOfTypeAll<LevelListTableCell>().First(x => (x.name == "LevelListTableCell"));
 
                 if (_tableView == null)
                 {
@@ -158,7 +158,7 @@ namespace SongBrowserPlugin.UI
             try
             {
                 Playlist p = _reader.Playlists[row];
-                StandardLevelListTableCell tableCell = Instantiate(_cellInstanceTemplate, this._tableView.transform, false);
+                LevelListTableCell tableCell = Instantiate(_cellInstanceTemplate, this._tableView.transform, false);
                 tableCell.coverImage = Base64Sprites.Base64ToSprite(p.Image);
                 tableCell.songName = p.Title;
                 tableCell.author = p.Author;
