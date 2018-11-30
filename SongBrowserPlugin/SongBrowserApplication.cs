@@ -75,11 +75,9 @@ namespace SongBrowserPlugin
         {
             _log.Trace("WaitForSongListUI()");
 
-            yield return new WaitUntil(delegate () { return Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().Any(); });
+            yield return new WaitUntil(delegate () { return Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().Any() && Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().Any(); });
 
-            _log.Debug("Found StandardLevelSelectionFlowCoordinator...");
-
-            _songBrowserUI.CreateUI();
+            _log.Debug("Found Solo and Party FreePlayFlowCoordinators...");
 
             if (SongLoaderPlugin.SongLoader.AreSongsLoaded)
             {
@@ -123,7 +121,7 @@ namespace SongBrowserPlugin
             {
                 // TODO - this should be in the SongBrowserUI which is acting like the view controller for the SongBrowser
                 _songBrowserUI.Model.UpdateScoreSaberDataMapping();
-                _songBrowserUI.RefreshScoreSaberData(null);
+                //_songBrowserUI.RefreshScoreSaberData(null);
                 if (_songBrowserUI.Model.Settings.sortMode == SongSortMode.PP)
                 {
                     _songBrowserUI.Model.ProcessSongList();
@@ -160,8 +158,8 @@ namespace SongBrowserPlugin
                 Button soloFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloFreePlayButton");
                 Button partyFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PartyFreePlayButton");
 
-                soloFreePlayButton.onClick.AddListener(HandleModeSelection);
-                partyFreePlayButton.onClick.AddListener(HandleModeSelection);
+                soloFreePlayButton.onClick.AddListener(HandleSoloModeSelection);
+                partyFreePlayButton.onClick.AddListener(HandlePartyModeSelection);
             }
             catch (Exception e)
             {
@@ -170,14 +168,36 @@ namespace SongBrowserPlugin
         }
 
         /// <summary>
-        /// Perfect time to refresh the level list on first entry.
+        /// Handle Solo Mode
         /// </summary>
         /// <param name="arg1"></param>
         /// <param name="arg2"></param>
-        private void HandleModeSelection()
+        private void HandleSoloModeSelection()
+        {
+            _log.Trace("HandleSoloModeSelection()");
+            HandleModeSelection(MainMenuViewController.MenuButton.SoloFreePlay);
+        }
+
+        /// <summary>
+        /// Handle Party Mode
+        /// </summary>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
+        private void HandlePartyModeSelection()
+        {
+            _log.Trace("HandlePartyModeSelection()");
+            HandleModeSelection(MainMenuViewController.MenuButton.Party);
+        }
+
+        /// <summary>
+        /// Handle Mode
+        /// </summary>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
+        private void HandleModeSelection(MainMenuViewController.MenuButton mode)
         {
             _log.Trace("HandleModeSelection()");
-
+            this._songBrowserUI.CreateUI(mode);
             this._songBrowserUI.UpdateSongList();
             this._songBrowserUI.RefreshSongList();
         }

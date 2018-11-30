@@ -73,6 +73,9 @@ namespace SongBrowserPlugin.UI
         // Model
         private SongBrowserModel _model;
 
+        // UI Created
+        private bool _rebuildUI = true;
+
         public SongBrowserModel Model
         {
             get
@@ -90,23 +93,39 @@ namespace SongBrowserPlugin.UI
             {
                 _model = new SongBrowserModel();
             }
+
             _model.Init();
+
             _sortButtonLastPushedIndex = (int)(_model.Settings.sortMode);
         }
 
         /// <summary>
         /// Builds the UI for this plugin.
         /// </summary>
-        public void CreateUI()
+        public void CreateUI(MainMenuViewController.MenuButton mode)
         {
             _log.Trace("CreateUI()");
+            
+            var soloFlow = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
+            var partyFlow = Resources.FindObjectsOfTypeAll<PartyFreePlayFlowCoordinator>().First();
+            if (mode == MainMenuViewController.MenuButton.SoloFreePlay)
+            {
+                _levelSelectionFlowCoordinator = soloFlow;
+            }
+            else
+            {
+                _levelSelectionFlowCoordinator = partyFlow;
+            }
+
+            // returning to the menu and switching modes could trigger this.
+            if (!_rebuildUI)
+            {
+                return;
+            }
+
             try
             {
-                if (_levelSelectionFlowCoordinator == null)
-                {
-                    _levelSelectionFlowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
-                }
-
+                // gather controllers and ui elements.
                 if (_levelListViewController == null)
                 {
                     _levelListViewController = _levelSelectionFlowCoordinator.GetPrivateField<LevelListViewController>("_levelListViewController");
@@ -129,7 +148,7 @@ namespace SongBrowserPlugin.UI
 
                 if (_levelDifficultyViewController == null)
                 {
-                    _levelDifficultyViewController = _levelSelectionFlowCoordinator.GetPrivateField<BeatmapDifficultyViewController>("_beatmapDifficultyViewControllerViewController");
+                    _levelDifficultyViewController = soloFlow.GetPrivateField<BeatmapDifficultyViewController>("_beatmapDifficultyViewControllerViewController");
                 }
 
                 if (_levelListTableView == null)
@@ -141,19 +160,25 @@ namespace SongBrowserPlugin.UI
 
                 _simpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
 
+                // delete dialog
                 this._deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(this._simpleDialogPromptViewControllerPrefab);
                 this._deleteDialog.gameObject.SetActive(false);
+
+                // sprites
                 this._addFavoriteSprite = Base64Sprites.Base64ToSprite(Base64Sprites.AddToFavoritesIcon);
                 this._removeFavoriteSprite = Base64Sprites.Base64ToSprite(Base64Sprites.RemoveFromFavoritesIcon);
 
+                // create song browser main ui
                 this.CreateUIElements();
 
-                _levelListViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
-
+                // handlers
                 TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelListTableView, "_tableView");
-                tableView.didSelectRowEvent += HandleDidSelectTableViewRow;                
+                tableView.didSelectRowEvent += HandleDidSelectTableViewRow;
+                _levelListViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
                 _levelDifficultyViewController.didSelectDifficultyEvent += OnDidSelectDifficultyEvent;
                 _beatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent += OnDidSelectBeatmapCharacteristic;
+
+                _rebuildUI = false;
             }
             catch (Exception e)
             {
@@ -227,7 +252,7 @@ namespace SongBrowserPlugin.UI
                 {
                     Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Favorites, OnFavoriteFilterButtonClickEvent, _addFavoriteSprite),
                     //Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Playlist, OnPlaylistButtonClickEvent, playlistSprite),
-                    //Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Search, OnSearchButtonClickEvent, searchSprite),
+                    Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Search, OnSearchButtonClickEvent, searchSprite),
                 };
 
                 _filterButtonGroup = new List<SongFilterButton>();
@@ -275,10 +300,10 @@ namespace SongBrowserPlugin.UI
                 }*/
 
                 // Create delete button
-                /*_deleteButton = UIBuilder.CreateButton(otherButtonTransform, otherButtonTemplate, "Delete", fontSize, 30f, -80.0f, 15f, 5f);                
+                _deleteButton = UIBuilder.CreateButton(otherButtonTransform, otherButtonTemplate, "Delete", fontSize, 30f, -80.0f, 15f, 5f);                
                 _deleteButton.onClick.AddListener(delegate () {
                     HandleDeleteSelectedLevel();
-                });*/
+                });
 
                 // Create fast scroll buttons
                 /*_pageUpFastButton = UIBuilder.CreateIconButton(sortButtonTransform, otherButtonTemplate, arrowIcon,
@@ -572,9 +597,10 @@ namespace SongBrowserPlugin.UI
             SongLoaderPlugin.OverrideClasses.CustomLevel customLevel = _model.LevelIdToCustomSongInfos[level.levelID];
 
             this._deleteDialog.Init("Delete level warning!", String.Format("<color=#00AAFF>Permanently delete level: {0}</color>\n  Do you want to continue?", customLevel.songName), "YES", "NO");
+            this._deleteDialog.didFinishEvent -= this.HandleDeleteDialogPromptViewControllerDidFinish;
             this._deleteDialog.didFinishEvent += this.HandleDeleteDialogPromptViewControllerDidFinish;
 
-            this._levelSelectionNavigationController.PresentViewControllerCoroutine(this._deleteDialog, null, false);
+            _levelSelectionFlowCoordinator.InvokePrivateMethod("PresentViewController", new object[] { this._deleteDialog, null, false });            
         }
 
         /// <summary>
@@ -585,6 +611,7 @@ namespace SongBrowserPlugin.UI
         public void HandleDeleteDialogPromptViewControllerDidFinish(SimpleDialogPromptViewController viewController, bool ok)
         {
             viewController.didFinishEvent -= this.HandleDeleteDialogPromptViewControllerDidFinish;
+            //_levelSelectionFlowCoordinator.InvokePrivateMethod("DismissViewController", new object[] { _deleteDialog, null, false });
             if (!ok)
             {
                 viewController.DismissViewControllerCoroutine(null, false);
@@ -737,8 +764,8 @@ namespace SongBrowserPlugin.UI
                 _searchViewController.backButtonPressed += SearchViewControllerbackButtonPressed;
             }
 
-            _log.Debug("Presenting keyboard");
-            _levelListViewController.navigationController.PresentViewControllerCoroutine(_searchViewController, null, false);
+            _log.Debug("Presenting search keyboard");
+            _levelSelectionFlowCoordinator.InvokePrivateMethod("PresentViewController", new object[] { _searchViewController, null, false });
         }
 
         /// <summary>
@@ -746,6 +773,8 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         private void SearchViewControllerbackButtonPressed()
         {
+            _levelSelectionFlowCoordinator.InvokePrivateMethod("DismissViewController", new object[] { _searchViewController, null, false });
+
             // force disable search filter.
             this._model.Settings.filterMode = SongFilterMode.None;
             this._model.Settings.Save();
@@ -757,7 +786,10 @@ namespace SongBrowserPlugin.UI
         /// <param name="searchFor"></param>
         private void SearchViewControllerSearchButtonPressed(string searchFor)
         {
+            _levelSelectionFlowCoordinator.InvokePrivateMethod("DismissViewController", new object[] { _searchViewController, null, false });
+
             _log.Debug("Searching for \"{0}\"...", searchFor);
+
             _model.Settings.filterMode = SongFilterMode.Search;
             _model.Settings.searchTerms.Insert(0, searchFor);
             _model.Settings.Save();
@@ -1155,6 +1187,12 @@ namespace SongBrowserPlugin.UI
         {
             _log.Trace("UpdateSongList()");
 
+            // UI not created yet. 
+            if (_beatmapCharacteristicSelectionViewController == null)
+            {
+                return;
+            }
+
             BeatmapCharacteristicSO bc = _beatmapCharacteristicSelectionViewController.selectedBeatmapCharacteristic;
             _model.UpdateSongLists(bc);
             this.RefreshDirectoryButtons();
@@ -1167,11 +1205,9 @@ namespace SongBrowserPlugin.UI
         {
             if (Input.GetKeyDown(KeyCode.B))
             {
-                //InvokeBeatSaberButton("ContinueButton");
                 _log.Debug("Invoking OK Button");
                 VRUIViewController view = Resources.FindObjectsOfTypeAll<VRUIViewController>().First(x => x.name == "StandardLevelResultsViewController");
                 view.GetComponentsInChildren<Button>().First(x => x.name == "Ok").onClick.Invoke();
-                //InvokeBeatSaberButton("Ok");
             }
 
             CheckDebugUserInput();
