@@ -191,11 +191,12 @@ namespace SongBrowserPlugin
                 ["TurnMeOn"] = 2,
                 ["LvlInsane"] = 1,
 
-                ["Level4OneSaber"] = 12,
-                ["Level1OneSaber"] = 11,
-                ["Level2OneSaber"] = 10,
-                ["Level9OneSaber"] = 9,
-                ["Level7OneSaber"] = 8,
+                ["100BillsOneSaber"] = 12,
+                ["EscapeOneSaber"] = 11,
+                ["LegendOneSaber"] = 10,
+                ["BeatSaberOneSaber"] = 9,
+                ["CommercialPumpingOneSaber"] = 8,
+                ["TurnMeOnOneSaber"] = 8,
             };
 
             _difficultyWeights = new Dictionary<BeatmapDifficulty, int>
