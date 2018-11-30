@@ -464,7 +464,8 @@ namespace SongBrowserPlugin.UI
                 {
                     _playListFlowCoordinator = UIBuilder.CreateFlowCoordinator<PlaylistFlowCoordinator>("PlaylistFlowCoordinator");
                     _playListFlowCoordinator.didSelectPlaylist += HandleDidSelectPlaylist;
-                    //_playListFlowCoordinator.Present(_levelSelectionNavigationController);
+
+                    _levelSelectionFlowCoordinator.InvokePrivateMethod("PresentFlowCoordinator", new object[] { _playListFlowCoordinator, null, false, false });
                 }                
             }
             else
@@ -731,7 +732,8 @@ namespace SongBrowserPlugin.UI
         {
             if (_playListFlowCoordinator != null)
             {
-                _levelSelectionNavigationController.PopViewControllerFullscreenModeCoroutine(null, true);
+                _levelSelectionFlowCoordinator.InvokePrivateMethod("DismissFlowCoordinator", new object[] { _playListFlowCoordinator, null, false });
+
                 _playListFlowCoordinator.gameObject.SetActive(false);
                 UnityEngine.Object.DestroyImmediate(_playListFlowCoordinator);
             }
