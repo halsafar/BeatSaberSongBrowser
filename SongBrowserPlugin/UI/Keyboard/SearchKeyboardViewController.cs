@@ -92,10 +92,10 @@ namespace SongBrowserPlugin.UI
             {
                 this._searchKeyboard.DeleteButtonWasPressed();
             }
-            /*else if (Input.GetKeyDown(KeyCode.Space))
+            else if (Input.GetKeyDown(KeyCode.Space))
             {
-                this._searchKeyboard.SpaceButtonWasPressed();
-            }*/
+                this._searchKeyboard.KeyPressed(' ');
+            }
             else if (Input.GetKeyDown(KeyCode.Escape))
             {
                 this.Back();
