@@ -18,8 +18,6 @@ namespace SongBrowserPlugin.UI
 {
     public class PlaylistFlowCoordinator : FlowCoordinator
     {
-        public static string beatsaverURL = "https://beatsaver.com";
-
         private Logger _log = new Logger("PlaylistFlowCoordinator");
 
         private BackButtonNavigationController _playlistNavigationController;
@@ -33,8 +31,6 @@ namespace SongBrowserPlugin.UI
         public PlaylistsReader _playlistsReader;
 
         private bool _downloadingPlaylist;
-
-        private Song _lastRequestedSong;
 
         private Playlist _lastPlaylist;
 
@@ -51,6 +47,9 @@ namespace SongBrowserPlugin.UI
             _log.Trace("OnDestroy()");
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void Awake()
         {
             _playlistNavigationController = BeatSaberUI.CreateViewController<BackButtonNavigationController>();
@@ -244,62 +243,76 @@ namespace SongBrowserPlugin.UI
             this.FilterSongsForPlaylist(playlist);
             List<PlaylistSong> playlistSongsToDownload = playlist.Songs.Where(x => x.Level == null).ToList();
 
-            List<Song> beatSaverSongs = new List<Song>();
+            List<PlaylistSong> needToDownload = playlist.Songs.Where(x => x.Level == null).ToList();
+            _log.Info($"Need to download {needToDownload.Count} songs");
 
-            DownloadQueueViewController.AbortDownloads();
             _downloadingPlaylist = true;
-            _playlistDetailViewController.UpdateButtons(!_downloadingPlaylist, !_downloadingPlaylist);
-
-            foreach (var item in playlistSongsToDownload)
+            foreach (var item in needToDownload)
             {
+                Song beatSaverSong = null;
+
                 if (String.IsNullOrEmpty(playlist.CustomArchiveUrl))
                 {
-                    _log.Debug("Obtaining hash and url for " + item.Key + ": " + item.SongName);
-                    yield return GetSongByPlaylistSong(playlist, item);
-
-                    _log.Debug("Song is null: " + (_lastRequestedSong == null) + "\n Level is downloaded: " + (SongLoader.CustomLevels.Any(x => x.levelID.Substring(0, 32) == _lastRequestedSong.hash.ToUpper())));
+                    _log.Info("Obtaining hash and url for " + item.Key + ": " + item.SongName);
+                    yield return GetInfoForSong(playlist, item, (Song song) => { beatSaverSong = song; });
                 }
                 else
                 {
-                    // stamp archive url
-                    String archiveUrl = playlist.CustomArchiveUrl.Replace("[KEY]", item.Key);
+                    string archiveUrl = playlist.CustomArchiveUrl.Replace("[KEY]", item.Key);
 
-                    // Create fake song with what we know...
-                    // TODO - update this if we ever know more...
-                    _lastRequestedSong = new Song()
+                    beatSaverSong = new Song()
                     {
                         songName = item.SongName,
+                        id = item.Key,
                         downloadingProgress = 0f,
-                        hash = "",
+                        hash = item.LevelId,
                         downloadUrl = archiveUrl
                     };
                 }
 
-                if (_lastRequestedSong != null && !SongLoader.CustomLevels.Any(x => x.levelID.Substring(0, 32) == _lastRequestedSong.hash.ToUpper()))
+                if (beatSaverSong != null && !SongLoader.CustomLevels.Any(x => x.levelID.Substring(0, 32) == beatSaverSong.hash.ToUpper()))
                 {
-                    _log.Debug(item.Key + ": " + item.SongName + "  -  " + _lastRequestedSong.hash);
-                    beatSaverSongs.Add(_lastRequestedSong);
-                    DownloadQueueViewController.EnqueueSong(_lastRequestedSong, false);
+                    DownloadQueueViewController.EnqueueSong(beatSaverSong, true);
                 }
             }
+            _downloadingPlaylist = false;
+        }
 
-            _log.Info($"Need to download {beatSaverSongs.Count(x => x.songQueueState == SongQueueState.Queued)} songs:");
-
-            if (!beatSaverSongs.Any(x => x.songQueueState == SongQueueState.Queued))
+        /// <summary>
+        /// Request song info via BeatSaber (or custom) api call.
+        /// </summary>
+        /// <param name="playlist"></param>
+        /// <param name="song"></param>
+        /// <param name="songCallback"></param>
+        /// <returns></returns>
+        public IEnumerator GetInfoForSong(Playlist playlist, PlaylistSong song, Action<Song> songCallback)
+        {
+            string url = $"{PluginConfig.BeatsaverURL}/api/songs/detail/{song.Key}";
+            if (!string.IsNullOrEmpty(playlist.CustomDetailUrl))
             {
-                _downloadingPlaylist = false;
-                _playlistDetailViewController.UpdateButtons(!_downloadingPlaylist, !_downloadingPlaylist);
+                url = playlist.CustomDetailUrl + song.Key;
             }
 
-            foreach (var item in beatSaverSongs.Where(x => x.songQueueState == SongQueueState.Queued))
+            UnityWebRequest www = UnityWebRequest.Get(url);
+            www.timeout = 15;
+            yield return www.SendWebRequest();
+
+            if (www.isNetworkError || www.isHttpError)
             {
-                _log.Debug(item.songName);
+                _log.Error($"Unable to connect to {PluginConfig.BeatsaverURL}! " + (www.isNetworkError ? $"Network error: {www.error}" : (www.isHttpError ? $"HTTP error: {www.error}" : "Unknown error")));
             }
-
-            DownloadQueueViewController.allSongsDownloaded -= HandleAllSongsDownloaded;
-            DownloadQueueViewController.allSongsDownloaded += HandleAllSongsDownloaded;
-
-            DownloadQueueViewController.DownloadAllSongsFromQueue();
+            else
+            {
+                try
+                {
+                    JSONNode node = JSON.Parse(www.downloadHandler.text);
+                    songCallback?.Invoke(new Song(node["song"]));
+                }
+                catch (Exception e)
+                {
+                    _log.Exception("Unable to parse response! Exception: ", e);
+                }
+            }
         }
 
         /// <summary>
@@ -313,49 +326,6 @@ namespace SongBrowserPlugin.UI
 
             _downloadingPlaylist = false;
             _playlistDetailViewController.UpdateButtons(!_downloadingPlaylist, !_downloadingPlaylist);
-        }
-
-        /// <summary>
-        /// Fetch the song info from beat saver.
-        /// </summary>
-        /// <param name="song"></param>
-        /// <returns></returns>
-        public IEnumerator GetSongByPlaylistSong(Playlist playlist, PlaylistSong song)
-        {
-            UnityWebRequest wwwId = null;
-            try
-            {
-                wwwId = UnityWebRequest.Get($"{PlaylistFlowCoordinator.beatsaverURL}/api/songs/detail/" + song.Key);
-                string url = PlaylistFlowCoordinator.beatsaverURL + $"/api/songs/detail/" + song.Key;
-                if (!string.IsNullOrEmpty(playlist.CustomDetailUrl))
-                {
-                    url = playlist.CustomDetailUrl + song.Key;
-                }
-                wwwId = UnityWebRequest.Get(url);
-                wwwId.timeout = 10;
-            }
-            catch
-            {
-                _lastRequestedSong = new Song() { songName = song.SongName, songQueueState = SongQueueState.Error, downloadingProgress = 1f, hash = "" };
-
-                yield break;
-            }
-
-            yield return wwwId.SendWebRequest();
-
-            if (wwwId.isNetworkError || wwwId.isHttpError)
-            {
-                _log.Error(wwwId.error);
-                _log.Error($"Song {song.Key}({song.SongName}) doesn't exist!");
-                _lastRequestedSong = new Song() { songName = song.SongName, songQueueState = SongQueueState.Error, downloadingProgress = 1f, hash = "" };
-            }
-            else
-            {
-                JSONNode node = JSON.Parse(wwwId.downloadHandler.text);
-                Song _tempSong = new Song(node["song"]);
-
-                _lastRequestedSong = _tempSong;
-            }
         }
 
         /// <summary>
@@ -373,7 +343,7 @@ namespace SongBrowserPlugin.UI
             }
             else if (Input.GetKeyDown(KeyCode.Return))
             {
-                HandleSelectRow(_lastPlaylist);
+                HandleDidSelectPlaylist(_lastPlaylist);
             }
         }
     }

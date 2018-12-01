@@ -145,9 +145,6 @@ namespace SongBrowserPlugin.UI
             return _tableCell;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
         private void CheckDebugUserInput()
         {
             bool isShiftKeyDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
@@ -179,9 +176,6 @@ namespace SongBrowserPlugin.UI
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
         private void LateUpdate()
         {
             CheckDebugUserInput();

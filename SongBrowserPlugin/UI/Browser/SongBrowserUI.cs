@@ -460,14 +460,16 @@ namespace SongBrowserPlugin.UI
 
             if (_model.Settings.filterMode != SongFilterMode.Playlist)
             {
-                if (_playListFlowCoordinator == null || !_playListFlowCoordinator.isActiveAndEnabled)
+                if (_playListFlowCoordinator == null)
                 {
                     _playListFlowCoordinator = UIBuilder.CreateFlowCoordinator<PlaylistFlowCoordinator>("PlaylistFlowCoordinator");
-                    _playListFlowCoordinator.ParentFlowCoordinator = _levelSelectionFlowCoordinator;
-                    _playListFlowCoordinator.didFinishEvent += HandleDidSelectPlaylist;
+                }
 
-                    _levelSelectionFlowCoordinator.InvokePrivateMethod("PresentFlowCoordinator", new object[] { _playListFlowCoordinator, null, false, false });
-                }                
+                _playListFlowCoordinator.ParentFlowCoordinator = _levelSelectionFlowCoordinator;
+                _playListFlowCoordinator.didFinishEvent -= HandleDidSelectPlaylist;
+                _playListFlowCoordinator.didFinishEvent += HandleDidSelectPlaylist;
+
+                _levelSelectionFlowCoordinator.InvokePrivateMethod("PresentFlowCoordinator", new object[] { _playListFlowCoordinator, null, false, false });                                
             }
             else
             {
@@ -733,8 +735,6 @@ namespace SongBrowserPlugin.UI
         {
             if (_playListFlowCoordinator != null)
             {
-                _levelSelectionFlowCoordinator.InvokePrivateMethod("DismissFlowCoordinator", new object[] { _playListFlowCoordinator, null, false });
-
                 _playListFlowCoordinator.gameObject.SetActive(false);
                 UnityEngine.Object.DestroyImmediate(_playListFlowCoordinator);
             }

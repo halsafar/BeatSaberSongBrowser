@@ -112,7 +112,7 @@ namespace SongBrowserPlugin.UI.DownloadQueue
         {
             queuedSongs.Add(song);
             song.songQueueState = SongQueueState.Queued;
-            if (startDownload && queuedSongs.Count(x => x.songQueueState == SongQueueState.Downloading) < PluginConfig.maxSimultaneousDownloads)
+            if (startDownload && queuedSongs.Count(x => x.songQueueState == SongQueueState.Downloading) < PluginConfig.MaxSimultaneousDownloads)
             {
                 DownloadSong(song);
             }
@@ -123,7 +123,7 @@ namespace SongBrowserPlugin.UI.DownloadQueue
         {
             _log.Info("Downloading all songs from queue...");
 
-            for (int i = 0; i < Math.Min(PluginConfig.maxSimultaneousDownloads, queuedSongs.Count); i++)
+            for (int i = 0; i < Math.Min(PluginConfig.MaxSimultaneousDownloads, queuedSongs.Count); i++)
             {
                 DownloadSong(queuedSongs[i]);
             }
@@ -150,7 +150,7 @@ namespace SongBrowserPlugin.UI.DownloadQueue
                 allSongsDownloaded?.Invoke();
             }
 
-            if (queuedSongs.Count(x => x.songQueueState == SongQueueState.Downloading) < PluginConfig.maxSimultaneousDownloads && queuedSongs.Any(x => x.songQueueState == SongQueueState.Queued))
+            if (queuedSongs.Count(x => x.songQueueState == SongQueueState.Downloading) < PluginConfig.MaxSimultaneousDownloads && queuedSongs.Any(x => x.songQueueState == SongQueueState.Queued))
                 DownloadSong(queuedSongs.First(x => x.songQueueState == SongQueueState.Queued));
         }
 
