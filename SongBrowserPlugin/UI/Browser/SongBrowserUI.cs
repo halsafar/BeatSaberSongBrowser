@@ -463,7 +463,8 @@ namespace SongBrowserPlugin.UI
                 if (_playListFlowCoordinator == null || !_playListFlowCoordinator.isActiveAndEnabled)
                 {
                     _playListFlowCoordinator = UIBuilder.CreateFlowCoordinator<PlaylistFlowCoordinator>("PlaylistFlowCoordinator");
-                    _playListFlowCoordinator.didSelectPlaylist += HandleDidSelectPlaylist;
+                    _playListFlowCoordinator.ParentFlowCoordinator = _levelSelectionFlowCoordinator;
+                    _playListFlowCoordinator.didFinishEvent += HandleDidSelectPlaylist;
 
                     _levelSelectionFlowCoordinator.InvokePrivateMethod("PresentFlowCoordinator", new object[] { _playListFlowCoordinator, null, false, false });
                 }                
@@ -1200,21 +1201,6 @@ namespace SongBrowserPlugin.UI
             this.RefreshDirectoryButtons();
         }
 
-        /// <summary>
-        /// Not normally called by the game-engine.  Dependent on SongBrowserApplication to call it.
-        /// </summary>
-        public void LateUpdate()
-        {
-            if (Input.GetKeyDown(KeyCode.B))
-            {
-                _log.Debug("Invoking OK Button");
-                VRUIViewController view = Resources.FindObjectsOfTypeAll<VRUIViewController>().First(x => x.name == "StandardLevelResultsViewController");
-                view.GetComponentsInChildren<Button>().First(x => x.name == "Ok").onClick.Invoke();
-            }
-
-            CheckDebugUserInput();
-        }
-
         //Pull njs from a difficulty, based on private function from SongLoader
         public void GetNoteJump(string json, out float noteJumpSpeed)
         {
@@ -1230,6 +1216,14 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
+        /// Not normally called by the game-engine.  Dependent on SongBrowserApplication to call it.
+        /// </summary>
+        public void LateUpdate()
+        {
+            CheckDebugUserInput();
+        }
+
+        /// <summary>
         /// Map some key presses directly to UI interactions to make testing easier.
         /// </summary>
         private void CheckDebugUserInput()
@@ -1240,7 +1234,7 @@ namespace SongBrowserPlugin.UI
                 {
                     bool isShiftKeyDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
 
-                    if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.X))
+                    if (isShiftKeyDown && Input.GetKeyDown(KeyCode.X))
                     {
                         this._beatmapCharacteristicSelectionViewController.HandleBeatmapCharacteristicSegmentedControlDidSelectCell(null, 1);
                     }
@@ -1297,7 +1291,6 @@ namespace SongBrowserPlugin.UI
                     {
                         this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[0].levelID);
                         this._levelDifficultyViewController.HandleDifficultyTableViewDidSelectRow(null, 0);
-                        //TODO - this._levelSelectionFlowCoordinator.HandleDifficultyViewControllerDidSelectDifficulty(_levelDifficultyViewController, _model.SortedSongList[0].GetDifficultyBeatmap(BeatmapDifficulty.Easy));
                     }
 
                     // v start a song or enter a folder
@@ -1357,6 +1350,15 @@ namespace SongBrowserPlugin.UI
                     if (Input.GetKeyDown(KeyCode.Escape))
                     {
                         _deleteDialog.GetPrivateField<TextMeshProButton>("_cancelButton").button.onClick.Invoke();
+                    }
+                }
+                else
+                {
+                    if (Input.GetKeyDown(KeyCode.B))
+                    {
+                        _log.Debug("Invoking OK Button");
+                        VRUIViewController view = Resources.FindObjectsOfTypeAll<VRUIViewController>().First(x => x.name == "StandardLevelResultsViewController");
+                        view.GetComponentsInChildren<Button>().First(x => x.name == "Ok").onClick.Invoke();
                     }
                 }
             }

@@ -24,17 +24,18 @@ namespace SongBrowserPlugin.DataAccess
             }
         }
 
-        public PlaylistsReader(String playlistsDirectory)
+        public PlaylistsReader()
         {
-            _PlaylistsDirectories.Add(playlistsDirectory);
-
             // Hack, add beatdrop location
             String localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
             String beatDropPlaylistPath = Path.Combine(localAppDataPath, "Programs", "BeatDrop", "playlists");
             String beatDropCuratorPlaylistPath = Path.Combine(localAppDataPath, "Programs", "BeatDropCurator", "playlists");
+            String beatSaberPlaylistPath = Path.Combine(Environment.CurrentDirectory, "Playlists");
 
             _PlaylistsDirectories.Add(beatDropPlaylistPath);
             _PlaylistsDirectories.Add(beatDropCuratorPlaylistPath);
+            _PlaylistsDirectories.Add(beatSaberPlaylistPath);
         }
         
         public void UpdatePlaylists()

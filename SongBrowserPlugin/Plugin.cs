@@ -28,7 +28,6 @@ namespace SongBrowserPlugin
         private void OnMenuSceneEnabled()
         {
             SongBrowserApplication.OnLoad();
-            Downloader.OnLoad();
         }
 
         public void OnApplicationQuit()

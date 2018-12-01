@@ -14,91 +14,82 @@ namespace SongBrowserPlugin.UI
 {
     class PlaylistDetailViewController : VRUIViewController
     {
-        private Playlist _selectedPlaylist;
+        private Logger _log = new Logger("PlaylistDetailViewController");
 
-        private TextMeshProUGUI _playlistTitleText;
-        private TextMeshProUGUI _playlistAuthorText;
-        private TextMeshProUGUI _playlistNumberOfSongs;
-        private TextMeshProUGUI _playlistMissingSongCount;
+        public event Action<Playlist> downloadButtonPressed;
+        public event Action<Playlist> selectButtonPressed;
 
+        private Playlist _currentPlaylist;
+
+        private TextMeshProUGUI songNameText;
+
+        private Button _downloadButton;
         private Button _selectButton;
-        Button _downloadButton;
 
-        public Action<Playlist> didPressPlayPlaylist;
-        public event Action didPressDownloadPlaylist;
-       
-        /// <summary>
-        /// Override the left/right screen selector.
-        /// Put the Download Queue into the left screen.
-        /// </summary>
-        /// <param name="leftScreenViewController"></param>
-        /// <param name="rightScreenViewController"></param>
-        /*TODO protected override void LeftAndRightScreenViewControllers(out VRUIViewController leftScreenViewController, out VRUIViewController rightScreenViewController)
-        {
-            PlaylistFlowCoordinator playlistFlowCoordinator = Resources.FindObjectsOfTypeAll<PlaylistFlowCoordinator>().First();
-            leftScreenViewController = playlistFlowCoordinator.DownloadQueueViewController;
-            rightScreenViewController = null;
-        }*/
+        private TextMeshProUGUI authorText;
+        private TextMeshProUGUI totalSongsText;
+        private TextMeshProUGUI downloadedSongsText;
 
         /// <summary>
-        /// Initialize the UI Elements.
+        /// 
         /// </summary>
-        /// <param name="playlist"></param>
-        public void Init(Playlist playlist, int missingCount)
+        /// <param name="firstActivation"></param>
+        /// <param name="type"></param>
+        protected override void DidActivate(bool firstActivation, ActivationType type)
         {
-            _playlistTitleText = UIBuilder.CreateText(this.transform as RectTransform,
-                playlist.Title,
-                new Vector2(0, -20),
-                new Vector2(60f, 10f)
-            );
-            _playlistTitleText.alignment = TextAlignmentOptions.Center;
 
-            _playlistAuthorText = UIBuilder.CreateText(this.transform as RectTransform,
-                playlist.Author,
-                new Vector2(0, -30),
-                new Vector2(60f, 10f)
-            );
-            _playlistAuthorText.alignment = TextAlignmentOptions.Center;
-
-            _playlistNumberOfSongs = UIBuilder.CreateText(this.transform as RectTransform,
-                playlist.Songs.Count.ToString(),
-                new Vector2(0, -40),
-                new Vector2(60f, 10f)
-            );
-            _playlistNumberOfSongs.alignment = TextAlignmentOptions.Center;
-
-            _playlistMissingSongCount = UIBuilder.CreateText(this.transform as RectTransform,
-                missingCount.ToString(),
-                new Vector2(0, -50),
-                new Vector2(60f, 10f)
-            );
-            _playlistMissingSongCount.alignment = TextAlignmentOptions.Center;
-
-            Button buttonTemplate = Resources.FindObjectsOfTypeAll<Button>().FirstOrDefault(x => x.name == "PlayButton");
-            _selectButton = UIBuilder.CreateButton(this.transform as RectTransform, buttonTemplate, "Select Playlist", 3, 0, 3.5f, 45, 6);
-            _selectButton.onClick.AddListener(delegate ()
+            if (firstActivation && type == ActivationType.AddedToHierarchy)
             {
-                didPressPlayPlaylist.Invoke(_selectedPlaylist);
-            });
+                RemoveCustomUIElements(rectTransform);
 
-            _downloadButton = UIBuilder.CreateButton(this.transform as RectTransform, buttonTemplate, "Download All Songs", 3, 0, 11.5f, 45, 6);
-            UIBuilder.SetButtonText(ref _downloadButton, "Download");
-            _downloadButton.onClick.AddListener(delegate () { didPressDownloadPlaylist?.Invoke(); });
+                Destroy(GetComponentsInChildren<LevelParamsPanel>().First(x => x.name == "LevelParamsPanel").gameObject);
 
-            SetContent(playlist, missingCount);
+                RectTransform yourStats = GetComponentsInChildren<RectTransform>(true).First(x => x.name == "YourStats");
+                yourStats.gameObject.SetActive(true);
+
+                RectTransform buttonsRect = GetComponentsInChildren<RectTransform>().First(x => x.name == "Buttons");
+                buttonsRect.anchoredPosition = new Vector2(0f, 6f);
+
+                TextMeshProUGUI[] _textComponents = GetComponentsInChildren<TextMeshProUGUI>();
+
+                try
+                {
+                    songNameText = _textComponents.First(x => x.name == "SongNameText");
+                    _textComponents.First(x => x.name == "Title").text = "Playlist";
+
+                    _textComponents.First(x => x.name == "YourStatsTitle").text = "Playlist Info";
+
+                    _textComponents.First(x => x.name == "HighScoreText").text = "Author";
+                    authorText = _textComponents.First(x => x.name == "HighScoreValueText");
+                    authorText.rectTransform.sizeDelta = new Vector2(24f, 0f);
+
+                    _textComponents.First(x => x.name == "MaxComboText").text = "Total songs";
+                    totalSongsText = _textComponents.First(x => x.name == "MaxComboValueText");
+
+                    _textComponents.First(x => x.name == "MaxRankText").text = "Downloaded";
+                    _textComponents.First(x => x.name == "MaxRankText").rectTransform.sizeDelta = new Vector2(18f, 3f);
+                    downloadedSongsText = _textComponents.First(x => x.name == "MaxRankValueText");
+                }
+                catch (Exception e)
+                {
+                    _log.Exception("Unable to convert detail view controller! Exception:  ", e);
+                }
+
+                _selectButton = GetComponentsInChildren<Button>().First(x => x.name == "PlayButton");
+                _selectButton.GetComponentsInChildren<TextMeshProUGUI>().First().text = "SELECT";
+                _selectButton.onClick.RemoveAllListeners();
+                _selectButton.onClick.AddListener(() => { selectButtonPressed?.Invoke(_currentPlaylist); });
+
+                _downloadButton = GetComponentsInChildren<Button>().First(x => x.name == "PracticeButton");
+                _downloadButton.GetComponentsInChildren<Image>().First(x => x.name == "Icon").sprite = Base64Sprites.Base64ToSprite(Base64Sprites.DownloadIconB64);
+                _downloadButton.onClick.RemoveAllListeners();
+                _downloadButton.onClick.AddListener(() => { downloadButtonPressed?.Invoke(_currentPlaylist); });
+            }
         }
 
-        /// <summary>
-        /// Set the content.
-        /// </summary>
-        /// <param name="p"></param>
-        public virtual void SetContent(Playlist p, int missingCount)
+        public void SetDownloadState(bool downloaded)
         {
-            _selectedPlaylist = p;
-            _playlistTitleText.text = _selectedPlaylist.Title;
-            _playlistAuthorText.text = _selectedPlaylist.Author;
-            _playlistNumberOfSongs.text = "Song Count: " + _selectedPlaylist.Songs.Count.ToString();
-            _playlistMissingSongCount.text = "Missing Count: " + missingCount;
+            _downloadButton.interactable = !downloaded;
         }
 
         /// <summary>
@@ -110,6 +101,40 @@ namespace SongBrowserPlugin.UI
         {
             _selectButton.interactable = enableSelect;
             _downloadButton.interactable = enableDownload;
+        }
+
+        /// <summary>
+        /// Set the content.
+        /// </summary>
+        /// <param name="p"></param>
+        public void SetContent(Playlist newPlaylist)
+        {
+            _currentPlaylist = newPlaylist;
+
+            songNameText.text = newPlaylist.Title;
+
+            authorText.text = newPlaylist.Author;
+            totalSongsText.text = newPlaylist.Songs.Count.ToString();
+            downloadedSongsText.text = newPlaylist.Songs.Where(x => x.Level != null).Count().ToString();
+
+            SetDownloadState(newPlaylist.Songs.All(x => x.Level != null));
+        }
+
+        void RemoveCustomUIElements(Transform parent)
+        {
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                Transform child = parent.GetChild(i);
+
+                if (child.name.StartsWith("CustomUI"))
+                {
+                    Destroy(child.gameObject);
+                }
+                if (child.childCount > 0)
+                {
+                    RemoveCustomUIElements(child);
+                }
+            }
         }
     }
 }

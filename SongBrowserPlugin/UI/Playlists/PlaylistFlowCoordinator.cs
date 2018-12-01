@@ -1,4 +1,5 @@
-﻿using SimpleJSON;
+﻿using CustomUI.BeatSaber;
+using SimpleJSON;
 using SongBrowserPlugin.DataAccess;
 using SongBrowserPlugin.DataAccess.BeatSaverApi;
 using SongBrowserPlugin.UI.DownloadQueue;
@@ -21,22 +22,26 @@ namespace SongBrowserPlugin.UI
 
         private Logger _log = new Logger("PlaylistFlowCoordinator");
 
-        private PlaylistSelectionNavigationController _playlistNavigationController;
-        private PlaylistSelectionListViewController _playlistListViewController;
+        private BackButtonNavigationController _playlistNavigationController;
+        private PlaylistListViewController _playlistListViewController;
         private PlaylistDetailViewController _playlistDetailViewController;
 
         public DownloadQueueViewController DownloadQueueViewController;
 
-        private bool _initialized;
+        public FlowCoordinator ParentFlowCoordinator;
+
+        public PlaylistsReader _playlistsReader;
 
         private bool _downloadingPlaylist;
 
         private Song _lastRequestedSong;
 
+        private Playlist _lastPlaylist;
+
         /// <summary>
         /// User pressed "select" on the playlist.
         /// </summary>
-        public Action<Playlist> didSelectPlaylist;
+        public Action<Playlist> didFinishEvent;
 
         /// <summary>
         /// Destroy.
@@ -46,84 +51,112 @@ namespace SongBrowserPlugin.UI
             _log.Trace("OnDestroy()");
         }
 
+        public void Awake()
+        {
+            _playlistNavigationController = BeatSaberUI.CreateViewController<BackButtonNavigationController>();
+
+            GameObject _playlistDetailGameObject = Instantiate(Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First(), _playlistNavigationController.rectTransform, false).gameObject;
+            _playlistDetailViewController = _playlistDetailGameObject.AddComponent<PlaylistDetailViewController>();
+            Destroy(_playlistDetailGameObject.GetComponent<StandardLevelDetailViewController>());
+            _playlistDetailViewController.name = "PlaylistDetailViewController";
+        }
+
         /// <summary>
         /// Present the playlist selector flow.
         /// </summary>
         /// <param name="parentViewController"></param>
         /// <param name="levels"></param>
         /// <param name="gameplayMode"></param>
-        protected override void DidActivate(bool unknown, FlowCoordinator.ActivationType activationType)
+        protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
-            _log.Trace("Presenting Playlist Selector! - initialized: {0}", this._initialized);
-            if (!this._initialized)
+            _log.Trace("Presenting Playlist Selector! - firstActivation: {0}", firstActivation);
+            try
             {
-                _playlistNavigationController = UIBuilder.CreateViewController<PlaylistSelectionNavigationController>("PlaylistSelectionMasterViewController");
-                _playlistListViewController = UIBuilder.CreateViewController<PlaylistSelectionListViewController>("PlaylistSelectionListViewController");
-                _playlistDetailViewController = UIBuilder.CreateViewController<PlaylistDetailViewController>("PlaylistDetailViewController");
+                if (firstActivation && activationType == ActivationType.AddedToHierarchy)
+                {
+                    if (_playlistsReader == null)
+                    {
+                        _playlistsReader = new PlaylistsReader();
+                        _playlistsReader.UpdatePlaylists();
+                        _log.Debug("Reader found {0} playlists!", _playlistsReader.Playlists.Count);
+                    }
 
-                this.DownloadQueueViewController = UIBuilder.CreateViewController<DownloadQueueViewController>("DownloadQueueViewController");
+                    title = "Playlists";
 
-                // Set parent view controllers appropriately.
-                //_playlistNavigationController.GetType().GetField("_parentViewController", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).SetValue(_playlistNavigationController, parentViewController);
-                _playlistListViewController.GetType().GetField("_parentViewController", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).SetValue(_playlistListViewController, _playlistNavigationController);
-                _playlistDetailViewController.GetType().GetField("_parentViewController", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).SetValue(_playlistDetailViewController, _playlistListViewController);
+                    _playlistNavigationController.didFinishEvent += HandleDidFinish;
 
-                this._playlistListViewController.didSelectPlaylistRowEvent += HandlePlaylistListDidSelectPlaylist;
+                    _playlistListViewController = BeatSaberUI.CreateViewController<PlaylistListViewController>();
+                    _playlistListViewController.didSelectRow += HandleSelectRow;
 
-                this._playlistDetailViewController.didPressPlayPlaylist += HandleDidPlayPlaylist;
-                this._playlistDetailViewController.didPressDownloadPlaylist += HandleDownloadPressed;
+                    _playlistDetailViewController.downloadButtonPressed += HandleDownloadPressed;
+                    _playlistDetailViewController.selectButtonPressed += HandleDidSelectPlaylist;
 
-                this._playlistNavigationController.didDismissEvent += HandleDidFinish;
+                    DownloadQueueViewController = BeatSaberUI.CreateViewController<DownloadQueueViewController>();
 
-                _playlistListViewController.rectTransform.anchorMin = new Vector2(0.3f, 0f);
-                _playlistListViewController.rectTransform.anchorMax = new Vector2(0.7f, 1f);
+                    SetViewControllersToNavigationConctroller(_playlistNavigationController, new VRUIViewController[]
+                    {
+                        _playlistListViewController
+                    });
 
-                _playlistDetailViewController.rectTransform.anchorMin = new Vector2(0.3f, 0f);
-                _playlistDetailViewController.rectTransform.anchorMax = new Vector2(0.7f, 1f);
+                    ProvideInitialViewControllers(_playlistNavigationController, DownloadQueueViewController, null);
+                }
 
-                //parentViewController.PresentViewControllerCoroutine(this._playlistNavigationController, null, true);
-                this.PresentViewController(this._playlistNavigationController, null, true);
-                this._playlistNavigationController.PushViewControllerCoroutine(this._playlistListViewController, null, true);
+                _downloadingPlaylist = false;
+                _playlistListViewController.SetContent(_playlistsReader.Playlists, _lastPlaylist);
 
-                this._initialized = true;
-            }                        
+                DownloadQueueViewController.allSongsDownloaded += HandleAllSongsDownloaded;
+            }
+            catch (Exception e)
+            {
+                _log.Exception("Exception displaying playlist selector", e);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="deactivationType"></param>
+        protected override void DidDeactivate(DeactivationType deactivationType)
+        {
+            DownloadQueueViewController.allSongsDownloaded -= HandleAllSongsDownloaded;
         }
 
         /// <summary>
         /// Update the playlist detail view when a row is selected.
         /// </summary>
         /// <param name="songListViewController"></param>
-        public virtual void HandlePlaylistListDidSelectPlaylist(PlaylistSelectionListViewController playlistListViewController)
+        public virtual void HandleSelectRow(Playlist playlist)
         {
-            _log.Debug("Selected Playlist: {0}", playlistListViewController.SelectedPlaylist.Title);
+            _log.Debug("Selected Playlist: {0}", playlist.Title);
 
-            int missingCount = CountMissingSongs(playlistListViewController.SelectedPlaylist);
+            //int missingCount = CountMissingSongs(playlist);
 
-            if (!this._playlistDetailViewController.isInViewControllerHierarchy)
+            if (!_playlistDetailViewController.isInViewControllerHierarchy)
             {
-                this._playlistDetailViewController.Init(playlistListViewController.SelectedPlaylist, missingCount);
-                this._playlistNavigationController.PushViewControllerCoroutine(this._playlistDetailViewController, null, true);
+                PushViewControllerToNavigationController(_playlistNavigationController, _playlistDetailViewController);
             }
-            else
-            {
-                this._playlistDetailViewController.SetContent(playlistListViewController.SelectedPlaylist, missingCount);
-                this._playlistDetailViewController.UpdateButtons(!_downloadingPlaylist, !_downloadingPlaylist);
-            }
+
+            _lastPlaylist = playlist;
+            _playlistDetailViewController.SetContent(playlist);
+
+            this._playlistDetailViewController.UpdateButtons(!_downloadingPlaylist, !_downloadingPlaylist);
         }
 
         /// <summary>
         /// Playlist was selected, dismiss view and inform song browser.
         /// </summary>
         /// <param name="p"></param>
-        public void HandleDidPlayPlaylist(Playlist p)
+        public void HandleDidSelectPlaylist(Playlist p)
         {
             try
             {
-                _log.Debug("Playlist selector selected playlist...");
-                this._playlistNavigationController.DismissViewControllerCoroutine(delegate ()                
+                if (!DownloadQueueViewController.queuedSongs.Any(x => x.songQueueState == SongQueueState.Downloading || x.songQueueState == SongQueueState.Queued))
                 {
-                    didSelectPlaylist.Invoke(p);
-                }, true);
+                    DownloadQueueViewController.AbortDownloads();
+
+                    ParentFlowCoordinator.InvokePrivateMethod("DismissFlowCoordinator", new object[] { this, null, false });
+                    didFinishEvent?.Invoke(p);
+                }
             }
             catch (Exception e)
             {
@@ -138,7 +171,7 @@ namespace SongBrowserPlugin.UI
         {
             try
             {
-                if (this.DownloadQueueViewController._queuedSongs.Any(x => x.songQueueState == SongQueueState.Queued || x.songQueueState == SongQueueState.Downloading))
+                if (this.DownloadQueueViewController.queuedSongs.Any(x => x.songQueueState == SongQueueState.Queued || x.songQueueState == SongQueueState.Downloading))
                 {
                     _log.Debug("Aborting downloads...");
                     this.DownloadQueueViewController.AbortDownloads();
@@ -147,7 +180,7 @@ namespace SongBrowserPlugin.UI
                 _log.Debug("Playlist selector dismissed...");
                 this._playlistNavigationController.DismissViewControllerCoroutine(delegate ()
                 {
-                    didSelectPlaylist.Invoke(null);
+                    didFinishEvent.Invoke(null);
                 }, true);
             }
             catch (Exception e)
@@ -189,11 +222,11 @@ namespace SongBrowserPlugin.UI
         /// <summary>
         /// Download playlist button pressed.
         /// </summary>
-        private void HandleDownloadPressed()
+        private void HandleDownloadPressed(Playlist playlist)
         {
             if (!_downloadingPlaylist)
             {
-                StartCoroutine(DownloadPlaylist(this._playlistListViewController.SelectedPlaylist));
+                StartCoroutine(DownloadPlaylist(playlist));
             }
             else
             {
@@ -263,8 +296,8 @@ namespace SongBrowserPlugin.UI
                 _log.Debug(item.songName);
             }
 
-            DownloadQueueViewController.allSongsDownloaded -= AllSongsDownloaded;
-            DownloadQueueViewController.allSongsDownloaded += AllSongsDownloaded;
+            DownloadQueueViewController.allSongsDownloaded -= HandleAllSongsDownloaded;
+            DownloadQueueViewController.allSongsDownloaded += HandleAllSongsDownloaded;
 
             DownloadQueueViewController.DownloadAllSongsFromQueue();
         }
@@ -272,11 +305,11 @@ namespace SongBrowserPlugin.UI
         /// <summary>
         /// Songs finished downloading.
         /// </summary>
-        private void AllSongsDownloaded()
+        private void HandleAllSongsDownloaded()
         {
             SongLoader.Instance.RefreshSongs(false);
 
-            this.FilterSongsForPlaylist(this._playlistListViewController.SelectedPlaylist);
+            this.FilterSongsForPlaylist(_lastPlaylist);
 
             _downloadingPlaylist = false;
             _playlistDetailViewController.UpdateButtons(!_downloadingPlaylist, !_downloadingPlaylist);
@@ -332,13 +365,15 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         public void LateUpdate()
         {
-            if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.Return))
+            bool isShiftKeyDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+
+            if (isShiftKeyDown && Input.GetKeyDown(KeyCode.Return))
             {
-                HandleDownloadPressed();
+                HandleDownloadPressed(_lastPlaylist);
             }
             else if (Input.GetKeyDown(KeyCode.Return))
             {
-                HandleDidPlayPlaylist(this._playlistListViewController.SelectedPlaylist);
+                HandleSelectRow(_lastPlaylist);
             }
         }
     }

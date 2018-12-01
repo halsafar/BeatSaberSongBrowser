@@ -1,77 +1,190 @@
-﻿using SongBrowserPlugin.DataAccess;
+﻿using HMUI;
+using SongBrowserPlugin.DataAccess;
+using SongLoaderPlugin;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 using VRUI;
 
 namespace SongBrowserPlugin.UI
 {
-    public class PlaylistSelectionListViewController : VRUI.VRUIViewController
+    class PlaylistListViewController : VRUIViewController, TableView.IDataSource
     {
-        public const String Name = "PlaylistSelectionListViewController";
+        private Logger _log = new Logger("PlaylistListViewController");
 
-        private Logger _log = new Logger(Name);
+        public event Action<Playlist> didSelectRow;
 
-        private PlaylistTableView _playlistTableView;
+        public List<Playlist> playlistList = new List<Playlist>();
 
-        private PlaylistsReader _playlistsReader;        
+        private Button _pageUpButton;
+        private Button _pageDownButton;
 
-        public Action<PlaylistSelectionListViewController> didSelectPlaylistRowEvent;
+        private TableView _songsTableView;
+        private LevelListTableCell _songListTableCellInstance;
 
-        public Playlist SelectedPlaylist { get; private set; }
+        private int _lastSelectedRow;
+
+        protected override void DidActivate(bool firstActivation, ActivationType type)
+        {
+            if (firstActivation && type == ActivationType.AddedToHierarchy)
+            {
+                rectTransform.anchorMin = new Vector2(0.3f, 0f);
+                rectTransform.anchorMax = new Vector2(0.7f, 1f);
+
+                _pageUpButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageUpButton")), rectTransform, false);
+                (_pageUpButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 1f);
+                (_pageUpButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 1f);
+                (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -14f);
+                (_pageUpButton.transform as RectTransform).sizeDelta = new Vector2(40f, 10f);
+                _pageUpButton.interactable = true;
+                _pageUpButton.onClick.AddListener(delegate ()
+                {
+                    _songsTableView.PageScrollUp();
+                });
+
+                _pageDownButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageDownButton")), rectTransform, false);
+                (_pageDownButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0f);
+                (_pageDownButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0f);
+                (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 11f);
+                (_pageDownButton.transform as RectTransform).sizeDelta = new Vector2(40f, 10f);
+                _pageDownButton.interactable = true;
+                _pageDownButton.onClick.AddListener(delegate ()
+                {
+                    _songsTableView.PageScrollDown();
+                });
+
+                _songListTableCellInstance = Resources.FindObjectsOfTypeAll<LevelListTableCell>().First(x => (x.name == "LevelListTableCell"));
+                _songsTableView = new GameObject().AddComponent<TableView>();
+                _songsTableView.transform.SetParent(rectTransform, false);
+
+                _songsTableView.SetPrivateField("_isInitialized", false);
+                _songsTableView.SetPrivateField("_preallocatedCells", new TableView.CellsGroup[0]);
+                _songsTableView.Init();
+
+                RectMask2D viewportMask = Instantiate(Resources.FindObjectsOfTypeAll<RectMask2D>().First(), _songsTableView.transform, false);
+                viewportMask.transform.DetachChildren();
+                _songsTableView.GetComponentsInChildren<RectTransform>().First(x => x.name == "Content").transform.SetParent(viewportMask.rectTransform, false);
+
+                (_songsTableView.transform as RectTransform).anchorMin = new Vector2(0f, 0.5f);
+                (_songsTableView.transform as RectTransform).anchorMax = new Vector2(1f, 0.5f);
+                (_songsTableView.transform as RectTransform).sizeDelta = new Vector2(0f, 60f);
+                (_songsTableView.transform as RectTransform).position = new Vector3(0f, 0f, 2.4f);
+                (_songsTableView.transform as RectTransform).anchoredPosition = new Vector3(0f, -3f);
+
+                _songsTableView.SetPrivateField("_pageUpButton", _pageUpButton);
+                _songsTableView.SetPrivateField("_pageDownButton", _pageDownButton);
+
+                _songsTableView.dataSource = this;
+                _songsTableView.ScrollToRow(0, false);
+                _lastSelectedRow = -1;
+                _songsTableView.didSelectRowEvent += _songsTableView_DidSelectRowEvent;
+            }
+            else
+            {
+                _songsTableView.ReloadData();
+                _songsTableView.ScrollToRow(0, false);
+                _lastSelectedRow = -1;
+            }
+        }
+
+        internal void Refresh()
+        {
+            _songsTableView.ReloadData();
+            if (_lastSelectedRow > -1)
+                _songsTableView.SelectRow(_lastSelectedRow);
+        }
+
+        protected override void DidDeactivate(DeactivationType type)
+        {
+            _lastSelectedRow = -1;
+        }
+
+        public void SetContent(List<Playlist> playlists, Playlist select = null)
+        {
+            if (playlists == null && playlistList != null)
+                playlistList.Clear();
+            else
+                playlistList = new List<Playlist>(playlists);
+
+            if (_songsTableView != null)
+            {
+                _songsTableView.ReloadData();
+                _songsTableView.ScrollToRow(0, false);
+                _songsTableView.SelectRow(0, true);
+            }
+        }
+
+        private void _songsTableView_DidSelectRowEvent(TableView sender, int row)
+        {
+            _lastSelectedRow = row;
+            didSelectRow?.Invoke(playlistList[row]);
+        }
+
+        public float RowHeight()
+        {
+            return 10f;
+        }
+
+        public int NumberOfRows()
+        {
+            return playlistList.Count;
+        }
+
+        public TableCell CellForRow(int row)
+        {
+            LevelListTableCell _tableCell = Instantiate(_songListTableCellInstance);
+
+            _tableCell.reuseIdentifier = "PlaylistTableCell";
+            _tableCell.songName = playlistList[row].Title;
+            _tableCell.author = playlistList[row].Author;
+            _tableCell.coverImage = Base64Sprites.Base64ToSprite(playlistList[row].Image);
+
+            return _tableCell;
+        }
 
         /// <summary>
-        /// Instantiate the playlist table view.
+        /// 
         /// </summary>
-        /// <param name="firstActivation"></param>
-        /// <param name="activationType"></param>
-        protected override void DidActivate(bool firstActivation, VRUIViewController.ActivationType activationType)
+        private void CheckDebugUserInput()
         {
-            _log.Debug("DidActivate()");
+            bool isShiftKeyDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
 
-            if (_playlistsReader == null)
-            { 
-                String playlistPath = Path.Combine(Environment.CurrentDirectory, "Playlists");
-                _playlistsReader = new PlaylistsReader(playlistPath);
-                _playlistsReader.UpdatePlaylists();
-                _log.Debug("Reader found {0} playlists!", _playlistsReader.Playlists.Count);
+            if (Input.GetKeyDown(KeyCode.N) && isShiftKeyDown)
+            {
+                _songsTableView.PageScrollUp();
+            }
+            else if (Input.GetKeyDown(KeyCode.N))
+            {
+                _lastSelectedRow = (_lastSelectedRow - 1) % _songsTableView.dataSource.NumberOfRows();
+                if (_lastSelectedRow < 0)
+                {
+                    _lastSelectedRow = _songsTableView.dataSource.NumberOfRows() - 1;
+                }
+                _songsTableView.ScrollToRow(_lastSelectedRow, true);
+                this._songsTableView_DidSelectRowEvent(_songsTableView, _lastSelectedRow);
             }
 
-            base.DidActivate(firstActivation, activationType);
-
-            if (_playlistTableView == null)
+            if (Input.GetKeyDown(KeyCode.M) && isShiftKeyDown)
             {
-                _playlistTableView = new GameObject(name).AddComponent<PlaylistTableView>();
-                _playlistTableView.Init(rectTransform, _playlistsReader);
-
-                _playlistTableView.didSelectPlaylistEvent += HandlePlaylistListTableViewDidSelectRow;
+                _songsTableView.PageScrollDown();
+            }
+            else if (Input.GetKeyDown(KeyCode.M))
+            {
+                _lastSelectedRow = (_lastSelectedRow + 1) % _songsTableView.dataSource.NumberOfRows();
+                _songsTableView.ScrollToRow(_lastSelectedRow, true);
+                this._songsTableView_DidSelectRowEvent(_songsTableView, _lastSelectedRow);
             }
         }
 
         /// <summary>
-        /// Deactivate - Destroy!
+        /// 
         /// </summary>
-        /// <param name="deactivationType"></param>
-        protected override void DidDeactivate(VRUIViewController.DeactivationType deactivationType)
+        private void LateUpdate()
         {
-            _log.Debug("DidDeactivate()");
-            this._playlistTableView.gameObject.SetActive(false);
-            Destroy(this._playlistTableView);
-            base.DidDeactivate(deactivationType);
-        }
-
-        /// <summary>
-        /// Did select a playlist row.
-        /// </summary>
-        /// <param name="tableView"></param>
-        /// <param name="row"></param>
-        public virtual void HandlePlaylistListTableViewDidSelectRow(PlaylistTableView tableView, int row)
-        {
-            this.SelectedPlaylist = _playlistsReader.Playlists[row];
-            if (this.didSelectPlaylistRowEvent != null)
-            {
-                this.didSelectPlaylistRowEvent(this);
-            }
+            CheckDebugUserInput();
         }
     }
 }

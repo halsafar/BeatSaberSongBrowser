@@ -52,6 +52,8 @@ namespace SongBrowserPlugin.UI
         /// <param name="parent"></param>
         public void Init(RectTransform parent, PlaylistsReader reader)
         {
+            _log.Debug("Init()");
+
             _rect = parent;
             _reader = reader;
 
