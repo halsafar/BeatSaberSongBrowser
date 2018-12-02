@@ -733,26 +733,21 @@ namespace SongBrowserPlugin.UI
         /// <param name="p"></param>
         private void HandleDidSelectPlaylist(Playlist p)
         {
-            if (_playListFlowCoordinator != null)
-            {
-                _playListFlowCoordinator.gameObject.SetActive(false);
-                UnityEngine.Object.DestroyImmediate(_playListFlowCoordinator);
-            }
-
             if (p != null)
             {
                 Logger.Debug("Showing songs for playlist: {0}", p.Title);
                 _model.Settings.filterMode = SongFilterMode.Playlist;
                 _model.CurrentPlaylist = p;
                 _model.Settings.Save();
+
+                this.UpdateSongList();
+                this.RefreshSongList();
+                this.RefreshSortButtonUI();
             }
             else
             {
                 Logger.Debug("No playlist selected");
             }
-
-            this.UpdateSongList();
-            this.RefreshSongList();
         }
 
         /// <summary>
@@ -861,7 +856,6 @@ namespace SongBrowserPlugin.UI
 
         /// <summary>
         /// Update GUI elements that show score saber data.
-        /// TODO - make better
         /// </summary>
         public void RefreshScoreSaberData(IBeatmapLevel level)
         {            
@@ -1101,8 +1095,7 @@ namespace SongBrowserPlugin.UI
             Logger.Info("Refreshing the song list view.");
             try
             {
-                // TODO - remove OR
-                if (_model.SortedSongList == null || _model.SortedSongList.Count <= 0)
+                if (_model.SortedSongList == null)
                 {
                     Logger.Debug("Songs are not sorted yet, nothing to refresh.");
                     return;

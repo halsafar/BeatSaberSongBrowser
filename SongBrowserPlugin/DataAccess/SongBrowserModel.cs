@@ -229,7 +229,6 @@ namespace SongBrowserPlugin
 
         /// <summary>
         /// Get the song cache from the game.
-        /// TODO: This might not even be necessary anymore.  Need to test interactions with BeatSaverDownloader.
         /// </summary>
         public void UpdateSongLists(BeatmapCharacteristicSO gameplayMode)
         {

@@ -76,6 +76,8 @@ namespace SongBrowserPlugin.UI
                         _playlistsReader = new PlaylistsReader();
                         _playlistsReader.UpdatePlaylists();
                         Logger.Debug("Reader found {0} playlists!", _playlistsReader.Playlists.Count);
+
+                        this.MatchSongsForAllPlaylists(true);
                     }
 
                     title = "Playlists";
@@ -200,6 +202,19 @@ namespace SongBrowserPlugin.UI
                         x.Level = SongLoader.CustomLevels.FirstOrDefault(y => (y.customSongInfo.path.Contains(x.Key) && Directory.Exists(y.customSongInfo.path)) || (string.IsNullOrEmpty(x.LevelId) ? false : y.levelID.StartsWith(x.LevelId)));
                     }
                 });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="matchAll"></param>
+        public void MatchSongsForAllPlaylists(bool matchAll = false)
+        {
+            Logger.Info("Matching songs for all playlists!");
+            foreach (Playlist playlist in _playlistsReader.Playlists)
+            {
+                FilterSongsForPlaylist(playlist, matchAll);
             }
         }
 
