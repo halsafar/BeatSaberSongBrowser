@@ -8,14 +8,13 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using Logger = SongBrowserPlugin.Logging.Logger;
 
 namespace SongBrowserPlugin
 {
     public class SongBrowserApplication : MonoBehaviour
     {
         public static SongBrowserApplication Instance;
-
-        private Logger _log = new Logger("SongBrowserApplication");
 
         // Song Browser UI Elements
         private SongBrowserUI _songBrowserUI;
@@ -35,8 +34,10 @@ namespace SongBrowserPlugin
             {
                 return;
             }
-            new GameObject("BeatSaber SongBrowser Mod").AddComponent<SongBrowserApplication>();
+            new GameObject("Beat Saber SongBrowser Plugin").AddComponent<SongBrowserApplication>();
             SongBrowserApplication.MainProgressBar = SongBrowserPlugin.UI.ProgressBar.Create();
+
+            Console.WriteLine("SongBrowser Plugin Loaded()");
         }
 
         /// <summary>
@@ -44,7 +45,7 @@ namespace SongBrowserPlugin
         /// </summary>
         private void Awake()
         {
-            _log.Trace("Awake()");
+            Logger.Trace("Awake()");
 
             Instance = this;
 
@@ -58,7 +59,7 @@ namespace SongBrowserPlugin
         /// </summary>
         public void Start()
         {
-            _log.Trace("Start()");
+            Logger.Trace("Start()");
 
             AcquireUIElements();
 
@@ -71,13 +72,11 @@ namespace SongBrowserPlugin
         /// <returns></returns>
         private IEnumerator WaitForSongListUI()
         {
-            _log.Trace("WaitForSongListUI()");
+            Logger.Trace("WaitForSongListUI()");
 
-            yield return new WaitUntil(delegate () { return Resources.FindObjectsOfTypeAll<StandardLevelSelectionFlowCoordinator>().Any(); });
+            yield return new WaitUntil(delegate () { return Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().Any() && Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().Any(); });
 
-            _log.Debug("Found StandardLevelSelectionFlowCoordinator...");
-
-            _songBrowserUI.CreateUI();
+            Logger.Debug("Found Solo and Party FreePlayFlowCoordinators...");
 
             if (SongLoaderPlugin.SongLoader.AreSongsLoaded)
             {
@@ -98,14 +97,14 @@ namespace SongBrowserPlugin
         /// <param name="levels"></param>
         private void OnSongLoaderLoadedSongs(SongLoader loader, List<CustomLevel> levels)
         {
-            _log.Trace("OnSongLoaderLoadedSongs");
+            Logger.Trace("OnSongLoaderLoadedSongs");
             try
             {
                 _songBrowserUI.UpdateSongList();
             }
             catch (Exception e)
             {
-                _log.Exception("Exception during OnSongLoaderLoadedSongs: ", e);
+                Logger.Exception("Exception during OnSongLoaderLoadedSongs: ", e);
             }
         }
 
@@ -116,12 +115,12 @@ namespace SongBrowserPlugin
         /// <param name="levels"></param>
         private void OnScoreSaberDataDownloaded()
         {
-            _log.Trace("OnScoreSaberDataDownloaded");
+            Logger.Trace("OnScoreSaberDataDownloaded");
             try
             {
                 // TODO - this should be in the SongBrowserUI which is acting like the view controller for the SongBrowser
                 _songBrowserUI.Model.UpdateScoreSaberDataMapping();
-                _songBrowserUI.RefreshScoreSaberData(null);
+                //_songBrowserUI.RefreshScoreSaberData(null);
                 if (_songBrowserUI.Model.Settings.sortMode == SongSortMode.PP)
                 {
                     _songBrowserUI.Model.ProcessSongList();
@@ -130,7 +129,7 @@ namespace SongBrowserPlugin
             }
             catch (Exception e)
             {
-                _log.Exception("Exception during OnSongLoaderLoadedSongs: ", e);
+                Logger.Exception("Exception during OnSongLoaderLoadedSongs: ", e);
             }
         }
 
@@ -139,7 +138,7 @@ namespace SongBrowserPlugin
         /// </summary>
         public void AcquireUIElements()
         {
-            _log.Trace("AcquireUIElements()");        
+            Logger.Trace("AcquireUIElements()");        
             try
             {
                 CachedIcons = new Dictionary<String, Sprite>();
@@ -149,28 +148,55 @@ namespace SongBrowserPlugin
                     {
                         continue;
                     }
+
+                    //Logger.Debug("Adding Icon: {0}", sprite.name);
                     CachedIcons.Add(sprite.name, sprite);
                 }
-
                 // Append our own event to appropriate events so we can refresh the song list before the user sees it.
                 MainFlowCoordinator mainFlow = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-                SoloModeSelectionViewController view = Resources.FindObjectsOfTypeAll<SoloModeSelectionViewController>().First();                
-                view.didFinishEvent += HandleSoloModeSelectionViewControllerDidSelectMode;
+                Button soloFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloFreePlayButton");
+                Button partyFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PartyFreePlayButton");
+
+                soloFreePlayButton.onClick.AddListener(HandleSoloModeSelection);
+                partyFreePlayButton.onClick.AddListener(HandlePartyModeSelection);
             }
             catch (Exception e)
             {
-                _log.Exception("Exception AcquireUIElements(): ", e);
+                Logger.Exception("Exception AcquireUIElements(): ", e);
             }
         }
 
         /// <summary>
-        /// Perfect time to refresh the level list on first entry.
+        /// Handle Solo Mode
         /// </summary>
         /// <param name="arg1"></param>
         /// <param name="arg2"></param>
-        private void HandleSoloModeSelectionViewControllerDidSelectMode(SoloModeSelectionViewController arg1, SoloModeSelectionViewController.MenuType arg2)
+        private void HandleSoloModeSelection()
         {
-            _log.Trace("HandleSoloModeSelectionViewControllerDidSelectMode() - GameplayMode={0}", arg2);
+            Logger.Trace("HandleSoloModeSelection()");
+            HandleModeSelection(MainMenuViewController.MenuButton.SoloFreePlay);
+        }
+
+        /// <summary>
+        /// Handle Party Mode
+        /// </summary>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
+        private void HandlePartyModeSelection()
+        {
+            Logger.Trace("HandlePartyModeSelection()");
+            HandleModeSelection(MainMenuViewController.MenuButton.Party);
+        }
+
+        /// <summary>
+        /// Handle Mode
+        /// </summary>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
+        private void HandleModeSelection(MainMenuViewController.MenuButton mode)
+        {
+            Logger.Trace("HandleModeSelection()");
+            this._songBrowserUI.CreateUI(mode);
             this._songBrowserUI.UpdateSongList();
             this._songBrowserUI.RefreshSongList();
         }
@@ -189,25 +215,15 @@ namespace SongBrowserPlugin
         /// Map some key presses directly to UI interactions to make testing easier.
         /// </summary>
         private void LateUpdate()
-        {
+        {            
             // z,x,c,v can be used to get into a song, b will hit continue button after song ends
-            if (Input.GetKeyDown(KeyCode.Z))
+            if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.Z))
             {
-                InvokeBeatSaberButton("SoloButton");
+                InvokeBeatSaberButton("PartyFreePlayButton");
             }
-
-            if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.X))
+            else if (Input.GetKeyDown(KeyCode.Z))
             {
-                InvokeBeatSaberButton("OneSaberButton");
-            }
-            else if (Input.GetKeyDown(KeyCode.X))
-            {
-                InvokeBeatSaberButton("StandardButton");
-            }
-
-            if (Input.GetKeyDown(KeyCode.B))
-            {
-                InvokeBeatSaberButton("ContinueButton");
+                InvokeBeatSaberButton("SoloFreePlayButton");
             }
         }
     }

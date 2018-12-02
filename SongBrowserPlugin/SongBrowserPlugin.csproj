@@ -40,14 +40,23 @@
     <Reference Include="Assembly-CSharp">
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
+    <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="BeatSaberCustomUI">
+      <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Plugins\BeatSaberCustomUI.dll</HintPath>
+    </Reference>
     <Reference Include="IllusionPlugin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\IllusionPlugin.dll</HintPath>
     </Reference>
-    <Reference Include="SongLoaderPlugin">
+    <Reference Include="SongLoaderPlugin, Version=5.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Plugins\SongLoaderPlugin.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Security" />
     <Reference Include="System.Xml" />
@@ -112,8 +121,11 @@
     <Compile Include="DataAccess\PlaylistSong.cs" />
     <Compile Include="DataAccess\PlaylistWriter.cs" />
     <Compile Include="DataAccess\ScoreSaberDatabase.cs" />
-    <Compile Include="Downloader.cs" />
-    <Compile Include="Logger.cs" />
+    <Compile Include="DataAccess\Network\Downloader.cs" />
+    <Compile Include="Logging\Logger.cs" />
+    <Compile Include="PluginConfig.cs" />
+    <Compile Include="UI\SceneEvents.cs" />
+    <Compile Include="UI\BackButtonNavigationController.cs" />
     <Compile Include="UI\DownloadQueue\DownloadQueueTableCell.cs" />
     <Compile Include="UI\DownloadQueue\DownloadQueueViewController.cs" />
     <Compile Include="UI\ProgressBar.cs" />
@@ -126,8 +138,6 @@
     <Compile Include="UI\Playlists\PlaylistDetailViewController.cs" />
     <Compile Include="UI\Playlists\PlaylistFlowCoordinator.cs" />
     <Compile Include="UI\Playlists\PlaylistSelectionListViewController.cs" />
-    <Compile Include="UI\Playlists\PlaylistSelectionNavigationController.cs" />
-    <Compile Include="UI\Playlists\PlaylistTableView.cs" />
     <Compile Include="UI\Base64Sprites.cs" />
     <Compile Include="UI\Keyboard\CustomUIKeyboard.cs" />
     <Compile Include="UI\Keyboard\SearchKeyboardViewController.cs" />
@@ -138,7 +148,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Internals\" />
-    <Folder Include="Logging\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

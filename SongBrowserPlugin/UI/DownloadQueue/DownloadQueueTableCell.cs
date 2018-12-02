@@ -6,10 +6,9 @@ using UnityEngine;
 // From: https://github.com/andruzzzhka/BeatSaverDownloader
 namespace SongBrowserPlugin.UI.DownloadQueue
 {
-    class DownloadQueueTableCell : StandardLevelListTableCell
+    class DownloadQueueTableCell : LevelListTableCell
     {
         Song song;
-
 
         protected override void Awake()
         {
@@ -18,7 +17,7 @@ namespace SongBrowserPlugin.UI.DownloadQueue
 
         public void Init(Song _song)
         {
-            StandardLevelListTableCell cell = GetComponent<StandardLevelListTableCell>();
+            LevelListTableCell cell = GetComponent<LevelListTableCell>();
 
             foreach (FieldInfo info in cell.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic))
             {
@@ -49,7 +48,6 @@ namespace SongBrowserPlugin.UI.DownloadQueue
                         _bgImage.fillAmount = song.downloadingProgress;
                     }
                     break;
-                case SongQueueState.Available:
                 case SongQueueState.Downloaded:
                     {
                         _bgImage.color = new Color(1f, 1f, 1f, 0.35f);
@@ -78,7 +76,6 @@ namespace SongBrowserPlugin.UI.DownloadQueue
                         _bgImage.fillAmount = song.downloadingProgress;
                     }
                     break;
-                case SongQueueState.Available:
                 case SongQueueState.Downloaded:
                     {
                         _bgImage.color = new Color(1f, 1f, 1f, 0.35f);
@@ -93,6 +90,5 @@ namespace SongBrowserPlugin.UI.DownloadQueue
                     break;
             }
         }
-
     }
 }

@@ -1,17 +1,14 @@
 ﻿using SimpleJSON;
+using SongBrowserPlugin.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace SongBrowserPlugin.DataAccess
 {
     public class PlaylistsReader
     {
-        private static Logger _log = new Logger("PlaylistReader");
-
         private List<String> _PlaylistsDirectories = new List<string>();
 
         private List<Playlist> _CachedPlaylists;
@@ -24,17 +21,18 @@ namespace SongBrowserPlugin.DataAccess
             }
         }
 
-        public PlaylistsReader(String playlistsDirectory)
+        public PlaylistsReader()
         {
-            _PlaylistsDirectories.Add(playlistsDirectory);
-
             // Hack, add beatdrop location
             String localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
             String beatDropPlaylistPath = Path.Combine(localAppDataPath, "Programs", "BeatDrop", "playlists");
             String beatDropCuratorPlaylistPath = Path.Combine(localAppDataPath, "Programs", "BeatDropCurator", "playlists");
+            String beatSaberPlaylistPath = Path.Combine(Environment.CurrentDirectory, "Playlists");
 
             _PlaylistsDirectories.Add(beatDropPlaylistPath);
             _PlaylistsDirectories.Add(beatDropCuratorPlaylistPath);
+            _PlaylistsDirectories.Add(beatSaberPlaylistPath);
         }
         
         public void UpdatePlaylists()
@@ -45,17 +43,17 @@ namespace SongBrowserPlugin.DataAccess
             timer.Start();
             foreach (String path in _PlaylistsDirectories)
             {
-                _log.Debug("Reading playlists located at: {0}", path);
+                Logger.Debug("Reading playlists located at: {0}", path);
                 if (!Directory.Exists(path))
                 {
-                    _log.Info("Playlist path does not exist: {0}", path);
+                    Logger.Info("Playlist path does not exist: {0}", path);
                     continue;
                 }
 
                 string[] files = Directory.GetFiles(path);
                 foreach (string file in files)
                 {
-                    _log.Debug("Checking file {0}", file);
+                    Logger.Debug("Checking file {0}", file);
                     if (Path.GetExtension(file) == ".json")
                     {
                         Playlist p = ParsePlaylist(file);
@@ -64,7 +62,7 @@ namespace SongBrowserPlugin.DataAccess
                 }
             }
             timer.Stop();
-            _log.Debug("Processing playlists took {0}ms", timer.ElapsedMilliseconds);
+            Logger.Debug("Processing playlists took {0}ms", timer.ElapsedMilliseconds);
         }
 
         public static Playlist ParsePlaylist(String path)
@@ -73,11 +71,11 @@ namespace SongBrowserPlugin.DataAccess
             {
                 if (!File.Exists(path))
                 {
-                    _log.Debug("Playlist file no longer exists: {0}", path);
+                    Logger.Debug("Playlist file no longer exists: {0}", path);
                     return null;
                 }
 
-                _log.Debug("Parsing playlist at {0}", path);
+                Logger.Debug("Parsing playlist at {0}", path);
                 String json = File.ReadAllText(path);
                 Playlist playlist = new Playlist();
 
@@ -95,7 +93,7 @@ namespace SongBrowserPlugin.DataAccess
                     {
                         playlist.CustomDetailUrl += "/";
                     }
-                    _log.Debug("Found playlist with custom URL! Name: " + playlist.Title + ", CustomDetailURL: " + playlist.CustomDetailUrl);
+                    Logger.Debug("Found playlist with custom URL! Name: " + playlist.Title + ", CustomDetailURL: " + playlist.CustomDetailUrl);
                 }
                 foreach (JSONNode node in playlistNode["songs"].AsArray)
                 {
@@ -114,7 +112,7 @@ namespace SongBrowserPlugin.DataAccess
             }
             catch (Exception e)
             {
-                _log.Exception("Exception parsing playlist: ", e);
+                Logger.Exception("Exception parsing playlist: ", e);
             }
 
             return null;

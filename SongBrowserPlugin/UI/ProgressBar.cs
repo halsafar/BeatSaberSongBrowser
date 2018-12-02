@@ -71,14 +71,12 @@ namespace SongBrowserPlugin.UI
         private void OnEnable()
         {
             SceneManager.activeSceneChanged += SceneManagerOnActiveSceneChanged;
-            SongLoader.SongsLoadedEvent += SongLoaderOnSongsLoadedEvent;
             SongBrowserModel.didFinishProcessingSongs += SongBrowserFinishedProcessingSongs;
         }
 
         private void OnDisable()
         {
             SceneManager.activeSceneChanged -= SceneManagerOnActiveSceneChanged;
-            SongLoader.SongsLoadedEvent -= SongLoaderOnSongsLoadedEvent;
             SongBrowserModel.didFinishProcessingSongs -= SongBrowserFinishedProcessingSongs;
         }
 
@@ -97,7 +95,7 @@ namespace SongBrowserPlugin.UI
             }
         }
 
-        private void SongLoaderOnSongsLoadedEvent(SongLoader arg1, List<CustomLevel> arg2)
+        public void ShowDeafaultMessage()
         {
             _showingMessage = false;
             _headerText.text = HeaderText;

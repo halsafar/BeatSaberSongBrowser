@@ -5,14 +5,13 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
+using Logger = SongBrowserPlugin.Logging.Logger;
 
 namespace SongBrowserPlugin.UI
 {
     public class ScoreSaberDatabaseDownloader : MonoBehaviour
     {
         public const String SCRAPED_SCORE_SABER_JSON_URL = "https://raw.githubusercontent.com/halsafar/beat-saber-scraped-data/master/scoresaber/score_saber_data_v1.json";
-
-        private Logger _log = new Logger("ScoreSaberDatabaseDownloader");
 
         public static ScoreSaberDatabaseDownloader Instance;
 
@@ -27,7 +26,7 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         private void Awake()
         {
-            _log.Trace("Awake()");
+            Logger.Trace("Awake()");
 
             if (Instance == null)
             {
@@ -40,7 +39,7 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         public void Start()
         {
-            _log.Trace("Start()");
+            Logger.Trace("Start()");
 
             StartCoroutine(WaitForDownload());
         }
@@ -58,36 +57,36 @@ namespace SongBrowserPlugin.UI
         {
             if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile != null)
             {
-                _log.Info("Using cached copy of ScoreSaberData...");
+                Logger.Info("Using cached copy of ScoreSaberData...");
             }
             else
             {
                 SongBrowserApplication.MainProgressBar.ShowMessage("Downloading ScoreSaber data...");
 
-                _log.Info("Attempting to download: {0}", ScoreSaberDatabaseDownloader.SCRAPED_SCORE_SABER_JSON_URL);
+                Logger.Info("Attempting to download: {0}", ScoreSaberDatabaseDownloader.SCRAPED_SCORE_SABER_JSON_URL);
                 using (UnityWebRequest www = UnityWebRequest.Get(ScoreSaberDatabaseDownloader.SCRAPED_SCORE_SABER_JSON_URL))
                 {
                     // Use 4MB cache, large enough for this file to grow for awhile.
                     www.SetCacheable(new CacheableDownloadHandlerScoreSaberData(www, _buffer));
                     yield return www.SendWebRequest();
 
-                    _log.Debug("Returned from web request!...");
+                    Logger.Debug("Returned from web request!...");
 
                     try
                     {
                         ScoreSaberDatabaseDownloader.ScoreSaberDataFile = (www.downloadHandler as CacheableDownloadHandlerScoreSaberData).ScoreSaberDataFile;
-                        _log.Info("Success downloading ScoreSaber data!");
+                        Logger.Info("Success downloading ScoreSaber data!");
 
-                        SongBrowserApplication.MainProgressBar.ShowMessage("Success downloading ScoreSaber data...");
+                        SongBrowserApplication.MainProgressBar.ShowMessage("Success downloading ScoreSaber data...", 10.0f);
                         onScoreSaberDataDownloaded?.Invoke();
                     }
                     catch (System.InvalidOperationException)
                     {
-                        _log.Error("Failed to download ScoreSaber data file...");
+                        Logger.Error("Failed to download ScoreSaber data file...");
                     }
                     catch (Exception e)
                     {
-                        _log.Exception("Exception trying to download ScoreSaber data file...", e);
+                        Logger.Exception("Exception trying to download ScoreSaber data file...", e);
                     }
                 }
             }

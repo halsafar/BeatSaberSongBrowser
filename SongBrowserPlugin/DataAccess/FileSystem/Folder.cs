@@ -20,8 +20,10 @@ namespace SongBrowserPlugin.DataAccess.FileSystem
     {
         public FolderBeatMapDataSO()
         {
-            BeatmapLineData lineData = new BeatmapLineData();
-            lineData.beatmapObjectsData = new BeatmapObjectData[0];
+            BeatmapLineData lineData = new BeatmapLineData
+            {
+                beatmapObjectsData = new BeatmapObjectData[0]
+            };
             this._beatmapData = new FolderBeatMapData(
                 new BeatmapLineData[1]
                 {
@@ -34,23 +36,24 @@ namespace SongBrowserPlugin.DataAccess.FileSystem
         }
     }
 
-    class FolderLevel : StandardLevelSO
+    class FolderLevel : LevelSO
     {
         public void Init(String relativePath, String name, Sprite coverImage)
         {
             _songName = name;
             _songSubName = "";
             _songAuthorName = "Folder";
+            _levelAuthorName = "Halsafar";
 
             _levelID = $"Folder_{relativePath}";
 
             var beatmapData = new FolderBeatMapDataSO();
             var difficultyBeatmaps = new List<CustomLevel.CustomDifficultyBeatmap>();
-            var newDiffBeatmap = new CustomLevel.CustomDifficultyBeatmap(this, LevelDifficulty.Easy, 0, 0, beatmapData);
+            var newDiffBeatmap = new CustomLevel.CustomDifficultyBeatmap(this, BeatmapDifficulty.Easy, 0, 0, beatmapData);
             difficultyBeatmaps.Add(newDiffBeatmap);
 
             var sceneInfo = Resources.Load<SceneInfo>("SceneInfo/" + "DefaultEnvironment" + "SceneInfo");
-            this.InitFull(_levelID, _songName, _songSubName, _songAuthorName, SongLoaderPlugin.SongLoader.TemporaryAudioClip, 1, 1, 1, 1, 1, 1, 1, coverImage, difficultyBeatmaps.ToArray(), sceneInfo);
+            this.InitFull(_levelID, _songName, _songSubName, _songAuthorName, _levelAuthorName, SongLoaderPlugin.SongLoader.TemporaryAudioClip, 1, 1, 1, 1, 1, 1, coverImage, difficultyBeatmaps.ToArray(), sceneInfo, null);
             this.InitData();
         }
     }

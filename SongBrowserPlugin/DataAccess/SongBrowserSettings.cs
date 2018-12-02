@@ -5,7 +5,7 @@ using System.IO;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-
+using SongBrowserPlugin.Logging;
 
 namespace SongBrowserPlugin.DataAccess
 {
@@ -65,9 +65,6 @@ namespace SongBrowserPlugin.DataAccess
         [NonSerialized]
         public bool DisableSavingSettings = false;
 
-        [NonSerialized]
-        private static Logger Log = new Logger("SongBrowserSettings");
-
         [XmlArray(@"favorites")]
         public HashSet<String> Favorites
         {
@@ -120,7 +117,7 @@ namespace SongBrowserPlugin.DataAccess
         /// <returns>SongBrowserSettings</returns>
         public static SongBrowserSettings Load()
         {
-            Log.Trace("Load()");
+            Logger.Trace("Load()");
             SongBrowserSettings retVal = null;
 
             // No Settings file.
@@ -140,7 +137,7 @@ namespace SongBrowserPlugin.DataAccess
                 }
                 catch (Exception e)
                 {
-                    Log.Exception("Unable to deserialize song browser settings file, using default settings: ", e);
+                    Logger.Exception("Unable to deserialize song browser settings file, using default settings: ", e);
                     retVal = new SongBrowserSettings
                     {
                         DisableSavingSettings = true
@@ -153,7 +150,7 @@ namespace SongBrowserPlugin.DataAccess
             }
             else
             {
-                Log.Debug("Settings file does not exist, returning defaults: " + settingsFilePath);
+                Logger.Debug("Settings file does not exist, returning defaults: " + settingsFilePath);
                 retVal = new SongBrowserSettings();
             }
 
@@ -204,11 +201,11 @@ namespace SongBrowserPlugin.DataAccess
             // abort here if playlist already exits.
             if (playlistExists)
             {
-                Log.Info("Not converting song_browser_setting.xml favorites because {0} already exists...", playlistPath);
+                Logger.Info("Not converting song_browser_setting.xml favorites because {0} already exists...", playlistPath);
                 return;
             }
 
-            Log.Info("Converting {0} Favorites in song_browser_settings.xml to {1}...", this.Favorites.Count, playlistPath);
+            Logger.Info("Converting {0} Favorites in song_browser_settings.xml to {1}...", this.Favorites.Count, playlistPath);
 
             // written like this in case we ever want to support adding to this playlist
             Playlist p = null;
@@ -286,7 +283,7 @@ namespace SongBrowserPlugin.DataAccess
         {
             if (this.DisableSavingSettings)
             {
-                Log.Info("Saving settings has been disabled...");
+                Logger.Info("Saving settings has been disabled...");
                 return;
             }
 

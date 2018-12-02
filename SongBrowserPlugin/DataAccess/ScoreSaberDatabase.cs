@@ -1,9 +1,8 @@
 ﻿using SimpleJSON;
+using SongBrowserPlugin.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text.RegularExpressions;
 
 
 namespace SongBrowserPlugin.DataAccess
@@ -48,8 +47,6 @@ namespace SongBrowserPlugin.DataAccess
 
     public class ScoreSaberDataFile
     {
-        private Logger _log = new Logger("ScoreSaberDataFile");
-
         public Dictionary<String, ScoreSaberData> SongVersionToScoreSaberData;
 
         public ScoreSaberDataFile(byte[] data)
@@ -106,7 +103,7 @@ namespace SongBrowserPlugin.DataAccess
             }
             
             timer.Stop();
-            _log.Debug("Processing ScoreSaber data took {0}ms", timer.ElapsedMilliseconds);
+            Logger.Debug("Processing ScoreSaber data took {0}ms", timer.ElapsedMilliseconds);
         }
     }
 }

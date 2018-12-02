@@ -7,7 +7,7 @@ using SongLoaderPlugin.OverrideClasses;
 // From: https://github.com/andruzzzhka/BeatSaverDownloader
 namespace SongBrowserPlugin.DataAccess.BeatSaverApi
 {
-    public enum SongQueueState { Available, Queued, Downloading, Downloaded, Error };
+    public enum SongQueueState { Queued, Downloading, Downloaded, Error };
 
     [Serializable]
     public class DifficultyLevel
@@ -23,13 +23,6 @@ namespace SongBrowserPlugin.DataAccess.BeatSaverApi
             difficultyRank = difficultyLevel.difficultyRank;
             jsonPath = difficultyLevel.jsonPath;
         }
-
-        /*
-        public DifficultyLevel(CustomLevelInfo.DifficultyLevelInfo difficultyLevel)
-        {
-            difficulty = difficultyLevel.difficulty;
-            difficultyRank = difficultyLevel.difficultyRank;
-        }*/
 
         public DifficultyLevel(string Difficulty, int DifficultyRank, string JsonPath, int Offset = 0)
         {
@@ -65,7 +58,7 @@ namespace SongBrowserPlugin.DataAccess.BeatSaverApi
 
         public string path;
 
-        public SongQueueState songQueueState = SongQueueState.Available;
+        public SongQueueState songQueueState = SongQueueState.Queued;
 
         public float downloadingProgress = 0f;
 
@@ -92,6 +85,7 @@ namespace SongBrowserPlugin.DataAccess.BeatSaverApi
             coverUrl = jsonNode["coverUrl"];
             downloadUrl = jsonNode["downloadUrl"];
             hash = jsonNode["hashMd5"];
+            hash = hash.ToUpper();
 
             var difficultyNode = jsonNode["difficulties"];
 
@@ -190,6 +184,7 @@ namespace SongBrowserPlugin.DataAccess.BeatSaverApi
             authorName = _data.songAuthorName;
             difficultyLevels = ConvertDifficultyLevels(_data.difficultyBeatmaps);
             path = _data.customSongInfo.path;
+            hash = _data.levelID.Substring(0, 32);
         }
 
         public Song(CustomSongInfo _song)
@@ -200,6 +195,7 @@ namespace SongBrowserPlugin.DataAccess.BeatSaverApi
             authorName = _song.songAuthorName;
             difficultyLevels = ConvertDifficultyLevels(_song.difficultyLevels);
             path = _song.path;
+            hash = _song.levelId.Substring(0, 32);
         }
 
         public DifficultyLevel[] ConvertDifficultyLevels(CustomSongInfo.DifficultyLevel[] _difficultyLevels)
@@ -223,7 +219,7 @@ namespace SongBrowserPlugin.DataAccess.BeatSaverApi
         }
 
 
-        public DifficultyLevel[] ConvertDifficultyLevels(IStandardLevelDifficultyBeatmap[] _difficultyLevels)
+        public DifficultyLevel[] ConvertDifficultyLevels(IDifficultyBeatmap[] _difficultyLevels)
         {
             if (_difficultyLevels != null && _difficultyLevels.Length > 0)
             {

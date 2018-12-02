@@ -1,20 +1,15 @@
 ﻿using SimpleJSON;
+using SongBrowserPlugin.Logging;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SongBrowserPlugin.DataAccess
 {
     class PlaylistWriter
     {
-        private static Logger _log = new Logger("PlaylistWriter");
-
         public static bool WritePlaylist(Playlist p, String fileName)
         {
-            _log.Debug("WritePlaylist - {0}", fileName);
+            Logger.Debug("WritePlaylist - {0}", fileName);
 
             JSONNode root = new JSONObject();
             root.Add("playlistTitle", p.Title);

@@ -1,14 +1,15 @@
-﻿using HMUI;
+﻿using CustomUI.BeatSaber;
+using CustomUI.Utilities;
+using HMUI;
 using SongBrowserPlugin.DataAccess.BeatSaverApi;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
-
+using Logger = SongBrowserPlugin.Logging.Logger;
 
 // Modified From: https://github.com/andruzzzhka/BeatSaverDownloader
 // - Adding queue count
@@ -16,72 +17,82 @@ namespace SongBrowserPlugin.UI.DownloadQueue
 {
     public class DownloadQueueViewController : VRUIViewController, TableView.IDataSource
     {
-        private Logger _log = new Logger("DownloadQueueViewController");
+        public event Action allSongsDownloaded;
 
-        public Action allSongsDownloaded;
-        public List<Song> _queuedSongs = new List<Song>();
+        public List<Song> queuedSongs = new List<Song>();
 
         TextMeshProUGUI _titleText;
-        TextMeshProUGUI _queueCountText;
 
         Button _abortButton;
         TableView _queuedSongsTableView;
-        StandardLevelListTableCell _songListTableCellInstance;
+        LevelListTableCell _songListTableCellInstance;
+        private Button _pageUpButton;
+        private Button _pageDownButton;
 
         protected override void DidActivate(bool firstActivation, ActivationType type)
         {
-
-            _songListTableCellInstance = Resources.FindObjectsOfTypeAll<StandardLevelListTableCell>().First(x => (x.name == "StandardLevelListTableCell"));
-
-            if (_titleText == null)
+            if (firstActivation && type == ActivationType.AddedToHierarchy)
             {
-                _titleText = UIBuilder.CreateText(rectTransform, "DOWNLOAD QUEUE", new Vector2(0f, -6f), new Vector2(60f, 10f));
+                _songListTableCellInstance = Resources.FindObjectsOfTypeAll<LevelListTableCell>().First(x => (x.name == "LevelListTableCell"));
+
+                _titleText = BeatSaberUI.CreateText(rectTransform, "DOWNLOAD QUEUE", new Vector2(0f, 36f));
                 _titleText.alignment = TextAlignmentOptions.Top;
-                _titleText.fontSize = 8;
-            }
+                _titleText.fontSize = 7;
 
-            if (_queueCountText == null)
-            {
-                _queueCountText = UIBuilder.CreateText(rectTransform, "Queue Count", new Vector2(20f, -50f), new Vector2(60f, 10f));
-                _queueCountText.alignment = TextAlignmentOptions.Right;
-                _queueCountText.fontSize = 5;
-                _queueCountText.text = "Queue Count: 0";
-            }
+                _pageUpButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageUpButton")), rectTransform, false);
+                (_pageUpButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 1f);
+                (_pageUpButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 1f);
+                (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -14f);
+                (_pageUpButton.transform as RectTransform).sizeDelta = new Vector2(40f, 10f);
+                _pageUpButton.interactable = true;
+                _pageUpButton.onClick.AddListener(delegate ()
+                {
+                    _queuedSongsTableView.PageScrollUp();
+                });
 
-            if (_queuedSongsTableView == null)
-            {
+                _pageDownButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageDownButton")), rectTransform, false);
+                (_pageDownButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0f);
+                (_pageDownButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0f);
+                (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 8f);
+                (_pageDownButton.transform as RectTransform).sizeDelta = new Vector2(40f, 10f);
+                _pageDownButton.interactable = true;
+                _pageDownButton.onClick.AddListener(delegate ()
+                {
+                    _queuedSongsTableView.PageScrollDown();
+                });
+
                 _queuedSongsTableView = new GameObject().AddComponent<TableView>();
-
                 _queuedSongsTableView.transform.SetParent(rectTransform, false);
 
-                _queuedSongsTableView.dataSource = this;
+                _queuedSongsTableView.SetPrivateField("_isInitialized", false);
+                _queuedSongsTableView.SetPrivateField("_preallocatedCells", new TableView.CellsGroup[0]);
+                _queuedSongsTableView.Init();
+
+                RectMask2D viewportMask = Instantiate(Resources.FindObjectsOfTypeAll<RectMask2D>().First(), _queuedSongsTableView.transform, false);
+                viewportMask.transform.DetachChildren();
+                _queuedSongsTableView.GetComponentsInChildren<RectTransform>().First(x => x.name == "Content").transform.SetParent(viewportMask.rectTransform, false);
 
                 (_queuedSongsTableView.transform as RectTransform).anchorMin = new Vector2(0.3f, 0.5f);
                 (_queuedSongsTableView.transform as RectTransform).anchorMax = new Vector2(0.7f, 0.5f);
                 (_queuedSongsTableView.transform as RectTransform).sizeDelta = new Vector2(0f, 60f);
                 (_queuedSongsTableView.transform as RectTransform).anchoredPosition = new Vector3(0f, -3f);
+
+                ReflectionUtil.SetPrivateField(_queuedSongsTableView, "_pageUpButton", _pageUpButton);
+                ReflectionUtil.SetPrivateField(_queuedSongsTableView, "_pageDownButton", _pageDownButton);
+
+                _queuedSongsTableView.dataSource = this;
+
+                _abortButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(36f, -30f), new Vector2(20f, 10f), AbortDownloads, "Abort All");
+                _abortButton.ToggleWordWrapping(false);
+
+                Downloader.Instance.songDownloaded += (Song song) => { Refresh(); };
             }
-
-            if (_abortButton == null)
-            {
-                _abortButton = UIBuilder.CreateUIButton(rectTransform, "SettingsButton");
-                UIBuilder.SetButtonText(ref _abortButton, "Abort All");
-
-                (_abortButton.transform as RectTransform).sizeDelta = new Vector2(30f, 10f);
-                (_abortButton.transform as RectTransform).anchoredPosition = new Vector2(-4f, 6f);
-
-                _abortButton.onClick.AddListener(delegate () {
-                    AbortDownloads();
-                });
-            }
-
-            AbortDownloads();
         }
 
         public void AbortDownloads()
         {
-            _log.Info("Cancelling downloads...");
-            foreach (Song song in _queuedSongs.Where(x => x.songQueueState == SongQueueState.Downloading || x.songQueueState == SongQueueState.Queued))
+            Logger.Info("Cancelling downloads...");
+            foreach (Song song in queuedSongs.Where(x => x.songQueueState == SongQueueState.Downloading || x.songQueueState == SongQueueState.Queued))
             {
                 song.songQueueState = SongQueueState.Error;
                 song.downloadingProgress = 1f;
@@ -92,62 +103,52 @@ namespace SongBrowserPlugin.UI.DownloadQueue
 
         protected override void DidDeactivate(DeactivationType type)
         {
-
         }
 
         public void EnqueueSong(Song song, bool startDownload = true)
         {
-            _queuedSongs.Add(song);
-            
+            queuedSongs.Add(song);
             song.songQueueState = SongQueueState.Queued;
-
+            if (startDownload && queuedSongs.Count(x => x.songQueueState == SongQueueState.Downloading) < PluginConfig.MaxSimultaneousDownloads)
+            {
+                DownloadSong(song);
+            }
             Refresh();
-
-            if (startDownload)
-                StartCoroutine(DownloadSong(song));
         }
 
         public void DownloadAllSongsFromQueue()
         {
-            _log.Info("Downloading all songs from queue...");
+            Logger.Info("Downloading all songs from queue...");
 
-            for (int i = 0; i < Math.Min(_queuedSongs.Count(x => x.songQueueState == SongQueueState.Queued), 4); i++)
+            for (int i = 0; i < Math.Min(PluginConfig.MaxSimultaneousDownloads, queuedSongs.Count); i++)
             {
-                StartCoroutine(DownloadSong(_queuedSongs[i]));
+                DownloadSong(queuedSongs[i]);
             }
         }
 
-        IEnumerator DownloadSong(Song song)
+        void DownloadSong(Song song)
         {
-            yield return Downloader.Instance.DownloadSongCoroutine(song);
-
-            _queuedSongs.Remove(song);
-            song.songQueueState = SongQueueState.Available;
+            StartCoroutine(Downloader.Instance.DownloadSongCoroutine(song));
             Refresh();
-
-            if (!_queuedSongs.Any(x => x.songQueueState == SongQueueState.Downloading || x.songQueueState == SongQueueState.Queued))
-            {
-                allSongsDownloaded?.Invoke();
-            }
-            else
-            {
-                if (_queuedSongs.Any(x => x.songQueueState == SongQueueState.Queued))
-                {
-                    StartCoroutine(DownloadSong(_queuedSongs.First(x => x.songQueueState == SongQueueState.Queued)));
-                }
-            }
         }
 
         public void Refresh()
         {
-            int removed = _queuedSongs.RemoveAll(x => x.songQueueState != SongQueueState.Downloading && x.songQueueState != SongQueueState.Queued);
+            int removed = queuedSongs.RemoveAll(x => x.songQueueState == SongQueueState.Downloaded || x.songQueueState == SongQueueState.Error);
 
-            _log.Debug($"Removed {removed} songs from queue");
+            Logger.Info($"Removed {removed} songs from queue");
 
             _queuedSongsTableView.ReloadData();
             _queuedSongsTableView.ScrollToRow(0, true);
 
-            _queueCountText.text = "Queue Count: " + _queuedSongs.Count;
+            if (queuedSongs.Count(x => x.songQueueState == SongQueueState.Downloading || x.songQueueState == SongQueueState.Queued) == 0)
+            {
+                Logger.Info("All songs downloaded!");
+                allSongsDownloaded?.Invoke();
+            }
+
+            if (queuedSongs.Count(x => x.songQueueState == SongQueueState.Downloading) < PluginConfig.MaxSimultaneousDownloads && queuedSongs.Any(x => x.songQueueState == SongQueueState.Queued))
+                DownloadSong(queuedSongs.First(x => x.songQueueState == SongQueueState.Queued));
         }
 
         public float RowHeight()
@@ -157,16 +158,16 @@ namespace SongBrowserPlugin.UI.DownloadQueue
 
         public int NumberOfRows()
         {
-            return _queuedSongs.Count;
+            return queuedSongs.Count;
         }
 
         public TableCell CellForRow(int row)
         {
-            StandardLevelListTableCell _tableCell = Instantiate(_songListTableCellInstance);
+            LevelListTableCell _tableCell = Instantiate(_songListTableCellInstance);
 
             DownloadQueueTableCell _queueCell = _tableCell.gameObject.AddComponent<DownloadQueueTableCell>();
 
-            _queueCell.Init(_queuedSongs[row]);
+            _queueCell.Init(queuedSongs[row]);
 
             return _queueCell;
         }
