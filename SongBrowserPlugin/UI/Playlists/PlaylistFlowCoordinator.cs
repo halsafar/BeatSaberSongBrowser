@@ -9,7 +9,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.Networking;
 using VRUI;
@@ -81,7 +80,7 @@ namespace SongBrowserPlugin.UI
 
                     title = "Playlists";
 
-                    _playlistNavigationController.didFinishEvent += HandleDidFinish;
+                    _playlistNavigationController.didFinishEvent += HandleDidDismiss;
 
                     _playlistListViewController = BeatSaberUI.CreateViewController<PlaylistListViewController>();
                     _playlistListViewController.didSelectRow += HandleSelectRow;
@@ -165,21 +164,18 @@ namespace SongBrowserPlugin.UI
         /// <summary>
         /// Playlist was dismissed, inform song browser (pass in null).
         /// </summary>
-        public void HandleDidFinish()
+        public void HandleDidDismiss()
         {
             try
             {
-                if (this.DownloadQueueViewController.queuedSongs.Any(x => x.songQueueState == SongQueueState.Queued || x.songQueueState == SongQueueState.Downloading))
+                if (!DownloadQueueViewController.queuedSongs.Any(x => x.songQueueState == SongQueueState.Downloading || x.songQueueState == SongQueueState.Queued))
                 {
-                    Logger.Debug("Aborting downloads...");
-                    this.DownloadQueueViewController.AbortDownloads();
-                }
+                    DownloadQueueViewController.AbortDownloads();
+                    SongLoader.Instance.RefreshSongs(false);
 
-                Logger.Debug("Playlist selector dismissed...");
-                this._playlistNavigationController.DismissViewControllerCoroutine(delegate ()
-                {
-                    didFinishEvent.Invoke(null);
-                }, true);
+                    ParentFlowCoordinator.InvokePrivateMethod("DismissFlowCoordinator", new object[] { this, null, false });
+                    didFinishEvent?.Invoke(null);
+                }
             }
             catch (Exception e)
             {
@@ -322,7 +318,7 @@ namespace SongBrowserPlugin.UI
         {
             SongLoader.Instance.RefreshSongs(false);
 
-            this.FilterSongsForPlaylist(_lastPlaylist);
+            this.FilterSongsForPlaylist(_lastPlaylist, true);
 
             _downloadingPlaylist = false;
             _playlistDetailViewController.UpdateButtons(!_downloadingPlaylist, !_downloadingPlaylist);
@@ -344,6 +340,12 @@ namespace SongBrowserPlugin.UI
             else if (Input.GetKeyDown(KeyCode.Return))
             {
                 HandleDidSelectPlaylist(_lastPlaylist);
+            }
+
+            // leave
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                HandleDidDismiss();
             }
         }
     }
