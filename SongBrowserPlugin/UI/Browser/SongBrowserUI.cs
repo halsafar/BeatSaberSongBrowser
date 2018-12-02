@@ -184,12 +184,27 @@ namespace SongBrowserPlugin.UI
                 _beatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent += OnDidSelectBeatmapCharacteristic;
 
                 // modify details view
-                var statsPanel = this._levelDetailViewController.GetComponentsInChildren<CanvasRenderer>().First(x => x.name == "LevelParamsPanel");
+                var statsPanel = this._levelDetailViewController.GetComponentsInChildren<CanvasRenderer>(true).First(x => x.name == "LevelParamsPanel");
                 var statTransforms = statsPanel.GetComponentsInChildren<RectTransform>();
-                for (int i = 1; i < statTransforms.Length; i++)
-                {
+                var valueTexts = statsPanel.GetComponentsInChildren<TextMeshProUGUI>().Where(x => x.name == "ValueText").ToList();
+                
+                RectTransform panelRect = (statsPanel.transform as RectTransform);
+                panelRect.sizeDelta = new Vector2(panelRect.sizeDelta.x * 1.2f, panelRect.sizeDelta.y * 1.2f);
+                
+                for (int i = 0; i < statTransforms.Length; i++)
+                {                    
                     var r = statTransforms[i];
-                    r.sizeDelta = new Vector2(r.sizeDelta.x * 0.725f, r.sizeDelta.y * 0.725f);
+                    if (r.name == "Separator")
+                    {
+                        continue;
+                    }
+                    r.sizeDelta = new Vector2(r.sizeDelta.x * 0.75f, r.sizeDelta.y * 0.75f);
+                }
+
+                for (int i = 0; i < valueTexts.Count; i++)
+                {
+                    var text = valueTexts[i];
+                    text.fontSize = 3.25f;
                 }
 
                 _ppStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
@@ -200,6 +215,10 @@ namespace SongBrowserPlugin.UI
 
                 _njsStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
                 UIBuilder.SetStatButtonIcon(_njsStatButton, Base64Sprites.Base64ToSprite(Base64Sprites.SpeedIcon));
+
+                // shrink title
+                var titleText = this._levelDetailViewController.GetComponentsInChildren<TextMeshProUGUI>(true).First(x => x.name == "SongNameText");
+                titleText.fontSize = 5.0f;
 
                 _rebuildUI = false;
             }
@@ -222,7 +241,11 @@ namespace SongBrowserPlugin.UI
                 RectTransform sortButtonTransform = this._levelSelectionNavigationController.transform as RectTransform;
                 RectTransform otherButtonTransform = this._levelDetailViewController.transform as RectTransform;
                 Button sortButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "SettingsButton"));
-                Button otherButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "SettingsButton"));                
+                Button otherButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "SettingsButton"));
+                Button practiceButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PracticeButton");
+                RectTransform practiceButtonRect = (practiceButton.transform as RectTransform);
+                Button playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
+                RectTransform playButtonRect = (playButton.transform as RectTransform);
                 Sprite arrowIcon = SongBrowserApplication.Instance.CachedIcons["ArrowIcon"];
                 //Sprite borderSprite = SongBrowserApplication.Instance.CachedIcons["HalfRoundRectTop"];
                 Sprite borderSprite = SongBrowserApplication.Instance.CachedIcons["RoundRectBigStroke"];
@@ -304,10 +327,10 @@ namespace SongBrowserPlugin.UI
                 }
 
                 // Create Add to Favorites Button
-                Vector2 addFavoritePos = new Vector2(50f, -37.75f);
+                Vector2 addFavoritePos = new Vector2(53.5f, playButtonRect.anchoredPosition.y - 1.75f);
                 _addFavoriteButton = UIBuilder.CreateIconButton(otherButtonTransform, otherButtonTemplate, null, 
-                    new Vector2(addFavoritePos.x, addFavoritePos.y), 
-                    new Vector2(7.0f, 7.0f), 
+                    new Vector2(addFavoritePos.x, addFavoritePos.y),
+                    new Vector2(7, 7),
                     new Vector2(3.5f, -3.5f),
                     new Vector2(4.0f, 4.0f), 
                     new Vector2(1.0f, 1.0f),
@@ -327,8 +350,8 @@ namespace SongBrowserPlugin.UI
                 }*/
 
                 // Create delete button
-                Button practiceButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PracticeButton");
-                RectTransform practiceButtonRect = (practiceButton.transform as RectTransform);
+                
+                
                 _deleteButton = UIBuilder.CreateButton(otherButtonTransform, otherButtonTemplate, "Delete", fontSize, 21f, -80.0f, practiceButtonRect.sizeDelta.x, 5f);                
                 _deleteButton.onClick.AddListener(delegate () {
                     HandleDeleteSelectedLevel();
