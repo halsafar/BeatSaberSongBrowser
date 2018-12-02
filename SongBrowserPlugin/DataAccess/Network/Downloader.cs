@@ -13,14 +13,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
-
+using Logger = SongBrowserPlugin.Logging.Logger;
 
 namespace SongBrowserPlugin
 {
     class Downloader : MonoBehaviour
     {
-        private Logger _log = new Logger("Downloader");
-
         public event Action<Song> songDownloaded;
 
         private static Downloader _instance = null;
@@ -78,7 +76,7 @@ namespace SongBrowserPlugin
             }
             catch (Exception e)
             {
-                _log.Exception("DownloadSongCoroutine Exception", e);
+                Logger.Exception("DownloadSongCoroutine Exception", e);
                 songInfo.songQueueState = SongQueueState.Error;
                 songInfo.downloadingProgress = 1f;
 
@@ -95,7 +93,7 @@ namespace SongBrowserPlugin
                 {
                     www.Abort();
                     timeout = true;
-                    _log.Error("Connection timed out!");
+                    Logger.Error("Connection timed out!");
                 }
 
                 songInfo.downloadingProgress = asyncRequest.progress;
@@ -105,11 +103,11 @@ namespace SongBrowserPlugin
             if (www.isNetworkError || www.isHttpError || timeout || songInfo.songQueueState == SongQueueState.Error)
             {
                 songInfo.songQueueState = SongQueueState.Error;
-                _log.Error("Unable to download song! " + (www.isNetworkError ? $"Network error: {www.error}" : (www.isHttpError ? $"HTTP error: {www.error}" : "Unknown error")));
+                Logger.Error("Unable to download song! " + (www.isNetworkError ? $"Network error: {www.error}" : (www.isHttpError ? $"HTTP error: {www.error}" : "Unknown error")));
             }
             else
             {
-                _log.Info("Received response from BeatSaver.com...");
+                Logger.Info("Received response from BeatSaver.com...");
 
                 //string zipPath = "";
                 string docPath = "";
@@ -132,11 +130,11 @@ namespace SongBrowserPlugin
                     }
                     zipStream = new MemoryStream(data);
                     //File.WriteAllBytes(zipPath, data);
-                    _log.Info("Downloaded zip!");
+                    Logger.Info("Downloaded zip!");
                 }
                 catch (Exception e)
                 {
-                    _log.Exception("DownloadSongCoroutine exception:", e);
+                    Logger.Exception("DownloadSongCoroutine exception:", e);
                     songInfo.songQueueState = SongQueueState.Error;
                     yield break;
                 }
@@ -158,7 +156,7 @@ namespace SongBrowserPlugin
                 {
                     Thread.Sleep(250);
                 }
-                _log.Info("Extracting...");
+                Logger.Info("Extracting...");
                 _extractingZip = true;
                 ZipArchive archive = new ZipArchive(zipStream, ZipArchiveMode.Read);
                 await Task.Run(() => archive.ExtractToDirectory(customSongsPath)); //ZipFile.ExtractToDirectory(zipPath, customSongsPath));
@@ -167,7 +165,7 @@ namespace SongBrowserPlugin
             }
             catch (Exception e)
             {
-                _log.Exception($"Unable to extract ZIP! Exception:", e);
+                Logger.Exception($"Unable to extract ZIP! Exception:", e);
                 songInfo.songQueueState = SongQueueState.Error;
                 _extractingZip = false;
                 return;
@@ -196,7 +194,7 @@ namespace SongBrowserPlugin
             _extractingZip = false;
             songInfo.songQueueState = SongQueueState.Downloaded;
             _alreadyDownloadedSongs.Add(songInfo);
-            _log.Info($"Extracted {songInfo.songName} {songInfo.songSubName}!");
+            Logger.Info($"Extracted {songInfo.songName} {songInfo.songSubName}!");
 
             songDownloaded?.Invoke(songInfo);
         }
@@ -228,7 +226,7 @@ namespace SongBrowserPlugin
 
             if (zippedSong)
             {
-                _log.Info("Deleting \"" + path.Substring(path.LastIndexOf('/')) + "\"...");
+                Logger.Info("Deleting \"" + path.Substring(path.LastIndexOf('/')) + "\"...");
                 Directory.Delete(path, true);
 
                 string songHash = Directory.GetParent(path).Name;
@@ -237,13 +235,13 @@ namespace SongBrowserPlugin
                 {
                     if (Directory.GetFileSystemEntries(path.Substring(0, path.LastIndexOf('/'))).Length == 0)
                     {
-                        _log.Info("Deleting empty folder \"" + path.Substring(0, path.LastIndexOf('/')) + "\"...");
+                        Logger.Info("Deleting empty folder \"" + path.Substring(0, path.LastIndexOf('/')) + "\"...");
                         Directory.Delete(path.Substring(0, path.LastIndexOf('/')), false);
                     }
                 }
                 catch
                 {
-                    _log.Warning("Can't find or delete empty folder!");
+                    Logger.Warning("Can't find or delete empty folder!");
                 }
 
                 string docPath = Application.dataPath;
@@ -268,20 +266,20 @@ namespace SongBrowserPlugin
             }
             else
             {
-                _log.Info("Deleting \"" + path.Substring(path.LastIndexOf('/')) + "\"...");
+                Logger.Info("Deleting \"" + path.Substring(path.LastIndexOf('/')) + "\"...");
                 Directory.Delete(path, true);
 
                 try
                 {
                     if (Directory.GetFileSystemEntries(path.Substring(0, path.LastIndexOf('/'))).Length == 0)
                     {
-                        _log.Info("Deleting empty folder \"" + path.Substring(0, path.LastIndexOf('/')) + "\"...");
+                        Logger.Info("Deleting empty folder \"" + path.Substring(0, path.LastIndexOf('/')) + "\"...");
                         Directory.Delete(path.Substring(0, path.LastIndexOf('/')), false);
                     }
                 }
                 catch
                 {
-                    _log.Warning("Unable to delete empty folder!");
+                    Logger.Warning("Unable to delete empty folder!");
                 }
             }
 
@@ -290,7 +288,7 @@ namespace SongBrowserPlugin
                 SongLoader.Instance.RemoveSongWithLevelID(level.levelID);
             }
 
-            _log.Info($"{_alreadyDownloadedSongs.RemoveAll(x => x.Compare(song))} song removed");
+            Logger.Info($"{_alreadyDownloadedSongs.RemoveAll(x => x.Compare(song))} song removed");
             return true;
         }
 

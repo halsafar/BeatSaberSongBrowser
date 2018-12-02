@@ -13,13 +13,12 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.Networking;
 using VRUI;
+using Logger = SongBrowserPlugin.Logging.Logger;
 
 namespace SongBrowserPlugin.UI
 {
     public class PlaylistFlowCoordinator : FlowCoordinator
     {
-        private Logger _log = new Logger("PlaylistFlowCoordinator");
-
         private BackButtonNavigationController _playlistNavigationController;
         private PlaylistListViewController _playlistListViewController;
         private PlaylistDetailViewController _playlistDetailViewController;
@@ -44,7 +43,7 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         public virtual void OnDestroy()
         {
-            _log.Trace("OnDestroy()");
+            Logger.Trace("OnDestroy()");
         }
 
         /// <summary>
@@ -68,7 +67,7 @@ namespace SongBrowserPlugin.UI
         /// <param name="gameplayMode"></param>
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
-            _log.Trace("Presenting Playlist Selector! - firstActivation: {0}", firstActivation);
+            Logger.Trace("Presenting Playlist Selector! - firstActivation: {0}", firstActivation);
             try
             {
                 if (firstActivation && activationType == ActivationType.AddedToHierarchy)
@@ -77,7 +76,7 @@ namespace SongBrowserPlugin.UI
                     {
                         _playlistsReader = new PlaylistsReader();
                         _playlistsReader.UpdatePlaylists();
-                        _log.Debug("Reader found {0} playlists!", _playlistsReader.Playlists.Count);
+                        Logger.Debug("Reader found {0} playlists!", _playlistsReader.Playlists.Count);
                     }
 
                     title = "Playlists";
@@ -107,7 +106,7 @@ namespace SongBrowserPlugin.UI
             }
             catch (Exception e)
             {
-                _log.Exception("Exception displaying playlist selector", e);
+                Logger.Exception("Exception displaying playlist selector", e);
             }
         }
 
@@ -126,7 +125,7 @@ namespace SongBrowserPlugin.UI
         /// <param name="songListViewController"></param>
         public virtual void HandleSelectRow(Playlist playlist)
         {
-            _log.Debug("Selected Playlist: {0}", playlist.Title);
+            Logger.Debug("Selected Playlist: {0}", playlist.Title);
 
             //int missingCount = CountMissingSongs(playlist);
 
@@ -159,7 +158,7 @@ namespace SongBrowserPlugin.UI
             }
             catch (Exception e)
             {
-                _log.Exception("", e);
+                Logger.Exception("", e);
             }
         }
 
@@ -172,11 +171,11 @@ namespace SongBrowserPlugin.UI
             {
                 if (this.DownloadQueueViewController.queuedSongs.Any(x => x.songQueueState == SongQueueState.Queued || x.songQueueState == SongQueueState.Downloading))
                 {
-                    _log.Debug("Aborting downloads...");
+                    Logger.Debug("Aborting downloads...");
                     this.DownloadQueueViewController.AbortDownloads();
                 }
 
-                _log.Debug("Playlist selector dismissed...");
+                Logger.Debug("Playlist selector dismissed...");
                 this._playlistNavigationController.DismissViewControllerCoroutine(delegate ()
                 {
                     didFinishEvent.Invoke(null);
@@ -184,7 +183,7 @@ namespace SongBrowserPlugin.UI
             }
             catch (Exception e)
             {
-                _log.Exception("", e);
+                Logger.Exception("", e);
             }
         }
 
@@ -194,13 +193,13 @@ namespace SongBrowserPlugin.UI
         /// <param name="songs"></param>
         /// <param name="playlist"></param>
         /// <returns></returns>
-        private void FilterSongsForPlaylist(Playlist playlist)
+        private void FilterSongsForPlaylist(Playlist playlist, bool matchAll = false)
         {
-            if (!playlist.Songs.All(x => x.Level != null))
+            if (!playlist.Songs.All(x => x.Level != null) || matchAll)
             {
                 playlist.Songs.ForEach(x =>
                 {
-                    if (x.Level == null)
+                    if (x.Level == null || matchAll)
                     {
                         x.Level = SongLoader.CustomLevels.FirstOrDefault(y => (y.customSongInfo.path.Contains(x.Key) && Directory.Exists(y.customSongInfo.path)) || (string.IsNullOrEmpty(x.LevelId) ? false : y.levelID.StartsWith(x.LevelId)));
                     }
@@ -229,7 +228,7 @@ namespace SongBrowserPlugin.UI
             }
             else
             {
-                _log.Info("Already downloading playlist!");
+                Logger.Info("Already downloading playlist!");
             }
         }
 
@@ -240,11 +239,11 @@ namespace SongBrowserPlugin.UI
         /// <returns></returns>
         public IEnumerator DownloadPlaylist(Playlist playlist)
         {
-            this.FilterSongsForPlaylist(playlist);
+            this.FilterSongsForPlaylist(playlist, true);
             List<PlaylistSong> playlistSongsToDownload = playlist.Songs.Where(x => x.Level == null).ToList();
 
             List<PlaylistSong> needToDownload = playlist.Songs.Where(x => x.Level == null).ToList();
-            _log.Info($"Need to download {needToDownload.Count} songs");
+            Logger.Info($"Need to download {needToDownload.Count} songs");
 
             _downloadingPlaylist = true;
             foreach (var item in needToDownload)
@@ -253,7 +252,7 @@ namespace SongBrowserPlugin.UI
 
                 if (String.IsNullOrEmpty(playlist.CustomArchiveUrl))
                 {
-                    _log.Info("Obtaining hash and url for " + item.Key + ": " + item.SongName);
+                    Logger.Info("Obtaining hash and url for " + item.Key + ": " + item.SongName);
                     yield return GetInfoForSong(playlist, item, (Song song) => { beatSaverSong = song; });
                 }
                 else
@@ -293,13 +292,14 @@ namespace SongBrowserPlugin.UI
                 url = playlist.CustomDetailUrl + song.Key;
             }
 
+            Logger.Debug("Attempting to connect to: {0}", url);
             UnityWebRequest www = UnityWebRequest.Get(url);
             www.timeout = 15;
             yield return www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
             {
-                _log.Error($"Unable to connect to {PluginConfig.BeatsaverURL}! " + (www.isNetworkError ? $"Network error: {www.error}" : (www.isHttpError ? $"HTTP error: {www.error}" : "Unknown error")));
+                Logger.Error($"Unable to connect to {PluginConfig.BeatsaverURL}! " + (www.isNetworkError ? $"Network error: {www.error}" : (www.isHttpError ? $"HTTP error: {www.error}" : "Unknown error")));
             }
             else
             {
@@ -310,7 +310,7 @@ namespace SongBrowserPlugin.UI
                 }
                 catch (Exception e)
                 {
-                    _log.Exception("Unable to parse response! Exception: ", e);
+                    Logger.Exception("Unable to parse response! Exception: ", e);
                 }
             }
         }

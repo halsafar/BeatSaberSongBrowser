@@ -13,8 +13,6 @@ namespace SongBrowserPlugin.UI
 {
     class PlaylistListViewController : VRUIViewController, TableView.IDataSource
     {
-        private Logger _log = new Logger("PlaylistListViewController");
-
         public event Action<Playlist> didSelectRow;
 
         public List<Playlist> playlistList = new List<Playlist>();

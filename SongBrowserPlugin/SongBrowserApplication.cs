@@ -8,14 +8,13 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using Logger = SongBrowserPlugin.Logging.Logger;
 
 namespace SongBrowserPlugin
 {
     public class SongBrowserApplication : MonoBehaviour
     {
         public static SongBrowserApplication Instance;
-
-        private Logger _log = new Logger("SongBrowserApplication");
 
         // Song Browser UI Elements
         private SongBrowserUI _songBrowserUI;
@@ -46,7 +45,7 @@ namespace SongBrowserPlugin
         /// </summary>
         private void Awake()
         {
-            _log.Trace("Awake()");
+            Logger.Trace("Awake()");
 
             Instance = this;
 
@@ -60,7 +59,7 @@ namespace SongBrowserPlugin
         /// </summary>
         public void Start()
         {
-            _log.Trace("Start()");
+            Logger.Trace("Start()");
 
             AcquireUIElements();
 
@@ -73,11 +72,11 @@ namespace SongBrowserPlugin
         /// <returns></returns>
         private IEnumerator WaitForSongListUI()
         {
-            _log.Trace("WaitForSongListUI()");
+            Logger.Trace("WaitForSongListUI()");
 
             yield return new WaitUntil(delegate () { return Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().Any() && Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().Any(); });
 
-            _log.Debug("Found Solo and Party FreePlayFlowCoordinators...");
+            Logger.Debug("Found Solo and Party FreePlayFlowCoordinators...");
 
             if (SongLoaderPlugin.SongLoader.AreSongsLoaded)
             {
@@ -98,14 +97,14 @@ namespace SongBrowserPlugin
         /// <param name="levels"></param>
         private void OnSongLoaderLoadedSongs(SongLoader loader, List<CustomLevel> levels)
         {
-            _log.Trace("OnSongLoaderLoadedSongs");
+            Logger.Trace("OnSongLoaderLoadedSongs");
             try
             {
                 _songBrowserUI.UpdateSongList();
             }
             catch (Exception e)
             {
-                _log.Exception("Exception during OnSongLoaderLoadedSongs: ", e);
+                Logger.Exception("Exception during OnSongLoaderLoadedSongs: ", e);
             }
         }
 
@@ -116,7 +115,7 @@ namespace SongBrowserPlugin
         /// <param name="levels"></param>
         private void OnScoreSaberDataDownloaded()
         {
-            _log.Trace("OnScoreSaberDataDownloaded");
+            Logger.Trace("OnScoreSaberDataDownloaded");
             try
             {
                 // TODO - this should be in the SongBrowserUI which is acting like the view controller for the SongBrowser
@@ -130,7 +129,7 @@ namespace SongBrowserPlugin
             }
             catch (Exception e)
             {
-                _log.Exception("Exception during OnSongLoaderLoadedSongs: ", e);
+                Logger.Exception("Exception during OnSongLoaderLoadedSongs: ", e);
             }
         }
 
@@ -139,7 +138,7 @@ namespace SongBrowserPlugin
         /// </summary>
         public void AcquireUIElements()
         {
-            _log.Trace("AcquireUIElements()");        
+            Logger.Trace("AcquireUIElements()");        
             try
             {
                 CachedIcons = new Dictionary<String, Sprite>();
@@ -150,7 +149,7 @@ namespace SongBrowserPlugin
                         continue;
                     }
 
-                    //_log.Debug("Adding Icon: {0}", sprite.name);
+                    //Logger.Debug("Adding Icon: {0}", sprite.name);
                     CachedIcons.Add(sprite.name, sprite);
                 }
                 // Append our own event to appropriate events so we can refresh the song list before the user sees it.
@@ -163,7 +162,7 @@ namespace SongBrowserPlugin
             }
             catch (Exception e)
             {
-                _log.Exception("Exception AcquireUIElements(): ", e);
+                Logger.Exception("Exception AcquireUIElements(): ", e);
             }
         }
 
@@ -174,7 +173,7 @@ namespace SongBrowserPlugin
         /// <param name="arg2"></param>
         private void HandleSoloModeSelection()
         {
-            _log.Trace("HandleSoloModeSelection()");
+            Logger.Trace("HandleSoloModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.SoloFreePlay);
         }
 
@@ -185,7 +184,7 @@ namespace SongBrowserPlugin
         /// <param name="arg2"></param>
         private void HandlePartyModeSelection()
         {
-            _log.Trace("HandlePartyModeSelection()");
+            Logger.Trace("HandlePartyModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.Party);
         }
 
@@ -196,7 +195,7 @@ namespace SongBrowserPlugin
         /// <param name="arg2"></param>
         private void HandleModeSelection(MainMenuViewController.MenuButton mode)
         {
-            _log.Trace("HandleModeSelection()");
+            Logger.Trace("HandleModeSelection()");
             this._songBrowserUI.CreateUI(mode);
             this._songBrowserUI.UpdateSongList();
             this._songBrowserUI.RefreshSongList();

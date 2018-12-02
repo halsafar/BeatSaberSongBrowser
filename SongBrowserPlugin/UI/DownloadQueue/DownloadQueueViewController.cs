@@ -3,14 +3,13 @@ using CustomUI.Utilities;
 using HMUI;
 using SongBrowserPlugin.DataAccess.BeatSaverApi;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
-
+using Logger = SongBrowserPlugin.Logging.Logger;
 
 // Modified From: https://github.com/andruzzzhka/BeatSaverDownloader
 // - Adding queue count
@@ -18,8 +17,6 @@ namespace SongBrowserPlugin.UI.DownloadQueue
 {
     public class DownloadQueueViewController : VRUIViewController, TableView.IDataSource
     {
-        private Logger _log = new Logger("DownloadQueueViewController");
-
         public event Action allSongsDownloaded;
 
         public List<Song> queuedSongs = new List<Song>();
@@ -94,7 +91,7 @@ namespace SongBrowserPlugin.UI.DownloadQueue
 
         public void AbortDownloads()
         {
-            _log.Info("Cancelling downloads...");
+            Logger.Info("Cancelling downloads...");
             foreach (Song song in queuedSongs.Where(x => x.songQueueState == SongQueueState.Downloading || x.songQueueState == SongQueueState.Queued))
             {
                 song.songQueueState = SongQueueState.Error;
@@ -121,7 +118,7 @@ namespace SongBrowserPlugin.UI.DownloadQueue
 
         public void DownloadAllSongsFromQueue()
         {
-            _log.Info("Downloading all songs from queue...");
+            Logger.Info("Downloading all songs from queue...");
 
             for (int i = 0; i < Math.Min(PluginConfig.MaxSimultaneousDownloads, queuedSongs.Count); i++)
             {
@@ -139,14 +136,14 @@ namespace SongBrowserPlugin.UI.DownloadQueue
         {
             int removed = queuedSongs.RemoveAll(x => x.songQueueState == SongQueueState.Downloaded || x.songQueueState == SongQueueState.Error);
 
-            _log.Info($"Removed {removed} songs from queue");
+            Logger.Info($"Removed {removed} songs from queue");
 
             _queuedSongsTableView.ReloadData();
             _queuedSongsTableView.ScrollToRow(0, true);
 
             if (queuedSongs.Count(x => x.songQueueState == SongQueueState.Downloading || x.songQueueState == SongQueueState.Queued) == 0)
             {
-                _log.Info("All songs downloaded!");
+                Logger.Info("All songs downloaded!");
                 allSongsDownloaded?.Invoke();
             }
 

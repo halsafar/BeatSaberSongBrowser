@@ -2,8 +2,10 @@
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using UnityEngine;
 using System;
+using UnityEngine;
+
+using Logger = SongBrowserPlugin.Logging.Logger;
 
 // Modified Version of:
 // https://github.com/mob-sakai/AssetSystem/blob/master/Assets/Mobcast/Coffee/AssetSystem/CacheableDownloadHandler.cs
@@ -60,8 +62,6 @@ namespace Mobcast.Coffee.AssetSystem
 	/// </summary>
 	public abstract class CacheableDownloadHandler : DownloadHandlerScript
 	{
-        private static SongBrowserPlugin.Logger _log = new SongBrowserPlugin.Logger("CacheableDownloadHandler");
-
         const string kLog = "[WebRequestCaching] ";
 		const string kDataSufix = "_d";
 		const string kEtagSufix = "_e";
@@ -94,7 +94,7 @@ namespace Mobcast.Coffee.AssetSystem
 			if (s_WebCachePath == null)
 			{
 				s_WebCachePath = Application.temporaryCachePath + "/WebCache/";
-				_log.Debug("{0}WebCachePath : {1}", kLog, s_WebCachePath);
+                Logger.Debug("{0}WebCachePath : {1}", kLog, s_WebCachePath);
 
 			}
 
@@ -142,7 +142,7 @@ namespace Mobcast.Coffee.AssetSystem
 		{
 			if (!isDone)
 			{
-				_log.Error("{0}Downloading is not completed : {1}", kLog, m_WebRequest.url);
+				Logger.Error("{0}Downloading is not completed : {1}", kLog, m_WebRequest.url);
 				throw new InvalidOperationException("Downloading is not completed. " + m_WebRequest.url);
 			}
 			else if (m_Buffer == null)
@@ -150,13 +150,13 @@ namespace Mobcast.Coffee.AssetSystem
 				// Etag cache hit!
 				if (m_WebRequest.responseCode == 304)
 				{
-					_log.Debug("<color=green>{0}Etag cache hit : {1}</color>", kLog, m_WebRequest.url);
+					Logger.Debug("<color=green>{0}Etag cache hit : {1}</color>", kLog, m_WebRequest.url);
 					m_Buffer = LoadCache(m_WebRequest.url);
 				}
 				// Download is completed successfully.
 				else if (m_WebRequest.responseCode == 200)
 				{
-					_log.Debug("<color=green>{0}Download is completed successfully : {1}</color>", kLog, m_WebRequest.url);
+					Logger.Debug("<color=green>{0}Download is completed successfully : {1}</color>", kLog, m_WebRequest.url);
 					m_Buffer = m_Stream.GetBuffer();
 					SaveCache(m_WebRequest.url, m_WebRequest.GetResponseHeader("Etag"), m_Buffer);
 				}

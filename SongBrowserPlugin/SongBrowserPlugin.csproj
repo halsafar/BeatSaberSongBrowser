@@ -122,7 +122,7 @@
     <Compile Include="DataAccess\PlaylistWriter.cs" />
     <Compile Include="DataAccess\ScoreSaberDatabase.cs" />
     <Compile Include="DataAccess\Network\Downloader.cs" />
-    <Compile Include="Logger.cs" />
+    <Compile Include="Logging\Logger.cs" />
     <Compile Include="PluginConfig.cs" />
     <Compile Include="UI\SceneEvents.cs" />
     <Compile Include="UI\BackButtonNavigationController.cs" />
@@ -138,8 +138,6 @@
     <Compile Include="UI\Playlists\PlaylistDetailViewController.cs" />
     <Compile Include="UI\Playlists\PlaylistFlowCoordinator.cs" />
     <Compile Include="UI\Playlists\PlaylistSelectionListViewController.cs" />
-    <Compile Include="UI\Playlists\PlaylistSelectionNavigationController.cs" />
-    <Compile Include="UI\Playlists\PlaylistTableView.cs" />
     <Compile Include="UI\Base64Sprites.cs" />
     <Compile Include="UI\Keyboard\CustomUIKeyboard.cs" />
     <Compile Include="UI\Keyboard\SearchKeyboardViewController.cs" />
@@ -150,7 +148,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Internals\" />
-    <Folder Include="Logging\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
