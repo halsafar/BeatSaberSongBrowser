@@ -10,7 +10,6 @@ namespace SongBrowserPlugin.UI.DownloadQueue
     {
         Song song;
 
-
         protected override void Awake()
         {
             base.Awake();
@@ -49,7 +48,6 @@ namespace SongBrowserPlugin.UI.DownloadQueue
                         _bgImage.fillAmount = song.downloadingProgress;
                     }
                     break;
-                case SongQueueState.Available:
                 case SongQueueState.Downloaded:
                     {
                         _bgImage.color = new Color(1f, 1f, 1f, 0.35f);
@@ -78,7 +76,6 @@ namespace SongBrowserPlugin.UI.DownloadQueue
                         _bgImage.fillAmount = song.downloadingProgress;
                     }
                     break;
-                case SongQueueState.Available:
                 case SongQueueState.Downloaded:
                     {
                         _bgImage.color = new Color(1f, 1f, 1f, 0.35f);
@@ -93,6 +90,5 @@ namespace SongBrowserPlugin.UI.DownloadQueue
                     break;
             }
         }
-
     }
 }

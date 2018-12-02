@@ -14,6 +14,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using TMPro;
 using Logger = SongBrowserPlugin.Logging.Logger;
+using SongBrowserPlugin.DataAccess.BeatSaverApi;
 
 namespace SongBrowserPlugin.UI
 {
@@ -162,6 +163,7 @@ namespace SongBrowserPlugin.UI
 
                 // delete dialog
                 this._deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(this._simpleDialogPromptViewControllerPrefab);
+                this._deleteDialog.name = "DeleteDialogPromptViewController";
                 this._deleteDialog.gameObject.SetActive(false);
 
                 // sprites
@@ -535,6 +537,8 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         private void OnDidSelectDifficultyEvent(BeatmapDifficultyViewController view, IDifficultyBeatmap beatmap)
         {
+            _deleteButton.interactable = (beatmap.level.levelID.Length >= 32);
+
             this.RefreshScoreSaberData(_levelListViewController.selectedLevel);
         }
 
@@ -614,87 +618,30 @@ namespace SongBrowserPlugin.UI
         /// <param name="ok"></param>
         public void HandleDeleteDialogPromptViewControllerDidFinish(SimpleDialogPromptViewController viewController, bool ok)
         {
-            viewController.didFinishEvent -= this.HandleDeleteDialogPromptViewControllerDidFinish;
-            //_levelSelectionFlowCoordinator.InvokePrivateMethod("DismissViewController", new object[] { _deleteDialog, null, false });
-            if (!ok)
+            //viewController.didFinishEvent -= this.HandleDeleteDialogPromptViewControllerDidFinish;
+            _levelSelectionFlowCoordinator.InvokePrivateMethod("DismissViewController", new object[] { _deleteDialog, null, false });
+            if (ok)            
             {
-                viewController.DismissViewControllerCoroutine(null, false);
-            }
-            else
-            {
-                string customSongsPath = Path.Combine(Environment.CurrentDirectory, "CustomSongs");
-                IBeatmapLevel level = this._levelListViewController.selectedLevel;                
-                SongLoaderPlugin.OverrideClasses.CustomLevel customLevel = _model.LevelIdToCustomSongInfos[level.levelID];
-                string songPath = customLevel.customSongInfo.path;
-                bool isZippedSong = false;
+                Downloader.Instance.DeleteSong(new Song(SongLoader.CustomLevels.First(x => x.levelID == _levelDetailViewController.difficultyBeatmap.level.levelID)));
 
-                viewController.DismissViewControllerCoroutine(null, false);
-                Logger.Debug("Deleting: {0}", songPath);
+                List<IBeatmapLevel> levels = _levelListViewController.GetPrivateField<IBeatmapLevel[]>("_levels").ToList();
+                int selectedIndex = levels.IndexOf(_levelDetailViewController.difficultyBeatmap.level);
 
-                if (!string.IsNullOrEmpty(songPath) && songPath.Contains("/.cache/"))
+                if (selectedIndex > -1)
                 {
-                    isZippedSong = true;
-                }
+                    levels.Remove(_levelDetailViewController.difficultyBeatmap.level);
 
-                if (isZippedSong)
-                {
-                    DirectoryInfo songHashDir = Directory.GetParent(songPath);
-                    Logger.Debug("Deleting zipped song cache: {0}", songHashDir.FullName);
-                    Directory.Delete(songHashDir.FullName, true);
-
-                    foreach (string file in Directory.GetFiles(customSongsPath, "*.zip"))
+                    if (selectedIndex > 0)
                     {
-                        string hash = CreateMD5FromFile(file);
-                        if (hash != null)
-                        {
-                            if (hash == songHashDir.Name)
-                            {
-                                Logger.Debug("Deleting zipped song: {0}", file);
-                                File.Delete(file);
-                                break;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    // Just delete the song we know about.
-                    FileAttributes attr = File.GetAttributes(songPath);
-                    if (attr.HasFlag(FileAttributes.Directory))
-                    {
-                        Logger.Debug("Deleting song: {0}", songPath);
-                        Directory.Delete(songPath, true);
+                        selectedIndex--;
                     }
 
-                    // check if this is in the BeatSaberDownloader format
-                    if (_model.Settings.deleteNumberedSongFolder)
-                    {                        
-                        String[] splitPath = songPath.Split('/');
-                        if (splitPath.Length > 2)
-                        {
-                            String numberedDir = splitPath[splitPath.Length - 2];
-                            Regex r = new Regex(@"^\d{1,}-\d{1,}");
-                            if (r.Match(numberedDir).Success)
-                            {
-                                DirectoryInfo songNumberedDirPath = Directory.GetParent(songPath);
-                                Logger.Debug("Deleting song numbered folder: {0}", songNumberedDirPath.FullName);
-                                Directory.Delete(songNumberedDirPath.FullName, true);
-                            }
-                        }
-                    }
-                }
+                    _levelListViewController.SetLevels(levels.ToArray());
+                    TableView listTableView = _levelListViewController.GetPrivateField<LevelListTableView>("_levelListTableView").GetPrivateField<TableView>("_tableView");
+                    listTableView.ScrollToRow(selectedIndex, false);
+                    listTableView.SelectRow(selectedIndex, true);
+                }               
 
-                int newRow = _model.SortedSongList.FindIndex(x => x.levelID == level.levelID) - 1;
-                if (newRow > 0 && newRow < _model.SortedSongList.Count)
-                {
-                    _model.LastSelectedLevelId = _model.SortedSongList[newRow].levelID;
-                }
-                else
-                {
-                    _model.LastSelectedLevelId = null;
-                }
-
-                SongLoaderPlugin.SongLoader.Instance.RemoveSongWithPath(songPath);
                 this.UpdateSongList();
                 this.RefreshSongList();
             }
@@ -1102,6 +1049,9 @@ namespace SongBrowserPlugin.UI
                 }
                 
                 LevelSO[] levels = _model.SortedSongList.ToArray();
+
+                //_levelListViewController.SetLevels(levels);
+
                 LevelListViewController songListViewController = this._levelSelectionFlowCoordinator.GetPrivateField<LevelListViewController>("_levelListViewController");
                 ReflectionUtil.SetPrivateField(_levelListTableView, "_levels", levels);                
                 ReflectionUtil.SetPrivateField(songListViewController, "_levels", levels);
@@ -1241,40 +1191,39 @@ namespace SongBrowserPlugin.UI
                     {
                         this._levelSelectionNavigationController.DismissButtonWasPressed();
                     }
-
+                    
+                    // select current sort mode again (toggle inverting)
+                    if (isShiftKeyDown && Input.GetKeyDown(KeyCode.BackQuote))
+                    {
+                        _sortButtonGroup[_sortButtonLastPushedIndex].Button.onClick.Invoke();
+                    }
                     // cycle sort modes
-                    if (Input.GetKeyDown(KeyCode.T))
+                    else if (Input.GetKeyDown(KeyCode.BackQuote))
                     {
                         _sortButtonLastPushedIndex = (_sortButtonLastPushedIndex + 1) % _sortButtonGroup.Count;
                         _sortButtonGroup[_sortButtonLastPushedIndex].Button.onClick.Invoke();
                     }
 
-                    // select current sort mode again (toggle inverting)
-                    if (Input.GetKeyDown(KeyCode.Y))
-                    {
-                        _sortButtonGroup[_sortButtonLastPushedIndex].Button.onClick.Invoke();
-                    }
-
-                    // filter playlists
-                    if (Input.GetKeyDown(KeyCode.P))
-                    {
-                        OnPlaylistButtonClickEvent();
-                    }
-
                     // filter search
-                    if (Input.GetKeyDown(KeyCode.S))
+                    if (Input.GetKeyDown(KeyCode.F1))
                     {
                         OnSearchButtonClickEvent();
                     }
 
                     // filter favorites
-                    if (Input.GetKeyDown(KeyCode.F))
+                    if (Input.GetKeyDown(KeyCode.F2))
                     {
                         OnFavoriteFilterButtonClickEvent();
                     }
 
+                    // filter playlists
+                    if (Input.GetKeyDown(KeyCode.F3))
+                    {
+                        OnPlaylistButtonClickEvent();
+                    }
+
                     // delete
-                    if (Input.GetKeyDown(KeyCode.D))
+                    if (Input.GetKeyDown(KeyCode.Delete))
                     {
                         _deleteButton.onClick.Invoke();
                     }
@@ -1337,12 +1286,12 @@ namespace SongBrowserPlugin.UI
                     // accept delete
                     if (Input.GetKeyDown(KeyCode.Return))
                     {
-                        _deleteDialog.GetPrivateField<TextMeshProButton>("_okButton").button.onClick.Invoke();
+                        _deleteDialog.GetPrivateField<Button>("_okButton").onClick.Invoke();
                     }
 
                     if (Input.GetKeyDown(KeyCode.Escape))
                     {
-                        _deleteDialog.GetPrivateField<TextMeshProButton>("_cancelButton").button.onClick.Invoke();
+                        _deleteDialog.GetPrivateField<Button>("_cancelButton").onClick.Invoke();
                     }
                 }
                 else
