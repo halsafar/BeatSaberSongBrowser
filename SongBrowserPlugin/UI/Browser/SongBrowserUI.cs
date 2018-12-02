@@ -574,7 +574,11 @@ namespace SongBrowserPlugin.UI
             }
         }
 
-
+        /// <summary>
+        /// Switching one-saber modes for example.
+        /// </summary>
+        /// <param name="view"></param>
+        /// <param name="bc"></param>
         private void OnDidSelectBeatmapCharacteristic(BeatmapCharacteristicSelectionViewController view, BeatmapCharacteristicSO bc)
         {
             Logger.Trace("OnDidSelectBeatmapCharacteristic({0}", bc.name);
@@ -1187,12 +1191,12 @@ namespace SongBrowserPlugin.UI
             Logger.Trace("UpdateSongList()");
 
             // UI not created yet. 
-            if (_beatmapCharacteristicSelectionViewController == null)
+            BeatmapCharacteristicSO bc = null;
+            if (_beatmapCharacteristicSelectionViewController != null)
             {
-                return;
+                bc = _beatmapCharacteristicSelectionViewController.selectedBeatmapCharacteristic;
             }
 
-            BeatmapCharacteristicSO bc = _beatmapCharacteristicSelectionViewController.selectedBeatmapCharacteristic;
             _model.UpdateSongLists(bc);
             this.RefreshDirectoryButtons();
         }

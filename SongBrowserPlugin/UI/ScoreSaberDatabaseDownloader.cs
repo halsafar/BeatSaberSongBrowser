@@ -77,7 +77,7 @@ namespace SongBrowserPlugin.UI
                         ScoreSaberDatabaseDownloader.ScoreSaberDataFile = (www.downloadHandler as CacheableDownloadHandlerScoreSaberData).ScoreSaberDataFile;
                         Logger.Info("Success downloading ScoreSaber data!");
 
-                        SongBrowserApplication.MainProgressBar.ShowMessage("Success downloading ScoreSaber data...");
+                        SongBrowserApplication.MainProgressBar.ShowMessage("Success downloading ScoreSaber data...", 10.0f);
                         onScoreSaberDataDownloaded?.Invoke();
                     }
                     catch (System.InvalidOperationException)
