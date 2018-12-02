@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CustomUI.BeatSaber;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -36,7 +37,7 @@ namespace SongBrowserPlugin.UI
                 _searchKeyboard.okButtonWasPressedEvent += () => { searchButtonPressed?.Invoke(_inputString); };
 
                 //_inputText = BeatSaberUI.CreateText(rectTransform, "Search...", new Vector2(0f, 22f));
-                _inputText = UIBuilder.CreateText(rectTransform, "Search...", new Vector2(0f, -11.5f), new Vector2(60f, 10f));
+                _inputText = BeatSaberUI.CreateText(rectTransform, "Search...", new Vector2(0f, 22f));
                 _inputText.alignment = TextAlignmentOptions.Center;
                 _inputText.fontSize = 6f;
 

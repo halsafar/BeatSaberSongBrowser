@@ -51,6 +51,7 @@ namespace SongBrowserPlugin.UI
                 {
                     songNameText = _textComponents.First(x => x.name == "SongNameText");
                     _textComponents.First(x => x.name == "Title").text = "Playlist";
+                    _textComponents.First(x => x.name == "Title").fontSize = 2.5f;
 
                     _textComponents.First(x => x.name == "YourStatsTitle").text = "Playlist Info";
 

@@ -15,6 +15,7 @@ using System.Text.RegularExpressions;
 using TMPro;
 using Logger = SongBrowserPlugin.Logging.Logger;
 using SongBrowserPlugin.DataAccess.BeatSaverApi;
+using CustomUI.BeatSaber;
 
 namespace SongBrowserPlugin.UI
 {
@@ -55,9 +56,11 @@ namespace SongBrowserPlugin.UI
         private Button _upFolderButton;
         private SearchKeyboardViewController _searchViewController;
         private PlaylistFlowCoordinator _playListFlowCoordinator;
-        private TextMeshProUGUI _ppText;
-        private TextMeshProUGUI _starText;
-        private TextMeshProUGUI _nText;
+
+        private RectTransform _ppStatButton;
+        private RectTransform _starStatButton;
+        private RectTransform _njsStatButton;
+
         // Cached items
         private Sprite _addFavoriteSprite;
         private Sprite _removeFavoriteSprite;
@@ -180,6 +183,24 @@ namespace SongBrowserPlugin.UI
                 _levelDifficultyViewController.didSelectDifficultyEvent += OnDidSelectDifficultyEvent;
                 _beatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent += OnDidSelectBeatmapCharacteristic;
 
+                // modify details view
+                var statsPanel = this._levelDetailViewController.GetComponentsInChildren<CanvasRenderer>().First(x => x.name == "LevelParamsPanel");
+                var statTransforms = statsPanel.GetComponentsInChildren<RectTransform>();
+                for (int i = 1; i < statTransforms.Length; i++)
+                {
+                    var r = statTransforms[i];
+                    r.sizeDelta = new Vector2(r.sizeDelta.x * 0.725f, r.sizeDelta.y * 0.725f);
+                }
+
+                _ppStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
+                UIBuilder.SetStatButtonIcon(_ppStatButton, Base64Sprites.Base64ToSprite(Base64Sprites.GraphIcon));
+
+                _starStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
+                UIBuilder.SetStatButtonIcon(_starStatButton, Base64Sprites.Base64ToSprite(Base64Sprites.StarIcon));
+
+                _njsStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
+                UIBuilder.SetStatButtonIcon(_njsStatButton, Base64Sprites.Base64ToSprite(Base64Sprites.SpeedIcon));
+
                 _rebuildUI = false;
             }
             catch (Exception e)
@@ -203,7 +224,11 @@ namespace SongBrowserPlugin.UI
                 Button sortButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "SettingsButton"));
                 Button otherButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "SettingsButton"));                
                 Sprite arrowIcon = SongBrowserApplication.Instance.CachedIcons["ArrowIcon"];
-                
+                //Sprite borderSprite = SongBrowserApplication.Instance.CachedIcons["HalfRoundRectTop"];
+                Sprite borderSprite = SongBrowserApplication.Instance.CachedIcons["RoundRectBigStroke"];
+                //Sprite borderSprite = SongBrowserApplication.Instance.CachedIcons["RoundRectBigStrokeGlow"];                
+                //Sprite borderSprite = SongBrowserApplication.Instance.CachedIcons["ArrowIcon"];
+
                 // Resize some of the UI
                 _tableViewRectTransform = _levelListViewController.GetComponentsInChildren<RectTransform>().First(x => x.name == "TableViewContainer");                
                 _tableViewRectTransform.sizeDelta = new Vector2(0f, -20f);
@@ -213,9 +238,9 @@ namespace SongBrowserPlugin.UI
                 Logger.Debug("Creating sort by buttons...");
                                 
                 float fontSize = 2.0f;
-                float buttonWidth = 14.50f;
+                float buttonWidth = 12.25f;
                 float buttonHeight = 5.5f;
-                float buttonX = 25.0f;
+                float buttonX = 22.0f;
                 float buttonY = -5.5f;
 
                 string[] sortButtonNames = new string[]
@@ -231,7 +256,7 @@ namespace SongBrowserPlugin.UI
                 _sortButtonGroup = new List<SongSortButton>();
                 for (int i = 0; i < sortButtonNames.Length; i++)
                 {
-                    _sortButtonGroup.Add(UIBuilder.CreateSortButton(sortButtonTransform, sortButtonTemplate, arrowIcon,
+                    _sortButtonGroup.Add(UIBuilder.CreateSortButton(sortButtonTransform, sortButtonTemplate, arrowIcon, borderSprite,
                         sortButtonNames[i], 
                         fontSize, 
                         buttonX + (buttonWidth * i) + 2.5f, 
@@ -265,7 +290,7 @@ namespace SongBrowserPlugin.UI
                         t.Item3,
                         new Vector2(filterButtonX + (iconButtonSize.x * i), buttonY),
                         new Vector2(iconButtonSize.x, iconButtonSize.y),
-                        new Vector2(3.0f, -2.5f),
+                        new Vector2(3.0f, -3.0f),
                         new Vector2(3.5f, 3.5f),
                         new Vector2(1.0f, 1.0f),
                         0);
@@ -302,7 +327,9 @@ namespace SongBrowserPlugin.UI
                 }*/
 
                 // Create delete button
-                _deleteButton = UIBuilder.CreateButton(otherButtonTransform, otherButtonTemplate, "Delete", fontSize, 30f, -80.0f, 15f, 5f);                
+                Button practiceButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PracticeButton");
+                RectTransform practiceButtonRect = (practiceButton.transform as RectTransform);
+                _deleteButton = UIBuilder.CreateButton(otherButtonTransform, otherButtonTemplate, "Delete", fontSize, 21f, -80.0f, practiceButtonRect.sizeDelta.x, 5f);                
                 _deleteButton.onClick.AddListener(delegate () {
                     HandleDeleteSelectedLevel();
                 });
@@ -340,7 +367,7 @@ namespace SongBrowserPlugin.UI
                         this.RefreshSongList();
                         this.RefreshDirectoryButtons();
                     });
-                    UIBuilder.SetButtonText(ref _enterFolderButton, "Enter");
+                    UIBuilder.SetButtonText(_enterFolderButton, "Enter");
 
                     // Create up folder button
                     _upFolderButton = UIBuilder.CreateIconButton(sortButtonTransform, sortButtonTemplate, arrowIcon,
@@ -618,7 +645,6 @@ namespace SongBrowserPlugin.UI
         /// <param name="ok"></param>
         public void HandleDeleteDialogPromptViewControllerDidFinish(SimpleDialogPromptViewController viewController, bool ok)
         {
-            //viewController.didFinishEvent -= this.HandleDeleteDialogPromptViewControllerDidFinish;
             _levelSelectionFlowCoordinator.InvokePrivateMethod("DismissViewController", new object[] { _deleteDialog, null, false });
             if (ok)            
             {
@@ -825,30 +851,30 @@ namespace SongBrowserPlugin.UI
             // display pp potentially
             if (this._model.LevelIdToScoreSaberData != null && this._levelDifficultyViewController.selectedDifficultyBeatmap != null)
             {
-                if (this._ppText == null)
+                /*if (this._ppText == null)
                 {
                     // Create the PP and Star rating labels
                     //RectTransform bmpTextRect = Resources.FindObjectsOfTypeAll<RectTransform>().First(x => x.name == "BPMText");
-                    var text = UIBuilder.CreateText(this._levelDetailViewController.rectTransform, "PP", new Vector2(-15, -32), new Vector2(10f, 6f));
+                    var text = BeatSaberUI.CreateText(this._levelDetailViewController.rectTransform, "PP", new Vector2(-15, -32), new Vector2(10f, 6f));
                     text.fontSize = 2.5f;
                     text.alignment = TextAlignmentOptions.Left;
 
-                    text = UIBuilder.CreateText(this._levelDetailViewController.rectTransform, "STAR", new Vector2(-15, -34.5f), new Vector2(10f, 6f));
+                    text = BeatSaberUI.CreateText(this._levelDetailViewController.rectTransform, "STAR", new Vector2(-15, -34.5f), new Vector2(10f, 6f));
                     text.fontSize = 2.5f;
                     text.alignment = TextAlignmentOptions.Left;
 
-                    _ppText = UIBuilder.CreateText(this._levelDetailViewController.rectTransform, "?", new Vector2(-20, -32), new Vector2(20f, 6f));
+                    _ppText = BeatSaberUI.CreateText(this._levelDetailViewController.rectTransform, "?", new Vector2(-20, -32), new Vector2(20f, 6f));
                     _ppText.fontSize = 2.5f;
                     _ppText.alignment = TextAlignmentOptions.Right;
 
-                    _starText = UIBuilder.CreateText(this._levelDetailViewController.rectTransform, "", new Vector2(-20, -34.5f), new Vector2(20f, 6f));
+                    _starText = BeatSaberUI.CreateText(this._levelDetailViewController.rectTransform, "", new Vector2(-20, -34.5f), new Vector2(20f, 6f));
                     _starText.fontSize = 2.5f;
                     _starText.alignment = TextAlignmentOptions.Right;
 
-                    _nText = UIBuilder.CreateText(this._levelDetailViewController.rectTransform, "", new Vector2(-20, -37.0f), new Vector2(20f, 6f));
+                    _nText = BeatSaberUI.CreateText(this._levelDetailViewController.rectTransform, "", new Vector2(-20, -37.0f), new Vector2(20f, 6f));
                     _nText.fontSize = 2.5f;
                     _nText.alignment = TextAlignmentOptions.Right;
-                }
+                }*/
 
                 BeatmapDifficulty difficulty = this._levelDifficultyViewController.selectedDifficultyBeatmap.difficulty;
                 string njsText;
@@ -875,9 +901,9 @@ namespace SongBrowserPlugin.UI
                     }
 
                     //Show note jump speedS
-                    njsText = "NJS " + njs.ToString();
+                    njsText = njs.ToString();
                 }
-                _nText.text = njsText;
+                UIBuilder.SetStatButtonText(_njsStatButton, njsText);
 
                 Logger.Debug("Checking if have info for song {0}", level.songName);
                 if (this._model.LevelIdToScoreSaberData.ContainsKey(level.levelID))
@@ -890,19 +916,19 @@ namespace SongBrowserPlugin.UI
                         float pp = ppData.difficultyToSaberDifficulty[difficultyString].pp;
                         float star = ppData.difficultyToSaberDifficulty[difficultyString].star;
 
-                        _ppText.SetText(String.Format("{0:0.##}", pp));
-                        _starText.SetText(String.Format("{0:0.##}", star));
+                        UIBuilder.SetStatButtonText(_ppStatButton, String.Format("{0:0.#}", pp));
+                        UIBuilder.SetStatButtonText(_starStatButton, String.Format("{0:0.#}", star));
                     }
                     else
                     {
-                        _ppText.SetText("?");
-                        _starText.SetText("?");
+                        UIBuilder.SetStatButtonText(_ppStatButton, "NA");
+                        UIBuilder.SetStatButtonText(_starStatButton, "NA");
                     }
                 }
                 else
                 {
-                    _ppText.SetText("?");
-                    _starText.SetText("?");
+                    UIBuilder.SetStatButtonText(_ppStatButton, "?");
+                    UIBuilder.SetStatButtonText(_starStatButton, "?");
                 }
             }
         }
@@ -978,7 +1004,7 @@ namespace SongBrowserPlugin.UI
                 }
             }
 
-            UIBuilder.SetButtonIcon(ref _addFavoriteButton, _currentAddFavoriteButtonSprite);
+            UIBuilder.SetButtonIcon(_addFavoriteButton, _currentAddFavoriteButtonSprite);
         }
 
         /// <summary>
@@ -989,26 +1015,30 @@ namespace SongBrowserPlugin.UI
             // So far all we need to refresh is the sort buttons.
             foreach (SongSortButton sortButton in _sortButtonGroup)
             {
-                UIBuilder.SetButtonBorder(ref sortButton.Button, Color.black);
+                UIBuilder.SetButtonTextColor(sortButton.Button, Color.white);
+                UIBuilder.SetButtonBorder(sortButton.Button, Color.black);
                 if (sortButton.SortMode == _model.Settings.sortMode)
                 {
                     if (this._model.Settings.invertSortResults)
                     {
-                        UIBuilder.SetButtonBorder(ref sortButton.Button, Color.red);
+                        UIBuilder.SetButtonTextColor(sortButton.Button, Color.red);
+                        UIBuilder.SetButtonBorder(sortButton.Button, Color.red);
                     }
                     else
                     {
-                        UIBuilder.SetButtonBorder(ref sortButton.Button, Color.green);
+                        UIBuilder.SetButtonTextColor(sortButton.Button, Color.green);
+                        UIBuilder.SetButtonBorder(sortButton.Button, Color.green);
                     }
                 }
             }
+
             // refresh filter buttons
             foreach (SongFilterButton filterButton in _filterButtonGroup)
             {
-                UIBuilder.SetButtonBorder(ref filterButton.Button, Color.clear);
+                UIBuilder.SetButtonBorder(filterButton.Button, Color.black);
                 if (filterButton.FilterMode == _model.Settings.filterMode)
                 {
-                    UIBuilder.SetButtonBorder(ref filterButton.Button, Color.green);
+                    UIBuilder.SetButtonBorder(filterButton.Button, Color.green);
                 }
             }
         }
@@ -1204,22 +1234,22 @@ namespace SongBrowserPlugin.UI
                         _sortButtonGroup[_sortButtonLastPushedIndex].Button.onClick.Invoke();
                     }
 
-                    // filter search
-                    if (Input.GetKeyDown(KeyCode.F1))
-                    {
-                        OnSearchButtonClickEvent();
-                    }
-
                     // filter favorites
-                    if (Input.GetKeyDown(KeyCode.F2))
+                    if (Input.GetKeyDown(KeyCode.F1))
                     {
                         OnFavoriteFilterButtonClickEvent();
                     }
 
                     // filter playlists
-                    if (Input.GetKeyDown(KeyCode.F3))
+                    if (Input.GetKeyDown(KeyCode.F2))
                     {
                         OnPlaylistButtonClickEvent();
+                    }
+
+                    // filter search
+                    if (Input.GetKeyDown(KeyCode.F3))
+                    {
+                        OnSearchButtonClickEvent();
                     }
 
                     // delete

@@ -1,17 +1,12 @@
-﻿using HMUI;
-using SongBrowserPlugin.DataAccess;
+﻿using SongBrowserPlugin.DataAccess;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using VRUI;
 using Image = UnityEngine.UI.Image;
+using Logger = SongBrowserPlugin.Logging.Logger;
 
 
 namespace SongBrowserPlugin.UI
@@ -96,9 +91,9 @@ namespace SongBrowserPlugin.UI
             (newButton.transform as RectTransform).anchoredPosition = new Vector2(x, y);
             (newButton.transform as RectTransform).sizeDelta = new Vector2(w, h);
 
-            UIBuilder.SetButtonText(ref newButton, buttonText);
-            UIBuilder.SetButtonIconEnabled(ref newButton, false);
-            UIBuilder.SetButtonTextSize(ref newButton, fontSize);
+            UIBuilder.SetButtonText(newButton, buttonText);
+            UIBuilder.SetButtonIconEnabled(newButton, false);
+            UIBuilder.SetButtonTextSize(newButton, fontSize);
 
             return newButton;
         }
@@ -115,20 +110,24 @@ namespace SongBrowserPlugin.UI
         /// <param name="w"></param>
         /// <param name="h"></param>
         /// <param name="action"></param>
-        public static SongSortButton CreateSortButton(RectTransform parent, Button buttonTemplate, Sprite iconSprite, string buttonText, float fontSize, float x, float y, float w, float h, SongSortMode sortMode, System.Action<SongSortMode> onClickEvent)
+        public static SongSortButton CreateSortButton(RectTransform parent, Button buttonTemplate, Sprite iconSprite, Sprite borderSprite, string buttonText, float fontSize, float x, float y, float w, float h, SongSortMode sortMode, System.Action<SongSortMode> onClickEvent)
         {
             SongSortButton sortButton = new SongSortButton();
             Button newButton = UIBuilder.CreateUIButton(parent, buttonTemplate);
 
             newButton.interactable = true;
             (newButton.transform as RectTransform).anchoredPosition = new Vector2(x, y);
-            //(newButton.transform as RectTransform).position = new Vector2(x, y);
             (newButton.transform as RectTransform).sizeDelta = new Vector2(w, h);
 
-            UIBuilder.SetButtonText(ref newButton, buttonText);
-            UIBuilder.SetButtonIconEnabled(ref newButton, false);
-            UIBuilder.SetButtonIcon(ref newButton, iconSprite);
-            UIBuilder.SetButtonTextSize(ref newButton, fontSize);
+            UIBuilder.SetButtonText(newButton, buttonText);
+            UIBuilder.SetButtonIconEnabled(newButton, false);
+            UIBuilder.SetButtonIcon(newButton, iconSprite);
+            UIBuilder.SetButtonTextSize(newButton, fontSize);
+
+            newButton.GetComponentsInChildren<Image>().First(btn => btn.name == "Stroke").sprite = borderSprite;
+            newButton.GetComponentsInChildren<Image>().First(btn => btn.name == "Stroke").color = Color.black;
+
+            newButton.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(0, 0, 0, 0);
 
             newButton.onClick.RemoveAllListeners();
             newButton.onClick.AddListener(delegate ()
@@ -181,57 +180,18 @@ namespace SongBrowserPlugin.UI
                 UnityEngine.Object.Destroy(textRect.gameObject);
             }
 
-            UIBuilder.SetButtonBorder(ref newButton, Color.clear);        
-            UIBuilder.SetButtonIcon(ref newButton, iconSprite);
+            UIBuilder.SetButtonBorder(newButton, Color.clear);        
+            UIBuilder.SetButtonIcon(newButton, iconSprite);
 
             return newButton;
-        }
-
-        /// <summary>
-        /// Create a beat saber dismiss button.
-        /// </summary>
-        /// <param name="parent"></param>
-        /// <returns></returns>
-        public static Button CreateBackButton(RectTransform parent)
-        {
-            Button dismissButton = CreateUIButton(parent, "BackArrowButton");
-            UnityEngine.Object.DestroyImmediate(dismissButton.GetComponent<SignalOnUIButtonClick>());
-            dismissButton.onClick = new Button.ButtonClickedEvent();
-            dismissButton.name = "CustomUIButton";
-
-            return dismissButton;
-        }
-
-        /// <summary>
-        /// Generate TextMesh.
-        /// </summary>
-        /// <param name="parent"></param>
-        /// <param name="text"></param>
-        /// <param name="position"></param>
-        /// <returns></returns>
-        static public TextMeshProUGUI CreateText(RectTransform parent, string text, Vector2 position, Vector2 width)
-        {
-            TextMeshProUGUI textMesh = new GameObject("TextMeshProUGUI_GO").AddComponent<TextMeshProUGUI>();
-            textMesh.rectTransform.SetParent(parent, false);
-            textMesh.text = text;
-            textMesh.fontSize = 4;
-            textMesh.color = Color.white;
-            textMesh.font = Resources.Load<TMP_FontAsset>("Teko-Medium SDF No Glow");
-            textMesh.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-            textMesh.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            //textMesh.rectTransform.sizeDelta = size;
-            textMesh.rectTransform.sizeDelta = width;
-            textMesh.rectTransform.anchoredPosition = position;
-
-            return textMesh;
-        }
+        }   
 
         /// <summary>
         /// Adjust a Button text.
         /// </summary>
         /// <param name="button"></param>
         /// <param name="text"></param>
-        static public void SetButtonText(ref Button button, string text)
+        static public void SetButtonText(Button button, string text)
         {
             TextMeshProUGUI txt = button.GetComponentsInChildren<TextMeshProUGUI>().FirstOrDefault(x => x.name == "Text");
             if (txt != null)
@@ -246,11 +206,26 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         /// <param name="button"></param>
         /// <param name="fontSize"></param>
-        static public void SetButtonTextSize(ref Button button, float fontSize)
+        static public void SetButtonTextSize(Button button, float fontSize)
         {
-            if (button.GetComponentInChildren<TextMeshProUGUI>() != null)
+            TextMeshProUGUI txt = button.GetComponentsInChildren<TextMeshProUGUI>().FirstOrDefault(x => x.name == "Text");
+            if (txt != null)
             {
-                button.GetComponentInChildren<TextMeshProUGUI>().fontSize = fontSize;
+                txt.fontSize = fontSize;                
+            }
+        }
+
+        /// <summary>
+        /// Adjust button text size.
+        /// </summary>
+        /// <param name="button"></param>
+        /// <param name="fontSize"></param>
+        static public void SetButtonTextColor(Button button, Color color)
+        {
+            TextMeshProUGUI txt = button.GetComponentsInChildren<TextMeshProUGUI>().FirstOrDefault(x => x.name == "Text");
+            if (txt != null)
+            {
+                txt.color = color;
             }
         }
 
@@ -259,7 +234,7 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         /// <param name="button"></param>
         /// <param name="icon"></param>
-        static public void SetButtonIcon(ref Button button, Sprite icon)
+        static public void SetButtonIcon(Button button, Sprite icon)
         {
             if (button.GetComponentsInChildren<UnityEngine.UI.Image>().Count() > 1)
             {
@@ -276,7 +251,7 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         /// <param name="button"></param>
         /// <param name="enabled"></param>
-        static public void SetButtonIconEnabled(ref Button button, bool enabled)
+        static public void SetButtonIconEnabled(Button button, bool enabled)
         {
             Image img = button.GetComponentsInChildren<Image>(true).FirstOrDefault(x => x.name == "Icon");
             if (img != null)
@@ -291,12 +266,16 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         /// <param name="button"></param>
         /// <param name="background"></param>
-        static public void SetButtonBackground(ref Button button, Sprite background)
+        static public void SetButtonBackground(Button button, Sprite background)
         {
             Image img = button.GetComponentsInChildren<Image>().FirstOrDefault(x => x.name == "BG");
             if (img != null)
             {
                 img.sprite = background;
+            }
+            else
+            {
+                Logger.Debug("NULL BG");
             }
         }
 
@@ -305,11 +284,36 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         /// <param name="button"></param>
         /// <param name="color"></param>
-        static public void SetButtonBorder(ref Button button, Color color)
+        static public void SetButtonBorder(Button button, Color color)
         {
-            if (button.GetComponentsInChildren<Image>().Any())
+            Image img = button.GetComponentsInChildren<Image>().FirstOrDefault(x => x.name == "Stroke");
+            if (img != null)
             {
-                button.GetComponentsInChildren<UnityEngine.UI.Image>()[0].color = color;
+                img.color = color;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="rect"></param>
+        /// <param name="text"></param>
+        static public void SetStatButtonText(RectTransform rect, String text)
+        {
+            TextMeshProUGUI txt = rect.GetComponentsInChildren<TextMeshProUGUI>().FirstOrDefault(x => x.name == "ValueText");
+            if (txt != null)
+            {
+                txt.text = text;
+            }
+        }
+
+        static public void SetStatButtonIcon(RectTransform rect, Sprite icon)
+        {
+            Image img = rect.GetComponentsInChildren<Image>().FirstOrDefault(x => x.name == "Icon");
+            if (img != null)
+            {
+                img.sprite = icon;
+                img.color = Color.white;
             }
         }
     }
