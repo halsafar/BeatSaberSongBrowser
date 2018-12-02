@@ -28,9 +28,17 @@ A plugin for customizing the in-game song browser.
   - Display PP and STAR difficulty per song / difficulty.
   - Fast scroll buttons (jumps 10% of your song list in each press).
 - Tips:
- - Sort buttons can be pressed a second time to invert the sorting.
- - Filters can be cancelled by selecting them again.
+  - Sort buttons can be pressed a second time to invert the sorting.
+  - Filters can be cancelled by selecting them again.
 
+## Keyboard Shortcuts
+- Adjust Filters:
+  - `F1-F3` correspond to the filter selection
+- Adjust sort:
+  - The `\`` key (~) will cycle the sort functions.
+- Delete song:
+  - `Delete` key.
+ 
 ## Playlist Format
 ```json
 {
@@ -58,6 +66,6 @@ A plugin for customizing the in-game song browser.
 - `customDetailUrl` (optional): Expects a response equivalent to BeatSaver.com API.
 
 ## Status
-- Working with BeatSaber 0.11.2
+- Working with BeatSaber 0.12.x
 
 
