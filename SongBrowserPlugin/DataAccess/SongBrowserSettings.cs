@@ -154,6 +154,13 @@ namespace SongBrowserPlugin.DataAccess
                 retVal = new SongBrowserSettings();
             }
 
+            // check if the playlist directory exists, make it otherwise.
+            String playlistDirPath = Path.Combine(Environment.CurrentDirectory, "Playlists");
+            if (!Directory.Exists(playlistDirPath))
+            {
+                Directory.CreateDirectory(playlistDirPath);
+            }
+
             // Load Downloader favorites but only once, we'll convert them once, empty the song_browser_setting.xml favorites and never load it again.
             String playlistPath = Path.Combine(Environment.CurrentDirectory, "Playlists", DefaultConvertedFavoritesPlaylistName);
             if (!File.Exists(playlistPath))
@@ -191,7 +198,6 @@ namespace SongBrowserPlugin.DataAccess
 
             // check if the playlist exists
             String playlistPath = Path.Combine(Environment.CurrentDirectory, "Playlists", DefaultConvertedFavoritesPlaylistName);
-
             bool playlistExists = false;
             if (File.Exists(playlistPath))
             {
@@ -308,11 +314,6 @@ namespace SongBrowserPlugin.DataAccess
                     SettingsSerializer.Serialize(writer, this);
                 }
             }
-
-            /*FileStream fs = new FileStream(SongBrowserSettings.SettingsPath(), FileMode.Create, FileAccess.Write);            
-            XmlSerializer serializer = new XmlSerializer(typeof(SongBrowserSettings));           
-            serializer.Serialize(fs, this);            
-            fs.Close();*/
         }
     }
 }
