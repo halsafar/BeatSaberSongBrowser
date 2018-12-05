@@ -124,10 +124,11 @@ namespace SongBrowserPlugin.UI
             UIBuilder.SetButtonIcon(newButton, iconSprite);
             UIBuilder.SetButtonTextSize(newButton, fontSize);
 
-            newButton.GetComponentsInChildren<Image>().First(btn => btn.name == "Stroke").sprite = borderSprite;
-            newButton.GetComponentsInChildren<Image>().First(btn => btn.name == "Stroke").color = Color.black;
+            Image stroke = newButton.GetComponentsInChildren<Image>().First(btn => btn.name == "Stroke");
+            stroke.sprite = borderSprite;
+            //stroke.rectTransform.localScale = new Vector2(0.9f, 0.9f);
 
-            newButton.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(0, 0, 0, 0);
+            newButton.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(2, 2, 2, 2);
 
             newButton.onClick.RemoveAllListeners();
             newButton.onClick.AddListener(delegate ()
@@ -155,7 +156,7 @@ namespace SongBrowserPlugin.UI
         /// <param name="iconHeight"></param>
         /// <param name="iconRotation"></param>
         /// <returns></returns>
-        public static Button CreateIconButton(RectTransform parent, Button buttonTemplate, Sprite iconSprite, Vector2 pos, Vector2 size, Vector2 iconPos, Vector2 iconSize, Vector2 iconScale, float iconRotation)
+        public static Button CreateIconButton(RectTransform parent, Button buttonTemplate, Sprite iconSprite, Vector2 pos, Vector2 size, Vector2 iconSize, Vector2 iconScale, float iconRotation)
         {
             Button newButton = UIBuilder.CreateUIButton(parent, buttonTemplate);
             newButton.interactable = true;
@@ -167,9 +168,8 @@ namespace SongBrowserPlugin.UI
             iconTransform.gameObject.SetActive(true);
 ;
             HorizontalLayoutGroup hgroup = iconTransform.parent.GetComponent<HorizontalLayoutGroup>();
-            UnityEngine.Object.Destroy(hgroup);
-
-            iconTransform.anchoredPosition = new Vector2(iconPos.x, iconPos.y);
+            hgroup.padding = new RectOffset(1, 1, 0, 0);
+            
             iconTransform.sizeDelta = new Vector2(iconSize.x, iconSize.y);
             iconTransform.localScale = new Vector2(iconScale.x, iconScale.y);            
             iconTransform.Rotate(0, 0, iconRotation);

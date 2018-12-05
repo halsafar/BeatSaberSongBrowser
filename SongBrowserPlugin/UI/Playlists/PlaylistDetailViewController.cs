@@ -77,7 +77,7 @@ namespace SongBrowserPlugin.UI
                 _selectButton.onClick.AddListener(() => { selectButtonPressed?.Invoke(_currentPlaylist); });
 
                 _downloadButton = GetComponentsInChildren<Button>().First(x => x.name == "PracticeButton");
-                _downloadButton.GetComponentsInChildren<Image>().First(x => x.name == "Icon").sprite = Base64Sprites.Base64ToSprite(Base64Sprites.DownloadIconB64);
+                _downloadButton.GetComponentsInChildren<Image>().First(x => x.name == "Icon").sprite = Base64Sprites.DownloadIcon;
                 _downloadButton.onClick.RemoveAllListeners();
                 _downloadButton.onClick.AddListener(() => { downloadButtonPressed?.Invoke(_currentPlaylist); });
             }

@@ -1,12 +1,13 @@
 ﻿using UnityEngine.SceneManagement;
 using IllusionPlugin;
 using UnityEngine;
+using SongBrowserPlugin.UI;
 
 namespace SongBrowserPlugin
 {
     public class Plugin : IPlugin
     {
-        public const string VERSION_NUMBER = "v2.4.1";
+        public const string VERSION_NUMBER = "v2.4.2";
 
         public string Name
         {
@@ -23,6 +24,8 @@ namespace SongBrowserPlugin
             SceneEvents _sceneEvents;
             _sceneEvents = new GameObject("menu-signal").AddComponent<SceneEvents>();
             _sceneEvents.MenuSceneEnabled += OnMenuSceneEnabled;
+
+            Base64Sprites.Init();
         }
 
         private void OnMenuSceneEnabled()

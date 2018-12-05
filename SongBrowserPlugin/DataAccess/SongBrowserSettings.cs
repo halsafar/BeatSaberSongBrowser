@@ -226,7 +226,7 @@ namespace SongBrowserPlugin.DataAccess
                     Title = "Song Browser Favorites",
                     Author = "SongBrowserPlugin",
                     Path = "",
-                    Image = Base64Sprites.PlaylistIcon,
+                    Image = Base64Sprites.PlaylistIconB64,
                     Songs = new List<PlaylistSong>(),
                 };
             }

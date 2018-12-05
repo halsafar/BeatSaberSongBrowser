@@ -337,7 +337,7 @@ namespace SongBrowserPlugin
                     Title = "Song Browser Favorites",
                     Author = "SongBrowserPlugin",
                     Path = this.Settings.currentEditingPlaylistFile,
-                    Image = Base64Sprites.PlaylistIcon,
+                    Image = Base64Sprites.PlaylistIconB64,
                     Songs = new List<PlaylistSong>(),
                 };
             }
@@ -510,7 +510,7 @@ namespace SongBrowserPlugin
             Uri pathDiff = customSongDirUri.MakeRelativeUri(customSongUri);
             string relPath = Uri.UnescapeDataString(pathDiff.OriginalString);
             string[] paths = relPath.Split('/');
-            Sprite folderIcon = Base64Sprites.Base64ToSprite(Base64Sprites.FolderIcon);
+            Sprite folderIcon = Base64Sprites.FolderIcon;
 
             // Prevent cache directory from building into the tree, will add all its leafs to root.
             bool forceIntoRoot = false;
