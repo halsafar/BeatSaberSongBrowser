@@ -164,6 +164,11 @@ namespace SongBrowserPlugin.UI
 
                 _simpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
 
+                if (_playListFlowCoordinator == null)
+                {
+                    _playListFlowCoordinator = UIBuilder.CreateFlowCoordinator<PlaylistFlowCoordinator>("PlaylistFlowCoordinator");
+                }
+
                 // delete dialog
                 this._deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(this._simpleDialogPromptViewControllerPrefab);
                 this._deleteDialog.name = "DeleteDialogPromptViewController";
@@ -512,11 +517,6 @@ namespace SongBrowserPlugin.UI
 
             if (_model.Settings.filterMode != SongFilterMode.Playlist)
             {
-                if (_playListFlowCoordinator == null)
-                {
-                    _playListFlowCoordinator = UIBuilder.CreateFlowCoordinator<PlaylistFlowCoordinator>("PlaylistFlowCoordinator");
-                }
-
                 _playListFlowCoordinator.ParentFlowCoordinator = _levelSelectionFlowCoordinator;
                 _playListFlowCoordinator.didFinishEvent -= HandleDidSelectPlaylist;
                 _playListFlowCoordinator.didFinishEvent += HandleDidSelectPlaylist;
