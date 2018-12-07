@@ -7,7 +7,7 @@ namespace SongBrowserPlugin
 {
     public class Plugin : IPlugin
     {
-        public const string VERSION_NUMBER = "v2.4.2";
+        public const string VERSION_NUMBER = "v2.4.3";
 
         public string Name
         {

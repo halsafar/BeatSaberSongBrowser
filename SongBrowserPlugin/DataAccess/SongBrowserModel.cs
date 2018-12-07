@@ -809,7 +809,16 @@ namespace SongBrowserPlugin
             LevelCollectionSO levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionSO>().FirstOrDefault();
             var levels = levelCollections.GetLevelsWithBeatmapCharacteristic(CurrentBeatmapCharacteristicSO);
 
-            Dictionary<String, LevelSO> levelDict = levels.Select((val, index) => new { LevelId = val.levelID, Level = val }).ToDictionary(i => i.LevelId, i => i.Level);
+            //Dictionary<String, LevelSO> levelDict = levels.Select((val, index) => new { LevelId = val.levelID, Level = val }).ToDictionary(i => i.LevelId, i => i.Level);
+            Dictionary<String, LevelSO> levelDict = new Dictionary<string, LevelSO>();
+            foreach (LevelSO level in levels)
+            {
+                if (!levelDict.ContainsKey(level.levelID))
+                {
+                    levelDict.Add(level.levelID, level);
+                }
+            }
+
             List<LevelSO> songList = new List<LevelSO>();
             foreach (PlaylistSong ps in this.CurrentPlaylist.Songs)
             {
