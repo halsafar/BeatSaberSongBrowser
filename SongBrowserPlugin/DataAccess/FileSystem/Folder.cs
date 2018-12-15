@@ -49,7 +49,7 @@ namespace SongBrowserPlugin.DataAccess.FileSystem
 
             var beatmapData = new FolderBeatMapDataSO();
             var difficultyBeatmaps = new List<CustomLevel.CustomDifficultyBeatmap>();
-            var newDiffBeatmap = new CustomLevel.CustomDifficultyBeatmap(this, BeatmapDifficulty.Easy, 0, 0, beatmapData);
+            var newDiffBeatmap = new CustomLevel.CustomDifficultyBeatmap(this, BeatmapDifficulty.Easy, 0, 0, 0, beatmapData);
             difficultyBeatmaps.Add(newDiffBeatmap);
 
             var sceneInfo = Resources.Load<SceneInfo>("SceneInfo/" + "DefaultEnvironment" + "SceneInfo");

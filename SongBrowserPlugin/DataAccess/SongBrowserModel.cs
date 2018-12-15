@@ -178,6 +178,7 @@ namespace SongBrowserPlugin
             /*  Level4, Level2, Level9, Level5, Level10, Level6, Level7, Level1, Level3, Level8, Level11 */
             _weights = new Dictionary<string, int>
             {
+                ["OneHopeLevel"] = 12,
                 ["100Bills"] = 11,
                 ["Escape"] = 10,
                 ["Legend"] = 9,
@@ -852,7 +853,7 @@ namespace SongBrowserPlugin
             Logger.Info("Sorting song list as newest.");
             _sortedSongs = levels
                 .OrderBy(x => _weights.ContainsKey(x.levelID) ? _weights[x.levelID] : 0)
-                .ThenByDescending(x => !_levelIdToCustomLevel.ContainsKey(x.levelID) ? _weights[x.levelID] : _cachedLastWriteTimes[x.levelID])
+                .ThenByDescending(x => !_levelIdToCustomLevel.ContainsKey(x.levelID) ? (_weights.ContainsKey(x.levelID) ? _weights[x.levelID] : 0) : _cachedLastWriteTimes[x.levelID])
                 .ToList();
         }
 
