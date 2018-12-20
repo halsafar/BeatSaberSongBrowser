@@ -2,12 +2,13 @@
 using IllusionPlugin;
 using UnityEngine;
 using SongBrowserPlugin.UI;
+using Logger = SongBrowserPlugin.Logging.Logger;
 
 namespace SongBrowserPlugin
 {
     public class Plugin : IPlugin
     {
-        public const string VERSION_NUMBER = "v2.4.3";
+        public const string VERSION_NUMBER = "v2.4.4";
 
         public string Name
         {
@@ -21,11 +22,25 @@ namespace SongBrowserPlugin
 
         public void OnApplicationStart()
         {
-            SceneEvents _sceneEvents;
-            _sceneEvents = new GameObject("menu-signal").AddComponent<SceneEvents>();
-            _sceneEvents.MenuSceneEnabled += OnMenuSceneEnabled;
+            SceneManager.sceneLoaded += SceneManager_sceneLoaded;
+            SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
 
             Base64Sprites.Init();
+        }
+
+        private void SceneManager_activeSceneChanged(Scene from, Scene to)
+        {
+            Logger.Info($"Active scene changed from \"{from.name}\" to \"{to.name}\"");
+
+            if (from.name == "EmptyTransition" && to.name.Contains("Menu"))
+            {
+                OnMenuSceneEnabled();
+            }
+        }
+
+        private void SceneManager_sceneLoaded(Scene to, LoadSceneMode loadMode)
+        {
+            Logger.Debug($"Loaded scene \"{to.name}\"");
         }
 
         private void OnMenuSceneEnabled()
@@ -38,22 +53,9 @@ namespace SongBrowserPlugin
 
         }
 
-        private void SceneManagerOnActiveSceneChanged(Scene arg0, Scene scene)
-        {
-        
-        }
-
-        private void SceneManager_sceneLoaded(Scene arg0, LoadSceneMode arg1)
-        {
-        }
-
         public void OnLevelWasLoaded(int level)
         {
-            /*if (SceneManager.GetSceneByBuildIndex(level).name == "Menu")
-            {
-                SongBrowserApplication.OnLoad();
-                Downloader.OnLoad();
-            }*/
+
         }
 
         public void OnLevelWasInitialized(int level)

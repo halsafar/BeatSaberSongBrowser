@@ -143,23 +143,23 @@ namespace SongBrowserPlugin
                 {
                     yield return new WaitForSecondsRealtime(0.25f);
                 }
-                ExtractZipAsync(songInfo, zipStream, customSongsPath);
+
+                yield return new WaitWhile(() => _extractingZip); //because extracting several songs at once sometimes hangs the game
+
+                Task extract = ExtractZipAsync(songInfo, zipStream, customSongsPath);
+                yield return new WaitWhile(() => !extract.IsCompleted);
+                songDownloaded?.Invoke(songInfo);
             }
         }
 
-        private async void ExtractZipAsync(Song songInfo, Stream zipStream, string customSongsPath)
+        private async Task ExtractZipAsync(Song songInfo, Stream zipStream, string customSongsPath)
         {
-
             try
             {
-                while (_extractingZip)
-                {
-                    Thread.Sleep(250);
-                }
                 Logger.Info("Extracting...");
                 _extractingZip = true;
                 ZipArchive archive = new ZipArchive(zipStream, ZipArchiveMode.Read);
-                await Task.Run(() => archive.ExtractToDirectory(customSongsPath)); //ZipFile.ExtractToDirectory(zipPath, customSongsPath));
+                await Task.Run(() => archive.ExtractToDirectory(customSongsPath)).ConfigureAwait(false);
                 archive.Dispose();
                 zipStream.Close();
             }
@@ -178,25 +178,10 @@ namespace SongBrowserPlugin
                 songInfo.path = customSongsPath;
             }
 
-            /*
-            try
-            {
-                await Task.Run(() => File.Delete(zipPath));
-            }
-            catch (IOException e)
-            {
-                Logger.Warning($"Unable delete zip! Exception: {e}");
-                songInfo.songQueueState = SongQueueState.Error;
-                _extractingZip = false;
-                return;
-            }*/
-
             _extractingZip = false;
             songInfo.songQueueState = SongQueueState.Downloaded;
             _alreadyDownloadedSongs.Add(songInfo);
             Logger.Info($"Extracted {songInfo.songName} {songInfo.songSubName}!");
-
-            songDownloaded?.Invoke(songInfo);
         }
 
         public bool DeleteSong(Song song)

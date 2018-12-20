@@ -3,6 +3,7 @@ using CustomUI.Utilities;
 using HMUI;
 using SongBrowserPlugin.DataAccess.BeatSaverApi;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -33,6 +34,8 @@ namespace SongBrowserPlugin.UI.DownloadQueue
         {
             if (firstActivation && type == ActivationType.AddedToHierarchy)
             {
+                Downloader.Instance.songDownloaded += SongDownloaded;
+
                 _songListTableCellInstance = Resources.FindObjectsOfTypeAll<LevelListTableCell>().First(x => (x.name == "LevelListTableCell"));
 
                 _titleText = BeatSaberUI.CreateText(rectTransform, "DOWNLOAD QUEUE", new Vector2(0f, 36f));
@@ -126,10 +129,19 @@ namespace SongBrowserPlugin.UI.DownloadQueue
             }
         }
 
-        void DownloadSong(Song song)
+        IEnumerator DownloadSong(Song song)
         {
-            StartCoroutine(Downloader.Instance.DownloadSongCoroutine(song));
+            yield return Downloader.Instance.DownloadSongCoroutine(song);
             Refresh();
+        }
+
+        private void SongDownloaded(Song obj)
+        {
+            Refresh();
+            if (queuedSongs.Count(x => x.songQueueState == SongQueueState.Downloading) < PluginConfig.MaxSimultaneousDownloads && queuedSongs.Any(x => x.songQueueState == SongQueueState.Queued))
+            {
+                StartCoroutine(DownloadSong(queuedSongs.First(x => x.songQueueState == SongQueueState.Queued)));
+            }
         }
 
         public void Refresh()
@@ -148,7 +160,9 @@ namespace SongBrowserPlugin.UI.DownloadQueue
             }
 
             if (queuedSongs.Count(x => x.songQueueState == SongQueueState.Downloading) < PluginConfig.MaxSimultaneousDownloads && queuedSongs.Any(x => x.songQueueState == SongQueueState.Queued))
-                DownloadSong(queuedSongs.First(x => x.songQueueState == SongQueueState.Queued));
+            {
+                StartCoroutine(DownloadSong(queuedSongs.First(x => x.songQueueState == SongQueueState.Queued)));
+            }
         }
 
         public float RowHeight()

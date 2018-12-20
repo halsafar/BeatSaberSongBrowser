@@ -225,6 +225,27 @@ namespace SongBrowserPlugin
             {
                 InvokeBeatSaberButton("SoloFreePlayButton");
             }
+
+            if (Input.GetKeyDown(KeyCode.Alpha0))
+            {
+                InvokeBeatSaberButton("SettingsButton");
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha9))
+            {
+                InvokeBeatSaberButton("ApplyButton");
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha8))
+            {
+                Console.WriteLine("CLICKING OK BUTTON");
+                var settings = Resources.FindObjectsOfTypeAll<VRUI.VRUIViewController>().First(x => x.name == "SettingsViewController");
+                var button = settings.GetComponentsInChildren<Button>().Where(x => x.name == "OkButton");
+                foreach (Button b in button)
+                {
+                    b.onClick.Invoke();
+                }                
+            }
         }
     }
 }

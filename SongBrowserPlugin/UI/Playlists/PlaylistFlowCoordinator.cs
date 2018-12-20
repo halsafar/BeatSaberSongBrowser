@@ -50,12 +50,15 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         public void Awake()
         {
-            _playlistNavigationController = BeatSaberUI.CreateViewController<BackButtonNavigationController>();
+            if (_playlistNavigationController == null)
+            {
+                _playlistNavigationController = BeatSaberUI.CreateViewController<BackButtonNavigationController>();
 
-            GameObject _playlistDetailGameObject = Instantiate(Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First(), _playlistNavigationController.rectTransform, false).gameObject;
-            _playlistDetailViewController = _playlistDetailGameObject.AddComponent<PlaylistDetailViewController>();
-            Destroy(_playlistDetailGameObject.GetComponent<StandardLevelDetailViewController>());
-            _playlistDetailViewController.name = "PlaylistDetailViewController";
+                GameObject _playlistDetailGameObject = Instantiate(Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First(), _playlistNavigationController.rectTransform, false).gameObject;
+                _playlistDetailViewController = _playlistDetailGameObject.AddComponent<PlaylistDetailViewController>();
+                Destroy(_playlistDetailGameObject.GetComponent<StandardLevelDetailViewController>());
+                _playlistDetailViewController.name = "PlaylistDetailViewController";
+            }
         }
 
         /// <summary>
@@ -101,7 +104,7 @@ namespace SongBrowserPlugin.UI
                 }
 
                 _downloadingPlaylist = false;
-                _playlistListViewController.SetContent(_playlistsReader.Playlists, _lastPlaylist);
+                _playlistListViewController.SetContent(_playlistsReader.Playlists);
 
                 DownloadQueueViewController.allSongsDownloaded += HandleAllSongsDownloaded;
             }
@@ -153,6 +156,11 @@ namespace SongBrowserPlugin.UI
                 {
                     DownloadQueueViewController.AbortDownloads();
 
+                    if (_playlistNavigationController.viewControllers.IndexOf(_playlistDetailViewController) >= 0)
+                    {
+                        PopViewControllerFromNavigationController(_playlistNavigationController, null, true);
+                    }
+
                     ParentFlowCoordinator.InvokePrivateMethod("DismissFlowCoordinator", new object[] { this, null, false });
                     didFinishEvent?.Invoke(p);
                 }
@@ -174,6 +182,11 @@ namespace SongBrowserPlugin.UI
                 {
                     DownloadQueueViewController.AbortDownloads();
                     SongLoader.Instance.RefreshSongs(false);
+
+                    if (_playlistNavigationController.viewControllers.IndexOf(_playlistDetailViewController) >= 0)
+                    {
+                        PopViewControllerFromNavigationController(_playlistNavigationController, null, true);
+                    }
 
                     ParentFlowCoordinator.InvokePrivateMethod("DismissFlowCoordinator", new object[] { this, null, false });
                     didFinishEvent?.Invoke(null);
@@ -275,7 +288,7 @@ namespace SongBrowserPlugin.UI
                         songName = item.SongName,
                         id = item.Key,
                         downloadingProgress = 0f,
-                        hash = item.LevelId,
+                        hash = (item.LevelId == null ? "" : item.LevelId),
                         downloadUrl = archiveUrl
                     };
                 }
