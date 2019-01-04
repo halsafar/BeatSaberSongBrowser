@@ -54,7 +54,7 @@ namespace SongBrowserPlugin.DataAccess
                 foreach (string file in files)
                 {
                     Logger.Debug("Checking file {0}", file);
-                    if (Path.GetExtension(file) == ".json")
+                    if (Path.GetExtension(file) == ".json" || Path.GetExtension(file) == ".bplist")
                     {
                         Playlist p = ParsePlaylist(file);
                         _CachedPlaylists.Add(p);
