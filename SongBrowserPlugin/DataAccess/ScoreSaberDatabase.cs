@@ -3,7 +3,7 @@ using SongBrowserPlugin.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-
+using Logger = SongBrowserPlugin.Logging.Logger;
 
 namespace SongBrowserPlugin.DataAccess
 {

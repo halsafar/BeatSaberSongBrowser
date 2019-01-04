@@ -1,4 +1,5 @@
-﻿using SongBrowserPlugin.DataAccess.BeatSaverApi;
+﻿using SimpleJSON;
+using SongBrowserPlugin.DataAccess.BeatSaverApi;
 using SongLoaderPlugin;
 using SongLoaderPlugin.OverrideClasses;
 using System;
@@ -315,6 +316,71 @@ namespace SongBrowserPlugin
                     hash = sb.ToString();
                     return true;
                 }
+            }
+        }
+
+        public void RequestSongByLevelID(string levelId, Action<Song> callback)
+        {
+            StartCoroutine(RequestSongByLevelIDCoroutine(levelId, callback));
+        }
+
+        public IEnumerator RequestSongByLevelIDCoroutine(string levelId, Action<Song> callback)
+        {
+            UnityWebRequest wwwId = UnityWebRequest.Get($"{PluginConfig.BeatsaverURL}/api/songs/search/hash/" + levelId);
+            wwwId.timeout = 10;
+
+            yield return wwwId.SendWebRequest();
+
+
+            if (wwwId.isNetworkError || wwwId.isHttpError)
+            {
+                Logger.Error(wwwId.error);
+            }
+            else
+            {
+#if DEBUG
+                Logger.Log("Received response from BeatSaver...");
+#endif
+                JSONNode node = JSON.Parse(wwwId.downloadHandler.text);
+
+                if (node["songs"].Count == 0)
+                {
+                    Logger.Error($"Song {levelId} doesn't exist on BeatSaver!");
+                    callback?.Invoke(null);
+                    yield break;
+                }
+
+                Song _tempSong = Song.FromSearchNode(node["songs"][0]);
+                callback?.Invoke(_tempSong);
+            }
+        }
+
+        public void RequestSongByKey(string key, Action<Song> callback)
+        {
+            StartCoroutine(RequestSongByKeyCoroutine(key, callback));
+        }
+
+        public IEnumerator RequestSongByKeyCoroutine(string key, Action<Song> callback)
+        {
+            UnityWebRequest wwwId = UnityWebRequest.Get($"{PluginConfig.BeatsaverURL}/api/songs/detail/" + key);
+            wwwId.timeout = 10;
+
+            yield return wwwId.SendWebRequest();
+
+
+            if (wwwId.isNetworkError || wwwId.isHttpError)
+            {
+                Logger.Error(wwwId.error);
+            }
+            else
+            {
+#if DEBUG
+                Logger.Log("Received response from BeatSaver...");
+#endif
+                JSONNode node = JSON.Parse(wwwId.downloadHandler.text);
+
+                Song _tempSong = new Song(node["song"]);
+                callback?.Invoke(_tempSong);
             }
         }
     }

@@ -100,7 +100,7 @@ namespace SongBrowserPlugin.UI
             _lastSelectedRow = -1;
         }
 
-        public void SetContent(List<Playlist> playlists, Playlist select = null)
+        public void SetContent(List<Playlist> playlists)
         {
             if (playlists == null && playlistList != null)
                 playlistList.Clear();
@@ -138,7 +138,9 @@ namespace SongBrowserPlugin.UI
             _tableCell.reuseIdentifier = "PlaylistTableCell";
             _tableCell.songName = playlistList[row].Title;
             _tableCell.author = playlistList[row].Author;
-            _tableCell.coverImage = Base64Sprites.Base64ToSprite(playlistList[row].Image);
+
+            if (playlistList[row].Image != null)
+                _tableCell.coverImage = Base64Sprites.Base64ToSprite(playlistList[row].Image);
 
             return _tableCell;
         }

@@ -114,7 +114,7 @@ namespace SongBrowserPlugin.UI.DownloadQueue
             song.songQueueState = SongQueueState.Queued;
             if (startDownload && queuedSongs.Count(x => x.songQueueState == SongQueueState.Downloading) < PluginConfig.MaxSimultaneousDownloads)
             {
-                DownloadSong(song);
+                StartCoroutine(DownloadSong(song));
             }
             Refresh();
         }
@@ -125,7 +125,7 @@ namespace SongBrowserPlugin.UI.DownloadQueue
 
             for (int i = 0; i < Math.Min(PluginConfig.MaxSimultaneousDownloads, queuedSongs.Count); i++)
             {
-                DownloadSong(queuedSongs[i]);
+                StartCoroutine(DownloadSong(queuedSongs[i]));
             }
         }
 

@@ -167,6 +167,7 @@ namespace SongBrowserPlugin.UI
                 if (_playListFlowCoordinator == null)
                 {
                     _playListFlowCoordinator = UIBuilder.CreateFlowCoordinator<PlaylistFlowCoordinator>("PlaylistFlowCoordinator");
+                    _playListFlowCoordinator.didFinishEvent += HandleDidSelectPlaylist;
                 }
 
                 // delete dialog
@@ -518,9 +519,6 @@ namespace SongBrowserPlugin.UI
             if (_model.Settings.filterMode != SongFilterMode.Playlist)
             {
                 _playListFlowCoordinator.ParentFlowCoordinator = _levelSelectionFlowCoordinator;
-                _playListFlowCoordinator.didFinishEvent -= HandleDidSelectPlaylist;
-                _playListFlowCoordinator.didFinishEvent += HandleDidSelectPlaylist;
-
                 _levelSelectionFlowCoordinator.InvokePrivateMethod("PresentFlowCoordinator", new object[] { _playListFlowCoordinator, null, false, false });                                
             }
             else

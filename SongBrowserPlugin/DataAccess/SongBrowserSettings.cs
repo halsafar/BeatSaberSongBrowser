@@ -6,6 +6,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using SongBrowserPlugin.Logging;
+using Logger = SongBrowserPlugin.Logging.Logger;
 
 namespace SongBrowserPlugin.DataAccess
 {

@@ -2,6 +2,7 @@
 using SongBrowserPlugin.Logging;
 using System;
 using System.IO;
+using Logger = SongBrowserPlugin.Logging.Logger;
 
 namespace SongBrowserPlugin.DataAccess
 {
