@@ -123,13 +123,11 @@ namespace SongBrowserPlugin
                     docPath = docPath.Substring(0, docPath.Length - 5);
                     docPath = docPath.Substring(0, docPath.LastIndexOf("/"));
                     customSongsPath = docPath + "/CustomSongs/" + songInfo.id + "/";
-                    //zipPath = customSongsPath + songInfo.id + ".zip";
                     if (!Directory.Exists(customSongsPath))
                     {
                         Directory.CreateDirectory(customSongsPath);
                     }
                     zipStream = new MemoryStream(data);
-                    //File.WriteAllBytes(zipPath, data);
                     Logger.Info("Downloaded zip!");
                 }
                 catch (Exception e)
