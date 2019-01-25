@@ -78,7 +78,7 @@ namespace SongBrowserPlugin.UI
             //DismissViewControllerCoroutine(null, false);
         }
 
-
+#if DEBUG
         /// <summary>
         /// Emulate keyboard support.
         /// </summary>
@@ -113,5 +113,6 @@ namespace SongBrowserPlugin.UI
                 }
             }      
         }
+#endif
     }
 }
