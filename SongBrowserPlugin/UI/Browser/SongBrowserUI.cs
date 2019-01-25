@@ -1213,6 +1213,7 @@ namespace SongBrowserPlugin.UI
             }
         }
 
+#if DEBUG
         /// <summary>
         /// Not normally called by the game-engine.  Dependent on SongBrowserApplication to call it.
         /// </summary>
@@ -1364,6 +1365,7 @@ namespace SongBrowserPlugin.UI
                 Logger.Exception("Debug Input caused Exception: ", e);
             }
         }
+#endif
     }
 }
  

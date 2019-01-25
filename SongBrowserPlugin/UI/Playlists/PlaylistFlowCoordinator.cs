@@ -253,6 +253,7 @@ namespace SongBrowserPlugin.UI
             Logger.Info("Done matching songs for all playlists...");
         }
 
+#if DEBUG
         /// <summary>
         /// Useful playlist navigation.
         /// Shift+Enter downloads.
@@ -277,5 +278,6 @@ namespace SongBrowserPlugin.UI
                 _playlistsNavigationController_didFinishEvent();
             }
         }
+#endif
     }
 }

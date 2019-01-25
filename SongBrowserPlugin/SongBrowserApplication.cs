@@ -211,6 +211,7 @@ namespace SongBrowserPlugin
             buttonInstance.onClick.Invoke();
         }
 
+#if DEBUG
         /// <summary>
         /// Map some key presses directly to UI interactions to make testing easier.
         /// </summary>
@@ -247,5 +248,6 @@ namespace SongBrowserPlugin
                 }                
             }
         }
+#endif
     }
 }

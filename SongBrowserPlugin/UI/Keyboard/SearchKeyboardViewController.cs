@@ -78,6 +78,7 @@ namespace SongBrowserPlugin.UI
             //DismissViewControllerCoroutine(null, false);
         }
 
+
         /// <summary>
         /// Emulate keyboard support.
         /// </summary>

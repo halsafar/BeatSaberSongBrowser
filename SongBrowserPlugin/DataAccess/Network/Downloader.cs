@@ -339,7 +339,7 @@ namespace SongBrowserPlugin
             else
             {
 #if DEBUG
-                Logger.Log("Received response from BeatSaver...");
+                Logger.Info("Received response from BeatSaver...");
 #endif
                 JSONNode node = JSON.Parse(wwwId.downloadHandler.text);
 
@@ -375,7 +375,7 @@ namespace SongBrowserPlugin
             else
             {
 #if DEBUG
-                Logger.Log("Received response from BeatSaver...");
+                Logger.Info("Received response from BeatSaver...");
 #endif
                 JSONNode node = JSON.Parse(wwwId.downloadHandler.text);
 

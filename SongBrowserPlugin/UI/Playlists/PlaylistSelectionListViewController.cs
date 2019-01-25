@@ -144,6 +144,11 @@ namespace SongBrowserPlugin.UI
 
             return _tableCell;
         }
+#if DEBUG
+        private void LateUpdate()
+        {
+            CheckDebugUserInput();
+        }
 
         private void CheckDebugUserInput()
         {
@@ -175,10 +180,6 @@ namespace SongBrowserPlugin.UI
                 this._songsTableView_DidSelectRowEvent(_songsTableView, _lastSelectedRow);
             }
         }
-
-        private void LateUpdate()
-        {
-            CheckDebugUserInput();
-        }
+#endif
     }
 }
