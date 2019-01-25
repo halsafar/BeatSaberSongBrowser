@@ -3,12 +3,14 @@ using IllusionPlugin;
 using UnityEngine;
 using SongBrowserPlugin.UI;
 using Logger = SongBrowserPlugin.Logging.Logger;
+using SongBrowserPlugin.DataAccess;
+using System.Collections.Generic;
 
 namespace SongBrowserPlugin
 {
     public class Plugin : IPlugin
     {
-        public const string VERSION_NUMBER = "v2.4.5";
+        public const string VERSION_NUMBER = "v2.4.6";
 
         public string Name
         {
@@ -25,7 +27,7 @@ namespace SongBrowserPlugin
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
             SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
 
-            Base64Sprites.Init();
+            Base64Sprites.Init();            
         }
 
         private void SceneManager_activeSceneChanged(Scene from, Scene to)

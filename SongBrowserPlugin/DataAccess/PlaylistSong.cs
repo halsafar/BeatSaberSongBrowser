@@ -10,9 +10,11 @@ namespace SongBrowserPlugin.DataAccess
     {
         public String Key { get; set; }
         public String SongName { get; set; }
-        public string LevelId { get; set; }
+        public string Hash { get; set; }
 
         // Set by playlist downloading
+        [NonSerialized]
+        public string LevelId;
         [NonSerialized]
         public IBeatmapLevel Level;
         [NonSerialized]

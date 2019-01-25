@@ -63,6 +63,7 @@ namespace SongBrowserPlugin
 
             AcquireUIElements();
 
+            StartCoroutine(ScrappedData.Instance.DownloadScrappedData((List<ScrappedSong> songs) => { }));
             StartCoroutine(WaitForSongListUI());
         }
 

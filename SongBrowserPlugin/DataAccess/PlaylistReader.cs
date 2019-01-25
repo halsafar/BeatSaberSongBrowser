@@ -102,8 +102,9 @@ namespace SongBrowserPlugin.DataAccess
                     {
                         Key = node["key"],
                         SongName = node["songName"],
-                        LevelId = node["levelId"]
-                    };
+                        LevelId = node["levelId"],
+                        Hash = node["hash"]
+                };
 
                     playlist.Songs.Add(song);
                 }

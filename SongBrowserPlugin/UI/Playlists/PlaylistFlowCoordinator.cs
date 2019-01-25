@@ -7,8 +7,9 @@ using SongLoaderPlugin;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 using VRUI;
@@ -174,10 +175,30 @@ namespace SongBrowserPlugin.UI
 
         public IEnumerator GetInfoForSong(Playlist playlist, PlaylistSong song, Action<Song> songCallback)
         {
-            string url = $"{PluginConfig.BeatsaverURL}/api/songs/detail/{song.Key}";
-            if (!string.IsNullOrEmpty(playlist.CustomDetailUrl))
+            string url = "";
+            bool _usingHash = false;
+            if (!string.IsNullOrEmpty(song.Key))
             {
-                url = playlist.CustomDetailUrl + song.Key;
+                url = $"{PluginConfig.BeatsaverURL}/api/songs/detail/{song.Key}";
+                if (!string.IsNullOrEmpty(playlist.CustomDetailUrl))
+                {
+                    url = playlist.CustomDetailUrl + song.Key;
+                }
+            }
+            else if (!string.IsNullOrEmpty(song.Hash))
+            {
+                url = $"{PluginConfig.BeatsaverURL}/api/songs/search/hash/{song.Hash}";
+                _usingHash = true;
+            }
+            else if (!string.IsNullOrEmpty(song.LevelId))
+            {
+                string hash = CustomHelpers.CheckHex(song.LevelId.Substring(0, Math.Min(32, song.LevelId.Length)));
+                url = $"{PluginConfig.BeatsaverURL}/api/songs/search/hash/{hash}";
+                _usingHash = true;
+            }
+            else
+            {
+                yield break;
             }
 
             UnityWebRequest www = UnityWebRequest.Get(url);
@@ -193,7 +214,21 @@ namespace SongBrowserPlugin.UI
                 try
                 {
                     JSONNode node = JSON.Parse(www.downloadHandler.text);
-                    songCallback?.Invoke(new Song(node["song"]));
+
+                    if (_usingHash)
+                    {
+                        if (node["songs"].Count == 0)
+                        {
+                            Logger.Error($"Song {song.SongName} doesn't exist on BeatSaver!");
+                            songCallback?.Invoke(null);
+                            yield break;
+                        }
+                        songCallback?.Invoke(Song.FromSearchNode(node["songs"][0]));
+                    }
+                    else
+                    {
+                        songCallback?.Invoke(new Song(node["song"]));
+                    }
                 }
                 catch (Exception e)
                 {
@@ -227,15 +262,46 @@ namespace SongBrowserPlugin.UI
         public static void MatchSongsForPlaylist(Playlist playlist, bool matchAll = false)
         {
             if (!SongLoader.AreSongsLoaded || SongLoader.AreSongsLoading || playlist.Title == "All songs" || playlist.Title == "Your favorite songs") return;
+            Logger.Info("Started matching songs for playlist \"" + playlist.Title + "\"...");
             if (!playlist.Songs.All(x => x.Level != null) || matchAll)
             {
-                playlist.Songs.ForEach(x =>
+                Stopwatch execTime = new Stopwatch();
+                execTime.Start();
+                playlist.Songs.AsParallel().ForAll(x =>
                 {
                     if (x.Level == null || matchAll)
                     {
-                        x.Level = SongLoader.CustomLevels.FirstOrDefault(y => (y.customSongInfo.path.Contains(x.Key) && Directory.Exists(y.customSongInfo.path)) || (string.IsNullOrEmpty(x.LevelId) ? false : y.levelID.StartsWith(x.LevelId)));
+                        try
+                        {
+                            if (!string.IsNullOrEmpty(x.LevelId)) //check that we have levelId and if we do, try to match level
+                            {
+                                x.Level = SongLoader.CustomLevels.FirstOrDefault(y => y.levelID == x.LevelId);
+                            }
+                            if (x.Level == null && !string.IsNullOrEmpty(x.Hash)) //if level is still null, check that we have hash and if we do, try to match level
+                            {
+                                x.Level = SongLoader.CustomLevels.FirstOrDefault(y => y.levelID.StartsWith(x.Hash.ToUpper()));
+                            }
+                            if (x.Level == null && !string.IsNullOrEmpty(x.Key)) //if level is still null, check that we have key and if we do, try to match level
+                            {
+                                ScrappedSong song = ScrappedData.Songs.FirstOrDefault(z => z.Key == x.Key);
+                                if (song != null)
+                                {
+                                    x.Level = SongLoader.CustomLevels.FirstOrDefault(y => y.levelID.StartsWith(song.Hash));
+                                }
+                                else
+                                {
+                                    x.Level = SongLoader.CustomLevels.FirstOrDefault(y => y.customSongInfo.path.Contains(x.Key));
+                                }
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Warning($"Unable to match song with {(string.IsNullOrEmpty(x.Key) ? " unknown key!" : ("key " + x.Key + " !"))} Exception: {e}");
+                        }
                     }
                 });
+                Logger.Info($"Matched all songs for playlist \"{playlist.Title}\"! Time: {execTime.Elapsed.TotalSeconds.ToString("0.00")}s");
+                execTime.Reset();
             }
         }
 
@@ -246,11 +312,13 @@ namespace SongBrowserPlugin.UI
         public void MatchSongsForAllPlaylists(bool matchAll = false)
         {
             Logger.Info("Matching songs for all playlists!");
-            foreach (Playlist playlist in _playlistsReader.Playlists)
+            Task.Run(() =>
             {
-                MatchSongsForPlaylist(playlist, matchAll);
-            }
-            Logger.Info("Done matching songs for all playlists...");
+                for (int i = 0; i < _playlistsReader.Playlists.Count; i++)
+                {
+                    MatchSongsForPlaylist(_playlistsReader.Playlists[i], matchAll);
+                }
+            });
         }
 
 #if DEBUG

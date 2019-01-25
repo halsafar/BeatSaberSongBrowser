@@ -50,6 +50,9 @@
     <Reference Include="IllusionPlugin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\IllusionPlugin.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="SongLoaderPlugin, Version=5.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Plugins\SongLoaderPlugin.dll</HintPath>
@@ -111,6 +114,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataAccess\BeatSaverApi\BeatSaverApiResults.cs" />
+    <Compile Include="DataAccess\CustomHelpers.cs" />
     <Compile Include="DataAccess\FileSystem\Directory.cs" />
     <Compile Include="DataAccess\FileSystem\Folder.cs" />
     <Compile Include="DataAccess\LoadScripts.cs" />
@@ -122,6 +126,7 @@
     <Compile Include="DataAccess\PlaylistWriter.cs" />
     <Compile Include="DataAccess\ScoreSaberDatabase.cs" />
     <Compile Include="DataAccess\Network\Downloader.cs" />
+    <Compile Include="DataAccess\ScrappedData.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="PluginConfig.cs" />
     <Compile Include="UI\SceneEvents.cs" />
