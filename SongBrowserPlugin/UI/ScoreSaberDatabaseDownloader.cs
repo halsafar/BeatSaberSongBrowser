@@ -11,7 +11,7 @@ namespace SongBrowserPlugin.UI
 {
     public class ScoreSaberDatabaseDownloader : MonoBehaviour
     {
-        public const String SCRAPED_SCORE_SABER_JSON_URL = "https://raw.githubusercontent.com/halsafar/beat-saber-scraped-data/master/scoresaber/score_saber_data_v1.json";
+        public const String SCRAPED_SCORE_SABER_JSON_URL = "https://wes.ams3.digitaloceanspaces.com/beatstar/bssb.json";
 
         public static ScoreSaberDatabaseDownloader Instance;
 
@@ -61,7 +61,7 @@ namespace SongBrowserPlugin.UI
             }
             else
             {
-                SongBrowserApplication.MainProgressBar.ShowMessage("Downloading ScoreSaber data...");
+                SongBrowserApplication.MainProgressBar.ShowMessage("Downloading BeatStar data...");
 
                 Logger.Info("Attempting to download: {0}", ScoreSaberDatabaseDownloader.SCRAPED_SCORE_SABER_JSON_URL);
                 using (UnityWebRequest www = UnityWebRequest.Get(ScoreSaberDatabaseDownloader.SCRAPED_SCORE_SABER_JSON_URL))
@@ -77,7 +77,7 @@ namespace SongBrowserPlugin.UI
                         ScoreSaberDatabaseDownloader.ScoreSaberDataFile = (www.downloadHandler as CacheableDownloadHandlerScoreSaberData).ScoreSaberDataFile;
                         Logger.Info("Success downloading ScoreSaber data!");
 
-                        SongBrowserApplication.MainProgressBar.ShowMessage("Success downloading ScoreSaber data...", 10.0f);
+                        SongBrowserApplication.MainProgressBar.ShowMessage("Success downloading BeatStar data...", 10.0f);
                         onScoreSaberDataDownloaded?.Invoke();
                     }
                     catch (System.InvalidOperationException)
