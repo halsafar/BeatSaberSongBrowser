@@ -904,9 +904,9 @@ namespace SongBrowserPlugin
                     {
                         int difficultyValue = 0;
 
-                        // Get the beatmap difficulties TODO - match characteristics
+                        // Get the beatmap difficulties
                         var difficulties = level.difficultyBeatmapSets
-                            .Where(x => x.beatmapCharacteristic)
+                            .Where(x => x.beatmapCharacteristic == this.CurrentBeatmapCharacteristicSO)
                             .SelectMany(x => x.difficultyBeatmaps);
 
                         foreach (IDifficultyBeatmap difficultyBeatmap in difficulties)
