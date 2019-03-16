@@ -518,7 +518,7 @@ namespace SongBrowserPlugin.UI
 
             if (_model.Settings.filterMode != SongFilterMode.Playlist)
             {
-                _playListFlowCoordinator.ParentFlowCoordinator = _levelSelectionFlowCoordinator;
+                _playListFlowCoordinator.parentFlowCoordinator = _levelSelectionFlowCoordinator;
                 _levelSelectionFlowCoordinator.InvokePrivateMethod("PresentFlowCoordinator", new object[] { _playListFlowCoordinator, null, false, false });                                
             }
             else
@@ -676,14 +676,14 @@ namespace SongBrowserPlugin.UI
             _levelSelectionFlowCoordinator.InvokePrivateMethod("DismissViewController", new object[] { _deleteDialog, null, false });
             if (buttonNum == 0)            
             {
-                Downloader.Instance.DeleteSong(new Song(SongLoader.CustomLevels.First(x => x.levelID == _levelDetailViewController.difficultyBeatmap.level.levelID)));
+                SongDownloader.Instance.DeleteSong(new Song(SongLoader.CustomLevels.First(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID)));
 
                 List<IBeatmapLevel> levels = _levelListViewController.GetPrivateField<IBeatmapLevel[]>("_levels").ToList();
-                int selectedIndex = levels.IndexOf(_levelDetailViewController.difficultyBeatmap.level);
+                int selectedIndex = levels.IndexOf(_levelDetailViewController.selectedDifficultyBeatmap.level);
 
                 if (selectedIndex > -1)
                 {
-                    levels.Remove(_levelDetailViewController.difficultyBeatmap.level);
+                    levels.Remove(_levelDetailViewController.selectedDifficultyBeatmap.level);
 
                     if (selectedIndex > 0)
                     {
@@ -736,7 +736,7 @@ namespace SongBrowserPlugin.UI
         {
             if (p != null)
             {
-                Logger.Debug("Showing songs for playlist: {0}", p.Title);
+                Logger.Debug("Showing songs for playlist: {0}", p.playlistTitle);
                 _model.Settings.filterMode = SongFilterMode.Playlist;
                 _model.CurrentPlaylist = p;
                 _model.Settings.Save();
@@ -1105,8 +1105,8 @@ namespace SongBrowserPlugin.UI
                     Logger.Debug("Songs are not sorted yet, nothing to refresh.");
                     return;
                 }
-                
-                LevelSO[] levels = _model.SortedSongList.ToArray();
+
+                BeatmapLevelSO[] levels = _model.SortedSongList.ToArray();
 
                 //_levelListViewController.SetLevels(levels);
 

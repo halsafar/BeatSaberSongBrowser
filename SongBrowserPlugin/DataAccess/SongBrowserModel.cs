@@ -151,7 +151,7 @@ namespace SongBrowserPlugin
 
             set
             {
-                _settings.currentPlaylistFile = value.Path;
+                _settings.currentPlaylistFile = value.fileLoc;
                 _currentPlaylist = value;
             }
         }
@@ -244,7 +244,7 @@ namespace SongBrowserPlugin
             timer.Start();
 
             // Get the level collection from song loader
-            BeatmapLevelCollectionSO levelCollections = Resources.FindObjectsOfTypeAll<BeatmapLevelCollectionSO>().FirstOrDefault();
+            LevelCollectionSO levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionSO>().FirstOrDefault();
 
             // Stash everything we need
             _originalSongs = levelCollections.GetLevelsWithBeatmapCharacteristic(gameplayMode).ToList();
@@ -335,18 +335,18 @@ namespace SongBrowserPlugin
             {
                 CurrentEditingPlaylist = new Playlist
                 {
-                    Title = "Song Browser Favorites",
-                    Author = "SongBrowserPlugin",
-                    Path = this.Settings.currentEditingPlaylistFile,
-                    Image = Base64Sprites.PlaylistIconB64,
-                    Songs = new List<PlaylistSong>(),
+                    playlistTitle = "Song Browser Favorites",
+                    playlistAuthor = "SongBrowserPlugin",
+                    fileLoc = this.Settings.currentEditingPlaylistFile,
+                    image = Base64Sprites.PlaylistIconB64,
+                    songs = new List<PlaylistSong>(),
                 };
             }
 
             CurrentEditingPlaylistLevelIds = new HashSet<string>();
-            foreach (PlaylistSong ps in CurrentEditingPlaylist.Songs)
+            foreach (PlaylistSong ps in CurrentEditingPlaylist.songs)
             {
-                CurrentEditingPlaylistLevelIds.Add(ps.LevelId);
+                CurrentEditingPlaylistLevelIds.Add(ps.levelId);
             }            
 
             // Actually sort and filter
@@ -621,16 +621,16 @@ namespace SongBrowserPlugin
                 return;
             }
 
-            this.CurrentEditingPlaylist.Songs.Add(new PlaylistSong()
+            this.CurrentEditingPlaylist.songs.Add(new PlaylistSong()
             {
-                SongName = songInfo.songName,
-                LevelId = songInfo.levelID,
-                Key = _levelIdToSongVersion.ContainsKey(songInfo.levelID) ? _levelIdToSongVersion[songInfo.levelID] : songInfo.levelID,                
+                songName = songInfo.songName,
+                levelId = songInfo.levelID,
+                key = _levelIdToSongVersion.ContainsKey(songInfo.levelID) ? _levelIdToSongVersion[songInfo.levelID] : songInfo.levelID,                
             });
 
             this.CurrentEditingPlaylistLevelIds.Add(songInfo.levelID);
 
-            PlaylistWriter.WritePlaylist(this.CurrentEditingPlaylist, this.CurrentEditingPlaylist.Path);
+            PlaylistWriter.WritePlaylist(this.CurrentEditingPlaylist, this.CurrentEditingPlaylist.fileLoc);
         }
 
         /// <summary>
@@ -644,10 +644,10 @@ namespace SongBrowserPlugin
                 return;
             }
 
-            this.CurrentEditingPlaylist.Songs.RemoveAll(x => x.LevelId == songInfo.levelID);
+            this.CurrentEditingPlaylist.songs.RemoveAll(x => x.levelId == songInfo.levelID);
             this.CurrentEditingPlaylistLevelIds.Remove(songInfo.levelID);
 
-            PlaylistWriter.WritePlaylist(this.CurrentEditingPlaylist, this.CurrentEditingPlaylist.Path);
+            PlaylistWriter.WritePlaylist(this.CurrentEditingPlaylist, this.CurrentEditingPlaylist.fileLoc);
         }
         
         /// <summary>
@@ -806,9 +806,10 @@ namespace SongBrowserPlugin
                 return;
             }
 
-            Logger.Debug("Filtering songs for playlist: {0}", this.CurrentPlaylist.Title);            
-            LevelCollectionSO levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionSO>().FirstOrDefault();
-            var levels = levelCollections.GetLevelsWithBeatmapCharacteristic(CurrentBeatmapCharacteristicSO);
+            Logger.Debug("Filtering songs for playlist: {0}", this.CurrentPlaylist.playlistTitle);            
+            BeatmapLevelCollectionSO levelCollections = Resources.FindObjectsOfTypeAll<BeatmapLevelCollectionSO>().FirstOrDefault();
+            var levels = levelCollections.beatmapLevels;
+            //var levels = levelCollections.GetLevelsWithBeatmapCharacteristic(CurrentBeatmapCharacteristicSO);
 
             //Dictionary<String, BeatmapLevelSO> levelDict = levels.Select((val, index) => new { LevelId = val.levelID, Level = val }).ToDictionary(i => i.LevelId, i => i.Level);
             Dictionary<String, BeatmapLevelSO> levelDict = new Dictionary<string, BeatmapLevelSO>();
@@ -821,18 +822,18 @@ namespace SongBrowserPlugin
             }
 
             List<BeatmapLevelSO> songList = new List<BeatmapLevelSO>();
-            foreach (PlaylistSong ps in this.CurrentPlaylist.Songs)
+            foreach (PlaylistSong ps in this.CurrentPlaylist.songs)
             {
-                if (!String.IsNullOrEmpty(ps.LevelId))
+                if (!String.IsNullOrEmpty(ps.levelId))
                 {
-                    if (levelDict.ContainsKey(ps.LevelId))
+                    if (levelDict.ContainsKey(ps.levelId))
                     {
-                        songList.Add(levelDict[ps.LevelId]);
+                        songList.Add(levelDict[ps.levelId]);
                     }
                 }
-                else if (!ps.Key.StartsWith("Level_") && _keyToSong.ContainsKey(ps.Key))
+                else if (!ps.key.StartsWith("Level_") && _keyToSong.ContainsKey(ps.key))
                 {
-                    songList.Add(_keyToSong[ps.Key]);
+                    songList.Add(_keyToSong[ps.key]);
                 }
             }
 

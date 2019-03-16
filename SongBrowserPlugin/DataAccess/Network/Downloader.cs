@@ -1,4 +1,5 @@
 ﻿using SimpleJSON;
+using SongBrowserPlugin.DataAccess;
 using SongBrowserPlugin.DataAccess.BeatSaverApi;
 using SongLoaderPlugin;
 using SongLoaderPlugin.OverrideClasses;
@@ -18,19 +19,17 @@ using Logger = SongBrowserPlugin.Logging.Logger;
 
 namespace SongBrowserPlugin
 {
-    class Downloader : MonoBehaviour
+    public class SongDownloader : MonoBehaviour
     {
         public event Action<Song> songDownloaded;
 
-        private static Downloader _instance = null;
-        public static Downloader Instance
+        private static SongDownloader _instance = null;
+        public static SongDownloader Instance
         {
             get
             {
                 if (!_instance)
-                {
-                    _instance = new GameObject("SongDownloader").AddComponent<Downloader>();
-                }
+                    _instance = new GameObject("SongDownloader").AddComponent<SongDownloader>();
                 return _instance;
             }
             private set
@@ -77,20 +76,20 @@ namespace SongBrowserPlugin
             }
             catch (Exception e)
             {
-                Logger.Exception("DownloadSongCoroutine Exception", e);
+                Logger.Error(e);
                 songInfo.songQueueState = SongQueueState.Error;
                 songInfo.downloadingProgress = 1f;
 
                 yield break;
             }
 
-            while ((!asyncRequest.isDone || songInfo.downloadingProgress != 1f) && songInfo.songQueueState != SongQueueState.Error)
+            while ((!asyncRequest.isDone || songInfo.downloadingProgress < 1f) && songInfo.songQueueState != SongQueueState.Error)
             {
                 yield return null;
 
                 time += Time.deltaTime;
 
-                if ((time >= 5f && asyncRequest.progress == 0f) || songInfo.songQueueState == SongQueueState.Error)
+                if (time >= 5f && asyncRequest.progress <= float.Epsilon)
                 {
                     www.Abort();
                     timeout = true;
@@ -100,6 +99,8 @@ namespace SongBrowserPlugin
                 songInfo.downloadingProgress = asyncRequest.progress;
             }
 
+            if (songInfo.songQueueState == SongQueueState.Error && (!asyncRequest.isDone || songInfo.downloadingProgress < 1f))
+                www.Abort();
 
             if (www.isNetworkError || www.isHttpError || timeout || songInfo.songQueueState == SongQueueState.Error)
             {
@@ -108,9 +109,8 @@ namespace SongBrowserPlugin
             }
             else
             {
-                Logger.Info("Received response from BeatSaver.com...");
+                Logger.Log("Received response from BeatSaver.com...");
 
-                //string zipPath = "";
                 string docPath = "";
                 string customSongsPath = "";
 
@@ -129,18 +129,13 @@ namespace SongBrowserPlugin
                         Directory.CreateDirectory(customSongsPath);
                     }
                     zipStream = new MemoryStream(data);
-                    Logger.Info("Downloaded zip!");
+                    Logger.Log("Downloaded zip!");
                 }
                 catch (Exception e)
                 {
-                    Logger.Exception("DownloadSongCoroutine exception:", e);
+                    Logger.Exception(e);
                     songInfo.songQueueState = SongQueueState.Error;
                     yield break;
-                }
-
-                while (_extractingZip)
-                {
-                    yield return new WaitForSecondsRealtime(0.25f);
                 }
 
                 yield return new WaitWhile(() => _extractingZip); //because extracting several songs at once sometimes hangs the game
@@ -155,20 +150,20 @@ namespace SongBrowserPlugin
         {
             try
             {
-                Logger.Info("Extracting...");
+                Logger.Log("Extracting...");
                 _extractingZip = true;
                 ZipArchive archive = new ZipArchive(zipStream, ZipArchiveMode.Read);
                 await Task.Run(() => archive.ExtractToDirectory(customSongsPath)).ConfigureAwait(false);
                 archive.Dispose();
-                zipStream.Close();
             }
             catch (Exception e)
             {
-                Logger.Exception($"Unable to extract ZIP! Exception:", e);
+                Logger.Exception($"Unable to extract ZIP! Exception: {e}");
                 songInfo.songQueueState = SongQueueState.Error;
                 _extractingZip = false;
                 return;
             }
+            zipStream.Close();
 
             songInfo.path = Directory.GetDirectories(customSongsPath).FirstOrDefault();
 
@@ -180,7 +175,7 @@ namespace SongBrowserPlugin
             _extractingZip = false;
             songInfo.songQueueState = SongQueueState.Downloaded;
             _alreadyDownloadedSongs.Add(songInfo);
-            Logger.Info($"Extracted {songInfo.songName} {songInfo.songSubName}!");
+            Logger.Log($"Extracted {songInfo.songName} {songInfo.songSubName}!");
         }
 
         public bool DeleteSong(Song song)
@@ -210,8 +205,15 @@ namespace SongBrowserPlugin
 
             if (zippedSong)
             {
-                Logger.Info("Deleting \"" + path.Substring(path.LastIndexOf('/')) + "\"...");
-                Directory.Delete(path, true);
+                Logger.Log("Deleting \"" + path.Substring(path.LastIndexOf('/')) + "\"...");
+                if (PluginConfig.deleteToRecycleBin)
+                {
+                    FileOperationAPIWrapper.MoveToRecycleBin(path);
+                }
+                else
+                {
+                    Directory.Delete(path, true);
+                }
 
                 string songHash = Directory.GetParent(path).Name;
 
@@ -219,7 +221,7 @@ namespace SongBrowserPlugin
                 {
                     if (Directory.GetFileSystemEntries(path.Substring(0, path.LastIndexOf('/'))).Length == 0)
                     {
-                        Logger.Info("Deleting empty folder \"" + path.Substring(0, path.LastIndexOf('/')) + "\"...");
+                        Logger.Log("Deleting empty folder \"" + path.Substring(0, path.LastIndexOf('/')) + "\"...");
                         Directory.Delete(path.Substring(0, path.LastIndexOf('/')), false);
                     }
                 }
@@ -250,14 +252,22 @@ namespace SongBrowserPlugin
             }
             else
             {
-                Logger.Info("Deleting \"" + path.Substring(path.LastIndexOf('/')) + "\"...");
-                Directory.Delete(path, true);
+                Logger.Log("Deleting \"" + path.Substring(path.LastIndexOf('/')) + "\"...");
+
+                if (PluginConfig.deleteToRecycleBin)
+                {
+                    FileOperationAPIWrapper.MoveToRecycleBin(path);
+                }
+                else
+                {
+                    Directory.Delete(path, true);
+                }
 
                 try
                 {
                     if (Directory.GetFileSystemEntries(path.Substring(0, path.LastIndexOf('/'))).Length == 0)
                     {
-                        Logger.Info("Deleting empty folder \"" + path.Substring(0, path.LastIndexOf('/')) + "\"...");
+                        Logger.Log("Deleting empty folder \"" + path.Substring(0, path.LastIndexOf('/')) + "\"...");
                         Directory.Delete(path.Substring(0, path.LastIndexOf('/')), false);
                     }
                 }
@@ -268,11 +278,8 @@ namespace SongBrowserPlugin
             }
 
             if (level != null)
-            {
                 SongLoader.Instance.RemoveSongWithLevelID(level.levelID);
-            }
-
-            Logger.Info($"{_alreadyDownloadedSongs.RemoveAll(x => x.Compare(song))} song removed");
+            Logger.Log($"{_alreadyDownloadedSongs.RemoveAll(x => x.Compare(song))} song removed");
             return true;
         }
 
@@ -294,7 +301,7 @@ namespace SongBrowserPlugin
 
         public static BeatmapLevelSO GetLevel(string levelId)
         {
-            return SongLoader.CustomLevelCollectionSO.levels.FirstOrDefault(x => x.levelID == levelId);
+            return SongLoader.CustomLevelCollectionSO.beatmapLevels.FirstOrDefault(x => x.levelID == levelId) as BeatmapLevelSO;
         }
 
         public static bool CreateMD5FromFile(string path, out string hash)
@@ -326,7 +333,7 @@ namespace SongBrowserPlugin
 
         public IEnumerator RequestSongByLevelIDCoroutine(string levelId, Action<Song> callback)
         {
-            UnityWebRequest wwwId = UnityWebRequest.Get($"{PluginConfig.BeatsaverURL}/api/songs/search/hash/" + levelId);
+            UnityWebRequest wwwId = UnityWebRequest.Get($"{PluginConfig.beatsaverURL}/api/songs/search/hash/" + levelId);
             wwwId.timeout = 10;
 
             yield return wwwId.SendWebRequest();
@@ -339,7 +346,7 @@ namespace SongBrowserPlugin
             else
             {
 #if DEBUG
-                Logger.Info("Received response from BeatSaver...");
+                Logger.Log("Received response from BeatSaver...");
 #endif
                 JSONNode node = JSON.Parse(wwwId.downloadHandler.text);
 
@@ -362,7 +369,7 @@ namespace SongBrowserPlugin
 
         public IEnumerator RequestSongByKeyCoroutine(string key, Action<Song> callback)
         {
-            UnityWebRequest wwwId = UnityWebRequest.Get($"{PluginConfig.BeatsaverURL}/api/songs/detail/" + key);
+            UnityWebRequest wwwId = UnityWebRequest.Get($"{PluginConfig.beatsaverURL}/api/songs/detail/" + key);
             wwwId.timeout = 10;
 
             yield return wwwId.SendWebRequest();
@@ -375,7 +382,7 @@ namespace SongBrowserPlugin
             else
             {
 #if DEBUG
-                Logger.Info("Received response from BeatSaver...");
+                Logger.Log("Received response from BeatSaver...");
 #endif
                 JSONNode node = JSON.Parse(wwwId.downloadHandler.text);
 

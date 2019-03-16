@@ -121,6 +121,7 @@
   <ItemGroup>
     <Compile Include="DataAccess\BeatSaverApi\BeatSaverApiResults.cs" />
     <Compile Include="DataAccess\CustomHelpers.cs" />
+    <Compile Include="DataAccess\FileOperationApiWrapper.cs" />
     <Compile Include="DataAccess\FileSystem\Directory.cs" />
     <Compile Include="DataAccess\FileSystem\Folder.cs" />
     <Compile Include="DataAccess\LoadScripts.cs" />

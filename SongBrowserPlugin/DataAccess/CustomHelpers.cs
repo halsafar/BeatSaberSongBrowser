@@ -19,7 +19,7 @@ namespace SongBrowserPlugin.DataAccess
             tableView.GetPrivateField<ScrollRect>("_scrollRect").verticalNormalizedPosition = scrollPosition;
             tableView.SetPrivateField("_targetVerticalNormalizedPosition", scrollPosition);
             if (rows.Count > 0)
-                tableView.SelectRow(rows.First(), callbackTable);
+                tableView.SelectCellWithIdx(rows.First(), callbackTable);
         }
 
         static char[] hexChars = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
