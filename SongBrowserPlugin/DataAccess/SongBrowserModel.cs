@@ -903,14 +903,15 @@ namespace SongBrowserPlugin
                     else
                     {
                         int difficultyValue = 0;
-                        foreach (BeatmapDifficulty difficulty in difficultyIterator)
-                        {
-                            IDifficultyBeatmap beatmap = level.GetDifficultyBeatmap(difficulty);
-                            if (beatmap != null)
-                            {
-                                difficultyValue += _difficultyWeights[difficulty];
-                                break;
-                            }
+
+                        // Get the beatmap difficulties TODO - match characteristics
+                        var difficulties = level.difficultyBeatmapSets
+                            .Where(x => x.beatmapCharacteristic)
+                            .SelectMany(x => x.difficultyBeatmaps);
+
+                        foreach (IDifficultyBeatmap difficultyBeatmap in difficulties)
+                        {                            
+                            difficultyValue += _difficultyWeights[difficultyBeatmap.difficulty];
                         }
                         levelIdToDifficultyValue.Add(level.levelID, difficultyValue);
                     }
