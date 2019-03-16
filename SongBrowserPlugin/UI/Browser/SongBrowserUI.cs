@@ -16,6 +16,7 @@ using TMPro;
 using Logger = SongBrowserPlugin.Logging.Logger;
 using SongBrowserPlugin.DataAccess.BeatSaverApi;
 using CustomUI.BeatSaber;
+using SongBrowserPlugin.Internals;
 
 namespace SongBrowserPlugin.UI
 {
@@ -635,71 +636,42 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         private void HandleDeleteSelectedLevel()
         {
-            IBeatmapLevel level = this._levelListViewController.selectedLevel;
-            if (level == null)
-            {
-                Logger.Info("No level selected, cannot delete nothing...");
-                return;
-            }
-
-            if (!_model.LevelIdToCustomSongInfos.ContainsKey(level.levelID))
-            {
-                Logger.Debug("Cannot delete non-custom levels.");
-                return;
-            }
-
-            if (level.levelID.StartsWith("Folder"))
-            {
-                Logger.Debug("Cannot delete folders.");
-                return;
-            }
-
-            SongLoaderPlugin.OverrideClasses.CustomLevel customLevel = _model.LevelIdToCustomSongInfos[level.levelID];
-
-            this._deleteDialog.Init(
-                "Delete level warning!", 
-                String.Format("<color=#00AAFF>Permanently delete level: {0}</color>\n  Do you want to continue?", customLevel.songName), 
-                "YES", 
-                "NO",
-                this.HandleDeleteDialogPromptViewControllerDidFinish);
-
-            _levelSelectionFlowCoordinator.InvokePrivateMethod("PresentViewController", new object[] { this._deleteDialog, null, false });            
-        }
-
-        /// <summary>
-        /// Handle delete dialog resolution.
-        /// </summary>
-        /// <param name="viewController"></param>
-        /// <param name="ok"></param>
-        public void HandleDeleteDialogPromptViewControllerDidFinish(int buttonNum)
-        {
-            _levelSelectionFlowCoordinator.InvokePrivateMethod("DismissViewController", new object[] { _deleteDialog, null, false });
-            if (buttonNum == 0)            
-            {
-                SongDownloader.Instance.DeleteSong(new Song(SongLoader.CustomLevels.First(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID)));
-
-                List<IBeatmapLevel> levels = _levelListViewController.GetPrivateField<IBeatmapLevel[]>("_levels").ToList();
-                int selectedIndex = levels.IndexOf(_levelDetailViewController.selectedDifficultyBeatmap.level);
-
-                if (selectedIndex > -1)
+            IBeatmapLevel level = _levelDetailViewController.selectedDifficultyBeatmap.level;
+            _deleteDialog.Init("Delete song", $"Do you really want to delete \"{ level.songName} {level.songSubName}\"?", "Delete", "Cancel",
+                (selectedButton) =>
                 {
-                    levels.Remove(_levelDetailViewController.selectedDifficultyBeatmap.level);
-
-                    if (selectedIndex > 0)
+                    _levelSelectionFlowCoordinator.InvokePrivateMethod("DismissViewController", new object[] { _deleteDialog, null, false });
+                    if (selectedButton == 0)
                     {
-                        selectedIndex--;
+                        try
+                        {
+                            var levelsTableView = _levelListViewController.GetPrivateField<LevelPackLevelsTableView>("_levelPackLevelsTableView");
+
+                            List<IPreviewBeatmapLevel> levels = levelsTableView.GetPrivateField<IBeatmapLevelPack>("_pack").beatmapLevelCollection.beatmapLevels.ToList();
+                            int selectedIndex = levels.FindIndex(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID);
+
+                            SongDownloader.Instance.DeleteSong(new Song(SongLoader.CustomLevels.First(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID)));
+
+                            if (selectedIndex > -1)
+                            {
+                                int removedLevels = levels.RemoveAll(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID);
+                                Logger.Log("Removed " + removedLevels + " level(s) from song list!");
+
+                                _levelListViewController.SetData(CustomHelpers.GetLevelPackWithLevels(levels.Cast<BeatmapLevelSO>().ToArray(), _model.CurrentPlaylist?.playlistTitle ?? "Custom Songs", _model.CurrentPlaylist?.icon));
+                                TableView listTableView = levelsTableView.GetPrivateField<TableView>("_tableView");
+                                listTableView.ScrollToCellWithIdx(selectedIndex, TableView.ScrollPositionType.Beginning, false);
+                                levelsTableView.SetPrivateField("_selectedRow", selectedIndex);
+                                listTableView.SelectCellWithIdx(selectedIndex, true);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Error("Unable to delete song! Exception: " + e);
+                        }
                     }
-
-                    _levelListViewController.SetLevels(levels.ToArray());
-                    TableView listTableView = _levelListViewController.GetPrivateField<LevelListTableView>("_levelListTableView").GetPrivateField<TableView>("_tableView");
-                    listTableView.ScrollToRow(selectedIndex, false);
-                    listTableView.SelectRow(selectedIndex, true);
-                }               
-
-                this.UpdateSongList();
-                this.RefreshSongList();
-            }
-        }
+                });
+            _levelSelectionFlowCoordinator.InvokePrivateMethod("PresentViewController", new object[] { _deleteDialog, null, false });
+        }        
 
         /// <summary>
         /// Create MD5 of a file.
@@ -1179,8 +1151,8 @@ namespace SongBrowserPlugin.UI
 
             int row = table.RowNumberForLevelID(levelID);
             TableView tableView = table.GetComponentInChildren<TableView>();
-            tableView.SelectRow(row, true);
-            tableView.ScrollToRow(row, true);
+            tableView.SelectCellWithIdx(row, true);
+            //tableView.ScrollToRow(row, true);
             _lastRow = row;
         }
 
@@ -1248,7 +1220,7 @@ namespace SongBrowserPlugin.UI
                     // back
                     if (Input.GetKeyDown(KeyCode.Escape))
                     {
-                        this._levelSelectionNavigationController.DismissButtonWasPressed();
+                        this._levelSelectionNavigationController.GoBackButtonPressed();
                     }
                     
                     // select current sort mode again (toggle inverting)

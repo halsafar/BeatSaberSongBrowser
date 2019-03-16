@@ -120,7 +120,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataAccess\BeatSaverApi\BeatSaverApiResults.cs" />
-    <Compile Include="DataAccess\CustomHelpers.cs" />
     <Compile Include="DataAccess\FileOperationApiWrapper.cs" />
     <Compile Include="DataAccess\FileSystem\Directory.cs" />
     <Compile Include="DataAccess\FileSystem\Folder.cs" />
@@ -133,6 +132,7 @@
     <Compile Include="DataAccess\ScoreSaberDatabase.cs" />
     <Compile Include="DataAccess\Network\Downloader.cs" />
     <Compile Include="DataAccess\ScrappedData.cs" />
+    <Compile Include="Internals\CustomHelpers.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="PluginConfig.cs" />
     <Compile Include="UI\SceneEvents.cs" />
@@ -157,9 +157,7 @@
     <Compile Include="UI\Browser\SongSortButton.cs" />
     <Compile Include="UI\UIBuilder.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Internals\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
