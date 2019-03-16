@@ -246,8 +246,9 @@ namespace SongBrowserPlugin
             // Get the level collection from song loader
             BeatmapLevelCollectionSO levelCollections = Resources.FindObjectsOfTypeAll<BeatmapLevelCollectionSO>().FirstOrDefault();
 
-            // Stash everything we need
-            _originalSongs = levelCollections.GetLevelsWithBeatmapCharacteristic(gameplayMode).ToList();
+            // Stash everything we need - TODO verify this works
+            _originalSongs = levelCollections.GetPrivateField<BeatmapLevelSO[]>("_beatmapLevels").ToList();
+            //_originalSongs = levelCollections.GetLevelsWithBeatmapCharacteristic(gameplayMode).ToList();
 
             Logger.Debug("Got {0} songs from level collections...", _originalSongs.Count);
             //_originalSongs.ForEach(x => Logger.Debug("{0} by {1} = {2}", x.name, x.levelAuthorName, x.levelID));
