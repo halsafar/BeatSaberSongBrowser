@@ -53,6 +53,9 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="ProBuilderCore">
+      <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\ProBuilderCore.dll</HintPath>
+    </Reference>
     <Reference Include="SongLoaderPlugin, Version=5.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Plugins\SongLoaderPlugin.dll</HintPath>
@@ -66,6 +69,9 @@
     <Reference Include="TextMeshPro-1.0.55.2017.1.0b12, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\TextMeshPro-1.0.55.2017.1.0b12.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.dll</HintPath>

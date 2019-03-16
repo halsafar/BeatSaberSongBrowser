@@ -292,7 +292,7 @@ namespace SongBrowserPlugin
             return string.Join("∎", values) + "∎";
         }
 
-        public static LevelSO GetLevel(string levelId)
+        public static BeatmapLevelSO GetLevel(string levelId)
         {
             return SongLoader.CustomLevelCollectionSO.levels.FirstOrDefault(x => x.levelID == levelId);
         }

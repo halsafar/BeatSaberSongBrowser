@@ -656,9 +656,12 @@ namespace SongBrowserPlugin.UI
 
             SongLoaderPlugin.OverrideClasses.CustomLevel customLevel = _model.LevelIdToCustomSongInfos[level.levelID];
 
-            this._deleteDialog.Init("Delete level warning!", String.Format("<color=#00AAFF>Permanently delete level: {0}</color>\n  Do you want to continue?", customLevel.songName), "YES", "NO");
-            this._deleteDialog.didFinishEvent -= this.HandleDeleteDialogPromptViewControllerDidFinish;
-            this._deleteDialog.didFinishEvent += this.HandleDeleteDialogPromptViewControllerDidFinish;
+            this._deleteDialog.Init(
+                "Delete level warning!", 
+                String.Format("<color=#00AAFF>Permanently delete level: {0}</color>\n  Do you want to continue?", customLevel.songName), 
+                "YES", 
+                "NO",
+                this.HandleDeleteDialogPromptViewControllerDidFinish);
 
             _levelSelectionFlowCoordinator.InvokePrivateMethod("PresentViewController", new object[] { this._deleteDialog, null, false });            
         }
@@ -668,10 +671,10 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         /// <param name="viewController"></param>
         /// <param name="ok"></param>
-        public void HandleDeleteDialogPromptViewControllerDidFinish(SimpleDialogPromptViewController viewController, bool ok)
+        public void HandleDeleteDialogPromptViewControllerDidFinish(int buttonNum)
         {
             _levelSelectionFlowCoordinator.InvokePrivateMethod("DismissViewController", new object[] { _deleteDialog, null, false });
-            if (ok)            
+            if (buttonNum == 0)            
             {
                 Downloader.Instance.DeleteSong(new Song(SongLoader.CustomLevels.First(x => x.levelID == _levelDetailViewController.difficultyBeatmap.level.levelID)));
 

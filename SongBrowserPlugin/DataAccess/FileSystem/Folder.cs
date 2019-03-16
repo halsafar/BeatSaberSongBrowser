@@ -36,7 +36,7 @@ namespace SongBrowserPlugin.DataAccess.FileSystem
         }
     }
 
-    class FolderLevel : LevelSO
+    class FolderLevel : BeatmapLevelSO
     {
         public void Init(String relativePath, String name, Sprite coverImage)
         {
