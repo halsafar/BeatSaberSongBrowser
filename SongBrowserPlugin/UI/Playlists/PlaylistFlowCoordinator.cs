@@ -2,6 +2,7 @@
 using SimpleJSON;
 using SongBrowserPlugin.DataAccess;
 using SongBrowserPlugin.DataAccess.BeatSaverApi;
+using SongBrowserPlugin.Internals;
 using SongBrowserPlugin.UI.DownloadQueue;
 using SongLoaderPlugin;
 using System;

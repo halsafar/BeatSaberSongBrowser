@@ -832,7 +832,6 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         public void RefreshScoreSaberData(IBeatmapLevel level)
         {            
-            // TODO - fix this obvious mess...
             // use controllers level...
             if (level == null)
             {
@@ -851,31 +850,6 @@ namespace SongBrowserPlugin.UI
             // display pp potentially
             if (this._model.LevelIdToScoreSaberData != null && this._levelDifficultyViewController.selectedDifficultyBeatmap != null)
             {
-                /*if (this._ppText == null)
-                {
-                    // Create the PP and Star rating labels
-                    //RectTransform bmpTextRect = Resources.FindObjectsOfTypeAll<RectTransform>().First(x => x.name == "BPMText");
-                    var text = BeatSaberUI.CreateText(this._levelDetailViewController.rectTransform, "PP", new Vector2(-15, -32), new Vector2(10f, 6f));
-                    text.fontSize = 2.5f;
-                    text.alignment = TextAlignmentOptions.Left;
-
-                    text = BeatSaberUI.CreateText(this._levelDetailViewController.rectTransform, "STAR", new Vector2(-15, -34.5f), new Vector2(10f, 6f));
-                    text.fontSize = 2.5f;
-                    text.alignment = TextAlignmentOptions.Left;
-
-                    _ppText = BeatSaberUI.CreateText(this._levelDetailViewController.rectTransform, "?", new Vector2(-20, -32), new Vector2(20f, 6f));
-                    _ppText.fontSize = 2.5f;
-                    _ppText.alignment = TextAlignmentOptions.Right;
-
-                    _starText = BeatSaberUI.CreateText(this._levelDetailViewController.rectTransform, "", new Vector2(-20, -34.5f), new Vector2(20f, 6f));
-                    _starText.fontSize = 2.5f;
-                    _starText.alignment = TextAlignmentOptions.Right;
-
-                    _nText = BeatSaberUI.CreateText(this._levelDetailViewController.rectTransform, "", new Vector2(-20, -37.0f), new Vector2(20f, 6f));
-                    _nText.fontSize = 2.5f;
-                    _nText.alignment = TextAlignmentOptions.Right;
-                }*/
-
                 BeatmapDifficulty difficulty = this._levelDifficultyViewController.selectedDifficultyBeatmap.difficulty;
                 string njsText;
                 string difficultyString = difficulty.ToString();

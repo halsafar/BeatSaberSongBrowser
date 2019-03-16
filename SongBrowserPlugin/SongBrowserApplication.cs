@@ -119,9 +119,7 @@ namespace SongBrowserPlugin
             Logger.Trace("OnScoreSaberDataDownloaded");
             try
             {
-                // TODO - this should be in the SongBrowserUI which is acting like the view controller for the SongBrowser
                 _songBrowserUI.Model.UpdateScoreSaberDataMapping();
-                //_songBrowserUI.RefreshScoreSaberData(null);
                 if (_songBrowserUI.Model.Settings.sortMode == SongSortMode.PP)
                 {
                     _songBrowserUI.Model.ProcessSongList();
