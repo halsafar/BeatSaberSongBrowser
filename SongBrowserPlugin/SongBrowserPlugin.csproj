@@ -129,7 +129,6 @@
     <Compile Include="DataAccess\Network\CacheableDownloadHandlerScoreSaberData.cs" />
     <Compile Include="DataAccess\Playlist.cs" />
     <Compile Include="DataAccess\PlaylistReader.cs" />
-    <Compile Include="DataAccess\PlaylistSong.cs" />
     <Compile Include="DataAccess\PlaylistWriter.cs" />
     <Compile Include="DataAccess\ScoreSaberDatabase.cs" />
     <Compile Include="DataAccess\Network\Downloader.cs" />
