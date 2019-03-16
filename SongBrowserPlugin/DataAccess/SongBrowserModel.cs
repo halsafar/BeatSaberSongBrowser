@@ -388,7 +388,7 @@ namespace SongBrowserPlugin
                         int playCountSum = 0;
                         foreach (BeatmapDifficulty difficulty in difficultyIterator)
                         {
-                            PlayerLevelStatsData stats = playerData.currentLocalPlayer.GetPlayerLevelStatsData(level.levelID, difficulty);
+                            PlayerLevelStatsData stats = playerData.currentLocalPlayer.GetPlayerLevelStatsData(level.levelID, difficulty, this.CurrentBeatmapCharacteristicSO);
                             playCountSum += stats.playCount;
                         }
                         _levelIdToPlayCount.Add(level.levelID, playCountSum);
