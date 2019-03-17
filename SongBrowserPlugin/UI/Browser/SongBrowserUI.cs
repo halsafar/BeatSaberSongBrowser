@@ -198,44 +198,10 @@ namespace SongBrowserPlugin.UI
                 _levelDifficultyViewController.didSelectDifficultyEvent += OnDidSelectDifficultyEvent;
                 _beatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent += OnDidSelectBeatmapCharacteristic;
 
-                // modify details view
-                var statsPanel = this._levelDetailViewController.GetComponentsInChildren<CanvasRenderer>(true).First(x => x.name == "LevelParamsPanel");
-                var statTransforms = statsPanel.GetComponentsInChildren<RectTransform>();
-                var valueTexts = statsPanel.GetComponentsInChildren<TextMeshProUGUI>().Where(x => x.name == "ValueText").ToList();
-                
-                RectTransform panelRect = (statsPanel.transform as RectTransform);
-                panelRect.sizeDelta = new Vector2(panelRect.sizeDelta.x * 1.2f, panelRect.sizeDelta.y * 1.2f);
-                
-                for (int i = 0; i < statTransforms.Length; i++)
-                {                    
-                    var r = statTransforms[i];
-                    if (r.name == "Separator")
-                    {
-                        continue;
-                    }
-                    r.sizeDelta = new Vector2(r.sizeDelta.x * 0.75f, r.sizeDelta.y * 0.75f);
-                }
-
-                for (int i = 0; i < valueTexts.Count; i++)
-                {
-                    var text = valueTexts[i];
-                    text.fontSize = 3.25f;
-                }
-
-                _ppStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
-                UIBuilder.SetStatButtonIcon(_ppStatButton, Base64Sprites.GraphIcon);
-
-                _starStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
-                UIBuilder.SetStatButtonIcon(_starStatButton, Base64Sprites.StarIcon);
-
-                _njsStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
-                UIBuilder.SetStatButtonIcon(_njsStatButton, Base64Sprites.SpeedIcon);
-
-                // shrink title
-                var titleText = this._levelDetailViewController.GetComponentsInChildren<TextMeshProUGUI>(true).First(x => x.name == "SongNameText");
-                titleText.fontSize = 5.0f;
+                this.ResizeStatsPanel();
 
                 _rebuildUI = false;
+                Logger.Debug("Done Creating UI...");
             }
             catch (Exception e)
             {
@@ -265,7 +231,8 @@ namespace SongBrowserPlugin.UI
                 Sprite borderSprite = SongBrowserApplication.Instance.CachedIcons["RoundRectBigStroke"];
 
                 // Resize some of the UI
-                _tableViewRectTransform = _levelListViewController.GetComponentsInChildren<RectTransform>().First(x => x.name == "TableViewContainer");                
+                //_tableViewRectTransform = _levelListViewController.GetComponentsInChildren<RectTransform>().First(x => x.name == "LevelPackLevelsTableView");                
+                _tableViewRectTransform = _levelListTableView.transform as RectTransform;
                 _tableViewRectTransform.sizeDelta = new Vector2(0f, -20f);
                 _tableViewRectTransform.anchoredPosition = new Vector2(0f, -2.5f);
                 
@@ -341,16 +308,19 @@ namespace SongBrowserPlugin.UI
                 }
 
                 // Get element info to position properly
-                RectTransform detailContainerRect = _levelDetailViewController.GetComponentsInChildren<RectTransform>().First(x => x.name == "Container");
-                RectTransform detailButtonRect = _levelDetailViewController.GetComponentsInChildren<RectTransform>().First(x => x.name == "Buttons");
+                Logger.Debug("Modifying and Cloning PlayButtons...");
+                StandardLevelDetailView standardLevelDetailView = _levelDetailViewController.GetPrivateField<StandardLevelDetailView>("_standardLevelDetailView");
+                RectTransform detailButtonContainerRect = standardLevelDetailView.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayContainer");
+                RectTransform detailButtonRect = detailButtonContainerRect.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayButtons");
                 detailButtonRect.anchoredPosition = new Vector2(detailButtonRect.anchoredPosition.x, detailButtonRect.anchoredPosition.y + 5.0f);
 
                 // clone existing button group
-                RectTransform newButtonRect = UnityEngine.Object.Instantiate(detailButtonRect, detailContainerRect, false);
-                newButtonRect.name = "Buttons2";
+                RectTransform newButtonRect = UnityEngine.Object.Instantiate(detailButtonRect, detailButtonContainerRect, false);
+                newButtonRect.name = "PlayButtons2";
                 newButtonRect.anchoredPosition = new Vector2(newButtonRect.anchoredPosition.x, newButtonRect.anchoredPosition.y - 10.0f);
 
                 // Create add favorite button
+                Logger.Debug("Creating Add to favorites button...");
                 _addFavoriteButton = newButtonRect.GetComponentsInChildren<Button>().First(x => x.name == "PracticeButton");
                 _addFavoriteButton.name = "AddFavoritesButton";
                 _addFavoriteButton.onClick.RemoveAllListeners();
@@ -363,7 +333,8 @@ namespace SongBrowserPlugin.UI
                     ToggleSongInPlaylist();
                 });
 
-                // Create delete button                      
+                // Create delete button          
+                Logger.Debug("Creating delete button...");
                 _deleteButton = newButtonRect.GetComponentsInChildren<Button>().First(x => x.name == "PlayButton");
                 _deleteButton.name = "DeleteButton";
                 _deleteButton.onClick.RemoveAllListeners();
@@ -374,6 +345,7 @@ namespace SongBrowserPlugin.UI
                 });
 
                 // Create fast scroll buttons
+                Logger.Debug("Creating fast scroll button...");
                 _pageUpFastButton = UIBuilder.CreateIconButton(sortButtonTransform, otherButtonTemplate, arrowIcon,
                     new Vector2(32, -12),
                     new Vector2(6.0f, 5.5f),
@@ -426,11 +398,59 @@ namespace SongBrowserPlugin.UI
 
                 RefreshSortButtonUI();
                 RefreshDirectoryButtons();
+
+                Logger.Debug("Done Creating UIElements");
             }
             catch (Exception e)
             {
                 Logger.Exception("Exception CreateUIElements:", e);
             }
+        }
+
+        /// <summary>
+        /// Resize the stats panel to fit more stats.
+        /// </summary>
+        private void ResizeStatsPanel()
+        {
+            // modify details view
+            Logger.Debug("Resizing Stats Panel...");
+
+            StandardLevelDetailView standardLevelDetailView = _levelDetailViewController.GetPrivateField<StandardLevelDetailView>("_standardLevelDetailView");
+            var statsPanel = standardLevelDetailView.GetPrivateField<LevelParamsPanel>("_levelParamsPanel");
+            var statTransforms = statsPanel.GetComponentsInChildren<RectTransform>();
+            var valueTexts = statsPanel.GetComponentsInChildren<TextMeshProUGUI>().Where(x => x.name == "ValueText").ToList();
+            RectTransform panelRect = (statsPanel.transform as RectTransform);
+            panelRect.sizeDelta = new Vector2(panelRect.sizeDelta.x * 1.2f, panelRect.sizeDelta.y * 1.2f);
+
+            for (int i = 0; i < statTransforms.Length; i++)
+            {
+                var r = statTransforms[i];
+                if (r.name == "Separator")
+                {
+                    continue;
+                }
+                r.sizeDelta = new Vector2(r.sizeDelta.x * 0.75f, r.sizeDelta.y * 0.75f);
+            }
+
+            for (int i = 0; i < valueTexts.Count; i++)
+            {
+                var text = valueTexts[i];
+                text.fontSize = 3.25f;
+            }
+
+            _ppStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
+            UIBuilder.SetStatButtonIcon(_ppStatButton, Base64Sprites.GraphIcon);
+
+            _starStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
+            UIBuilder.SetStatButtonIcon(_starStatButton, Base64Sprites.StarIcon);
+
+            _njsStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
+            UIBuilder.SetStatButtonIcon(_njsStatButton, Base64Sprites.SpeedIcon);
+
+            // shrink title
+            var titleText = this._levelDetailViewController.GetComponentsInChildren<TextMeshProUGUI>(true).First(x => x.name == "SongNameText");
+            
+            titleText.fontSize = 5.0f;
         }
 
         /// <summary>

@@ -153,6 +153,12 @@ namespace SongBrowserPlugin
                     //Logger.Debug("Adding Icon: {0}", sprite.name);
                     CachedIcons.Add(sprite.name, sprite);
                 }
+
+                /*foreach (RectTransform rect in Resources.FindObjectsOfTypeAll<RectTransform>())
+                {
+                    Logger.Debug("RectTransform: {0}", rect.name);
+                }*/
+
                 // Append our own event to appropriate events so we can refresh the song list before the user sees it.
                 MainFlowCoordinator mainFlow = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
                 Button soloFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloFreePlayButton");
