@@ -1,4 +1,6 @@
 ﻿using HMUI;
+using SongLoaderPlugin;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,13 +13,13 @@ namespace SongBrowserPlugin.DataAccess
     {
         static public Dictionary<string, Sprite> _cachedSprites = new Dictionary<string, Sprite>();
 
-        static public IEnumerator LoadSprite(string spritePath, TableCell obj)
+        static public IEnumerator LoadSpriteCoroutine(string spritePath, Action<Sprite> finished)
         {
             Texture2D tex;
 
             if (_cachedSprites.ContainsKey(spritePath))
             {
-                obj.GetComponentsInChildren<UnityEngine.UI.Image>(true).First(x => x.name == "CoverImage").sprite = _cachedSprites[spritePath];
+                finished.Invoke(_cachedSprites[spritePath]);
                 yield break;
             }
 
@@ -27,17 +29,18 @@ namespace SongBrowserPlugin.DataAccess
                 tex = www.texture;
                 var newSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), Vector2.one * 0.5f, 100, 1);
                 _cachedSprites.Add(spritePath, newSprite);
-                obj.GetComponentsInChildren<UnityEngine.UI.Image>(true).First(x => x.name == "CoverImage").sprite = newSprite;
+                finished.Invoke(newSprite);
             }
         }
 
-        static public IEnumerator LoadAudio(string audioPath, object obj, string fieldName)
+        static public IEnumerator LoadAudioCoroutine(string audioPath, object obj, string fieldName)
         {
             using (var www = new WWW(audioPath))
             {
                 yield return www;
-                SongLoaderPlugin.ReflectionUtil.SetPrivateField(obj, fieldName, www.GetAudioClip(true, true, AudioType.UNKNOWN));
+                ReflectionUtil.SetPrivateField(obj, fieldName, www.GetAudioClip(true, true, AudioType.UNKNOWN));
             }
         }
+
     }
 }
