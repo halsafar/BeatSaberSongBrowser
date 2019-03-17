@@ -5,6 +5,10 @@ using SongBrowserPlugin.UI;
 using Logger = SongBrowserPlugin.Logging.Logger;
 using SongBrowserPlugin.DataAccess;
 using System.Collections.Generic;
+using SongBrowserPlugin.Internals;
+using System;
+using SongLoaderPlugin;
+using SongLoaderPlugin.OverrideClasses;
 
 namespace SongBrowserPlugin
 {
@@ -27,27 +31,49 @@ namespace SongBrowserPlugin
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
             SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
 
-            Base64Sprites.Init();            
+            PluginConfig.LoadOrCreateConfig();
+
+            Base64Sprites.Init();
+
+            PlaylistsCollection.ReloadPlaylists();
+            SongLoader.SongsLoadedEvent += SongLoader_SongsLoadedEvent;
+
+            BSEvents.OnLoad();
+            BSEvents.menuSceneLoadedFresh += OnMenuSceneLoadedFresh;
+        }
+
+        private void OnMenuSceneLoadedFresh()
+        {
+            try
+            {
+                SongBrowserApplication.OnLoad();
+            }
+            catch (Exception e)
+            {
+                Logger.Exception("Exception on fresh menu scene change: " + e);
+            }
+        }
+
+        private void SongLoader_SongsLoadedEvent(SongLoader sender, List<CustomLevel> levels)
+        {
+            try
+            {
+                PlaylistsCollection.MatchSongsForAllPlaylists(true);
+            }
+            catch (Exception e)
+            {
+                Logger.Exception("Unable to match songs for all playlists! Exception: " + e);
+            }
         }
 
         private void SceneManager_activeSceneChanged(Scene from, Scene to)
         {
             Logger.Info($"Active scene changed from \"{from.name}\" to \"{to.name}\"");
-
-            if (from.name == "EmptyTransition" && to.name.Contains("Menu"))
-            {
-                OnMenuSceneEnabled();
-            }
         }
 
         private void SceneManager_sceneLoaded(Scene to, LoadSceneMode loadMode)
         {
             Logger.Debug($"Loaded scene \"{to.name}\"");
-        }
-
-        private void OnMenuSceneEnabled()
-        {
-            SongBrowserApplication.OnLoad();
         }
 
         public void OnApplicationQuit()
