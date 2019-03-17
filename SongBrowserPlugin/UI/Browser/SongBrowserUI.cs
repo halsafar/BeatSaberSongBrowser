@@ -1115,10 +1115,10 @@ namespace SongBrowserPlugin.UI
                 if (levels.Length > 6 && !String.IsNullOrEmpty(selectedLevelID) && levels.Any(x => x.levelID == selectedLevelID))
                 {
                     SelectAndScrollToLevel(_levelListTableView, selectedLevelID);
-                }*/
+                }
 
                 RefreshSortButtonUI();
-                RefreshQuickScrollButtons();
+                RefreshQuickScrollButtons();*/
             }
             catch (Exception e)
             {
