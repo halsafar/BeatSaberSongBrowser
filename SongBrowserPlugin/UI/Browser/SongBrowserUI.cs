@@ -33,12 +33,12 @@ namespace SongBrowserPlugin.UI
 
         // Beat Saber UI Elements
         private FlowCoordinator _levelSelectionFlowCoordinator;
-        private LevelListViewController _levelListViewController;
+        private LevelPackLevelsViewController _levelListViewController;
         private StandardLevelDetailViewController _levelDetailViewController;
         private BeatmapDifficultyViewController _levelDifficultyViewController;
         private BeatmapCharacteristicSelectionViewController _beatmapCharacteristicSelectionViewController; 
         private DismissableNavigationController _levelSelectionNavigationController;
-        private LevelListTableView _levelListTableView;
+        private LevelPackLevelsTableView _levelListTableView;
         private RectTransform _tableViewRectTransform;
         private Button _tableViewPageUpButton;
         private Button _tableViewPageDownButton;
@@ -133,7 +133,7 @@ namespace SongBrowserPlugin.UI
                 // gather controllers and ui elements.
                 if (_levelListViewController == null)
                 {
-                    _levelListViewController = _levelSelectionFlowCoordinator.GetPrivateField<LevelListViewController>("_levelListViewController");
+                    _levelListViewController = _levelSelectionFlowCoordinator.GetPrivateField<LevelPackLevelsViewController>("_levelListViewController");
                 }
 
                 if (_levelDetailViewController == null)
@@ -158,7 +158,7 @@ namespace SongBrowserPlugin.UI
 
                 if (_levelListTableView == null)
                 {
-                    _levelListTableView = this._levelListViewController.GetComponentInChildren<LevelListTableView>();
+                    _levelListTableView = this._levelListViewController.GetComponentInChildren<LevelPackLevelsTableView>();
                 }
 
                 _playButton = _levelDetailViewController.GetComponentsInChildren<Button>().FirstOrDefault(x => x.name == "PlayButton");
@@ -394,7 +394,7 @@ namespace SongBrowserPlugin.UI
                     _enterFolderButton = UIBuilder.CreateUIButton(otherButtonTransform, _playButton);
                     _enterFolderButton.onClick.AddListener(delegate ()
                     {
-                        _model.PushDirectory(_levelListViewController.selectedLevel);
+                        _model.PushDirectory(_levelDetailViewController.selectedDifficultyBeatmap.level);
                         this.RefreshSongList();
                         this.RefreshDirectoryButtons();
                     });
@@ -538,7 +538,7 @@ namespace SongBrowserPlugin.UI
         /// Adjust UI based on level selected.
         /// Various ways of detecting if a level is not properly selected.  Seems most hit the first one.
         /// </summary>
-        private void OnDidSelectLevelEvent(LevelListViewController view, IBeatmapLevel level)
+        private void OnDidSelectLevelEvent(LevelPackLevelsViewController view, IPreviewBeatmapLevel level)
         {            
             try
             {
@@ -595,13 +595,13 @@ namespace SongBrowserPlugin.UI
         {
             _deleteButton.interactable = (beatmap.level.levelID.Length >= 32);
 
-            this.RefreshScoreSaberData(_levelListViewController.selectedLevel);
+            this.RefreshScoreSaberData(_levelDetailViewController.selectedDifficultyBeatmap.level);
         }
 
         /// <summary>
         /// Turn play button into enter folder button.
         /// </summary>
-        private void HandleDidSelectFolderRow(IBeatmapLevel level)
+        private void HandleDidSelectFolderRow(IPreviewBeatmapLevel level)
         {
             _enterFolderButton.gameObject.SetActive(true);
             _playButton.gameObject.SetActive(false);
@@ -611,7 +611,7 @@ namespace SongBrowserPlugin.UI
         /// Turn enter folder button into play button.
         /// </summary>
         /// <param name="level"></param>
-        private void HandleDidSelectLevelRow(IBeatmapLevel level)
+        private void HandleDidSelectLevelRow(IPreviewBeatmapLevel level)
         {
             // deal with enter folder button
             if (_enterFolderButton != null)
@@ -810,7 +810,7 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         private void ToggleSongInPlaylist()
         {
-            IBeatmapLevel songInfo = this._levelListViewController.selectedLevel;
+            IBeatmapLevel songInfo = _levelDetailViewController.selectedDifficultyBeatmap.level;
             if (_model.CurrentEditingPlaylist != null)
             {
                 if (_model.CurrentEditingPlaylistLevelIds.Contains(songInfo.levelID))
@@ -833,12 +833,12 @@ namespace SongBrowserPlugin.UI
         /// <summary>
         /// Update GUI elements that show score saber data.
         /// </summary>
-        public void RefreshScoreSaberData(IBeatmapLevel level)
+        public void RefreshScoreSaberData(IPreviewBeatmapLevel level)
         {            
             // use controllers level...
             if (level == null)
             {
-                level = _levelListViewController.selectedLevel;
+                level = _levelDetailViewController.selectedDifficultyBeatmap.level;
             }
 
             // abort!
@@ -1049,7 +1049,8 @@ namespace SongBrowserPlugin.UI
             Logger.Info("Refreshing the song list view.");
             try
             {
-                if (_model.SortedSongList == null)
+                // TODO - this is broken in v13 for sure.
+                /*if (_model.SortedSongList == null)
                 {
                     Logger.Debug("Songs are not sorted yet, nothing to refresh.");
                     return;
@@ -1057,11 +1058,9 @@ namespace SongBrowserPlugin.UI
 
                 BeatmapLevelSO[] levels = _model.SortedSongList.ToArray();
 
-                //_levelListViewController.SetLevels(levels);
-
-                LevelListViewController songListViewController = this._levelSelectionFlowCoordinator.GetPrivateField<LevelListViewController>("_levelListViewController");
+                //_levelListViewController.SetLevels(levels);                
                 ReflectionUtil.SetPrivateField(_levelListTableView, "_levels", levels);                
-                ReflectionUtil.SetPrivateField(songListViewController, "_levels", levels);
+                ReflectionUtil.SetPrivateField(_levelListViewController, "_levels", levels);
                 TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelListTableView, "_tableView");
                 if (tableView == null)
                 {
@@ -1088,7 +1087,7 @@ namespace SongBrowserPlugin.UI
                 if (levels.Length > 6 && !String.IsNullOrEmpty(selectedLevelID) && levels.Any(x => x.levelID == selectedLevelID))
                 {
                     SelectAndScrollToLevel(_levelListTableView, selectedLevelID);
-                }
+                }*/
 
                 RefreshSortButtonUI();
                 RefreshQuickScrollButtons();
@@ -1104,7 +1103,7 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         /// <param name="table"></param>
         /// <param name="levelID"></param>
-        private void SelectAndScrollToLevel(LevelListTableView table, string levelID)
+        private void SelectAndScrollToLevel(LevelPackLevelsTableView table, string levelID)
         {
             // Check once per load
             if (!_checkedForTwitchPlugin)
@@ -1126,11 +1125,13 @@ namespace SongBrowserPlugin.UI
                 return;
             }
 
-            int row = table.RowNumberForLevelID(levelID);
+            // TODO - this is likely very slow and can be done better - this whole function can maybe go.
+            List<IPreviewBeatmapLevel> levels = _levelListTableView.GetPrivateField<IBeatmapLevelPack>("_pack").beatmapLevelCollection.beatmapLevels.ToList();
+            int selectedIndex = levels.FindIndex(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID);
+
             TableView tableView = table.GetComponentInChildren<TableView>();
-            tableView.SelectCellWithIdx(row, true);
-            //tableView.ScrollToRow(row, true);
-            _lastRow = row;
+            tableView.SelectCellWithIdx(selectedIndex, true);            
+            _lastRow = selectedIndex;
         }
 
         /// <summary>

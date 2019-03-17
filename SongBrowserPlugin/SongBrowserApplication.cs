@@ -34,7 +34,9 @@ namespace SongBrowserPlugin
             {
                 return;
             }
+
             new GameObject("Beat Saber SongBrowser Plugin").AddComponent<SongBrowserApplication>();
+
             SongBrowserApplication.MainProgressBar = SongBrowserPlugin.UI.ProgressBar.Create();
 
             Console.WriteLine("SongBrowser Plugin Loaded()");
