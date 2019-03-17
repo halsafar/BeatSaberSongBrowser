@@ -459,7 +459,10 @@ namespace SongBrowserPlugin.UI
                     if (!_model.SortedSongList[i].levelID.StartsWith("Folder_"))
                     {
                         this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[i].levelID);
-                        this._levelDifficultyViewController.HandleDifficultyTableViewDidSelectRow(null, _model.SortedSongList[i].difficultyBeatmaps.Length-1);
+                        var beatMapDifficulties = _model.SortedSongList[i].difficultyBeatmapSets
+                            .Where(x => x.beatmapCharacteristic == _model.CurrentBeatmapCharacteristicSO)
+                            .SelectMany(x => x.difficultyBeatmaps);
+                        this._levelDifficultyViewController.HandleDifficultyTableViewDidSelectRow(null, beatMapDifficulties.Count()-1);
                         _playButton.onClick.Invoke();
                         break;
                     }
