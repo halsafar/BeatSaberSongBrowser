@@ -35,13 +35,15 @@ namespace SongBrowserPlugin.UI
 
             if (firstActivation && type == ActivationType.AddedToHierarchy)
             {
-                rectTransform.anchorMin = new Vector2(0.3f, 0f);
-                rectTransform.anchorMax = new Vector2(0.7f, 1f);
+                rectTransform.anchorMin = new Vector2(0.5f, 0f);
+                rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                rectTransform.sizeDelta = new Vector2(74f, 0f);
+                rectTransform.pivot = new Vector2(0.4f, 0.5f);
 
                 _pageUpButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageUpButton")), rectTransform, false);
                 (_pageUpButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 1f);
                 (_pageUpButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 1f);
-                (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -14f);
+                (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -10f);
                 (_pageUpButton.transform as RectTransform).sizeDelta = new Vector2(40f, 10f);
                 _pageUpButton.interactable = true;
                 _pageUpButton.onClick.AddListener(delegate ()
@@ -52,7 +54,7 @@ namespace SongBrowserPlugin.UI
                 _pageDownButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageDownButton")), rectTransform, false);
                 (_pageDownButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0f);
                 (_pageDownButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0f);
-                (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 8f);
+                (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 10f);
                 (_pageDownButton.transform as RectTransform).sizeDelta = new Vector2(40f, 10f);
                 _pageDownButton.interactable = true;
                 _pageDownButton.onClick.AddListener(delegate ()
@@ -62,14 +64,11 @@ namespace SongBrowserPlugin.UI
 
                 _songListTableCellInstance = Resources.FindObjectsOfTypeAll<LevelListTableCell>().First(x => (x.name == "LevelListTableCell"));
 
-                RectTransform container = new GameObject("Content", typeof(RectTransform)).transform as RectTransform;
+                RectTransform container = new GameObject("CustomListContainer", typeof(RectTransform)).transform as RectTransform;
                 container.SetParent(rectTransform, false);
-                container.anchorMin = new Vector2(0f, 0.5f);
-                container.anchorMax = new Vector2(1f, 0.5f);
-                container.sizeDelta = new Vector2(0f, 60f);
-                container.anchoredPosition = new Vector2(0f, -3f);
+                container.sizeDelta = new Vector2(60f, 0f);
 
-                _songsTableView = new GameObject("CustomTableView").AddComponent<TableView>();
+                _songsTableView = new GameObject("CustomTableView", typeof(RectTransform)).AddComponent<TableView>();
                 _songsTableView.gameObject.AddComponent<RectMask2D>();
                 _songsTableView.transform.SetParent(container, false);
 
@@ -79,11 +78,8 @@ namespace SongBrowserPlugin.UI
 
                 (_songsTableView.transform as RectTransform).anchorMin = new Vector2(0f, 0f);
                 (_songsTableView.transform as RectTransform).anchorMax = new Vector2(1f, 1f);
-                (_songsTableView.transform as RectTransform).sizeDelta = new Vector2(0f, 0f);
+                (_songsTableView.transform as RectTransform).sizeDelta = new Vector2(0f, 60f);
                 (_songsTableView.transform as RectTransform).anchoredPosition = new Vector2(0f, 0f);
-
-                _songsTableView.SetPrivateField("_pageUpButton", _pageUpButton);
-                _songsTableView.SetPrivateField("_pageDownButton", _pageDownButton);
 
                 _songsTableView.dataSource = this;
                 _songsTableView.ScrollToCellWithIdx(0, TableView.ScrollPositionType.Beginning, false);

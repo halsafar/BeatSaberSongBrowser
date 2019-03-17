@@ -130,7 +130,7 @@ namespace SongBrowserPlugin
 
             //ModPrefs.SetBool("BeatSaverDownloader", "disableDeleteButton", disableDeleteButton);
             //ModPrefs.SetBool("BeatSaverDownloader", "deleteToRecycleBin", deleteToRecycleBin);
-            ModPrefs.SetInt("BeatSaverDownloader", "maxSimultaneousDownloads", maxSimultaneousDownloads);
+            //ModPrefs.SetInt("BeatSaverDownloader", "maxSimultaneousDownloads", maxSimultaneousDownloads);
         }
     }
 }

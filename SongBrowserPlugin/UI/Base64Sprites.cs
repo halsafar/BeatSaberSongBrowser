@@ -62,7 +62,7 @@ namespace SongBrowserPlugin.UI
             StarIcon = Base64Sprites.Base64ToSprite(StarIconB64);
             GraphIcon = Base64Sprites.Base64ToSprite(GraphIconB64);
             SortButtonStroke = Base64Sprites.Base64ToSprite(SortButtonStrokeB64);
-            BeastSaberLogo = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("BeatSaverDownloader.Assets.BeastSaberLogo.png");
+            BeastSaberLogo = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowserPlugin.Assets.BeastSaberLogo.png");
         }
 
         public static string SpriteToBase64(Sprite input)

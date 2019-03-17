@@ -38,7 +38,7 @@ namespace SongBrowserPlugin.UI.DownloadQueue
                 SongDownloader.Instance.songDownloaded += SongDownloaded;
                 _songListTableCellInstance = Resources.FindObjectsOfTypeAll<LevelListTableCell>().First(x => (x.name == "LevelListTableCell"));
 
-                _titleText = BeatSaberUI.CreateText(rectTransform, "DOWNLOAD QUEUE", new Vector2(0f, 39f));
+                _titleText = BeatSaberUI.CreateText(rectTransform, "DOWNLOAD QUEUE", new Vector2(0f, 35f));
                 _titleText.alignment = TextAlignmentOptions.Top;
                 _titleText.fontSize = 6f;
 
