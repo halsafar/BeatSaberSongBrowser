@@ -35,8 +35,8 @@ namespace SongBrowserPlugin.UI
         private FlowCoordinator _levelSelectionFlowCoordinator;
         private LevelPackLevelsViewController _levelListViewController;
         private StandardLevelDetailViewController _levelDetailViewController;
-        private BeatmapDifficultyViewController _levelDifficultyViewController;
-        private BeatmapCharacteristicSelectionViewController _beatmapCharacteristicSelectionViewController; 
+        private BeatmapDifficultySegmentedControlController _levelDifficultyViewController;
+        private BeatmapCharacteristicSegmentedControlController _beatmapCharacteristicSelectionViewController; 
         private DismissableNavigationController _levelSelectionNavigationController;
         private LevelPackLevelsTableView _levelListTableView;
         private RectTransform _tableViewRectTransform;
@@ -115,10 +115,12 @@ namespace SongBrowserPlugin.UI
             var partyFlow = Resources.FindObjectsOfTypeAll<PartyFreePlayFlowCoordinator>().First();
             if (mode == MainMenuViewController.MenuButton.SoloFreePlay)
             {
+                Logger.Debug("Entering SOLO mode...");
                 _levelSelectionFlowCoordinator = soloFlow;
             }
             else
             {
+                Logger.Debug("Entering PARTY mode...");
                 _levelSelectionFlowCoordinator = partyFlow;
             }
 
@@ -132,33 +134,39 @@ namespace SongBrowserPlugin.UI
             {
                 // gather controllers and ui elements.
                 if (_levelListViewController == null)
-                {
-                    _levelListViewController = _levelSelectionFlowCoordinator.GetPrivateField<LevelPackLevelsViewController>("_levelListViewController");
+                {                    
+                    _levelListViewController = _levelSelectionFlowCoordinator.GetPrivateField<LevelPackLevelsViewController>("_levelPackLevelsViewController");
+                    Logger.Debug("Acquired LevelPackLevelsViewController [{0}]", _levelListViewController.GetInstanceID());
                 }
 
                 if (_levelDetailViewController == null)
                 {
                     _levelDetailViewController = _levelSelectionFlowCoordinator.GetPrivateField<StandardLevelDetailViewController>("_levelDetailViewController");
+                    Logger.Debug("Acquired StandardLevelDetailViewController [{0}]", _levelDetailViewController.GetInstanceID());
                 }
                 
                 if (_beatmapCharacteristicSelectionViewController == null)
                 {
-                    _beatmapCharacteristicSelectionViewController = _levelSelectionFlowCoordinator.GetPrivateField<BeatmapCharacteristicSelectionViewController>("_beatmapCharacteristicSelectionViewController");
+                    _beatmapCharacteristicSelectionViewController = Resources.FindObjectsOfTypeAll<BeatmapCharacteristicSegmentedControlController>().First();
+                    Logger.Debug("Acquired BeatmapCharacteristicSegmentedControlController [{0}]", _beatmapCharacteristicSelectionViewController.GetInstanceID());
                 }
 
                 if (_levelSelectionNavigationController == null)
                 {
                     _levelSelectionNavigationController = _levelSelectionFlowCoordinator.GetPrivateField<DismissableNavigationController>("_navigationController");
+                    Logger.Debug("Acquired DismissableNavigationController [{0}]", _levelSelectionNavigationController.GetInstanceID());
                 }
 
                 if (_levelDifficultyViewController == null)
                 {
-                    _levelDifficultyViewController = soloFlow.GetPrivateField<BeatmapDifficultyViewController>("_beatmapDifficultyViewControllerViewController");
+                    _levelDifficultyViewController = Resources.FindObjectsOfTypeAll<BeatmapDifficultySegmentedControlController>().First();
+                    Logger.Debug("Acquired BeatmapDifficultySegmentedControlController [{0}]", _levelDifficultyViewController.GetInstanceID());
                 }
 
                 if (_levelListTableView == null)
                 {
                     _levelListTableView = this._levelListViewController.GetComponentInChildren<LevelPackLevelsTableView>();
+                    Logger.Debug("Acquired LevelPackLevelsTableView [{0}]", _levelListTableView.GetInstanceID());
                 }
 
                 _playButton = _levelDetailViewController.GetComponentsInChildren<Button>().FirstOrDefault(x => x.name == "PlayButton");
@@ -462,7 +470,7 @@ namespace SongBrowserPlugin.UI
                         var beatMapDifficulties = _model.SortedSongList[i].difficultyBeatmapSets
                             .Where(x => x.beatmapCharacteristic == _model.CurrentBeatmapCharacteristicSO)
                             .SelectMany(x => x.difficultyBeatmaps);
-                        this._levelDifficultyViewController.HandleDifficultyTableViewDidSelectRow(null, beatMapDifficulties.Count()-1);
+                        this._levelDifficultyViewController.HandleDifficultySegmentedControlDidSelectCell(null, beatMapDifficulties.Count()-1);
                         _playButton.onClick.Invoke();
                         break;
                     }
@@ -581,7 +589,7 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         /// <param name="view"></param>
         /// <param name="bc"></param>
-        private void OnDidSelectBeatmapCharacteristic(BeatmapCharacteristicSelectionViewController view, BeatmapCharacteristicSO bc)
+        private void OnDidSelectBeatmapCharacteristic(BeatmapCharacteristicSegmentedControlController view, BeatmapCharacteristicSO bc)
         {
             Logger.Trace("OnDidSelectBeatmapCharacteristic({0}", bc.name);
             _model.UpdateSongLists(bc);
@@ -591,9 +599,9 @@ namespace SongBrowserPlugin.UI
         /// <summary>
         /// Handle difficulty level selection.
         /// </summary>
-        private void OnDidSelectDifficultyEvent(BeatmapDifficultyViewController view, IDifficultyBeatmap beatmap)
+        private void OnDidSelectDifficultyEvent(BeatmapDifficultySegmentedControlController view, BeatmapDifficulty beatmap)
         {
-            _deleteButton.interactable = (beatmap.level.levelID.Length >= 32);
+            _deleteButton.interactable = (_levelDetailViewController.selectedDifficultyBeatmap.level.levelID.Length >= 32);
 
             this.RefreshScoreSaberData(_levelDetailViewController.selectedDifficultyBeatmap.level);
         }
@@ -851,9 +859,9 @@ namespace SongBrowserPlugin.UI
             Logger.Trace("RefreshScoreSaberData({0})", level.levelID);
 
             // display pp potentially
-            if (this._model.LevelIdToScoreSaberData != null && this._levelDifficultyViewController.selectedDifficultyBeatmap != null)
+            if (this._model.LevelIdToScoreSaberData != null)
             {
-                BeatmapDifficulty difficulty = this._levelDifficultyViewController.selectedDifficultyBeatmap.difficulty;
+                BeatmapDifficulty difficulty = this._levelDifficultyViewController.selectedDifficulty;
                 string njsText;
                 string difficultyString = difficulty.ToString();
 
@@ -1188,11 +1196,11 @@ namespace SongBrowserPlugin.UI
 
                     if (isShiftKeyDown && Input.GetKeyDown(KeyCode.X))
                     {
-                        this._beatmapCharacteristicSelectionViewController.HandleBeatmapCharacteristicSegmentedControlDidSelectCell(null, 1);
+                        this._beatmapCharacteristicSelectionViewController.HandleDifficultySegmentedControlDidSelectCell(null, 1);
                     }
                     else if (Input.GetKeyDown(KeyCode.X))
                     {
-                        this._beatmapCharacteristicSelectionViewController.HandleBeatmapCharacteristicSegmentedControlDidSelectCell(null, 0);
+                        this._beatmapCharacteristicSelectionViewController.HandleDifficultySegmentedControlDidSelectCell(null, 0);
                     }
 
                     // back
@@ -1241,7 +1249,7 @@ namespace SongBrowserPlugin.UI
                     if (Input.GetKeyDown(KeyCode.C))
                     {
                         this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[0].levelID);
-                        this._levelDifficultyViewController.HandleDifficultyTableViewDidSelectRow(null, 0);
+                        this._levelDifficultyViewController.HandleDifficultySegmentedControlDidSelectCell(null, 0);
                     }
 
                     // v start a song or enter a folder
