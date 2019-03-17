@@ -42,6 +42,10 @@ namespace SongBrowserPlugin
             BSEvents.menuSceneLoadedFresh += OnMenuSceneLoadedFresh;
         }
 
+        public void OnApplicationQuit()
+        {            
+        }
+
         private void OnMenuSceneLoadedFresh()
         {
             try
@@ -74,11 +78,6 @@ namespace SongBrowserPlugin
         private void SceneManager_sceneLoaded(Scene to, LoadSceneMode loadMode)
         {
             Logger.Debug($"Loaded scene \"{to.name}\"");
-        }
-
-        public void OnApplicationQuit()
-        {
-
         }
 
         public void OnLevelWasLoaded(int level)
