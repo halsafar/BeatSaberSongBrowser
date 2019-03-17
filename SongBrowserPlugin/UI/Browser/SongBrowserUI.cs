@@ -185,7 +185,7 @@ namespace SongBrowserPlugin.UI
 
                 // handlers
                 TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelListTableView, "_tableView");
-                tableView.didSelectRowEvent += HandleDidSelectTableViewRow;
+                tableView.didSelectCellWithIdxEvent += HandleDidSelectTableViewRow;
                 _levelListViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
                 _levelDifficultyViewController.didSelectDifficultyEvent += OnDidSelectDifficultyEvent;
                 _beatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent += OnDidSelectBeatmapCharacteristic;
