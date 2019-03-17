@@ -143,7 +143,7 @@ namespace SongBrowserPlugin
             {
                 if (_currentPlaylist == null)
                 {
-                    _currentPlaylist = PlaylistsReader.ParsePlaylist(this._settings.currentPlaylistFile);
+                    _currentPlaylist = Playlist.LoadPlaylist(this._settings.currentPlaylistFile);
                 }
 
                 return _currentPlaylist;
@@ -329,7 +329,7 @@ namespace SongBrowserPlugin
             // load the current editing playlist or make one
             if (!String.IsNullOrEmpty(this.Settings.currentEditingPlaylistFile))
             {
-                CurrentEditingPlaylist = PlaylistsReader.ParsePlaylist(this.Settings.currentEditingPlaylistFile);
+                CurrentEditingPlaylist = Playlist.LoadPlaylist(this.Settings.currentEditingPlaylistFile);
             }
 
             if (CurrentEditingPlaylist == null)
@@ -631,7 +631,7 @@ namespace SongBrowserPlugin
 
             this.CurrentEditingPlaylistLevelIds.Add(songInfo.levelID);
 
-            PlaylistWriter.WritePlaylist(this.CurrentEditingPlaylist, this.CurrentEditingPlaylist.fileLoc);
+            this.CurrentEditingPlaylist.SavePlaylist();
         }
 
         /// <summary>
@@ -648,7 +648,7 @@ namespace SongBrowserPlugin
             this.CurrentEditingPlaylist.songs.RemoveAll(x => x.levelId == songInfo.levelID);
             this.CurrentEditingPlaylistLevelIds.Remove(songInfo.levelID);
 
-            PlaylistWriter.WritePlaylist(this.CurrentEditingPlaylist, this.CurrentEditingPlaylist.fileLoc);
+            this.CurrentEditingPlaylist.SavePlaylist();
         }
         
         /// <summary>

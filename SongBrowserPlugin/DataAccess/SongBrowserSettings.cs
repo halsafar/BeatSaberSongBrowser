@@ -218,7 +218,7 @@ namespace SongBrowserPlugin.DataAccess
             Playlist p = null;
             if (playlistExists)
             {
-                p = PlaylistsReader.ParsePlaylist(playlistPath);
+                p = Playlist.LoadPlaylist(playlistPath);
             }
             else
             {
@@ -256,8 +256,8 @@ namespace SongBrowserPlugin.DataAccess
 
                 return true;
             });
-            
-            PlaylistWriter.WritePlaylist(p, playlistPath);
+
+            p.SavePlaylist(playlistPath);
 
             if (String.IsNullOrEmpty(this.currentEditingPlaylistFile))
             {
