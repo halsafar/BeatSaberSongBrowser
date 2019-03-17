@@ -14,7 +14,7 @@ namespace SongBrowserPlugin.Logging
     public class Logger
     {
         private static readonly string LoggerName = "SongBrowserPlugin";
-        private static readonly LogLevel LogLevel = LogLevel.Info;
+        private static readonly LogLevel LogLevel = LogLevel.Debug;
         private static readonly ConsoleColor DefaultFgColor = ConsoleColor.Gray;
 
         private static void ResetForegroundColor()
@@ -57,6 +57,11 @@ namespace SongBrowserPlugin.Logging
             ResetForegroundColor();
         }
 
+        public static void Log(string format, params object[] args)
+        {
+            Logger.Info(format, args);
+        }
+
         public static void Warning(string format, params object[] args)
         {
             if (LogLevel > LogLevel.Warn)
@@ -69,10 +74,29 @@ namespace SongBrowserPlugin.Logging
             ResetForegroundColor();
         }
 
+        public static void Error(Exception e)
+        {
+            Logger.Error("{0}", e.Message);
+        }
+
         public static void Error(string format, params object[] args)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("[" + LoggerName + " @ " + DateTime.Now.ToString("HH:mm") + " - Error] " + String.Format(format, args));
+            ResetForegroundColor();
+        }
+
+        public static void Exception(string message)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("[" + LoggerName + " @ " + DateTime.Now.ToString("HH:mm") + "] " + String.Format("{0}", message));
+            ResetForegroundColor();
+        }
+
+        public static void Exception(Exception e)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("[" + LoggerName + " @ " + DateTime.Now.ToString("HH:mm") + "] " + String.Format("{0}", e));
             ResetForegroundColor();
         }
 

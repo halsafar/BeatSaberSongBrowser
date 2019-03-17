@@ -16,6 +16,7 @@ using TMPro;
 using Logger = SongBrowserPlugin.Logging.Logger;
 using SongBrowserPlugin.DataAccess.BeatSaverApi;
 using CustomUI.BeatSaber;
+using SongBrowserPlugin.Internals;
 
 namespace SongBrowserPlugin.UI
 {
@@ -32,12 +33,12 @@ namespace SongBrowserPlugin.UI
 
         // Beat Saber UI Elements
         private FlowCoordinator _levelSelectionFlowCoordinator;
-        private LevelListViewController _levelListViewController;
+        private LevelPackLevelsViewController _levelListViewController;
         private StandardLevelDetailViewController _levelDetailViewController;
         private BeatmapDifficultyViewController _levelDifficultyViewController;
         private BeatmapCharacteristicSelectionViewController _beatmapCharacteristicSelectionViewController; 
         private DismissableNavigationController _levelSelectionNavigationController;
-        private LevelListTableView _levelListTableView;
+        private LevelPackLevelsTableView _levelListTableView;
         private RectTransform _tableViewRectTransform;
         private Button _tableViewPageUpButton;
         private Button _tableViewPageDownButton;
@@ -132,7 +133,7 @@ namespace SongBrowserPlugin.UI
                 // gather controllers and ui elements.
                 if (_levelListViewController == null)
                 {
-                    _levelListViewController = _levelSelectionFlowCoordinator.GetPrivateField<LevelListViewController>("_levelListViewController");
+                    _levelListViewController = _levelSelectionFlowCoordinator.GetPrivateField<LevelPackLevelsViewController>("_levelListViewController");
                 }
 
                 if (_levelDetailViewController == null)
@@ -157,7 +158,7 @@ namespace SongBrowserPlugin.UI
 
                 if (_levelListTableView == null)
                 {
-                    _levelListTableView = this._levelListViewController.GetComponentInChildren<LevelListTableView>();
+                    _levelListTableView = this._levelListViewController.GetComponentInChildren<LevelPackLevelsTableView>();
                 }
 
                 _playButton = _levelDetailViewController.GetComponentsInChildren<Button>().FirstOrDefault(x => x.name == "PlayButton");
@@ -184,7 +185,7 @@ namespace SongBrowserPlugin.UI
 
                 // handlers
                 TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelListTableView, "_tableView");
-                tableView.didSelectRowEvent += HandleDidSelectTableViewRow;
+                tableView.didSelectCellWithIdxEvent += HandleDidSelectTableViewRow;
                 _levelListViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
                 _levelDifficultyViewController.didSelectDifficultyEvent += OnDidSelectDifficultyEvent;
                 _beatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent += OnDidSelectBeatmapCharacteristic;
@@ -393,7 +394,7 @@ namespace SongBrowserPlugin.UI
                     _enterFolderButton = UIBuilder.CreateUIButton(otherButtonTransform, _playButton);
                     _enterFolderButton.onClick.AddListener(delegate ()
                     {
-                        _model.PushDirectory(_levelListViewController.selectedLevel);
+                        _model.PushDirectory(_levelDetailViewController.selectedDifficultyBeatmap.level);
                         this.RefreshSongList();
                         this.RefreshDirectoryButtons();
                     });
@@ -458,7 +459,10 @@ namespace SongBrowserPlugin.UI
                     if (!_model.SortedSongList[i].levelID.StartsWith("Folder_"))
                     {
                         this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[i].levelID);
-                        this._levelDifficultyViewController.HandleDifficultyTableViewDidSelectRow(null, _model.SortedSongList[i].difficultyBeatmaps.Length-1);
+                        var beatMapDifficulties = _model.SortedSongList[i].difficultyBeatmapSets
+                            .Where(x => x.beatmapCharacteristic == _model.CurrentBeatmapCharacteristicSO)
+                            .SelectMany(x => x.difficultyBeatmaps);
+                        this._levelDifficultyViewController.HandleDifficultyTableViewDidSelectRow(null, beatMapDifficulties.Count()-1);
                         _playButton.onClick.Invoke();
                         break;
                     }
@@ -518,7 +522,7 @@ namespace SongBrowserPlugin.UI
 
             if (_model.Settings.filterMode != SongFilterMode.Playlist)
             {
-                _playListFlowCoordinator.ParentFlowCoordinator = _levelSelectionFlowCoordinator;
+                _playListFlowCoordinator.parentFlowCoordinator = _levelSelectionFlowCoordinator;
                 _levelSelectionFlowCoordinator.InvokePrivateMethod("PresentFlowCoordinator", new object[] { _playListFlowCoordinator, null, false, false });                                
             }
             else
@@ -534,7 +538,7 @@ namespace SongBrowserPlugin.UI
         /// Adjust UI based on level selected.
         /// Various ways of detecting if a level is not properly selected.  Seems most hit the first one.
         /// </summary>
-        private void OnDidSelectLevelEvent(LevelListViewController view, IBeatmapLevel level)
+        private void OnDidSelectLevelEvent(LevelPackLevelsViewController view, IPreviewBeatmapLevel level)
         {            
             try
             {
@@ -591,13 +595,13 @@ namespace SongBrowserPlugin.UI
         {
             _deleteButton.interactable = (beatmap.level.levelID.Length >= 32);
 
-            this.RefreshScoreSaberData(_levelListViewController.selectedLevel);
+            this.RefreshScoreSaberData(_levelDetailViewController.selectedDifficultyBeatmap.level);
         }
 
         /// <summary>
         /// Turn play button into enter folder button.
         /// </summary>
-        private void HandleDidSelectFolderRow(IBeatmapLevel level)
+        private void HandleDidSelectFolderRow(IPreviewBeatmapLevel level)
         {
             _enterFolderButton.gameObject.SetActive(true);
             _playButton.gameObject.SetActive(false);
@@ -607,7 +611,7 @@ namespace SongBrowserPlugin.UI
         /// Turn enter folder button into play button.
         /// </summary>
         /// <param name="level"></param>
-        private void HandleDidSelectLevelRow(IBeatmapLevel level)
+        private void HandleDidSelectLevelRow(IPreviewBeatmapLevel level)
         {
             // deal with enter folder button
             if (_enterFolderButton != null)
@@ -635,68 +639,42 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         private void HandleDeleteSelectedLevel()
         {
-            IBeatmapLevel level = this._levelListViewController.selectedLevel;
-            if (level == null)
-            {
-                Logger.Info("No level selected, cannot delete nothing...");
-                return;
-            }
-
-            if (!_model.LevelIdToCustomSongInfos.ContainsKey(level.levelID))
-            {
-                Logger.Debug("Cannot delete non-custom levels.");
-                return;
-            }
-
-            if (level.levelID.StartsWith("Folder"))
-            {
-                Logger.Debug("Cannot delete folders.");
-                return;
-            }
-
-            SongLoaderPlugin.OverrideClasses.CustomLevel customLevel = _model.LevelIdToCustomSongInfos[level.levelID];
-
-            this._deleteDialog.Init("Delete level warning!", String.Format("<color=#00AAFF>Permanently delete level: {0}</color>\n  Do you want to continue?", customLevel.songName), "YES", "NO");
-            this._deleteDialog.didFinishEvent -= this.HandleDeleteDialogPromptViewControllerDidFinish;
-            this._deleteDialog.didFinishEvent += this.HandleDeleteDialogPromptViewControllerDidFinish;
-
-            _levelSelectionFlowCoordinator.InvokePrivateMethod("PresentViewController", new object[] { this._deleteDialog, null, false });            
-        }
-
-        /// <summary>
-        /// Handle delete dialog resolution.
-        /// </summary>
-        /// <param name="viewController"></param>
-        /// <param name="ok"></param>
-        public void HandleDeleteDialogPromptViewControllerDidFinish(SimpleDialogPromptViewController viewController, bool ok)
-        {
-            _levelSelectionFlowCoordinator.InvokePrivateMethod("DismissViewController", new object[] { _deleteDialog, null, false });
-            if (ok)            
-            {
-                Downloader.Instance.DeleteSong(new Song(SongLoader.CustomLevels.First(x => x.levelID == _levelDetailViewController.difficultyBeatmap.level.levelID)));
-
-                List<IBeatmapLevel> levels = _levelListViewController.GetPrivateField<IBeatmapLevel[]>("_levels").ToList();
-                int selectedIndex = levels.IndexOf(_levelDetailViewController.difficultyBeatmap.level);
-
-                if (selectedIndex > -1)
+            IBeatmapLevel level = _levelDetailViewController.selectedDifficultyBeatmap.level;
+            _deleteDialog.Init("Delete song", $"Do you really want to delete \"{ level.songName} {level.songSubName}\"?", "Delete", "Cancel",
+                (selectedButton) =>
                 {
-                    levels.Remove(_levelDetailViewController.difficultyBeatmap.level);
-
-                    if (selectedIndex > 0)
+                    _levelSelectionFlowCoordinator.InvokePrivateMethod("DismissViewController", new object[] { _deleteDialog, null, false });
+                    if (selectedButton == 0)
                     {
-                        selectedIndex--;
+                        try
+                        {
+                            var levelsTableView = _levelListViewController.GetPrivateField<LevelPackLevelsTableView>("_levelPackLevelsTableView");
+
+                            List<IPreviewBeatmapLevel> levels = levelsTableView.GetPrivateField<IBeatmapLevelPack>("_pack").beatmapLevelCollection.beatmapLevels.ToList();
+                            int selectedIndex = levels.FindIndex(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID);
+
+                            SongDownloader.Instance.DeleteSong(new Song(SongLoader.CustomLevels.First(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID)));
+
+                            if (selectedIndex > -1)
+                            {
+                                int removedLevels = levels.RemoveAll(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID);
+                                Logger.Log("Removed " + removedLevels + " level(s) from song list!");
+
+                                _levelListViewController.SetData(CustomHelpers.GetLevelPackWithLevels(levels.Cast<BeatmapLevelSO>().ToArray(), _model.CurrentPlaylist?.playlistTitle ?? "Custom Songs", _model.CurrentPlaylist?.icon));
+                                TableView listTableView = levelsTableView.GetPrivateField<TableView>("_tableView");
+                                listTableView.ScrollToCellWithIdx(selectedIndex, TableView.ScrollPositionType.Beginning, false);
+                                levelsTableView.SetPrivateField("_selectedRow", selectedIndex);
+                                listTableView.SelectCellWithIdx(selectedIndex, true);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Error("Unable to delete song! Exception: " + e);
+                        }
                     }
-
-                    _levelListViewController.SetLevels(levels.ToArray());
-                    TableView listTableView = _levelListViewController.GetPrivateField<LevelListTableView>("_levelListTableView").GetPrivateField<TableView>("_tableView");
-                    listTableView.ScrollToRow(selectedIndex, false);
-                    listTableView.SelectRow(selectedIndex, true);
-                }               
-
-                this.UpdateSongList();
-                this.RefreshSongList();
-            }
-        }
+                });
+            _levelSelectionFlowCoordinator.InvokePrivateMethod("PresentViewController", new object[] { _deleteDialog, null, false });
+        }        
 
         /// <summary>
         /// Create MD5 of a file.
@@ -733,7 +711,7 @@ namespace SongBrowserPlugin.UI
         {
             if (p != null)
             {
-                Logger.Debug("Showing songs for playlist: {0}", p.Title);
+                Logger.Debug("Showing songs for playlist: {0}", p.playlistTitle);
                 _model.Settings.filterMode = SongFilterMode.Playlist;
                 _model.CurrentPlaylist = p;
                 _model.Settings.Save();
@@ -832,7 +810,7 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         private void ToggleSongInPlaylist()
         {
-            IBeatmapLevel songInfo = this._levelListViewController.selectedLevel;
+            IBeatmapLevel songInfo = _levelDetailViewController.selectedDifficultyBeatmap.level;
             if (_model.CurrentEditingPlaylist != null)
             {
                 if (_model.CurrentEditingPlaylistLevelIds.Contains(songInfo.levelID))
@@ -855,13 +833,12 @@ namespace SongBrowserPlugin.UI
         /// <summary>
         /// Update GUI elements that show score saber data.
         /// </summary>
-        public void RefreshScoreSaberData(IBeatmapLevel level)
+        public void RefreshScoreSaberData(IPreviewBeatmapLevel level)
         {            
-            // TODO - fix this obvious mess...
             // use controllers level...
             if (level == null)
             {
-                level = _levelListViewController.selectedLevel;
+                level = _levelDetailViewController.selectedDifficultyBeatmap.level;
             }
 
             // abort!
@@ -876,31 +853,6 @@ namespace SongBrowserPlugin.UI
             // display pp potentially
             if (this._model.LevelIdToScoreSaberData != null && this._levelDifficultyViewController.selectedDifficultyBeatmap != null)
             {
-                /*if (this._ppText == null)
-                {
-                    // Create the PP and Star rating labels
-                    //RectTransform bmpTextRect = Resources.FindObjectsOfTypeAll<RectTransform>().First(x => x.name == "BPMText");
-                    var text = BeatSaberUI.CreateText(this._levelDetailViewController.rectTransform, "PP", new Vector2(-15, -32), new Vector2(10f, 6f));
-                    text.fontSize = 2.5f;
-                    text.alignment = TextAlignmentOptions.Left;
-
-                    text = BeatSaberUI.CreateText(this._levelDetailViewController.rectTransform, "STAR", new Vector2(-15, -34.5f), new Vector2(10f, 6f));
-                    text.fontSize = 2.5f;
-                    text.alignment = TextAlignmentOptions.Left;
-
-                    _ppText = BeatSaberUI.CreateText(this._levelDetailViewController.rectTransform, "?", new Vector2(-20, -32), new Vector2(20f, 6f));
-                    _ppText.fontSize = 2.5f;
-                    _ppText.alignment = TextAlignmentOptions.Right;
-
-                    _starText = BeatSaberUI.CreateText(this._levelDetailViewController.rectTransform, "", new Vector2(-20, -34.5f), new Vector2(20f, 6f));
-                    _starText.fontSize = 2.5f;
-                    _starText.alignment = TextAlignmentOptions.Right;
-
-                    _nText = BeatSaberUI.CreateText(this._levelDetailViewController.rectTransform, "", new Vector2(-20, -37.0f), new Vector2(20f, 6f));
-                    _nText.fontSize = 2.5f;
-                    _nText.alignment = TextAlignmentOptions.Right;
-                }*/
-
                 BeatmapDifficulty difficulty = this._levelDifficultyViewController.selectedDifficultyBeatmap.difficulty;
                 string njsText;
                 string difficultyString = difficulty.ToString();
@@ -1097,19 +1049,18 @@ namespace SongBrowserPlugin.UI
             Logger.Info("Refreshing the song list view.");
             try
             {
-                if (_model.SortedSongList == null)
+                // TODO - this is broken in v13 for sure.
+                /*if (_model.SortedSongList == null)
                 {
                     Logger.Debug("Songs are not sorted yet, nothing to refresh.");
                     return;
                 }
-                
-                LevelSO[] levels = _model.SortedSongList.ToArray();
 
-                //_levelListViewController.SetLevels(levels);
+                BeatmapLevelSO[] levels = _model.SortedSongList.ToArray();
 
-                LevelListViewController songListViewController = this._levelSelectionFlowCoordinator.GetPrivateField<LevelListViewController>("_levelListViewController");
+                //_levelListViewController.SetLevels(levels);                
                 ReflectionUtil.SetPrivateField(_levelListTableView, "_levels", levels);                
-                ReflectionUtil.SetPrivateField(songListViewController, "_levels", levels);
+                ReflectionUtil.SetPrivateField(_levelListViewController, "_levels", levels);
                 TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelListTableView, "_tableView");
                 if (tableView == null)
                 {
@@ -1136,7 +1087,7 @@ namespace SongBrowserPlugin.UI
                 if (levels.Length > 6 && !String.IsNullOrEmpty(selectedLevelID) && levels.Any(x => x.levelID == selectedLevelID))
                 {
                     SelectAndScrollToLevel(_levelListTableView, selectedLevelID);
-                }
+                }*/
 
                 RefreshSortButtonUI();
                 RefreshQuickScrollButtons();
@@ -1152,7 +1103,7 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         /// <param name="table"></param>
         /// <param name="levelID"></param>
-        private void SelectAndScrollToLevel(LevelListTableView table, string levelID)
+        private void SelectAndScrollToLevel(LevelPackLevelsTableView table, string levelID)
         {
             // Check once per load
             if (!_checkedForTwitchPlugin)
@@ -1174,11 +1125,13 @@ namespace SongBrowserPlugin.UI
                 return;
             }
 
-            int row = table.RowNumberForLevelID(levelID);
+            // TODO - this is likely very slow and can be done better - this whole function can maybe go.
+            List<IPreviewBeatmapLevel> levels = _levelListTableView.GetPrivateField<IBeatmapLevelPack>("_pack").beatmapLevelCollection.beatmapLevels.ToList();
+            int selectedIndex = levels.FindIndex(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID);
+
             TableView tableView = table.GetComponentInChildren<TableView>();
-            tableView.SelectRow(row, true);
-            tableView.ScrollToRow(row, true);
-            _lastRow = row;
+            tableView.SelectCellWithIdx(selectedIndex, true);            
+            _lastRow = selectedIndex;
         }
 
         /// <summary>
@@ -1245,7 +1198,7 @@ namespace SongBrowserPlugin.UI
                     // back
                     if (Input.GetKeyDown(KeyCode.Escape))
                     {
-                        this._levelSelectionNavigationController.DismissButtonWasPressed();
+                        this._levelSelectionNavigationController.GoBackButtonPressed();
                     }
                     
                     // select current sort mode again (toggle inverting)
