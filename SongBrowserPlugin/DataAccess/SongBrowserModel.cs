@@ -234,11 +234,11 @@ namespace SongBrowserPlugin
         public void UpdateSongLists(BeatmapCharacteristicSO gameplayMode)
         {
             // give up
-            if (gameplayMode == null)
+            /*if (gameplayMode == null)
             {
                 Logger.Debug("Always null first time if user waits for SongLoader event, which they should...");
                 return;
-            }
+            }*/
 
             Stopwatch timer = new Stopwatch();
             timer.Start();

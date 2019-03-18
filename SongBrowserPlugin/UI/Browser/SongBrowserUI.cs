@@ -35,6 +35,7 @@ namespace SongBrowserPlugin.UI
         private FlowCoordinator _levelSelectionFlowCoordinator;
         private LevelPackLevelsViewController _levelListViewController;
         private StandardLevelDetailViewController _levelDetailViewController;
+        private StandardLevelDetailView _standardLevelDetailView;
         private BeatmapDifficultySegmentedControlController _levelDifficultyViewController;
         private BeatmapCharacteristicSegmentedControlController _beatmapCharacteristicSelectionViewController; 
         private DismissableNavigationController _levelSelectionNavigationController;
@@ -144,7 +145,13 @@ namespace SongBrowserPlugin.UI
                     _levelDetailViewController = _levelSelectionFlowCoordinator.GetPrivateField<StandardLevelDetailViewController>("_levelDetailViewController");
                     Logger.Debug("Acquired StandardLevelDetailViewController [{0}]", _levelDetailViewController.GetInstanceID());
                 }
-                
+
+                if (_standardLevelDetailView == null)
+                {
+                    _standardLevelDetailView = _levelDetailViewController.GetPrivateField<StandardLevelDetailView>("_standardLevelDetailView");
+                    Logger.Debug("Acquired StandardLevelDetailView [{0}]", _standardLevelDetailView.GetInstanceID());
+                }
+
                 if (_beatmapCharacteristicSelectionViewController == null)
                 {
                     _beatmapCharacteristicSelectionViewController = Resources.FindObjectsOfTypeAll<BeatmapCharacteristicSegmentedControlController>().First();
@@ -169,7 +176,8 @@ namespace SongBrowserPlugin.UI
                     Logger.Debug("Acquired LevelPackLevelsTableView [{0}]", _levelListTableView.GetInstanceID());
                 }
 
-                _playButton = _levelDetailViewController.GetComponentsInChildren<Button>().FirstOrDefault(x => x.name == "PlayButton");
+                _playButton = _standardLevelDetailView.GetComponentsInChildren<Button>().FirstOrDefault(x => x.name == "PlayButton");
+                Logger.Debug("Acquired PlayButton [{0}]", _playButton.GetInstanceID());
 
                 _simpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
 
@@ -191,12 +199,7 @@ namespace SongBrowserPlugin.UI
                 // create song browser main ui
                 this.CreateUIElements();
 
-                // handlers
-                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelListTableView, "_tableView");
-                tableView.didSelectCellWithIdxEvent += HandleDidSelectTableViewRow;
-                _levelListViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
-                _levelDifficultyViewController.didSelectDifficultyEvent += OnDidSelectDifficultyEvent;
-                _beatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent += OnDidSelectBeatmapCharacteristic;
+                this.InstallHandlers();
 
                 this.ResizeStatsPanel();
 
@@ -309,8 +312,7 @@ namespace SongBrowserPlugin.UI
 
                 // Get element info to position properly
                 Logger.Debug("Modifying and Cloning PlayButtons...");
-                StandardLevelDetailView standardLevelDetailView = _levelDetailViewController.GetPrivateField<StandardLevelDetailView>("_standardLevelDetailView");
-                RectTransform detailButtonContainerRect = standardLevelDetailView.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayContainer");
+                RectTransform detailButtonContainerRect = _standardLevelDetailView.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayContainer");
                 RectTransform detailButtonRect = detailButtonContainerRect.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayButtons");
                 detailButtonRect.anchoredPosition = new Vector2(detailButtonRect.anchoredPosition.x, detailButtonRect.anchoredPosition.y + 5.0f);
 
@@ -415,8 +417,7 @@ namespace SongBrowserPlugin.UI
             // modify details view
             Logger.Debug("Resizing Stats Panel...");
 
-            StandardLevelDetailView standardLevelDetailView = _levelDetailViewController.GetPrivateField<StandardLevelDetailView>("_standardLevelDetailView");
-            var statsPanel = standardLevelDetailView.GetPrivateField<LevelParamsPanel>("_levelParamsPanel");
+            var statsPanel = _standardLevelDetailView.GetPrivateField<LevelParamsPanel>("_levelParamsPanel");
             var statTransforms = statsPanel.GetComponentsInChildren<RectTransform>();
             var valueTexts = statsPanel.GetComponentsInChildren<TextMeshProUGUI>().Where(x => x.name == "ValueText").ToList();
             RectTransform panelRect = (statsPanel.transform as RectTransform);
@@ -451,6 +452,19 @@ namespace SongBrowserPlugin.UI
             var titleText = this._levelDetailViewController.GetComponentsInChildren<TextMeshProUGUI>(true).First(x => x.name == "SongNameText");
             
             titleText.fontSize = 5.0f;
+        }
+
+        /// <summary>
+        /// Add our handlers into BeatSaber.
+        /// </summary>
+        private void InstallHandlers()
+        {
+            // handlers
+            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelListTableView, "_tableView");
+            tableView.didSelectCellWithIdxEvent += HandleDidSelectTableViewRow;
+            _levelListViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
+            _levelDifficultyViewController.didSelectDifficultyEvent += OnDidSelectDifficultyEvent;
+            _beatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent += OnDidSelectBeatmapCharacteristic;
         }
 
         /// <summary>
@@ -1133,6 +1147,8 @@ namespace SongBrowserPlugin.UI
         /// <param name="levelID"></param>
         private void SelectAndScrollToLevel(LevelPackLevelsTableView table, string levelID)
         {
+            Logger.Debug("Scrolling to LevelID: {0}", levelID);
+
             // Check once per load
             if (!_checkedForTwitchPlugin)
             {
@@ -1154,8 +1170,12 @@ namespace SongBrowserPlugin.UI
             }
 
             // TODO - this is likely very slow and can be done better - this whole function can maybe go.
-            List<IPreviewBeatmapLevel> levels = _levelListTableView.GetPrivateField<IBeatmapLevelPack>("_pack").beatmapLevelCollection.beatmapLevels.ToList();
-            int selectedIndex = levels.FindIndex(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID);
+            int selectedIndex = 0;
+            if (_levelDetailViewController.selectedDifficultyBeatmap != null)
+            {
+                List<IPreviewBeatmapLevel> levels = table.GetPrivateField<IBeatmapLevelPack>("_pack").beatmapLevelCollection.beatmapLevels.ToList();
+                selectedIndex = levels.FindIndex(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID);
+            }
 
             TableView tableView = table.GetComponentInChildren<TableView>();
             tableView.SelectCellWithIdx(selectedIndex, true);            
@@ -1267,12 +1287,20 @@ namespace SongBrowserPlugin.UI
 
                     // c - select difficulty for top song
                     if (Input.GetKeyDown(KeyCode.C))
+                    {                        
+                        TableView listTableView = this._levelListTableView.GetPrivateField<TableView>("_tableView");
+                        this._levelListTableView.HandleDidSelectRowEvent(listTableView, 1);
+                        listTableView.ScrollToCellWithIdx(1, TableView.ScrollPositionType.Beginning, false);
+                    }
+
+                    // v - select difficulty for top song
+                    if (Input.GetKeyDown(KeyCode.V))
                     {
                         this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[0].levelID);
                         this._levelDifficultyViewController.HandleDifficultySegmentedControlDidSelectCell(null, 0);
                     }
 
-                    // v start a song or enter a folder
+                    // return - start a song or enter a folder
                     if (Input.GetKeyDown(KeyCode.Return))
                     {
                         if (_playButton.isActiveAndEnabled)
@@ -1307,8 +1335,9 @@ namespace SongBrowserPlugin.UI
                         _pageDownFastButton.onClick.Invoke();
                     }
                     else if (Input.GetKeyDown(KeyCode.M))
-                    {
+                    {                        
                         _lastRow = (_lastRow + 1) % this._model.SortedSongList.Count;
+                        Logger.Debug("Scrolling to row: {0}", _lastRow);
                         this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[_lastRow].levelID);
                     }
 

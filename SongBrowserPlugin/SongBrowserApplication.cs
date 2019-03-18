@@ -81,14 +81,14 @@ namespace SongBrowserPlugin
 
             Logger.Debug("Found Solo and Party FreePlayFlowCoordinators...");
 
-            if (SongLoaderPlugin.SongLoader.AreSongsLoaded)
+            /*if (SongLoaderPlugin.SongLoader.AreSongsLoaded)
             {
                 OnSongLoaderLoadedSongs(null, SongLoader.CustomLevels);
             }
             else
             {
                 SongLoader.SongsLoadedEvent += OnSongLoaderLoadedSongs;
-            }
+            }*/
 
             _songBrowserUI.RefreshSongList();
         }
