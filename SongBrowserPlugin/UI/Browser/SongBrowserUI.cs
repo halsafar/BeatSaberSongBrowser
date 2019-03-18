@@ -492,6 +492,8 @@ namespace SongBrowserPlugin.UI
 
             UpdateSongList();
             RefreshSongList();
+            RefreshSortButtonUI();
+            RefreshQuickScrollButtons();
 
             // Handle instant queue logic, avoid picking a folder.
             if (_model.Settings.sortMode == SongSortMode.Random && _model.Settings.randomInstantQueue)
@@ -1131,8 +1133,7 @@ namespace SongBrowserPlugin.UI
                     SelectAndScrollToLevel(_levelListTableView, selectedLevelID);
                 }
 
-                RefreshSortButtonUI();
-                RefreshQuickScrollButtons();*/
+                */
             }
             catch (Exception e)
             {
