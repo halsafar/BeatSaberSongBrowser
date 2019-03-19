@@ -1252,13 +1252,20 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
-        /// Helper for updating the model (which updates the song list)c
+        /// Helper for updating the model (which updates the song list)
         /// </summary>
         public void UpdateSongList()
         {
             try
             {
                 Logger.Trace("UpdateSongList()");
+
+                if (_model.CurrentLevelPack == null)
+                {
+                    var levelPackCollection = _levelPackViewController.GetPrivateField<IBeatmapLevelPackCollection>("_levelPackCollection");
+                    _model.CurrentLevelPack = levelPackCollection.beatmapLevelPacks[0];
+                }
+
                 _model.UpdateSongLists();
                 this.RefreshDirectoryButtons();
             }
