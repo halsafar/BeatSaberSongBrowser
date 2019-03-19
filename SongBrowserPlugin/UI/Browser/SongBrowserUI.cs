@@ -506,11 +506,23 @@ namespace SongBrowserPlugin.UI
             _beatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent += OnDidSelectBeatmapCharacteristic;
         }
 
+        /// <summary>
+        /// Handler for level pack selection.
+        /// UNUSED
+        /// </summary>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
         private void _levelPacksTableView_didSelectPackEvent(LevelPacksTableView arg1, IBeatmapLevelPack arg2)
         {
             Logger.Trace("_levelPacksTableView_didSelectPackEvent(arg2={0})", arg2);
         }
 
+        /// <summary>
+        /// Handler for level pack selection, controller.
+        /// Sets the current level pack into the model and updates.
+        /// </summary>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
         private void _levelPackViewController_didSelectPackEvent(LevelPacksViewController arg1, IBeatmapLevelPack arg2)
         {
             Logger.Trace("_levelPackViewController_didSelectPackEvent(arg2={0})", arg2);
@@ -548,14 +560,13 @@ namespace SongBrowserPlugin.UI
             RefreshQuickScrollButtons();
 
             // Handle instant queue logic, avoid picking a folder.
-            // TODO - cannot get difficulties
-            /*if (_model.Settings.sortMode == SongSortMode.Random && _model.Settings.randomInstantQueue)
+            if (_model.Settings.sortMode == SongSortMode.Random && _model.Settings.randomInstantQueue)
             {
                 for (int i = 0; i < _model.SortedSongList.Count; i++)
                 {
                     if (!_model.SortedSongList[i].levelID.StartsWith("Folder_"))
                     {
-                        this.SelectAndScrollToLevel(_levelListTableView, _model.SortedSongList[i].levelID);
+                        this.SelectAndScrollToLevel(_levelPackLevelsTableView, _model.SortedSongList[i].levelID);
                         var beatMapDifficulties = _model.SortedSongList[i].difficultyBeatmapSets
                             .Where(x => x.beatmapCharacteristic == _model.CurrentBeatmapCharacteristicSO)
                             .SelectMany(x => x.difficultyBeatmaps);
@@ -564,7 +575,7 @@ namespace SongBrowserPlugin.UI
                         break;
                     }
                 }                                                    
-            }*/
+            }
         }
 
         /// <summary>
@@ -1146,7 +1157,47 @@ namespace SongBrowserPlugin.UI
             Logger.Info("Refreshing the song list view.");
             try
             {
-                         
+                if (_model.SortedSongList == null)
+                {
+                    Logger.Debug("Songs are not sorted yet, nothing to refresh.");
+                    return;
+                }
+
+                var levels = _model.SortedSongList.ToArray();
+
+                IBeatmapLevelPack levelPack = this.Model.CurrentLevelPack;
+                ReflectionUtil.SetPrivateField(levelPack.beatmapLevelCollection, "_beatmapLevels", levels);
+                                
+                //_levelListViewController.SetLevels(levels);                
+                //ReflectionUtil.SetPrivateField(_levelListTableView, "_levels", levels);                
+                ///ReflectionUtil.SetPrivateField(_levelListViewController, "_levels", levels);
+                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelPackLevelsTableView, "_tableView");
+                if (tableView == null)
+                {
+                    Logger.Debug("TableView is not available yet, cannot refresh...");
+                    return;
+                }
+                tableView.ReloadData();
+
+                String selectedLevelID = null;
+                if (_model.LastSelectedLevelId != null)
+                {
+                    selectedLevelID = _model.LastSelectedLevelId;
+                    Logger.Debug("Scrolling to row for level ID: {0}", selectedLevelID);                    
+                }
+                else
+                {
+                    if (levels.Length > 0)
+                    {
+                        selectedLevelID = levels.FirstOrDefault().levelID;
+                    }
+                }
+
+                // HACK, seems like if 6 or less items scrolling to row causes the song list to disappear.
+                //if (levels.Length > 6 && !String.IsNullOrEmpty(selectedLevelID) && levels.Any(x => x.levelID == selectedLevelID))
+                {
+                    SelectAndScrollToLevel(_levelPackLevelsTableView, selectedLevelID);
+                }            
             }
             catch (Exception e)
             {
@@ -1183,18 +1234,16 @@ namespace SongBrowserPlugin.UI
                 return;
             }
 
-            // TODO - this is likely very slow and can be done better - this whole function can maybe go.
+            // try to find the index and scroll to it
             int selectedIndex = 0;
-
             List<IPreviewBeatmapLevel> levels = table.GetPrivateField<IBeatmapLevelPack>("_pack").beatmapLevelCollection.beatmapLevels.ToList();
             selectedIndex = levels.FindIndex(x => x.levelID == levelID);
-
             if (selectedIndex >= 0)
             {
                 Logger.Debug("Scrolling to idx: {0}", selectedIndex);
                 TableView tableView = table.GetComponentInChildren<TableView>();
                 tableView.SelectCellWithIdx(selectedIndex, true);
-                //_lastRow = selectedIndex;
+                _lastRow = selectedIndex;
             }
             else
             {
@@ -1361,7 +1410,6 @@ namespace SongBrowserPlugin.UI
                     else if (Input.GetKeyDown(KeyCode.M))
                     {                        
                         _lastRow = (_lastRow + 1) % this._model.SortedSongList.Count;
-                        Logger.Debug("Scrolling to row: {0}", _lastRow);
                         this.SelectAndScrollToLevel(_levelPackLevelsTableView, _model.SortedSongList[_lastRow].levelID);
                     }
 

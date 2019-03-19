@@ -25,9 +25,9 @@ namespace SongBrowserPlugin
 
         // song list management
         private double _customSongDirLastWriteTime = 0;
-        private List<IPreviewBeatmapLevel> _filteredSongs;
-        private List<IPreviewBeatmapLevel> _sortedSongs;
-        private List<IPreviewBeatmapLevel> _originalSongs;
+        private List<BeatmapLevelSO> _filteredSongs;
+        private List<BeatmapLevelSO> _sortedSongs;
+        private List<BeatmapLevelSO> _originalSongs;
         private Dictionary<String, SongLoaderPlugin.OverrideClasses.CustomLevel> _levelIdToCustomLevel;
         private Dictionary<String, double> _cachedLastWriteTimes;
         private Dictionary<string, int> _weights;
@@ -57,7 +57,7 @@ namespace SongBrowserPlugin
         /// <summary>
         /// Get the sorted song list for the current working directory.
         /// </summary>
-        public List<IPreviewBeatmapLevel> SortedSongList
+        public List<BeatmapLevelSO> SortedSongList
         {
             get
             {
@@ -258,10 +258,9 @@ namespace SongBrowserPlugin
             Stopwatch timer = new Stopwatch();
             timer.Start();
 
-            // Get the level collection from song loader
-            IBeatmapLevelCollection levelCollections = this.CurrentLevelPack.beatmapLevelCollection;
-            _originalSongs = levelCollections.GetPrivateField<IPreviewBeatmapLevel[]>("_beatmapLevels").ToList();
-
+            // Get current level pack level collection
+            var beatmapLevelPack = this.CurrentLevelPack as BeatmapLevelPackSO;
+            _originalSongs = (beatmapLevelPack.beatmapLevelCollection as BeatmapLevelCollectionSO).GetPrivateField<BeatmapLevelSO[]>("_beatmapLevels").ToList();
             Logger.Debug("Got {0} songs from level collections...", _originalSongs.Count);
             //_originalSongs.ForEach(x => Logger.Debug("{0} by {1} = {2}", x.name, x.levelAuthorName, x.levelID));
 
@@ -782,7 +781,7 @@ namespace SongBrowserPlugin
             this.FilterPlaylist();
         }
 
-        private void FilterSearch(List<IPreviewBeatmapLevel> levels)
+        private void FilterSearch(List<BeatmapLevelSO> levels)
         {
             // Make sure we can actually search.
             if (this._settings.searchTerms.Count <= 0)
@@ -833,7 +832,7 @@ namespace SongBrowserPlugin
                 }
             }
 
-            List<IPreviewBeatmapLevel> songList = new List<IPreviewBeatmapLevel>();
+            List<BeatmapLevelSO> songList = new List<BeatmapLevelSO>();
             foreach (PlaylistSong ps in this.CurrentPlaylist.songs)
             {
                 if (!String.IsNullOrEmpty(ps.levelId))
@@ -855,13 +854,13 @@ namespace SongBrowserPlugin
             Logger.Debug("Playlist filtered song count: {0}", _filteredSongs.Count);
         }
 
-        private void SortOriginal(List<IPreviewBeatmapLevel> levels)
+        private void SortOriginal(List<BeatmapLevelSO> levels)
         {
             Logger.Info("Sorting song list as original");
             _sortedSongs = levels;
         }
 
-        private void SortNewest(List<IPreviewBeatmapLevel> levels)
+        private void SortNewest(List<BeatmapLevelSO> levels)
         {
             Logger.Info("Sorting song list as newest.");
             _sortedSongs = levels
@@ -870,7 +869,7 @@ namespace SongBrowserPlugin
                 .ToList();
         }
 
-        private void SortAuthor(List<IPreviewBeatmapLevel> levels)
+        private void SortAuthor(List<BeatmapLevelSO> levels)
         {
             Logger.Info("Sorting song list by author");
             _sortedSongs = levels
@@ -879,7 +878,7 @@ namespace SongBrowserPlugin
                 .ToList();
         }
 
-        private void SortPlayCount(List<IPreviewBeatmapLevel> levels)
+        private void SortPlayCount(List<BeatmapLevelSO> levels)
         {
             Logger.Info("Sorting song list by playcount");
             _sortedSongs = levels
@@ -888,7 +887,7 @@ namespace SongBrowserPlugin
                 .ToList();
         }
 
-        private void SortPerformancePoints(List<IPreviewBeatmapLevel> levels)
+        private void SortPerformancePoints(List<BeatmapLevelSO> levels)
         {
             Logger.Info("Sorting song list by performance points...");
 
@@ -897,11 +896,10 @@ namespace SongBrowserPlugin
                 .ToList();
         }
 
-        private void SortDifficulty(List<IPreviewBeatmapLevel> levels)
+        private void SortDifficulty(List<BeatmapLevelSO> levels)
         {
             Logger.Info("Sorting song list by difficulty...");
 
-            // TODO - fix or remove
             IEnumerable<BeatmapDifficulty> difficultyIterator = Enum.GetValues(typeof(BeatmapDifficulty)).Cast<BeatmapDifficulty>();
             Dictionary<string, int>  levelIdToDifficultyValue = new Dictionary<string, int>();
             foreach (var level in levels)
@@ -918,7 +916,7 @@ namespace SongBrowserPlugin
                         int difficultyValue = 0;
 
                         // Get the beatmap difficulties
-                        var difficulties = (level as BeatmapLevelData).difficultyBeatmapSets
+                        var difficulties = level.difficultyBeatmapSets
                             .Where(x => x.beatmapCharacteristic == this.CurrentBeatmapCharacteristicSO)
                             .SelectMany(x => x.difficultyBeatmaps);
 
@@ -938,7 +936,7 @@ namespace SongBrowserPlugin
             _sortedSongs = levels;
         }
 
-        private void SortRandom(List<IPreviewBeatmapLevel> levels)
+        private void SortRandom(List<BeatmapLevelSO> levels)
         {
             Logger.Info("Sorting song list by random (seed={0})...", this.Settings.randomSongSeed);
 
@@ -949,7 +947,7 @@ namespace SongBrowserPlugin
                 .ToList();
         }        
 
-        private void SortSongName(List<IPreviewBeatmapLevel> levels)
+        private void SortSongName(List<BeatmapLevelSO> levels)
         {
             Logger.Info("Sorting song list as default (songName)");
             _sortedSongs = levels

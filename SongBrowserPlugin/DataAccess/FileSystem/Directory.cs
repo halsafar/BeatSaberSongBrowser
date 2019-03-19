@@ -10,13 +10,13 @@ namespace SongBrowserPlugin.DataAccess.FileSystem
     {
         public string Key { get; private set; }
         public Dictionary<String, DirectoryNode> Nodes;
-        public List<IPreviewBeatmapLevel> Levels;
+        public List<BeatmapLevelSO> Levels;
 
         public DirectoryNode(String key)
         {
             Key = key;
             Nodes = new Dictionary<string, DirectoryNode>();
-            Levels = new List<IPreviewBeatmapLevel>();
+            Levels = new List<BeatmapLevelSO>();
         }
     }
 }
