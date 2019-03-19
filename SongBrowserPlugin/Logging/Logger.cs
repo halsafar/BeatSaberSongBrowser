@@ -14,7 +14,7 @@ namespace SongBrowserPlugin.Logging
     public class Logger
     {
         private static readonly string LoggerName = "SongBrowserPlugin";
-        private static readonly LogLevel LogLevel = LogLevel.Debug;
+        private static readonly LogLevel LogLevel = LogLevel.Trace;
         private static readonly ConsoleColor DefaultFgColor = ConsoleColor.Gray;
 
         private static void ResetForegroundColor()

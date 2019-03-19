@@ -47,7 +47,7 @@ namespace SongBrowserPlugin
         /// </summary>
         private void Awake()
         {
-            Logger.Trace("Awake()");
+            Logger.Trace("Awake-SongBrowserApplication()");
 
             Instance = this;
 
@@ -61,12 +61,13 @@ namespace SongBrowserPlugin
         /// </summary>
         public void Start()
         {
-            Logger.Trace("Start()");
+            Logger.Trace("Start-SongBrowserApplication()");
 
             AcquireUIElements();
+            InstallHandlers();
 
             StartCoroutine(ScrappedData.Instance.DownloadScrappedData((List<ScrappedSong> songs) => { }));
-            StartCoroutine(WaitForSongListUI());
+            //StartCoroutine(WaitForSongListUI());
         }
 
         /// <summary>
@@ -81,14 +82,14 @@ namespace SongBrowserPlugin
 
             Logger.Debug("Found Solo and Party FreePlayFlowCoordinators...");
 
-            /*if (SongLoaderPlugin.SongLoader.AreSongsLoaded)
+            if (SongLoaderPlugin.SongLoader.AreSongsLoaded)
             {
                 OnSongLoaderLoadedSongs(null, SongLoader.CustomLevels);
             }
             else
             {
                 SongLoader.SongsLoadedEvent += OnSongLoaderLoadedSongs;
-            }*/
+            }
 
             _songBrowserUI.RefreshSongList();
         }
@@ -100,7 +101,7 @@ namespace SongBrowserPlugin
         /// <param name="levels"></param>
         private void OnSongLoaderLoadedSongs(SongLoader loader, List<CustomLevel> levels)
         {
-            Logger.Trace("OnSongLoaderLoadedSongs");
+            Logger.Trace("OnSongLoaderLoadedSongs-SongBrowserApplication()");
             try
             {
                 _songBrowserUI.UpdateSongList();
@@ -137,7 +138,7 @@ namespace SongBrowserPlugin
         /// <summary>
         /// Get a handle to the view controllers we are going to add elements to.
         /// </summary>
-        public void AcquireUIElements()
+        private void AcquireUIElements()
         {
             Logger.Trace("AcquireUIElements()");        
             try
@@ -158,19 +159,25 @@ namespace SongBrowserPlugin
                 {
                     Logger.Debug("RectTransform: {0}", rect.name);
                 }*/
-
-                // Append our own event to appropriate events so we can refresh the song list before the user sees it.
-                MainFlowCoordinator mainFlow = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-                Button soloFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloFreePlayButton");
-                Button partyFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PartyFreePlayButton");
-
-                soloFreePlayButton.onClick.AddListener(HandleSoloModeSelection);
-                partyFreePlayButton.onClick.AddListener(HandlePartyModeSelection);
             }
             catch (Exception e)
             {
                 Logger.Exception("Exception AcquireUIElements(): ", e);
             }
+        }
+
+        /// <summary>
+        /// Install Our Handlers so we can react to ingame events.
+        /// </summary>
+        private void InstallHandlers()
+        {
+            // Append our own event to appropriate events so we can refresh the song list before the user sees it.
+            MainFlowCoordinator mainFlow = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
+            Button soloFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloFreePlayButton");
+            Button partyFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PartyFreePlayButton");
+
+            soloFreePlayButton.onClick.AddListener(HandleSoloModeSelection);
+            partyFreePlayButton.onClick.AddListener(HandlePartyModeSelection);
         }
 
         /// <summary>
