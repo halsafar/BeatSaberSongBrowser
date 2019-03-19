@@ -1189,7 +1189,7 @@ namespace SongBrowserPlugin.UI
                 //ReflectionUtil.SetPrivateField(_levelListTableView, "_levels", levels);                
                 ///ReflectionUtil.SetPrivateField(_levelListViewController, "_levels", levels);
                 TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelPackLevelsTableView, "_tableView");
-                if (tableView == null)
+                if (tableView == null && !tableView.isActiveAndEnabled)
                 {
                     Logger.Debug("TableView is not available yet, cannot refresh...");
                     return;
