@@ -18,6 +18,8 @@ using Logger = SongBrowserPlugin.Logging.Logger;
 
 namespace SongBrowserPlugin.UI
 {
+    // https://github.com/andruzzzhka/BeatSaverDownloader/blob/master/BeatSaverDownloader/UI/FlowCoordinators/PlaylistsFlowCoordinator.cs
+    // +Keyboard Input
     public class PlaylistFlowCoordinator : FlowCoordinator
     {
         public event Action<Playlist> didFinishEvent;
