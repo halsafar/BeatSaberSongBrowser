@@ -597,6 +597,8 @@ namespace SongBrowserPlugin.UI
 
             UpdateSongList();
             RefreshSongList();
+            RefreshSortButtonUI();
+            RefreshQuickScrollButtons();
         }
 
         /// <summary>
@@ -615,6 +617,8 @@ namespace SongBrowserPlugin.UI
                 _model.Settings.filterMode = SongFilterMode.None;
                 UpdateSongList();
                 RefreshSongList();
+                RefreshSortButtonUI();
+                RefreshQuickScrollButtons();
             }
             _model.Settings.Save();            
         }
@@ -639,6 +643,8 @@ namespace SongBrowserPlugin.UI
                 _model.Settings.Save();
                 UpdateSongList();
                 RefreshSongList();
+                RefreshSortButtonUI();
+                RefreshQuickScrollButtons();
             }
         }
 
@@ -860,6 +866,9 @@ namespace SongBrowserPlugin.UI
             // force disable search filter.
             this._model.Settings.filterMode = SongFilterMode.None;
             this._model.Settings.Save();
+
+            RefreshSortButtonUI();
+            RefreshQuickScrollButtons();
         }
 
         /// <summary>
@@ -878,6 +887,9 @@ namespace SongBrowserPlugin.UI
             _model.LastSelectedLevelId = null;
             this.UpdateSongList();
             this.RefreshSongList();
+
+            RefreshSortButtonUI();
+            RefreshQuickScrollButtons();
         }
 
         /// <summary>
