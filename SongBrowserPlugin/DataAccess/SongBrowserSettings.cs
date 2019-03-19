@@ -15,9 +15,9 @@ namespace SongBrowserPlugin.DataAccess
     {
         Default,
         Author,
-        Original,
+        Original, //deprecated
         Newest,        
-        PlayCount,
+        PlayCount,  //deprecated
         Difficulty,
         Random,
         PP,
