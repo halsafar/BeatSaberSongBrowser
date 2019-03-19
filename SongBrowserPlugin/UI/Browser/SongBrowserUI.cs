@@ -209,6 +209,10 @@ namespace SongBrowserPlugin.UI
                     Logger.Debug("Acquired BeatmapDifficultySegmentedControlController [{0}]", _levelDifficultyViewController.GetInstanceID());
                 }
 
+                //_tableViewRectTransform = _levelListViewController.GetComponentsInChildren<RectTransform>().First(x => x.name == "LevelPackLevelsTableView");                
+                _tableViewRectTransform = _levelPackLevelsTableView.transform as RectTransform;
+                Logger.Debug("Acquired TableViewRectTransform from LevelPackLevelsTableView [{0}]", _tableViewRectTransform.GetInstanceID());
+
                 //if (_tableViewPageUpButton == null)
                 {
                     _tableViewPageUpButton = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageUpButton");
@@ -288,8 +292,6 @@ namespace SongBrowserPlugin.UI
                 Sprite borderSprite = SongBrowserApplication.Instance.CachedIcons["RoundRectBigStroke"];
 
                 // Resize some of the UI
-                //_tableViewRectTransform = _levelListViewController.GetComponentsInChildren<RectTransform>().First(x => x.name == "LevelPackLevelsTableView");                
-                _tableViewRectTransform = _levelPackLevelsTableView.transform as RectTransform;
                 _tableViewRectTransform.sizeDelta = new Vector2(0f, -20f);
                 _tableViewRectTransform.anchoredPosition = new Vector2(0f, -2.5f);
                 
@@ -1214,9 +1216,11 @@ namespace SongBrowserPlugin.UI
 
                 var levels = _model.SortedSongList.ToArray();
 
+                Logger.Debug("Overwriting levelPack.beatmapLevelCollection._beatmapLevels");
                 IBeatmapLevelPack levelPack = this.Model.CurrentLevelPack;
                 ReflectionUtil.SetPrivateField(levelPack.beatmapLevelCollection, "_beatmapLevels", levels);
-                                
+
+                Logger.Debug("Reloading SongList TableView");
                 //_levelListViewController.SetLevels(levels);                
                 //ReflectionUtil.SetPrivateField(_levelListTableView, "_levels", levels);                
                 ///ReflectionUtil.SetPrivateField(_levelListViewController, "_levels", levels);
@@ -1228,6 +1232,7 @@ namespace SongBrowserPlugin.UI
                 }
                 tableView.ReloadData();
 
+                Logger.Debug("Attempting to scroll to level...");
                 String selectedLevelID = null;
                 if (_model.LastSelectedLevelId != null)
                 {
@@ -1327,6 +1332,8 @@ namespace SongBrowserPlugin.UI
 
                 if (_model.CurrentLevelPack == null)
                 {
+                    // TODO - is this acceptable?  review....
+                    Logger.Debug("No level pack selected, acquiring the first available...");
                     var levelPackCollection = _levelPackViewController.GetPrivateField<IBeatmapLevelPackCollection>("_levelPackCollection");
                     _model.CurrentLevelPack = levelPackCollection.beatmapLevelPacks[0];
                 }
