@@ -246,6 +246,17 @@ namespace SongBrowserPlugin.UI
 
                 this.ResizeStatsPanel();
 
+
+                // make sure the quick scroll buttons don't desync with regular scrolling
+                _tableViewPageDownButton.onClick.AddListener(delegate ()
+                {
+                    this.RefreshQuickScrollButtons();
+                });
+                _tableViewPageUpButton.onClick.AddListener(delegate ()
+                {
+                    this.RefreshQuickScrollButtons();
+                });
+
                 _rebuildUI = false;
                 Logger.Debug("Done Creating UI...");
             }
@@ -390,28 +401,39 @@ namespace SongBrowserPlugin.UI
                 });
 
                 // Create fast scroll buttons
+                int pageFastButtonX = 25;
+                Vector2 pageFastSize = new Vector2(12.5f, 7.75f);
+                Vector2 pageFastIconSize = new Vector2(0.1f, 0.1f);
+                Vector2 pageFastIconScale = new Vector2(0.4f, 0.4f);
+
                 Logger.Debug("Creating fast scroll button...");
                 _pageUpFastButton = UIBuilder.CreateIconButton(sortButtonTransform, otherButtonTemplate, arrowIcon,
-                    new Vector2(32, -12),
-                    new Vector2(6.0f, 5.5f),
-                    new Vector2(1.5f, 1.5f),
-                    new Vector2(1.0f, 1.0f), 
+                    new Vector2(pageFastButtonX, -13f),
+                    pageFastSize,
+                    pageFastIconSize,
+                    pageFastIconScale,
                     180);
                 UnityEngine.GameObject.Destroy(_pageUpFastButton.GetComponentsInChildren<UnityEngine.UI.Image>().First(btn => btn.name == "Stroke"));
-                _pageUpFastButton.onClick.AddListener(delegate () {
+                _pageUpFastButton.onClick.AddListener(delegate ()
+                {
                     this.JumpSongList(-1, SEGMENT_PERCENT);
                 });
+                
 
                 _pageDownFastButton = UIBuilder.CreateIconButton(sortButtonTransform, otherButtonTemplate, arrowIcon,
-                    new Vector2(32, -78.5f),
-                    new Vector2(6.0f, 5.5f),
-                    new Vector2(1.5f, 1.5f),
-                    new Vector2(1.0f, 1.0f), 
+                    new Vector2(pageFastButtonX, -80f),
+                    pageFastSize,
+                    pageFastIconSize,
+                    pageFastIconScale,
                     0);
+                
                 UnityEngine.GameObject.Destroy(_pageDownFastButton.GetComponentsInChildren<UnityEngine.UI.Image>().First(btn => btn.name == "Stroke"));
-                _pageDownFastButton.onClick.AddListener(delegate () {
+                _pageDownFastButton.onClick.AddListener(delegate ()
+                {
                     this.JumpSongList(1, SEGMENT_PERCENT);
                 });
+
+                
 
                 // Create enter folder button
                 if (_model.Settings.folderSupportEnabled)
@@ -1268,8 +1290,24 @@ namespace SongBrowserPlugin.UI
             if (selectedIndex >= 0)
             {
                 Logger.Debug("Scrolling to idx: {0}", selectedIndex);
-                TableView tableView = table.GetComponentInChildren<TableView>();
-                tableView.SelectCellWithIdx(selectedIndex, true);
+
+                TableView listTableView = _levelPackLevelsViewController
+                    .GetPrivateField<LevelPackLevelsTableView>("_levelPackLevelsTableView")
+                    .GetPrivateField<TableView>("_tableView");
+
+                var scrollPosType = TableView.ScrollPositionType.Center;
+                if (selectedIndex == 0)
+                {
+                    scrollPosType = TableView.ScrollPositionType.Beginning;
+                }
+                if (selectedIndex == _model.SortedSongList.Count-1)
+                {
+                    scrollPosType = TableView.ScrollPositionType.End;
+                }
+
+                listTableView.ScrollToCellWithIdx(selectedIndex, scrollPosType, true);
+                RefreshQuickScrollButtons();
+
                 _lastRow = selectedIndex;
             }
             else
