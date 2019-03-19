@@ -209,6 +209,16 @@ namespace SongBrowserPlugin.UI
                     Logger.Debug("Acquired BeatmapDifficultySegmentedControlController [{0}]", _levelDifficultyViewController.GetInstanceID());
                 }
 
+                //if (_tableViewPageUpButton == null)
+                {
+                    _tableViewPageUpButton = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageUpButton");
+                }
+
+                //if (_tableViewPageDownButton == null)
+                {
+                    _tableViewPageDownButton = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageDownButton");
+                }
+
                 _playButton = _standardLevelDetailView.GetComponentsInChildren<Button>().FirstOrDefault(x => x.name == "PlayButton");
                 Logger.Debug("Acquired PlayButton [{0}]", _playButton.GetInstanceID());
 
