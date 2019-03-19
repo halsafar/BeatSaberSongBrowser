@@ -576,6 +576,11 @@ namespace SongBrowserPlugin.UI
                     }
                 }                                                    
             }
+
+            //Scroll to start of the list
+            var levelsTableView = _levelPackLevelsViewController.GetPrivateField<LevelPackLevelsTableView>("_levelPackLevelsTableView");
+            TableView listTableView = levelsTableView.GetPrivateField<TableView>("_tableView");
+            listTableView.ScrollToCellWithIdx(0, TableView.ScrollPositionType.Beginning, false);
         }
 
         /// <summary>
