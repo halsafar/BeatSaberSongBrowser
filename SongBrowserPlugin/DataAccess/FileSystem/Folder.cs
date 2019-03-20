@@ -36,7 +36,7 @@ namespace SongBrowserPlugin.DataAccess.FileSystem
         }
     }
 
-    class FolderLevel : LevelSO
+    class FolderLevel : BeatmapLevelSO
     {
         public void Init(String relativePath, String name, Sprite coverImage)
         {
@@ -53,7 +53,7 @@ namespace SongBrowserPlugin.DataAccess.FileSystem
             difficultyBeatmaps.Add(newDiffBeatmap);
 
             var sceneInfo = Resources.Load<SceneInfo>("SceneInfo/" + "DefaultEnvironment" + "SceneInfo");
-            this.InitFull(_levelID, _songName, _songSubName, _songAuthorName, _levelAuthorName, SongLoaderPlugin.SongLoader.TemporaryAudioClip, 1, 1, 1, 1, 1, 1, coverImage, difficultyBeatmaps.ToArray(), sceneInfo, null);
+            this.InitFull(_levelID, _songName, _songSubName, _songAuthorName, _levelAuthorName, SongLoaderPlugin.SongLoader.TemporaryAudioClip, 1, 1, 1, 1, 1, 1, coverImage, sceneInfo, null);
             this.InitData();
         }
     }

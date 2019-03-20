@@ -2,6 +2,7 @@
 using SimpleJSON;
 using SongBrowserPlugin.DataAccess;
 using SongBrowserPlugin.DataAccess.BeatSaverApi;
+using SongBrowserPlugin.Internals;
 using SongBrowserPlugin.UI.DownloadQueue;
 using SongLoaderPlugin;
 using System;
@@ -17,11 +18,13 @@ using Logger = SongBrowserPlugin.Logging.Logger;
 
 namespace SongBrowserPlugin.UI
 {
+    // https://github.com/andruzzzhka/BeatSaverDownloader/blob/master/BeatSaverDownloader/UI/FlowCoordinators/PlaylistsFlowCoordinator.cs
+    // +Keyboard Input
     public class PlaylistFlowCoordinator : FlowCoordinator
     {
         public event Action<Playlist> didFinishEvent;
 
-        public FlowCoordinator ParentFlowCoordinator;
+        public FlowCoordinator parentFlowCoordinator;
 
         private BackButtonNavigationController _playlistsNavigationController;
         private PlaylistListViewController _playlistListViewController;
@@ -30,65 +33,49 @@ namespace SongBrowserPlugin.UI
 
         private bool _downloadingPlaylist;
 
-        private PlaylistsReader _playlistsReader;
         private Playlist _lastPlaylist;
 
         public void Awake()
         {
-            if (_playlistsNavigationController == null)
+
+            if (_playlistsNavigationController == null && _playlistDetailViewController == null)
             {
                 _playlistsNavigationController = BeatSaberUI.CreateViewController<BackButtonNavigationController>();
+                _playlistsNavigationController.didFinishEvent += _playlistsNavigationController_didFinishEvent;
 
                 GameObject _playlistDetailGameObject = Instantiate(Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First(), _playlistsNavigationController.rectTransform, false).gameObject;
                 _playlistDetailViewController = _playlistDetailGameObject.AddComponent<PlaylistDetailViewController>();
                 Destroy(_playlistDetailGameObject.GetComponent<StandardLevelDetailViewController>());
                 _playlistDetailViewController.name = "PlaylistDetailViewController";
+
+                _playlistDetailViewController.downloadButtonPressed += _playlistDetailViewController_downloadButtonPressed;
+                _playlistDetailViewController.selectButtonPressed += _playlistDetailViewController_selectButtonPressed;
+                _playlistDetailViewController.SetSelectButtonText("Select");
             }
         }
 
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
-            try
+            if (firstActivation)
             {
-                if (firstActivation && activationType == ActivationType.AddedToHierarchy)
+                title = "Playlists";
+
+                _playlistListViewController = BeatSaberUI.CreateViewController<PlaylistListViewController>();
+                _playlistListViewController.didSelectRow += _playlistListViewController_didSelectRow;
+
+                _downloadQueueViewController = BeatSaberUI.CreateViewController<DownloadQueueViewController>();
+
+                SetViewControllersToNavigationConctroller(_playlistsNavigationController, new VRUIViewController[]
                 {
-                    title = "Playlists";
+                _playlistListViewController
+                });
 
-                    if (_playlistsReader == null)
-                    {
-                        _playlistsReader = new PlaylistsReader();
-                        _playlistsReader.UpdatePlaylists();
-                        Logger.Debug("Reader found {0} playlists!", _playlistsReader.Playlists.Count);
-
-                        this.MatchSongsForAllPlaylists(true);
-                    }
-
-                    _playlistsNavigationController.didFinishEvent += _playlistsNavigationController_didFinishEvent;
-
-                    _playlistListViewController = BeatSaberUI.CreateViewController<PlaylistListViewController>();
-                    _playlistListViewController.didSelectRow += _playlistListViewController_didSelectRow;
-
-                    _playlistDetailViewController.downloadButtonPressed += _playlistDetailViewController_downloadButtonPressed;
-                    _playlistDetailViewController.selectButtonPressed += _playlistDetailViewController_selectButtonPressed;
-
-                    _downloadQueueViewController = BeatSaberUI.CreateViewController<DownloadQueueViewController>();
-
-                    SetViewControllersToNavigationConctroller(_playlistsNavigationController, new VRUIViewController[]
-                    {
-                        _playlistListViewController
-                    });
-
-                    ProvideInitialViewControllers(_playlistsNavigationController, _downloadQueueViewController, null);
-                }
-                _downloadingPlaylist = false;
-                _playlistListViewController.SetContent(_playlistsReader.Playlists);
-
-                _downloadQueueViewController.allSongsDownloaded += _downloadQueueViewController_allSongsDownloaded;
+                ProvideInitialViewControllers(_playlistsNavigationController, _downloadQueueViewController, null);
             }
-            catch (Exception e)
-            {
-                Logger.Exception("Error activating playlist flow coordinator: ", e);
-            }
+            _downloadingPlaylist = false;
+            _playlistListViewController.SetContent(PlaylistsCollection.loadedPlaylists);
+
+            _downloadQueueViewController.allSongsDownloaded += _downloadQueueViewController_allSongsDownloaded;
         }
 
         protected override void DidDeactivate(DeactivationType deactivationType)
@@ -123,7 +110,7 @@ namespace SongBrowserPlugin.UI
                     PopViewControllerFromNavigationController(_playlistsNavigationController, null, true);
                 }
 
-                ParentFlowCoordinator.InvokePrivateMethod("DismissFlowCoordinator", new object[] { this, null, false });
+                parentFlowCoordinator.InvokePrivateMethod("DismissFlowCoordinator", new object[] { this, null, false });
                 didFinishEvent?.Invoke(playlist);
             }
         }
@@ -136,31 +123,31 @@ namespace SongBrowserPlugin.UI
 
         public IEnumerator DownloadPlaylist(Playlist playlist)
         {
-            PlaylistFlowCoordinator.MatchSongsForPlaylist(playlist, true);
+            PlaylistsCollection.MatchSongsForPlaylist(playlist, true);
 
-            List<PlaylistSong> needToDownload = playlist.Songs.Where(x => x.Level == null).ToList();
-            Logger.Info($"Need to download {needToDownload.Count} songs");
+            List<PlaylistSong> needToDownload = playlist.songs.Where(x => x.level == null).ToList();
+            Logger.Log($"Need to download {needToDownload.Count} songs");
 
             _downloadingPlaylist = true;
             foreach (var item in needToDownload)
             {
                 Song beatSaverSong = null;
 
-                if (String.IsNullOrEmpty(playlist.CustomArchiveUrl))
+                if (String.IsNullOrEmpty(playlist.customArchiveUrl))
                 {
-                    Logger.Info("Obtaining hash and url for " + item.Key + ": " + item.SongName);
+                    Logger.Log("Obtaining hash and url for " + item.key + ": " + item.songName);
                     yield return GetInfoForSong(playlist, item, (Song song) => { beatSaverSong = song; });
                 }
                 else
                 {
-                    string archiveUrl = playlist.CustomArchiveUrl.Replace("[KEY]", item.Key);
+                    string archiveUrl = playlist.customArchiveUrl.Replace("[KEY]", item.key);
 
                     beatSaverSong = new Song()
                     {
-                        songName = item.SongName,
-                        id = item.Key,
+                        songName = item.songName,
+                        id = item.key,
                         downloadingProgress = 0f,
-                        hash = (item.LevelId == null ? "" : item.LevelId),
+                        hash = (item.levelId == null ? "" : item.levelId),
                         downloadUrl = archiveUrl
                     };
                 }
@@ -177,23 +164,23 @@ namespace SongBrowserPlugin.UI
         {
             string url = "";
             bool _usingHash = false;
-            if (!string.IsNullOrEmpty(song.Key))
+            if (!string.IsNullOrEmpty(song.key))
             {
-                url = $"{PluginConfig.BeatsaverURL}/api/songs/detail/{song.Key}";
-                if (!string.IsNullOrEmpty(playlist.CustomDetailUrl))
+                url = $"{PluginConfig.beatsaverURL}/api/songs/detail/{song.key}";
+                if (!string.IsNullOrEmpty(playlist.customDetailUrl))
                 {
-                    url = playlist.CustomDetailUrl + song.Key;
+                    url = playlist.customDetailUrl + song.key;
                 }
             }
-            else if (!string.IsNullOrEmpty(song.Hash))
+            else if (!string.IsNullOrEmpty(song.hash))
             {
-                url = $"{PluginConfig.BeatsaverURL}/api/songs/search/hash/{song.Hash}";
+                url = $"{PluginConfig.beatsaverURL}/api/songs/search/hash/{song.hash}";
                 _usingHash = true;
             }
-            else if (!string.IsNullOrEmpty(song.LevelId))
+            else if (!string.IsNullOrEmpty(song.levelId))
             {
-                string hash = CustomHelpers.CheckHex(song.LevelId.Substring(0, Math.Min(32, song.LevelId.Length)));
-                url = $"{PluginConfig.BeatsaverURL}/api/songs/search/hash/{hash}";
+                string hash = CustomHelpers.CheckHex(song.levelId.Substring(0, Math.Min(32, song.levelId.Length)));
+                url = $"{PluginConfig.beatsaverURL}/api/songs/search/hash/{hash}";
                 _usingHash = true;
             }
             else
@@ -207,7 +194,7 @@ namespace SongBrowserPlugin.UI
 
             if (www.isNetworkError || www.isHttpError)
             {
-                Logger.Error($"Unable to connect to {PluginConfig.BeatsaverURL}! " + (www.isNetworkError ? $"Network error: {www.error}" : (www.isHttpError ? $"HTTP error: {www.error}" : "Unknown error")));
+                Logger.Error($"Unable to connect to {PluginConfig.beatsaverURL}! " + (www.isNetworkError ? $"Network error: {www.error}" : (www.isHttpError ? $"HTTP error: {www.error}" : "Unknown error")));
             }
             else
             {
@@ -219,7 +206,7 @@ namespace SongBrowserPlugin.UI
                     {
                         if (node["songs"].Count == 0)
                         {
-                            Logger.Error($"Song {song.SongName} doesn't exist on BeatSaver!");
+                            Logger.Error($"Song {song.songName} doesn't exist on BeatSaver!");
                             songCallback?.Invoke(null);
                             yield break;
                         }
@@ -232,7 +219,7 @@ namespace SongBrowserPlugin.UI
                 }
                 catch (Exception e)
                 {
-                    Logger.Exception("Unable to parse response! Exception: ", e);
+                    Logger.Exception("Unable to parse response! Exception: " + e);
                 }
             }
         }
@@ -249,76 +236,9 @@ namespace SongBrowserPlugin.UI
                     PopViewControllerFromNavigationController(_playlistsNavigationController, null, true);
                 }
 
-                ParentFlowCoordinator.InvokePrivateMethod("DismissFlowCoordinator", new object[] { this, null, false });
+                parentFlowCoordinator.InvokePrivateMethod("DismissFlowCoordinator", new object[] { this, null, false });
                 didFinishEvent?.Invoke(null);
             }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="playlist"></param>
-        /// <param name="matchAll"></param>
-        public static void MatchSongsForPlaylist(Playlist playlist, bool matchAll = false)
-        {
-            if (!SongLoader.AreSongsLoaded || SongLoader.AreSongsLoading || playlist.Title == "All songs" || playlist.Title == "Your favorite songs") return;
-            Logger.Info("Started matching songs for playlist \"" + playlist.Title + "\"...");
-            if (!playlist.Songs.All(x => x.Level != null) || matchAll)
-            {
-                Stopwatch execTime = new Stopwatch();
-                execTime.Start();
-                playlist.Songs.AsParallel().ForAll(x =>
-                {
-                    if (x.Level == null || matchAll)
-                    {
-                        try
-                        {
-                            if (!string.IsNullOrEmpty(x.LevelId)) //check that we have levelId and if we do, try to match level
-                            {
-                                x.Level = SongLoader.CustomLevels.FirstOrDefault(y => y.levelID == x.LevelId);
-                            }
-                            if (x.Level == null && !string.IsNullOrEmpty(x.Hash)) //if level is still null, check that we have hash and if we do, try to match level
-                            {
-                                x.Level = SongLoader.CustomLevels.FirstOrDefault(y => y.levelID.StartsWith(x.Hash.ToUpper()));
-                            }
-                            if (x.Level == null && !string.IsNullOrEmpty(x.Key)) //if level is still null, check that we have key and if we do, try to match level
-                            {
-                                ScrappedSong song = ScrappedData.Songs.FirstOrDefault(z => z.Key == x.Key);
-                                if (song != null)
-                                {
-                                    x.Level = SongLoader.CustomLevels.FirstOrDefault(y => y.levelID.StartsWith(song.Hash));
-                                }
-                                else
-                                {
-                                    x.Level = SongLoader.CustomLevels.FirstOrDefault(y => y.customSongInfo.path.Contains(x.Key));
-                                }
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.Warning($"Unable to match song with {(string.IsNullOrEmpty(x.Key) ? " unknown key!" : ("key " + x.Key + " !"))} Exception: {e}");
-                        }
-                    }
-                });
-                Logger.Info($"Matched all songs for playlist \"{playlist.Title}\"! Time: {execTime.Elapsed.TotalSeconds.ToString("0.00")}s");
-                execTime.Reset();
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="matchAll"></param>
-        public void MatchSongsForAllPlaylists(bool matchAll = false)
-        {
-            Logger.Info("Matching songs for all playlists!");
-            Task.Run(() =>
-            {
-                for (int i = 0; i < _playlistsReader.Playlists.Count; i++)
-                {
-                    MatchSongsForPlaylist(_playlistsReader.Playlists[i], matchAll);
-                }
-            });
         }
 
 #if DEBUG

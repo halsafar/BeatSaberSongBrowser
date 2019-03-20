@@ -26,7 +26,7 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         private void Awake()
         {
-            Logger.Trace("Awake()");
+            Logger.Trace("Awake-ScoreSaberDatabaseDownloader()");
 
             if (Instance == null)
             {

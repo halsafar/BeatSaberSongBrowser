@@ -15,9 +15,9 @@ namespace SongBrowserPlugin.DataAccess
     {
         Default,
         Author,
-        Original,
+        Original, //deprecated
         Newest,        
-        PlayCount,
+        PlayCount,  //deprecated
         Difficulty,
         Random,
         PP,
@@ -171,6 +171,16 @@ namespace SongBrowserPlugin.DataAccess
                     String[] downloaderFavorites = File.ReadAllLines(SongBrowserSettings.DownloaderFavoritesFilePath());
                     retVal.Favorites.UnionWith(downloaderFavorites);
                 }
+
+                Playlist p = new Playlist
+                {
+                    playlistTitle = "Song Browser Favorites",
+                    playlistAuthor = "SongBrowserPlugin",
+                    fileLoc = "",
+                    image = Base64Sprites.PlaylistIconB64,
+                    songs = new List<PlaylistSong>(),
+                };
+                p.CreateNew(playlistPath);
             }
 
             if (String.IsNullOrEmpty(retVal.currentEditingPlaylistFile))
@@ -218,17 +228,17 @@ namespace SongBrowserPlugin.DataAccess
             Playlist p = null;
             if (playlistExists)
             {
-                p = PlaylistsReader.ParsePlaylist(playlistPath);
+                p = Playlist.LoadPlaylist(playlistPath);
             }
             else
             {
                 p = new Playlist
                 {
-                    Title = "Song Browser Favorites",
-                    Author = "SongBrowserPlugin",
-                    Path = "",
-                    Image = Base64Sprites.PlaylistIconB64,
-                    Songs = new List<PlaylistSong>(),
+                    playlistTitle = "Song Browser Favorites",
+                    playlistAuthor = "SongBrowserPlugin",
+                    fileLoc = "",
+                    image = Base64Sprites.PlaylistIconB64,
+                    songs = new List<PlaylistSong>(),
                 };
             }
 
@@ -237,27 +247,27 @@ namespace SongBrowserPlugin.DataAccess
             {
                 PlaylistSong playlistSong = new PlaylistSong
                 {
-                    LevelId = levelId
+                    levelId = levelId
                 };
 
                 if (levelIdToCustomLevel.ContainsKey(levelId) && levelIdToSongVersion.ContainsKey(levelId))
                 {
-                    playlistSong.SongName = levelIdToCustomLevel[levelId].songName;
-                    playlistSong.Key = levelIdToSongVersion[levelId];
+                    playlistSong.songName = levelIdToCustomLevel[levelId].songName;
+                    playlistSong.key = levelIdToSongVersion[levelId];
                 }
                 else
                 {
                     // No easy way to look up original songs... They will still work but have wrong song name in playlist.  
-                    playlistSong.SongName = levelId;
-                    playlistSong.Key = "";
+                    playlistSong.songName = levelId;
+                    playlistSong.key = "";
                 }
 
-                p.Songs.Add(playlistSong);
+                p.songs.Add(playlistSong);
 
                 return true;
             });
-            
-            PlaylistWriter.WritePlaylist(p, playlistPath);
+
+            p.SavePlaylist(playlistPath);
 
             if (String.IsNullOrEmpty(this.currentEditingPlaylistFile))
             {
@@ -294,7 +304,6 @@ namespace SongBrowserPlugin.DataAccess
                 return;
             }
 
-            // TODO - not here
             if (searchTerms.Count > 10)
             {
                 searchTerms.RemoveRange(10, searchTerms.Count - 10);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using SimpleJSON;
 using SongLoaderPlugin;
 using SongLoaderPlugin.OverrideClasses;
@@ -182,7 +183,7 @@ namespace SongBrowserPlugin.DataAccess.BeatSaverApi
             songName = _data.songName;
             songSubName = _data.songSubName;
             authorName = _data.songAuthorName;
-            difficultyLevels = ConvertDifficultyLevels(_data.difficultyBeatmaps);
+            difficultyLevels = ConvertDifficultyLevels(_data.difficultyBeatmapSets.SelectMany(x => x.difficultyBeatmaps).ToArray());
             path = _data.customSongInfo.path;
             hash = _data.levelID.Substring(0, 32);
         }
