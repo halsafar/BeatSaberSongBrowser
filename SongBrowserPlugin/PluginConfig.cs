@@ -13,6 +13,7 @@ using Logger = SongBrowserPlugin.Logging.Logger;
 
 namespace SongBrowserPlugin
 {
+    // Downloader config
     class PluginConfig
     {
         public static int maxSimultaneousDownloads = 3;
