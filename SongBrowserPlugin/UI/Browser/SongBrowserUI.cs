@@ -1224,7 +1224,14 @@ namespace SongBrowserPlugin.UI
                 //_levelListViewController.SetLevels(levels);                
                 //ReflectionUtil.SetPrivateField(_levelListTableView, "_levels", levels);                
                 ///ReflectionUtil.SetPrivateField(_levelListViewController, "_levels", levels);
-                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelPackLevelsTableView, "_tableView");
+                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelPackLevelsTableView, "_tableView");                
+                bool tableViewInit = ReflectionUtil.GetPrivateField<bool>(tableView, "_isInitialized");
+                if (!tableViewInit)
+                {
+                    Logger.Debug("LevelPackLevelListTableView.TableView is not initialized... nothing to reload...");
+                    return;
+                }
+
                 if (tableView == null && !tableView.isActiveAndEnabled)
                 {
                     Logger.Debug("TableView is not available yet, cannot refresh...");
