@@ -577,7 +577,9 @@ namespace SongBrowserPlugin.UI
 
             try
             {
-
+                RefreshSongList();
+                RefreshSortButtonUI();
+                RefreshQuickScrollButtons();
             }
             catch (Exception e)
             {
