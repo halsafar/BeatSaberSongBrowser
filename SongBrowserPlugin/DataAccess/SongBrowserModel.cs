@@ -28,6 +28,7 @@ namespace SongBrowserPlugin
         private List<BeatmapLevelSO> _filteredSongs;
         private List<BeatmapLevelSO> _sortedSongs;
         private List<BeatmapLevelSO> _originalSongs;
+        private List<BeatmapLevelSO> _levelPackSongs;
         private Dictionary<String, SongLoaderPlugin.OverrideClasses.CustomLevel> _levelIdToCustomLevel;
         private Dictionary<String, double> _cachedLastWriteTimes;
         private Dictionary<string, int> _weights;
@@ -42,6 +43,8 @@ namespace SongBrowserPlugin
         public BeatmapCharacteristicSO CurrentBeatmapCharacteristicSO;
 
         public static Action<List<CustomLevel>> didFinishProcessingSongs;
+
+        private bool _isPreviewLevelPack;
 
         /// <summary>
         /// Get the settings the model is using.
@@ -156,9 +159,28 @@ namespace SongBrowserPlugin
             }
         }
 
+        private IBeatmapLevelPack _currentLevelPack;
         public IBeatmapLevelPack CurrentLevelPack
         {
-            get; set;
+            get
+            {
+                return _currentLevelPack;
+            }
+
+            set
+            {
+                // Forces us to query again
+                _levelPackSongs = null;
+                _currentLevelPack = value;
+            }
+        }
+
+        public bool IsCurrentLevelPackPreview
+        {
+            get
+            {
+                return _isPreviewLevelPack;
+            }
         }
 
         public Playlist CurrentEditingPlaylist;
@@ -250,21 +272,41 @@ namespace SongBrowserPlugin
             if (this.CurrentBeatmapCharacteristicSO == null)
             {
                 // TODO - this probably needs to be queried or passed in earlier, hack for now
+                // StandardBeatmapCharacteristic
+                Logger.Info("No Beatmap Characteristic selected... selecting default...");
                 this.CurrentBeatmapCharacteristicSO = Resources.FindObjectsOfTypeAll<BeatmapCharacteristicCollectionSO>().FirstOrDefault().beatmapCharacteristics[0];
-                Logger.Info("No Beatmap Characteristic selected... defaulting: {0}", this.CurrentBeatmapCharacteristicSO);
-                //return;
             }
 
             Stopwatch timer = new Stopwatch();
             timer.Start();
 
-            // Get current level pack level collection
-            var beatmapLevelPack = this.CurrentLevelPack as BeatmapLevelPackSO;
-            _originalSongs = (beatmapLevelPack.beatmapLevelCollection as BeatmapLevelCollectionSO).GetPrivateField<BeatmapLevelSO[]>("_beatmapLevels").ToList();
-            Logger.Debug("Got {0} songs from level collections...", _originalSongs.Count);
-            //_originalSongs.ForEach(x => Logger.Debug("{0} by {1} = {2}", x.name, x.levelAuthorName, x.levelID));
+            // Get current level pack level collection if we don't already have songs to work with.
+            if (_levelPackSongs == null)
+            {
+                Logger.Debug("Attempting to get song list from levelPack: {0}...", this.CurrentLevelPack);
+                var beatmapLevelPack = this.CurrentLevelPack as BeatmapLevelPackSO;
 
-            _sortedSongs = _originalSongs;
+                // TODO - need to rethink interface here, not all level packs can be cast this high, some sort functions need it.
+                //      - this helps prevent DLC from breaking everything
+                if (beatmapLevelPack == null)
+                {
+                    Logger.Info("DLC Detected...  Broken at the moment.");
+                    _isPreviewLevelPack = true;
+                    _originalSongs = new List<BeatmapLevelSO>();
+                    return;
+                }
+                else
+                {
+                    _isPreviewLevelPack = false;
+                }
+                _levelPackSongs = (beatmapLevelPack.beatmapLevelCollection as BeatmapLevelCollectionSO).GetPrivateField<BeatmapLevelSO[]>("_beatmapLevels").ToList();
+                Logger.Debug("Got {0} songs from level collections...", _levelPackSongs.Count);
+            }
+
+            // Clone the song list...
+            _originalSongs = new List<BeatmapLevelSO>(_levelPackSongs);
+            _sortedSongs = new List<BeatmapLevelSO>(_originalSongs);
+            //_sortedSongs.ForEach(x => Logger.Debug("{0} by {1} = {2}", x.name, x.levelAuthorName, x.levelID));
 
             // Calculate some information about the custom song dir
             String customSongsPath = Path.Combine(Environment.CurrentDirectory, CUSTOM_SONGS_DIR);
@@ -680,6 +722,12 @@ namespace SongBrowserPlugin
                     Logger.Debug("Missing KEY: {0}", level.levelID);
                 }
             }*/
+
+            // TODO - remove as part of unifying song list interface
+            if (_isPreviewLevelPack)
+            {
+                return;
+            }
 
             if (_directoryStack.Count <= 0)
             {

@@ -549,6 +549,20 @@ namespace SongBrowserPlugin.UI
         private void _levelPacksTableView_didSelectPackEvent(LevelPacksTableView arg1, IBeatmapLevelPack arg2)
         {
             Logger.Trace("_levelPacksTableView_didSelectPackEvent(arg2={0})", arg2);
+
+            try
+            {
+                this._model.CurrentLevelPack = arg2;
+
+                UpdateSongList();
+                RefreshSongList();
+                RefreshSortButtonUI();
+                RefreshQuickScrollButtons();
+            }
+            catch (Exception e)
+            {
+                Logger.Exception("Exception handling didSelectPackEvent...", e);
+            }
         }
 
         /// <summary>
@@ -561,8 +575,14 @@ namespace SongBrowserPlugin.UI
         {
             Logger.Trace("_levelPackViewController_didSelectPackEvent(arg2={0})", arg2);
 
-            this._model.CurrentLevelPack = arg2;
-            _model.UpdateSongLists();
+            try
+            {
+
+            }
+            catch (Exception e)
+            {
+                Logger.Exception("Exception handling didSelectPackEvent...", e);
+            }
         }
 
         /// <summary>
@@ -1208,6 +1228,12 @@ namespace SongBrowserPlugin.UI
             Logger.Info("Refreshing the song list view.");
             try
             {
+                // TODO - remove as part of unifying the we handle the song lists
+                if (_model.IsCurrentLevelPackPreview)
+                {
+                    return;
+                }
+
                 if (_model.SortedSongList == null)
                 {
                     Logger.Debug("Songs are not sorted yet, nothing to refresh.");
@@ -1216,15 +1242,8 @@ namespace SongBrowserPlugin.UI
 
                 var levels = _model.SortedSongList.ToArray();
 
-                Logger.Debug("Overwriting levelPack.beatmapLevelCollection._beatmapLevels");
-                IBeatmapLevelPack levelPack = this.Model.CurrentLevelPack;
-                ReflectionUtil.SetPrivateField(levelPack.beatmapLevelCollection, "_beatmapLevels", levels);
-
-                Logger.Debug("Reloading SongList TableView");
-                //_levelListViewController.SetLevels(levels);                
-                //ReflectionUtil.SetPrivateField(_levelListTableView, "_levels", levels);                
-                ///ReflectionUtil.SetPrivateField(_levelListViewController, "_levels", levels);
-                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelPackLevelsTableView, "_tableView");                
+                Logger.Debug("Checking if TableView is initialized...");
+                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelPackLevelsTableView, "_tableView");
                 bool tableViewInit = ReflectionUtil.GetPrivateField<bool>(tableView, "_isInitialized");
                 if (!tableViewInit)
                 {
@@ -1232,11 +1251,11 @@ namespace SongBrowserPlugin.UI
                     return;
                 }
 
-                if (tableView == null && !tableView.isActiveAndEnabled)
-                {
-                    Logger.Debug("TableView is not available yet, cannot refresh...");
-                    return;
-                }
+                Logger.Debug("Overwriting levelPack.beatmapLevelCollection._beatmapLevels");
+                IBeatmapLevelPack levelPack = this.Model.CurrentLevelPack;
+                ReflectionUtil.SetPrivateField(levelPack.beatmapLevelCollection, "_beatmapLevels", levels);
+
+                Logger.Debug("Reloading SongList TableView");
                 tableView.ReloadData();
 
                 Logger.Debug("Attempting to scroll to level...");
@@ -1442,7 +1461,7 @@ namespace SongBrowserPlugin.UI
                     // c - select difficulty for top song
                     if (Input.GetKeyDown(KeyCode.C))
                     {
-                        _levelPacksTableView.SelectCellWithIdx(2);
+                        _levelPacksTableView.SelectCellWithIdx(5);
                         _levelPacksTableView.HandleDidSelectColumnEvent(null, 2);
 
                         TableView listTableView = this._levelPackLevelsTableView.GetPrivateField<TableView>("_tableView");
