@@ -67,31 +67,15 @@ namespace SongBrowserPlugin
             InstallHandlers();
 
             StartCoroutine(ScrappedData.Instance.DownloadScrappedData((List<ScrappedSong> songs) => { }));
-            //StartCoroutine(WaitForSongListUI());
-        }
 
-        /// <summary>
-        /// Wait for the song list to be visible to draw it.
-        /// </summary>
-        /// <returns></returns>
-        private IEnumerator WaitForSongListUI()
-        {
-            Logger.Trace("WaitForSongListUI()");
-
-            yield return new WaitUntil(delegate () { return Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().Any() && Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().Any(); });
-
-            Logger.Debug("Found Solo and Party FreePlayFlowCoordinators...");
-
-            if (SongLoaderPlugin.SongLoader.AreSongsLoaded)
+            /*if (SongLoaderPlugin.SongLoader.AreSongsLoaded)
             {
                 OnSongLoaderLoadedSongs(null, SongLoader.CustomLevels);
             }
             else
             {
                 SongLoader.SongsLoadedEvent += OnSongLoaderLoadedSongs;
-            }
-
-            _songBrowserUI.RefreshSongList();
+            }*/
         }
 
         /// <summary>
@@ -131,7 +115,7 @@ namespace SongBrowserPlugin
             }
             catch (Exception e)
             {
-                Logger.Exception("Exception during OnSongLoaderLoadedSongs: ", e);
+                Logger.Exception("Exception during OnScoreSaberDataDownloaded: ", e);
             }
         }
 
