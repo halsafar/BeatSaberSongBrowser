@@ -370,7 +370,7 @@ namespace SongBrowserPlugin.UI
                 Logger.Debug("Modifying and Cloning PlayButtons...");
                 RectTransform detailButtonContainerRect = _standardLevelDetailView.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayContainer");
                 RectTransform detailButtonRect = detailButtonContainerRect.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayButtons");
-                detailButtonRect.anchoredPosition = new Vector2(detailButtonRect.anchoredPosition.x, detailButtonRect.anchoredPosition.y + 5.0f);
+                detailButtonRect.anchoredPosition = new Vector2(detailButtonRect.anchoredPosition.x, detailButtonRect.anchoredPosition.y + 2.5f);
 
                 // clone existing button group
                 RectTransform newButtonRect = UnityEngine.Object.Instantiate(detailButtonRect, detailButtonContainerRect, false);
@@ -396,7 +396,7 @@ namespace SongBrowserPlugin.UI
                 _deleteButton = newButtonRect.GetComponentsInChildren<Button>().First(x => x.name == "PlayButton");
                 _deleteButton.name = "DeleteButton";
                 _deleteButton.onClick.RemoveAllListeners();
-                _deleteButton.GetComponentsInChildren<HorizontalLayoutGroup>().First(c => c.name == "Content").padding = new RectOffset(7, 7, 0, 0);
+                _deleteButton.GetComponentsInChildren<HorizontalLayoutGroup>().First(c => c.name == "Content").padding = new RectOffset(6, 6, 0, 0);
                 UIBuilder.SetButtonText(_deleteButton, "Delete");
                 _deleteButton.onClick.AddListener(delegate () {
                     HandleDeleteSelectedLevel();
@@ -421,7 +421,6 @@ namespace SongBrowserPlugin.UI
                     this.JumpSongList(-1, SEGMENT_PERCENT);
                 });
                 
-
                 _pageDownFastButton = UIBuilder.CreateIconButton(sortButtonTransform, otherButtonTemplate, arrowIcon,
                     new Vector2(pageFastButtonX, -80f),
                     pageFastSize,
@@ -434,9 +433,7 @@ namespace SongBrowserPlugin.UI
                 {
                     this.JumpSongList(1, SEGMENT_PERCENT);
                 });
-
                 
-
                 // Create enter folder button
                 if (_model.Settings.folderSupportEnabled)
                 {
