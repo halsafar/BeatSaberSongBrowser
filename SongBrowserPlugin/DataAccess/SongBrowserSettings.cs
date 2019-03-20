@@ -171,6 +171,16 @@ namespace SongBrowserPlugin.DataAccess
                     String[] downloaderFavorites = File.ReadAllLines(SongBrowserSettings.DownloaderFavoritesFilePath());
                     retVal.Favorites.UnionWith(downloaderFavorites);
                 }
+
+                Playlist p = new Playlist
+                {
+                    playlistTitle = "Song Browser Favorites",
+                    playlistAuthor = "SongBrowserPlugin",
+                    fileLoc = "",
+                    image = Base64Sprites.PlaylistIconB64,
+                    songs = new List<PlaylistSong>(),
+                };
+                p.CreateNew(playlistPath);
             }
 
             if (String.IsNullOrEmpty(retVal.currentEditingPlaylistFile))

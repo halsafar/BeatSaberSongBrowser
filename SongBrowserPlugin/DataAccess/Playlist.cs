@@ -382,5 +382,10 @@ namespace SongBrowserPlugin.DataAccess
                    playlistAuthor == playlist.playlistAuthor &&
                    songCountThis == songCountObj;
         }
+
+        public void CreateNew(String fileLoc)
+        {
+            File.WriteAllText(fileLoc, JsonConvert.SerializeObject(this, Formatting.Indented));
+        }
     }
 }
