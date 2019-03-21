@@ -68,14 +68,14 @@ namespace SongBrowserPlugin
 
             StartCoroutine(ScrappedData.Instance.DownloadScrappedData((List<ScrappedSong> songs) => { }));
 
-            /*if (SongLoaderPlugin.SongLoader.AreSongsLoaded)
+            if (SongLoaderPlugin.SongLoader.AreSongsLoaded)
             {
                 OnSongLoaderLoadedSongs(null, SongLoader.CustomLevels);
             }
             else
             {
                 SongLoader.SongsLoadedEvent += OnSongLoaderLoadedSongs;
-            }*/
+            }
         }
 
         /// <summary>
@@ -88,7 +88,8 @@ namespace SongBrowserPlugin
             Logger.Trace("OnSongLoaderLoadedSongs-SongBrowserApplication()");
             try
             {
-                _songBrowserUI.UpdateSongList();
+                //_songBrowserUI.UpdateSongList();
+                _songBrowserUI.Model.UpdateScoreSaberDataMapping();
             }
             catch (Exception e)
             {

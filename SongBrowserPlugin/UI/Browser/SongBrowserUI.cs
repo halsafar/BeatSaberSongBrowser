@@ -205,7 +205,7 @@ namespace SongBrowserPlugin.UI
 
                 //if (_levelDifficultyViewController == null)
                 {
-                    _levelDifficultyViewController = Resources.FindObjectsOfTypeAll<BeatmapDifficultySegmentedControlController>().First();
+                    _levelDifficultyViewController = _standardLevelDetailView.GetPrivateField<BeatmapDifficultySegmentedControlController>("_beatmapDifficultySegmentedControlController");
                     Logger.Debug("Acquired BeatmapDifficultySegmentedControlController [{0}]", _levelDifficultyViewController.GetInstanceID());
                 }
 
