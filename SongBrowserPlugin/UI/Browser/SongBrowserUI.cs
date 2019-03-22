@@ -185,6 +185,7 @@ namespace SongBrowserPlugin.UI
 
                 _tableViewPageUpButton = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageUpButton");
                 _tableViewPageDownButton = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageDownButton");
+                Logger.Debug("Acquired Page Up and Down buttons...");
 
                 _playButton = _standardLevelDetailView.GetComponentsInChildren<Button>().FirstOrDefault(x => x.name == "PlayButton");
                 Logger.Debug("Acquired PlayButton [{0}]", _playButton.GetInstanceID());
