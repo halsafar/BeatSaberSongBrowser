@@ -536,21 +536,18 @@ namespace SongBrowserPlugin.UI
             RefreshSortButtonUI();
             RefreshQuickScrollButtons();
 
-            // Handle instant queue logic, avoid picking a folder.
+            // Handle instant queue logic
             if (_model.Settings.sortMode == SongSortMode.Random && _model.Settings.randomInstantQueue)
             {
                 for (int i = 0; i < _model.SortedSongList.Count; i++)
                 {
-                    if (!_model.SortedSongList[i].levelID.StartsWith("Folder_"))
-                    {
-                        this.SelectAndScrollToLevel(_levelPackLevelsTableView, _model.SortedSongList[i].levelID);
-                        var beatMapDifficulties = _model.SortedSongList[i].difficultyBeatmapSets
-                            .Where(x => x.beatmapCharacteristic == _model.CurrentBeatmapCharacteristicSO)
-                            .SelectMany(x => x.difficultyBeatmaps);
-                        this._levelDifficultyViewController.HandleDifficultySegmentedControlDidSelectCell(null, beatMapDifficulties.Count()-1);
-                        _playButton.onClick.Invoke();
-                        break;
-                    }
+                    this.SelectAndScrollToLevel(_levelPackLevelsTableView, _model.SortedSongList[i].levelID);
+                    var beatMapDifficulties = _model.SortedSongList[i].difficultyBeatmapSets
+                        .Where(x => x.beatmapCharacteristic == _model.CurrentBeatmapCharacteristicSO)
+                        .SelectMany(x => x.difficultyBeatmaps);
+                    this._levelDifficultyViewController.HandleDifficultySegmentedControlDidSelectCell(null, beatMapDifficulties.Count()-1);
+                    _playButton.onClick.Invoke();
+                    break;                    
                 }                                                    
             }
 
@@ -688,7 +685,7 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
-        /// Turn enter folder button into play button.
+        /// Refresh stats panel.
         /// </summary>
         /// <param name="level"></param>
         private void HandleDidSelectLevelRow(IPreviewBeatmapLevel level)
@@ -1357,23 +1354,13 @@ namespace SongBrowserPlugin.UI
                         this._levelDifficultyViewController.HandleDifficultySegmentedControlDidSelectCell(null, 0);
                     }
 
-                    // return - start a song or enter a folder
+                    // return - start a song
                     if (Input.GetKeyDown(KeyCode.Return))
                     {
                         if (_playButton.isActiveAndEnabled)
                         {
                             _playButton.onClick.Invoke();
                         }
-                        else if (_enterFolderButton.isActiveAndEnabled)
-                        {
-                            _enterFolderButton.onClick.Invoke();
-                        }
-                    }
-
-                    // backspace - up a folder
-                    if (Input.GetKeyDown(KeyCode.Backspace))
-                    {
-                        _upFolderButton.onClick.Invoke();
                     }
 
                     // change song index

@@ -399,20 +399,13 @@ namespace SongBrowserPlugin
                 if (!_levelIdToPlayCount.ContainsKey(level.levelID))
                 {
                     // Skip folders
-                    if (level.levelID.StartsWith("Folder_"))
+                    int playCountSum = 0;
+                    foreach (BeatmapDifficulty difficulty in difficultyIterator)
                     {
-                        _levelIdToPlayCount.Add(level.levelID, 0);
+                        PlayerLevelStatsData stats = playerData.currentLocalPlayer.GetPlayerLevelStatsData(level.levelID, difficulty, this.CurrentBeatmapCharacteristicSO);
+                        playCountSum += stats.playCount;
                     }
-                    else
-                    {
-                        int playCountSum = 0;
-                        foreach (BeatmapDifficulty difficulty in difficultyIterator)
-                        {
-                            PlayerLevelStatsData stats = playerData.currentLocalPlayer.GetPlayerLevelStatsData(level.levelID, difficulty, this.CurrentBeatmapCharacteristicSO);
-                            playCountSum += stats.playCount;
-                        }
-                        _levelIdToPlayCount.Add(level.levelID, playCountSum);
-                    }
+                    _levelIdToPlayCount.Add(level.levelID, playCountSum);                    
                 }
             }
         }
@@ -752,26 +745,18 @@ namespace SongBrowserPlugin
             {
                 if (!levelIdToDifficultyValue.ContainsKey(level.levelID))
                 {
-                    // Skip folders
-                    if (level.levelID.StartsWith("Folder_"))
-                    {
-                        levelIdToDifficultyValue.Add(level.levelID, 0);
-                    }
-                    else
-                    {
-                        int difficultyValue = 0;
+                    int difficultyValue = 0;
 
-                        // Get the beatmap difficulties
-                        var difficulties = level.difficultyBeatmapSets
-                            .Where(x => x.beatmapCharacteristic == this.CurrentBeatmapCharacteristicSO)
-                            .SelectMany(x => x.difficultyBeatmaps);
+                    // Get the beatmap difficulties
+                    var difficulties = level.difficultyBeatmapSets
+                        .Where(x => x.beatmapCharacteristic == this.CurrentBeatmapCharacteristicSO)
+                        .SelectMany(x => x.difficultyBeatmaps);
 
-                        foreach (IDifficultyBeatmap difficultyBeatmap in difficulties)
-                        {                            
-                            difficultyValue += _difficultyWeights[difficultyBeatmap.difficulty];
-                        }
-                        levelIdToDifficultyValue.Add(level.levelID, difficultyValue);
+                    foreach (IDifficultyBeatmap difficultyBeatmap in difficulties)
+                    {                            
+                        difficultyValue += _difficultyWeights[difficultyBeatmap.difficulty];
                     }
+                    levelIdToDifficultyValue.Add(level.levelID, difficultyValue);                    
                 }
             }
 
