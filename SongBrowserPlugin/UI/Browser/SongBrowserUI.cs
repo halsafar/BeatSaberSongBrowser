@@ -586,16 +586,16 @@ namespace SongBrowserPlugin.UI
             // Handle instant queue logic
             if (_model.Settings.sortMode == SongSortMode.Random && _model.Settings.randomInstantQueue)
             {
-                for (int i = 0; i < _model.SortedSongList.Count; i++)
+                int index = 0;
+                if (_model.SortedSongList.Count > index)
                 {
-                    this.SelectAndScrollToLevel(_levelPackLevelsTableView, _model.SortedSongList[i].levelID);
-                    var beatMapDifficulties = _model.SortedSongList[i].difficultyBeatmapSets
+                    this.SelectAndScrollToLevel(_levelPackLevelsTableView, _model.SortedSongList[index].levelID);
+                    var beatMapDifficulties = _model.SortedSongList[index].difficultyBeatmapSets
                         .Where(x => x.beatmapCharacteristic == _model.CurrentBeatmapCharacteristicSO)
                         .SelectMany(x => x.difficultyBeatmaps);
-                    this._levelDifficultyViewController.HandleDifficultySegmentedControlDidSelectCell(null, beatMapDifficulties.Count()-1);
+                    this._levelDifficultyViewController.HandleDifficultySegmentedControlDidSelectCell(null, beatMapDifficulties.Count() - 1);
                     _playButton.onClick.Invoke();
-                    break;                    
-                }                                                    
+                }
             }
 
             //Scroll to start of the list
