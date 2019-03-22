@@ -92,7 +92,7 @@ namespace SongBrowserPlugin.UI
         private SongBrowserModel _model;
 
         // UI Created
-        private bool _rebuildUI = true;
+        private bool _uiCreated = false;
 
         public SongBrowserModel Model
         {
@@ -142,7 +142,7 @@ namespace SongBrowserPlugin.UI
             }
 
             // returning to the menu and switching modes could trigger this.
-            if (!_rebuildUI)
+            if (_uiCreated)
             {
                 return;
             }
@@ -224,7 +224,7 @@ namespace SongBrowserPlugin.UI
                     this.RefreshQuickScrollButtons();
                 });
 
-                _rebuildUI = false;
+                _uiCreated = true;
                 Logger.Debug("Done Creating UI...");
             }
             catch (Exception e)
@@ -441,6 +441,52 @@ namespace SongBrowserPlugin.UI
             var titleText = this._levelDetailViewController.GetComponentsInChildren<TextMeshProUGUI>(true).First(x => x.name == "SongNameText");
             
             titleText.fontSize = 5.0f;
+        }
+
+        /// <summary>
+        /// Show the UI.
+        /// </summary>
+        public void Show()
+        {
+            Logger.Trace("Show SongBrowserUI()");
+
+            this.SetVisibility(true);
+        }
+
+        /// <summary>
+        /// Hide the UI.
+        /// </summary>
+        public void Hide()
+        {
+            Logger.Trace("Hide SongBrowserUI()");
+
+            this.SetVisibility(false);
+        }
+
+        /// <summary>
+        /// Handle showing or hiding UI logic.
+        /// </summary>
+        /// <param name="visible"></param>
+        private void SetVisibility(bool visible)
+        {
+            // UI not created, nothing visible to hide...
+            if (!_uiCreated)
+            {
+                return;
+            }
+
+            _ppStatButton.gameObject.SetActive(visible);
+            _starStatButton.gameObject.SetActive(visible);
+            _njsStatButton.gameObject.SetActive(visible);
+
+            _sortButtonGroup.ForEach(x => x.Button.gameObject.SetActive(visible));
+            _filterButtonGroup.ForEach(x => x.Button.gameObject.SetActive(visible));
+
+            _addFavoriteButton.gameObject.SetActive(visible);
+            _deleteButton.gameObject.SetActive(visible);
+
+            _pageUpFastButton.gameObject.SetActive(visible);
+            _pageDownFastButton.gameObject.SetActive(visible);
         }
 
         /// <summary>

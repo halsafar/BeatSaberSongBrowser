@@ -164,7 +164,7 @@ namespace SongBrowserPlugin
 
             soloFreePlayButton.onClick.AddListener(HandleSoloModeSelection);
             partyFreePlayButton.onClick.AddListener(HandlePartyModeSelection);
-            campaignButton.onClick.AddListener(HandleSoloModeSelection);
+            campaignButton.onClick.AddListener(HandleCampaignModeSelection);
         }
 
         /// <summary>
@@ -176,6 +176,7 @@ namespace SongBrowserPlugin
         {
             Logger.Trace("HandleSoloModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.SoloFreePlay);
+            this._songBrowserUI.Show();
         }
 
         /// <summary>
@@ -187,6 +188,7 @@ namespace SongBrowserPlugin
         {
             Logger.Trace("HandlePartyModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.Party);
+            this._songBrowserUI.Show();
         }
 
         /// <summary>
@@ -198,6 +200,7 @@ namespace SongBrowserPlugin
         {
             Logger.Trace("HandleCampaignModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.SoloCampaign);
+            this._songBrowserUI.Hide();
         }
 
         /// <summary>
