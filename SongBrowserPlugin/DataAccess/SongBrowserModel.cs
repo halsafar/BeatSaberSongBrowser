@@ -1,5 +1,4 @@
 ﻿using SongBrowserPlugin.DataAccess;
-using SongBrowserPlugin.DataAccess.FileSystem;
 using SongBrowserPlugin.UI;
 using SongLoaderPlugin;
 using SongLoaderPlugin.OverrideClasses;
@@ -8,7 +7,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using UnityEngine;
 using Logger = SongBrowserPlugin.Logging.Logger;
 
@@ -37,8 +35,6 @@ namespace SongBrowserPlugin
         private Dictionary<string, int> _levelIdToPlayCount;
         private Dictionary<string, string> _levelIdToSongVersion;
         private Dictionary<string, BeatmapLevelSO> _keyToSong;
-        private Dictionary<String, DirectoryNode> _directoryTree;
-        private Stack<DirectoryNode> _directoryStack = new Stack<DirectoryNode>();
 
         public BeatmapCharacteristicSO CurrentBeatmapCharacteristicSO;
 
@@ -91,17 +87,6 @@ namespace SongBrowserPlugin
         }
 
         /// <summary>
-        /// How deep is the directory stack.
-        /// </summary>
-        public int DirStackSize
-        {
-            get
-            {
-                return _directoryStack.Count;
-            }
-        }
-
-        /// <summary>
         /// Get the last selected (stored in settings) level id.
         /// </summary>
         public String LastSelectedLevelId
@@ -114,23 +99,6 @@ namespace SongBrowserPlugin
             set
             {
                 _settings.currentLevelId = value;
-                _settings.Save();
-            }
-        }
-
-        /// <summary>
-        /// Get the last known directory the user visited.
-        /// </summary>
-        public String CurrentDirectory
-        {
-            get
-            {
-                return _settings.currentDirectory;
-            }
-
-            set
-            {
-                _settings.currentDirectory = value;
                 _settings.Save();
             }
         }
@@ -366,7 +334,6 @@ namespace SongBrowserPlugin
             // Update song Infos, directory tree, and sort
             this.UpdateScoreSaberDataMapping();
             this.UpdatePlayCounts();
-            this.UpdateDirectoryTree(customSongsPath);
 
             // Check if we need to upgrade settings file favorites
             try
@@ -496,174 +463,6 @@ namespace SongBrowserPlugin
         }
 
         /// <summary>
-        /// Make the directory tree.
-        /// </summary>
-        /// <param name="customSongsPath"></param>
-        private void UpdateDirectoryTree(String customSongsPath)
-        {
-            // Determine folder mapping
-            Uri customSongDirUri = new Uri(customSongsPath);
-
-            _directoryTree = new Dictionary<string, DirectoryNode>
-            {
-                [CUSTOM_SONGS_DIR] = new DirectoryNode(CUSTOM_SONGS_DIR)
-            };
-
-            if (_settings.folderSupportEnabled)
-            {
-                foreach (BeatmapLevelSO level in _originalSongs)
-                {
-                    AddItemToDirectoryTree(customSongDirUri, level);
-                }
-            }
-            else
-            {
-                _directoryTree[CUSTOM_SONGS_DIR].Levels = _originalSongs;
-            }
-                    
-            // Determine starting location
-            DirectoryNode currentNode = _directoryTree[CUSTOM_SONGS_DIR];
-            _directoryStack.Push(currentNode);
-
-            // Try to navigate directory path
-            if (!String.IsNullOrEmpty(this.CurrentDirectory))
-            {
-                String[] paths = this.CurrentDirectory.Split('/');
-                for (int i = 1; i < paths.Length; i++)
-                {
-                    if (currentNode.Nodes.ContainsKey(paths[i]))
-                    {
-                        currentNode = currentNode.Nodes[paths[i]];
-                        _directoryStack.Push(currentNode);
-                    }
-                }
-            }
-
-            //PrintDirectory(_directoryTree[CUSTOM_SONGS_DIR], 1);
-        }
-
-        /// <summary>
-        /// Add a song to directory tree.  Determine its place in the tree by walking the split directory path.
-        /// </summary>
-        /// <param name="customSongDirUri"></param>
-        /// <param name="level"></param>
-        private void AddItemToDirectoryTree(Uri customSongDirUri, BeatmapLevelSO level)
-        {
-            //Logger.Debug("Processing item into directory tree: {0}", level.levelID);
-            DirectoryNode currentNode = _directoryTree[CUSTOM_SONGS_DIR];
-            
-            // Just add original songs to root and bail
-            if (level.levelID.Length < 32)
-            {
-                currentNode.Levels.Add(level);
-                return;
-            }
-
-            CustomSongInfo songInfo = _levelIdToCustomLevel[level.levelID].customSongInfo;            
-            Uri customSongUri = new Uri(songInfo.path);
-            Uri pathDiff = customSongDirUri.MakeRelativeUri(customSongUri);
-            string relPath = Uri.UnescapeDataString(pathDiff.OriginalString);
-            string[] paths = relPath.Split('/');
-            Sprite folderIcon = Base64Sprites.FolderIcon;
-
-            // Prevent cache directory from building into the tree, will add all its leafs to root.
-            bool forceIntoRoot = false;
-            //Logger.Debug("Processing path: {0}", songInfo.path);
-            if (paths.Length > 2)
-            {
-                forceIntoRoot = paths[1].Contains(".cache");
-                Regex r = new Regex(@"^\d{1,}-\d{1,}");
-                if (r.Match(paths[1]).Success)
-                {
-                    forceIntoRoot = true;
-                }
-            }
-
-            for (int i = 1; i < paths.Length; i++)
-            {
-                string path = paths[i];                
-
-                if (path == Path.GetFileName(songInfo.path))
-                {
-                    //Logger.Debug("\tLevel Found Adding {0}->{1}", currentNode.Key, level.levelID);
-                    currentNode.Levels.Add(level);
-                    break;
-                }
-                else if (currentNode.Nodes.ContainsKey(path))
-                {                    
-                    currentNode = currentNode.Nodes[path];
-                }
-                else if (!forceIntoRoot)
-                {
-                    currentNode.Nodes[path] = new DirectoryNode(path);
-                    FolderLevel folderLevel = new FolderLevel();
-                    folderLevel.Init(relPath, path, folderIcon);
-
-                    //Logger.Debug("\tAdding folder level {0}->{1}", currentNode.Key, path);
-                    currentNode.Levels.Add(folderLevel);
-
-                    _cachedLastWriteTimes[folderLevel.levelID] = (File.GetLastWriteTimeUtc(relPath) - EPOCH).TotalMilliseconds;
-
-                    currentNode = currentNode.Nodes[path];
-                }
-            }
-        }
-
-        /// <summary>
-        /// Push a dir onto the stack.
-        /// </summary>
-        public void PushDirectory(IBeatmapLevel level)
-        {
-            DirectoryNode currentNode = _directoryStack.Peek();
-            Logger.Debug("Pushing directory {0}", level.songName);
-
-            if (!currentNode.Nodes.ContainsKey(level.songName))
-            {
-                Logger.Debug("Trying to push a directory that doesn't exist at this level.");
-                return;
-            }
-
-            _directoryStack.Push(currentNode.Nodes[level.songName]);
-
-            this.CurrentDirectory = level.levelID;
-                
-            ProcessSongList();            
-        }
-
-        /// <summary>
-        /// Pop a dir off the stack.
-        /// </summary>
-        public void PopDirectory()
-        {
-            if (_directoryStack.Count > 1)
-            {
-                _directoryStack.Pop();
-                String currentDir = "";
-                foreach (DirectoryNode node in _directoryStack)
-                {
-                    currentDir = node.Key + "/" + currentDir;
-                }
-                this.CurrentDirectory = "Folder_" + currentDir;
-                ProcessSongList();
-            }      
-        }
-
-        /// <summary>
-        /// Print the directory structure parsed.
-        /// </summary>
-        /// <param name="node"></param>
-        /// <param name="depth"></param>
-        private void PrintDirectory(DirectoryNode node, int depth)
-        {
-            Console.WriteLine("Dir: {0}".PadLeft(depth*4, ' '), node.Key);
-            node.Levels.ForEach(x => Console.WriteLine("{0}".PadLeft((depth + 1)*4, ' '), x.levelID));
-            foreach (KeyValuePair<string, DirectoryNode> childNode in node.Nodes)
-            {
-                PrintDirectory(childNode.Value, depth + 1);
-            }            
-        }
-
-        /// <summary>
         /// Add Song to Editing Playlist
         /// </summary>
         /// <param name="songInfo"></param>
@@ -729,7 +528,7 @@ namespace SongBrowserPlugin
                 return;
             }
 
-            if (_directoryStack.Count <= 0)
+            if (_levelPackSongs == null || _levelPackSongs.Count <= 0)
             {
                 Logger.Debug("Cannot process songs yet, songs infos have not been processed...");
                 return;
@@ -742,8 +541,8 @@ namespace SongBrowserPlugin
             }
             else
             {
-                Logger.Debug("Showing songs for directory: {0}", _directoryStack.Peek().Key);
-                _originalSongs = _directoryStack.Peek().Levels;
+                Logger.Debug("Using songs from level pack: {0}", this.CurrentLevelPack.packName);
+                _originalSongs = _levelPackSongs;
             }
 
             // filter
@@ -847,7 +646,7 @@ namespace SongBrowserPlugin
             }
 
             Logger.Info("Filtering song list by search term: {0}", searchTerm);
-            _originalSongs.ForEach(x => Logger.Debug($"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()).ToString()));
+            //_originalSongs.ForEach(x => Logger.Debug($"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()).ToString()));
 
             _filteredSongs = levels
                 .Where(x => $"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()))
@@ -870,7 +669,6 @@ namespace SongBrowserPlugin
             var levels = levelCollections.beatmapLevels;
             //var levels = levelCollections.GetLevelsWithBeatmapCharacteristic(CurrentBeatmapCharacteristicSO);
 
-            //Dictionary<String, BeatmapLevelSO> levelDict = levels.Select((val, index) => new { LevelId = val.levelID, Level = val }).ToDictionary(i => i.LevelId, i => i.Level);
             Dictionary<String, BeatmapLevelSO> levelDict = new Dictionary<string, BeatmapLevelSO>();
             foreach (BeatmapLevelSO level in levels)
             {

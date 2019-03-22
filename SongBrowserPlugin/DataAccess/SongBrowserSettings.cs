@@ -56,7 +56,6 @@ namespace SongBrowserPlugin.DataAccess
         public String currentPlaylistFile = default(String);
         public String currentEditingPlaylistFile = default(String);
 
-        public bool folderSupportEnabled = false;
         public bool randomInstantQueue = false;
         public bool deleteNumberedSongFolder = true;
         public int randomSongSeed;
@@ -188,6 +187,7 @@ namespace SongBrowserPlugin.DataAccess
                 retVal.currentEditingPlaylistFile = playlistPath;
             }
 
+            
             return retVal;
         }
 

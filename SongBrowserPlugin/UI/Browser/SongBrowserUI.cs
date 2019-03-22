@@ -67,9 +67,6 @@ namespace SongBrowserPlugin.UI
         private Button _pageUpFastButton;
         private Button _pageDownFastButton;
 
-        private Button _enterFolderButton;
-        private Button _upFolderButton;
-
         private SearchKeyboardViewController _searchViewController;
 
         private PlaylistFlowCoordinator _playListFlowCoordinator;
@@ -433,37 +430,8 @@ namespace SongBrowserPlugin.UI
                 {
                     this.JumpSongList(1, SEGMENT_PERCENT);
                 });
-                
-                // Create enter folder button
-                if (_model.Settings.folderSupportEnabled)
-                {
-                    _enterFolderButton = UIBuilder.CreateUIButton(otherButtonTransform, _playButton);
-                    _enterFolderButton.onClick.AddListener(delegate ()
-                    {
-                        _model.PushDirectory(_levelDetailViewController.selectedDifficultyBeatmap.level);
-                        this.RefreshSongList();
-                        this.RefreshDirectoryButtons();
-                    });
-                    UIBuilder.SetButtonText(_enterFolderButton, "Enter");
-
-                    // Create up folder button
-                    _upFolderButton = UIBuilder.CreateIconButton(sortButtonTransform, sortButtonTemplate, arrowIcon,
-                        new Vector2(filterButtonX + (iconButtonSize.x* filterButtonSetup.Count), buttonY),
-                        new Vector2(iconButtonSize.x, iconButtonSize.y),
-                        new Vector2(0.85f, 0.85f),
-                        new Vector2(2.0f, 2.0f),
-                        180);
-                    _upFolderButton.onClick.RemoveAllListeners();
-                    _upFolderButton.onClick.AddListener(delegate ()
-                    {
-                        _model.PopDirectory();
-                        this.RefreshSongList();
-                        this.RefreshDirectoryButtons();
-                    });
-                }
-
+                                
                 RefreshSortButtonUI();
-                RefreshDirectoryButtons();
 
                 Logger.Debug("Done Creating UIElements");
             }
@@ -732,15 +700,7 @@ namespace SongBrowserPlugin.UI
                 RefreshAddFavoriteButton(level.levelID);
                 RefreshQuickScrollButtons();
 
-                if (level.levelID.StartsWith("Folder_"))
-                {
-                    Logger.Debug("Folder selected!  Adjust PlayButton logic...");
-                    HandleDidSelectFolderRow(level);
-                }
-                else
-                {
-                    HandleDidSelectLevelRow(level);
-                }
+                HandleDidSelectLevelRow(level);
             }
             catch (Exception e)
             {
@@ -772,25 +732,11 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
-        /// Turn play button into enter folder button.
-        /// </summary>
-        private void HandleDidSelectFolderRow(IPreviewBeatmapLevel level)
-        {
-            _enterFolderButton.gameObject.SetActive(true);
-            _playButton.gameObject.SetActive(false);
-        }
-
-        /// <summary>
         /// Turn enter folder button into play button.
         /// </summary>
         /// <param name="level"></param>
         private void HandleDidSelectLevelRow(IPreviewBeatmapLevel level)
         {
-            // deal with enter folder button
-            if (_enterFolderButton != null)
-            {
-                _enterFolderButton.gameObject.SetActive(false);
-            }
             _playButton.gameObject.SetActive(true);
 
             this.RefreshScoreSaberData(level);
@@ -1199,27 +1145,6 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
-        /// Refresh the UI state of any directory buttons.
-        /// </summary>
-        public void RefreshDirectoryButtons()
-        {
-            // bail if no button, likely folder support not enabled.
-            if (_upFolderButton == null)
-            {
-                return;
-            }
-
-            if (_model.DirStackSize > 1)
-            {
-                _upFolderButton.interactable = true;
-            }
-            else
-            {
-                _upFolderButton.interactable = false;
-            }
-        }
-
-        /// <summary>
         /// Try to refresh the song list.  Broken for now.
         /// </summary>
         public void RefreshSongList()
@@ -1364,7 +1289,6 @@ namespace SongBrowserPlugin.UI
                 }
 
                 _model.UpdateSongLists();
-                this.RefreshDirectoryButtons();
             }
             catch (Exception e)
             {
