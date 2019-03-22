@@ -88,8 +88,7 @@ namespace SongBrowserPlugin
             Logger.Trace("OnSongLoaderLoadedSongs-SongBrowserApplication()");
             try
             {
-                //_songBrowserUI.UpdateSongList();
-                _songBrowserUI.Model.UpdateScoreSaberDataMapping();
+                _songBrowserUI.UpdateSongList();
             }
             catch (Exception e)
             {

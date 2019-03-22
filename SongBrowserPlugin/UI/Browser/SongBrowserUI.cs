@@ -520,7 +520,7 @@ namespace SongBrowserPlugin.UI
 
             try
             {
-                this._model.CurrentLevelPack = arg2;
+                this._model.SetCurrentLevelPack(arg2);
 
                 UpdateSongList();
                 RefreshSongList();
@@ -1175,10 +1175,6 @@ namespace SongBrowserPlugin.UI
                     return;
                 }
 
-                Logger.Debug("Overwriting levelPack.beatmapLevelCollection._beatmapLevels");
-                IBeatmapLevelPack levelPack = this.Model.CurrentLevelPack;
-                ReflectionUtil.SetPrivateField(levelPack.beatmapLevelCollection, "_beatmapLevels", levels);
-
                 Logger.Debug("Reloading SongList TableView");
                 tableView.ReloadData();
 
@@ -1280,12 +1276,12 @@ namespace SongBrowserPlugin.UI
             {
                 Logger.Trace("UpdateSongList()");
 
-                if (_model.CurrentLevelPack == null)
+                if (_model.CurrentLevelPack == null && _levelPackViewController != null)
                 {
                     // TODO - is this acceptable?  review....
                     Logger.Debug("No level pack selected, acquiring the first available...");
                     var levelPackCollection = _levelPackViewController.GetPrivateField<IBeatmapLevelPackCollection>("_levelPackCollection");
-                    _model.CurrentLevelPack = levelPackCollection.beatmapLevelPacks[0];
+                    this._model.SetCurrentLevelPack(levelPackCollection.beatmapLevelPacks[0]);
                 }
 
                 _model.UpdateSongLists();
