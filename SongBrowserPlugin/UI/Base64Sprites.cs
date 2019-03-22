@@ -17,6 +17,7 @@ namespace SongBrowserPlugin.UI
         public static Sprite SpeedIcon;
         public static Sprite StarIcon;
         public static Sprite GraphIcon;
+        public static Sprite DeleteIcon;
         public static Sprite SortButtonStroke;
         public static Sprite BeastSaberLogo;
 
@@ -61,8 +62,11 @@ namespace SongBrowserPlugin.UI
             SpeedIcon = Base64Sprites.Base64ToSprite(SpeedIconB64);
             StarIcon = Base64Sprites.Base64ToSprite(StarIconB64);
             GraphIcon = Base64Sprites.Base64ToSprite(GraphIconB64);
+            DeleteIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowserPlugin.Assets.DeleteIcon.png");
+
             SortButtonStroke = Base64Sprites.Base64ToSprite(SortButtonStrokeB64);
-            BeastSaberLogo = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowserPlugin.Assets.BeastSaberLogo.png");
+
+            BeastSaberLogo = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowserPlugin.Assets.BeastSaberLogo.png");            
         }
 
         public static string SpriteToBase64(Sprite input)

@@ -135,7 +135,7 @@ namespace SongBrowserPlugin.UI
             {
                 onClickEvent(sortMode);
             });
-            
+
             sortButton.Button = newButton;
             sortButton.SortMode = sortMode;
 
@@ -143,7 +143,31 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
-        /// Create a page up/down button.
+        /// Create an icon button, simple.
+        /// </summary>
+        /// <param name="parent"></param>
+        /// <param name="buttonTemplate"></param>
+        /// <param name="iconSprite"></param>
+        /// <returns></returns>
+        public static Button CreateIconButton(RectTransform parent, Button buttonTemplate, Sprite iconSprite)
+        {
+            Button newButton = UIBuilder.CreateUIButton(parent, buttonTemplate);
+            newButton.interactable = true;
+
+            RectTransform textRect = newButton.GetComponentsInChildren<RectTransform>(true).FirstOrDefault(c => c.name == "Text");
+            if (textRect != null)
+            {
+                UnityEngine.Object.Destroy(textRect.gameObject);
+            }
+
+            UIBuilder.SetButtonIcon(newButton, iconSprite);
+
+            return newButton;
+        }
+
+        /// <summary>
+        /// Create an icon button, advanced.
+        /// Currently has some weird logic in it just for the filter buttons.  Use simple method instead.
         /// </summary>
         /// <param name="parent"></param>
         /// <param name="buttonTemplate"></param>
@@ -157,31 +181,21 @@ namespace SongBrowserPlugin.UI
         /// <param name="iconRotation"></param>
         /// <returns></returns>
         public static Button CreateIconButton(RectTransform parent, Button buttonTemplate, Sprite iconSprite, Vector2 pos, Vector2 size, Vector2 iconSize, Vector2 iconScale, float iconRotation)
-        {
-            Button newButton = UIBuilder.CreateUIButton(parent, buttonTemplate);
-            newButton.interactable = true;
+        {            
+            Button newButton = UIBuilder.CreateIconButton(parent, buttonTemplate, iconSprite);
 
             (newButton.transform as RectTransform).anchoredPosition = new Vector2(pos.x, pos.y);
             (newButton.transform as RectTransform).sizeDelta = new Vector2(size.x, size.y);
 
             RectTransform iconTransform = newButton.GetComponentsInChildren<RectTransform>(true).First(c => c.name == "Icon");
             iconTransform.gameObject.SetActive(true);
-;
+            
             HorizontalLayoutGroup hgroup = iconTransform.parent.GetComponent<HorizontalLayoutGroup>();
             hgroup.padding = new RectOffset(1, 1, 0, 0);
-            
+
             iconTransform.sizeDelta = new Vector2(iconSize.x, iconSize.y);
-            iconTransform.localScale = new Vector2(iconScale.x, iconScale.y);            
+            iconTransform.localScale = new Vector2(iconScale.x, iconScale.y);
             iconTransform.Rotate(0, 0, iconRotation);
-
-            RectTransform textRect = newButton.GetComponentsInChildren<RectTransform>(true).FirstOrDefault(c => c.name == "Text");
-            if (textRect != null)
-            {
-                UnityEngine.Object.Destroy(textRect.gameObject);
-            }
-
-            UIBuilder.SetButtonBorder(newButton, Color.clear);        
-            UIBuilder.SetButtonIcon(newButton, iconSprite);
 
             return newButton;
         }   

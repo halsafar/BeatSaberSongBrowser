@@ -137,7 +137,7 @@ namespace SongBrowserPlugin.UI
             }
             else
             {
-                Logger.Debug("Entering PARTY mode...");
+                Logger.Debug("Entering SOLO CAMPAIGN mode...");
                 _levelSelectionFlowCoordinator = Resources.FindObjectsOfTypeAll<CampaignFlowCoordinator>().First();
             }
 
@@ -246,8 +246,13 @@ namespace SongBrowserPlugin.UI
                 RectTransform otherButtonTransform = this._levelDetailViewController.transform as RectTransform;
                 Button sortButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "SettingsButton"));
                 Button otherButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "SettingsButton"));
-                Button practiceButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PracticeButton");
+
+                RectTransform playContainerRect = _standardLevelDetailView.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayContainer");
+                RectTransform playButtonsRect = playContainerRect.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayButtons");
+
+                Button practiceButton = playButtonsRect.GetComponentsInChildren<Button>().First(x => x.name == "PracticeButton");
                 RectTransform practiceButtonRect = (practiceButton.transform as RectTransform);
+
                 Button playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
                 RectTransform playButtonRect = (playButton.transform as RectTransform);
                 Sprite arrowIcon = SongBrowserApplication.Instance.CachedIcons["ArrowIcon"];
@@ -328,38 +333,24 @@ namespace SongBrowserPlugin.UI
                     _filterButtonGroup.Add(filterButton);                    
                 }
 
-                // Get element info to position properly
-                Logger.Debug("Modifying and Cloning PlayButtons...");
-                RectTransform detailButtonContainerRect = _standardLevelDetailView.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayContainer");
-                RectTransform detailButtonRect = detailButtonContainerRect.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayButtons");
-                detailButtonRect.anchoredPosition = new Vector2(detailButtonRect.anchoredPosition.x, detailButtonRect.anchoredPosition.y + 2.5f);
-
-                // clone existing button group
-                RectTransform newButtonRect = UnityEngine.Object.Instantiate(detailButtonRect, detailButtonContainerRect, false);
-                newButtonRect.name = "PlayButtons2";
-                newButtonRect.anchoredPosition = new Vector2(newButtonRect.anchoredPosition.x, newButtonRect.anchoredPosition.y - 10.0f);
-
                 // Create add favorite button
                 Logger.Debug("Creating Add to favorites button...");
-                _addFavoriteButton = newButtonRect.GetComponentsInChildren<Button>().First(x => x.name == "PracticeButton");
-                _addFavoriteButton.name = "AddFavoritesButton";
+                _addFavoriteButton = UIBuilder.CreateIconButton(playButtonsRect,
+                    practiceButton,
+                    Base64Sprites.AddToFavoritesIcon
+                );
                 _addFavoriteButton.onClick.RemoveAllListeners();
-                (_addFavoriteButton.transform as RectTransform).sizeDelta = new Vector2(practiceButtonRect.sizeDelta.x, practiceButtonRect.sizeDelta.y);
-                UnityEngine.UI.Image icon = _addFavoriteButton.GetComponentsInChildren<UnityEngine.UI.Image>().First(c => c.name == "Icon");
-                RectTransform iconTransform = icon.rectTransform;
-                iconTransform.localScale = new Vector2(0.75f, 0.75f);
-                _addFavoriteButton.GetComponentsInChildren<HorizontalLayoutGroup>().First(c => c.name == "Content").padding = new RectOffset(1, 1, 0, 0);
                 _addFavoriteButton.onClick.AddListener(delegate () {
                     ToggleSongInPlaylist();
                 });
 
                 // Create delete button          
                 Logger.Debug("Creating delete button...");
-                _deleteButton = newButtonRect.GetComponentsInChildren<Button>().First(x => x.name == "PlayButton");
-                _deleteButton.name = "DeleteButton";
+                _deleteButton = UIBuilder.CreateIconButton(playButtonsRect,
+                    practiceButton,
+                    Base64Sprites.DeleteIcon
+                );
                 _deleteButton.onClick.RemoveAllListeners();
-                _deleteButton.GetComponentsInChildren<HorizontalLayoutGroup>().First(c => c.name == "Content").padding = new RectOffset(6, 6, 0, 0);
-                UIBuilder.SetButtonText(_deleteButton, "Delete");
                 _deleteButton.onClick.AddListener(delegate () {
                     HandleDeleteSelectedLevel();
                 });
