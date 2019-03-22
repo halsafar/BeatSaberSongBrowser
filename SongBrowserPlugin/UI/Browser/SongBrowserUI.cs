@@ -123,18 +123,22 @@ namespace SongBrowserPlugin.UI
         public void CreateUI(MainMenuViewController.MenuButton mode)
         {
             Logger.Trace("CreateUI()");
-            
-            var soloFlow = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
-            var partyFlow = Resources.FindObjectsOfTypeAll<PartyFreePlayFlowCoordinator>().First();
+
+            // Determine the flow controller to use
             if (mode == MainMenuViewController.MenuButton.SoloFreePlay)
             {
                 Logger.Debug("Entering SOLO mode...");
-                _levelSelectionFlowCoordinator = soloFlow;
+                _levelSelectionFlowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().First();
+            }
+            else if (mode == MainMenuViewController.MenuButton.Party)
+            {
+                Logger.Debug("Entering PARTY mode...");
+                _levelSelectionFlowCoordinator = Resources.FindObjectsOfTypeAll<PartyFreePlayFlowCoordinator>().First();
             }
             else
             {
                 Logger.Debug("Entering PARTY mode...");
-                _levelSelectionFlowCoordinator = partyFlow;
+                _levelSelectionFlowCoordinator = Resources.FindObjectsOfTypeAll<CampaignFlowCoordinator>().First();
             }
 
             // returning to the menu and switching modes could trigger this.

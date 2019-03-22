@@ -160,9 +160,11 @@ namespace SongBrowserPlugin
             MainFlowCoordinator mainFlow = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
             Button soloFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloFreePlayButton");
             Button partyFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PartyFreePlayButton");
+            Button campaignButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "CampaignButton");
 
             soloFreePlayButton.onClick.AddListener(HandleSoloModeSelection);
             partyFreePlayButton.onClick.AddListener(HandlePartyModeSelection);
+            campaignButton.onClick.AddListener(HandleSoloModeSelection);
         }
 
         /// <summary>
@@ -185,6 +187,17 @@ namespace SongBrowserPlugin
         {
             Logger.Trace("HandlePartyModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.Party);
+        }
+
+        /// <summary>
+        /// Handle Party Mode
+        /// </summary>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
+        private void HandleCampaignModeSelection()
+        {
+            Logger.Trace("HandleCampaignModeSelection()");
+            HandleModeSelection(MainMenuViewController.MenuButton.SoloCampaign);
         }
 
         /// <summary>
