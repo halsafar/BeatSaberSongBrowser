@@ -500,6 +500,7 @@ namespace SongBrowserPlugin.UI
             _starStatButton.gameObject.SetActive(visible);
             _njsStatButton.gameObject.SetActive(visible);
 
+            _clearSortFilterButton.gameObject.SetActive(visible);
             _sortButtonGroup.ForEach(x => x.Button.gameObject.SetActive(visible));
             _filterButtonGroup.ForEach(x => x.Button.gameObject.SetActive(visible));
 
