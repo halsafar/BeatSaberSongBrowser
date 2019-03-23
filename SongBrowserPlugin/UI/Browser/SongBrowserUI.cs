@@ -543,7 +543,8 @@ namespace SongBrowserPlugin.UI
             {
                 this._model.SetCurrentLevelPack(arg2);
 
-                UpdateSongList();
+                this._model.ProcessSongList();
+
                 RefreshSongList();
                 RefreshSortButtonUI();
                 RefreshQuickScrollButtons();
@@ -656,7 +657,7 @@ namespace SongBrowserPlugin.UI
             }
             _model.Settings.Save();
 
-            UpdateSongList();
+            _model.ProcessSongList();
             RefreshSongList();
             RefreshSortButtonUI();
             RefreshQuickScrollButtons();
@@ -676,7 +677,8 @@ namespace SongBrowserPlugin.UI
             else
             {
                 _model.Settings.filterMode = SongFilterMode.None;
-                UpdateSongList();
+                _model.ProcessSongList();
+
                 RefreshSongList();
                 RefreshSortButtonUI();
                 RefreshQuickScrollButtons();
@@ -702,7 +704,8 @@ namespace SongBrowserPlugin.UI
             {
                 _model.Settings.filterMode = SongFilterMode.None;
                 _model.Settings.Save();
-                UpdateSongList();
+                _model.ProcessSongList();
+
                 RefreshSongList();
                 RefreshSortButtonUI();
                 RefreshQuickScrollButtons();
@@ -752,7 +755,7 @@ namespace SongBrowserPlugin.UI
         {
             Logger.Trace("OnDidSelectBeatmapCharacteristic({0}", bc.name);
             _model.CurrentBeatmapCharacteristicSO = bc;
-            _model.UpdateSongLists();
+            _model.UpdateLevelRecords();
             this.RefreshSongList();
         }
 
@@ -817,7 +820,9 @@ namespace SongBrowserPlugin.UI
                                 int removedLevels = levels.RemoveAll(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID);
                                 Logger.Log("Removed " + removedLevels + " level(s) from song list!");
 
-                                _levelPackLevelsViewController.SetData(CustomHelpers.GetLevelPackWithLevels(levels.Cast<BeatmapLevelSO>().ToArray(), _model.CurrentPlaylist?.playlistTitle ?? "Custom Songs", _model.CurrentPlaylist?.icon));
+                                this.UpdateLevelDataModel();
+                                this.RefreshSongList();
+
                                 TableView listTableView = levelsTableView.GetPrivateField<TableView>("_tableView");
                                 listTableView.ScrollToCellWithIdx(selectedIndex, TableView.ScrollPositionType.Beginning, false);
                                 levelsTableView.SetPrivateField("_selectedRow", selectedIndex);
@@ -872,8 +877,8 @@ namespace SongBrowserPlugin.UI
                 _model.Settings.filterMode = SongFilterMode.Playlist;
                 _model.CurrentPlaylist = p;
                 _model.Settings.Save();
+                _model.ProcessSongList();
 
-                this.UpdateSongList();
                 this.RefreshSongList();
                 this.RefreshSortButtonUI();
             }
@@ -928,9 +933,9 @@ namespace SongBrowserPlugin.UI
             _model.Settings.searchTerms.Insert(0, searchFor);
             _model.Settings.Save();
             _model.LastSelectedLevelId = null;
-            this.UpdateSongList();
-            this.RefreshSongList();
+            _model.ProcessSongList();
 
+            RefreshSongList();
             RefreshSortButtonUI();
             RefreshQuickScrollButtons();
         }
@@ -1328,11 +1333,11 @@ namespace SongBrowserPlugin.UI
         /// <summary>
         /// Helper for updating the model (which updates the song list)
         /// </summary>
-        public void UpdateSongList()
+        public void UpdateLevelDataModel()
         {
             try
             {
-                Logger.Trace("UpdateSongList()");
+                Logger.Trace("UpdateLevelDataModel()");
 
                 if (_model.CurrentLevelPack == null && _levelPackViewController != null)
                 {
@@ -1342,7 +1347,7 @@ namespace SongBrowserPlugin.UI
                     this._model.SetCurrentLevelPack(levelPackCollection.beatmapLevelPacks[0]);
                 }
 
-                _model.UpdateSongLists();
+                _model.UpdateLevelRecords();
             }
             catch (Exception e)
             {

@@ -221,7 +221,7 @@ namespace SongBrowserPlugin
         /// <summary>
         /// Get the song cache from the game.
         /// </summary>
-        public void UpdateSongLists()
+        public void UpdateLevelRecords()
         {
             // get a default beatmap characteristic...
             if (this.CurrentBeatmapCharacteristicSO == null)
@@ -484,6 +484,12 @@ namespace SongBrowserPlugin
             BeatmapLevelPackSO[] levelPacks = Resources.FindObjectsOfTypeAll<BeatmapLevelPackSO>();
             foreach (BeatmapLevelPackSO levelPack in levelPacks)
             {
+                if (!_levelPackToSongs.ContainsKey(levelPack.packName))
+                {
+                    Logger.Debug("We know nothing about pack: {0}", levelPack.packName);
+                    continue;
+                }
+
                 var levels = _levelPackToSongs[levelPack.packName].ToArray();
                 ReflectionUtil.SetPrivateField(levelPack.beatmapLevelCollection, "_beatmapLevels", levels);
             }

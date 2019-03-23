@@ -88,7 +88,8 @@ namespace SongBrowserPlugin
             Logger.Trace("OnSongLoaderLoadedSongs-SongBrowserApplication()");
             try
             {
-                _songBrowserUI.UpdateSongList();
+                _songBrowserUI.UpdateLevelDataModel();
+                _songBrowserUI.RefreshSongList();
             }
             catch (Exception e)
             {
@@ -211,7 +212,7 @@ namespace SongBrowserPlugin
         {
             Logger.Trace("HandleModeSelection()");
             this._songBrowserUI.CreateUI(mode);
-            this._songBrowserUI.UpdateSongList();
+            this._songBrowserUI.UpdateLevelDataModel();
             this._songBrowserUI.RefreshSongList();
         }
 
