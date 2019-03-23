@@ -279,10 +279,13 @@ namespace SongBrowserPlugin
             {
                 // If we already know this levelID, don't both updating it.
                 // SongLoader should filter duplicates but in case of failure we don't want to crash
-
                 if (!_cachedLastWriteTimes.ContainsKey(level.levelID) || customSongDirChanged)
                 {
-                    _cachedLastWriteTimes[level.levelID] = (File.GetLastWriteTimeUtc(level.customSongInfo.path) - EPOCH).TotalMilliseconds;
+                    // Always use the newest date.
+                    var lastWriteTime = File.GetLastWriteTimeUtc(level.customSongInfo.path);
+                    var lastCreateTime = File.GetCreationTimeUtc(level.customSongInfo.path);
+                    var lastTime = lastWriteTime > lastCreateTime ? lastWriteTime : lastCreateTime;
+                    _cachedLastWriteTimes[level.levelID] = (lastTime - EPOCH).TotalMilliseconds;
                 }
 
                 if (!_levelIdToCustomLevel.ContainsKey(level.levelID))
