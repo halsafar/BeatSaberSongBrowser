@@ -88,8 +88,8 @@ namespace SongBrowserPlugin
             Logger.Trace("OnSongLoaderLoadedSongs-SongBrowserApplication()");
             try
             {
-                //_songBrowserUI.UpdateSongList();
-                _songBrowserUI.Model.UpdateScoreSaberDataMapping();
+                _songBrowserUI.UpdateLevelDataModel();
+                _songBrowserUI.RefreshSongList();
             }
             catch (Exception e)
             {
@@ -160,9 +160,11 @@ namespace SongBrowserPlugin
             MainFlowCoordinator mainFlow = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
             Button soloFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloFreePlayButton");
             Button partyFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PartyFreePlayButton");
+            Button campaignButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "CampaignButton");
 
             soloFreePlayButton.onClick.AddListener(HandleSoloModeSelection);
             partyFreePlayButton.onClick.AddListener(HandlePartyModeSelection);
+            campaignButton.onClick.AddListener(HandleCampaignModeSelection);
         }
 
         /// <summary>
@@ -174,6 +176,7 @@ namespace SongBrowserPlugin
         {
             Logger.Trace("HandleSoloModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.SoloFreePlay);
+            this._songBrowserUI.Show();
         }
 
         /// <summary>
@@ -185,6 +188,19 @@ namespace SongBrowserPlugin
         {
             Logger.Trace("HandlePartyModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.Party);
+            this._songBrowserUI.Show();
+        }
+
+        /// <summary>
+        /// Handle Party Mode
+        /// </summary>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
+        private void HandleCampaignModeSelection()
+        {
+            Logger.Trace("HandleCampaignModeSelection()");
+            HandleModeSelection(MainMenuViewController.MenuButton.SoloCampaign);
+            this._songBrowserUI.Hide();
         }
 
         /// <summary>
@@ -196,7 +212,7 @@ namespace SongBrowserPlugin
         {
             Logger.Trace("HandleModeSelection()");
             this._songBrowserUI.CreateUI(mode);
-            this._songBrowserUI.UpdateSongList();
+            this._songBrowserUI.UpdateLevelDataModel();
             this._songBrowserUI.RefreshSongList();
         }
 

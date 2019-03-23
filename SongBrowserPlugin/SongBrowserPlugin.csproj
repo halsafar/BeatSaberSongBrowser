@@ -117,8 +117,6 @@
   <ItemGroup>
     <Compile Include="DataAccess\BeatSaverApi\BeatSaverApiResults.cs" />
     <Compile Include="DataAccess\FileOperationApiWrapper.cs" />
-    <Compile Include="DataAccess\FileSystem\Directory.cs" />
-    <Compile Include="DataAccess\FileSystem\Folder.cs" />
     <Compile Include="DataAccess\LoadScripts.cs" />
     <Compile Include="DataAccess\Network\CacheableDownloadHandler.cs" />
     <Compile Include="DataAccess\Network\CacheableDownloadHandlerScoreSaberData.cs" />
@@ -169,7 +167,7 @@
     <EmbeddedResource Include="Assets\StarEmpty.png" />
     <EmbeddedResource Include="Assets\StarFull.png" />
     <EmbeddedResource Include="Assets\RemoveFromFavorites.png" />
-  </ItemGroup>  
+  </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
