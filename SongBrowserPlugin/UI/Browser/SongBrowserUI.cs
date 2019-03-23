@@ -542,8 +542,13 @@ namespace SongBrowserPlugin.UI
 
             try
             {
-                this._model.SetCurrentLevelPack(arg2);
+                if (this._model.Settings.filterMode == SongFilterMode.Playlist)
+                {
+                    this._model.Settings.filterMode = SongFilterMode.None;
+                    this._model.Settings.Save();
+                }
 
+                this._model.SetCurrentLevelPack(arg2);
                 this._model.ProcessSongList();
 
                 RefreshSongList();
