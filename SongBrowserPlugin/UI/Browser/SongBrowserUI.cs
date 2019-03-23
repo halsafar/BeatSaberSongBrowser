@@ -726,6 +726,8 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         private void OnDidSelectDifficultyEvent(BeatmapDifficultySegmentedControlController view, BeatmapDifficulty beatmap)
         {
+            Logger.Trace("OnDidSelectDifficultyEvent({0})", beatmap);
+
             _deleteButton.interactable = (_levelDetailViewController.selectedDifficultyBeatmap.level.levelID.Length >= 32);
 
             this.RefreshScoreSaberData(_levelDetailViewController.selectedDifficultyBeatmap.level);
@@ -737,6 +739,8 @@ namespace SongBrowserPlugin.UI
         /// <param name="level"></param>
         private void HandleDidSelectLevelRow(IPreviewBeatmapLevel level)
         {
+            Logger.Trace("HandleDidSelectLevelRow({0})", level);
+
             _playButton.gameObject.SetActive(true);
 
             this.RefreshScoreSaberData(level);
@@ -958,7 +962,9 @@ namespace SongBrowserPlugin.UI
         /// Update GUI elements that show score saber data.
         /// </summary>
         public void RefreshScoreSaberData(IPreviewBeatmapLevel level)
-        {            
+        {
+            Logger.Trace("RefreshScoreSaberData({0})", level.levelID);
+
             // use controllers level...
             if (level == null)
             {
@@ -972,40 +978,48 @@ namespace SongBrowserPlugin.UI
                 return;
             }
 
-            Logger.Trace("RefreshScoreSaberData({0})", level.levelID);
+            BeatmapDifficulty difficulty = this._levelDifficultyViewController.selectedDifficulty;
+            string njsText;
+            string difficultyString = difficulty.ToString();
 
-            // display pp potentially
-            if (this._model.LevelIdToScoreSaberData != null)
+            //Grab NJS for difficulty
+            //Default to 10 if a standard level
+            float njs = 0;
+            if (!_model.LevelIdToCustomSongInfos.ContainsKey(level.levelID))
             {
-                BeatmapDifficulty difficulty = this._levelDifficultyViewController.selectedDifficulty;
-                string njsText;
-                string difficultyString = difficulty.ToString();
-
-                //Grab NJS for difficulty
-                //Default to 10 if a standard level
-                float njs = 0;
-                if (!_model.LevelIdToCustomSongInfos.ContainsKey(level.levelID))
+                njsText = "OST";
+            }
+            else
+            {
+                //Grab the matching difficulty level
+                SongLoaderPlugin.OverrideClasses.CustomLevel customLevel = _model.LevelIdToCustomSongInfos[level.levelID];
+                CustomSongInfo.DifficultyLevel difficultyLevel = null;
+                foreach (var diffLevel in customLevel.customSongInfo.difficultyLevels)
                 {
-                    njsText = "OST";
+                    if (diffLevel.difficulty == difficultyString)
+                    {
+                        difficultyLevel = diffLevel;                            
+                        break;
+                    }
+                }
+
+                // set njs text
+                if (difficultyLevel == null || String.IsNullOrEmpty(difficultyLevel.json))
+                {
+                    njsText = "NA";
                 }
                 else
                 {
-                    //Grab njs from custom level
-                    SongLoaderPlugin.OverrideClasses.CustomLevel customLevel = _model.LevelIdToCustomSongInfos[level.levelID];
-                    foreach (var diffLevel in customLevel.customSongInfo.difficultyLevels)
-                    {
-
-                        if (diffLevel.difficulty == difficultyString)
-                        {
-                            GetNoteJump(diffLevel.json, out njs);
-                        }
-                    }
-
-                    //Show note jump speedS
+                    njs = GetNoteJump(difficultyLevel.json);
                     njsText = njs.ToString();
                 }
-                UIBuilder.SetStatButtonText(_njsStatButton, njsText);
+            }
+            UIBuilder.SetStatButtonText(_njsStatButton, njsText);
 
+            // check if we have score saber data
+            if (this._model.LevelIdToScoreSaberData != null)
+            {
+                // Check for PP
                 Logger.Debug("Checking if have info for song {0}", level.songName);
                 if (this._model.LevelIdToScoreSaberData.ContainsKey(level.levelID))
                 {
@@ -1031,7 +1045,16 @@ namespace SongBrowserPlugin.UI
                     UIBuilder.SetStatButtonText(_ppStatButton, "?");
                     UIBuilder.SetStatButtonText(_starStatButton, "?");
                 }
+                
             }
+            else
+            {
+                Logger.Debug("No ScoreSaberData available...  Cannot display pp/star stats...");
+            }
+
+
+
+            Logger.Debug("Done refreshing score saber stats.");
         }
 
         /// <summary>
@@ -1293,9 +1316,9 @@ namespace SongBrowserPlugin.UI
         }
 
         //Pull njs from a difficulty, based on private function from SongLoader
-        public void GetNoteJump(string json, out float noteJumpSpeed)
+        public float GetNoteJump(string json)
         {
-            noteJumpSpeed = 0;
+            float noteJumpSpeed = 0;
             var split = json.Split(':');
             for (var i = 0; i < split.Length; i++)
             {
@@ -1304,6 +1327,8 @@ namespace SongBrowserPlugin.UI
                     noteJumpSpeed = Convert.ToSingle(split[i + 1].Split(',')[0], CultureInfo.InvariantCulture);
                 }
             }
+
+            return noteJumpSpeed;
         }
 
 #if DEBUG
