@@ -741,7 +741,7 @@ namespace SongBrowserPlugin.UI
         {
             Logger.Trace("HandleDidSelectLevelRow({0})", level);
 
-            _playButton.gameObject.SetActive(true);
+            _deleteButton.interactable = (level.levelID.Length >= 32);
 
             this.RefreshScoreSaberData(level);
         }
