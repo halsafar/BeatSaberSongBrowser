@@ -253,7 +253,6 @@ namespace SongBrowserPlugin
                 //_levelPackToSongs[levelPack.packName].ForEach(x => Logger.Debug("{0} by {1} = {2}", x.name, x.levelAuthorName, x.levelID));
             }
 
-
             // Calculate some information about the custom song dir
             String customSongsPath = Path.Combine(Environment.CurrentDirectory, CUSTOM_SONGS_DIR);
             String revSlashCustomSongPath = customSongsPath.Replace('\\', '/');
