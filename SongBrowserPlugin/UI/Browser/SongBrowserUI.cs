@@ -58,6 +58,8 @@ namespace SongBrowserPlugin.UI
         private List<SongSortButton> _sortButtonGroup;
         private List<SongFilterButton> _filterButtonGroup;
 
+        private Button _clearSortFilterButton;
+
         private Button _addFavoriteButton;
 
         private SimpleDialogPromptViewController _simpleDialogPromptViewControllerPrefab;
@@ -262,7 +264,7 @@ namespace SongBrowserPlugin.UI
                 // Resize some of the UI
                 _tableViewRectTransform.sizeDelta = new Vector2(0f, -20f);
                 _tableViewRectTransform.anchoredPosition = new Vector2(0f, -2.5f);
-                
+
                 // Create Sorting Songs By-Buttons
                 Logger.Debug("Creating sort by buttons...");
                 float buttonSpacing = 0.5f;                                
@@ -272,15 +274,35 @@ namespace SongBrowserPlugin.UI
                 float startButtonX = 24.50f;
                 float curButtonX = 0.0f;
                 float buttonY = -6.0f;
+                Vector2 iconButtonSize = new Vector2(buttonHeight, buttonHeight);
 
+                // Create cancel button
+                Logger.Debug("Creating cancel button...");
+                _clearSortFilterButton = UIBuilder.CreateIconButton(
+                    sortButtonTransform, 
+                    otherButtonTemplate, 
+                    Base64Sprites.XIcon, 
+                    new Vector2(startButtonX - buttonHeight - (buttonSpacing * 2.0f), buttonY), 
+                    new Vector2(iconButtonSize.x, iconButtonSize.y),
+                    new Vector2(3.5f, 3.5f),
+                    new Vector2(1.0f, 1.0f),
+                    0);
+                _clearSortFilterButton.onClick.RemoveAllListeners();
+                _clearSortFilterButton.onClick.AddListener(delegate () {
+                    OnClearButtonClickEvent();
+                });
+
+                startButtonX += (buttonHeight + buttonSpacing);
+
+                // define sort buttons
                 string[] sortButtonNames = new string[]
                 {
-                    "Song", "Author", "Newest", "PP", "Difficult", "Random"
+                    "Song", "Author", "Newest", "Plays", "PP", "Difficult", "Random"
                 };
 
                 SongSortMode[] sortModes = new SongSortMode[]
                 {
-                    SongSortMode.Default, SongSortMode.Author, SongSortMode.Newest, SongSortMode.PP, SongSortMode.Difficulty, SongSortMode.Random
+                    SongSortMode.Default, SongSortMode.Author, SongSortMode.Newest, SongSortMode.PlayCount, SongSortMode.PP, SongSortMode.Difficulty, SongSortMode.Random
                 };
                 
                 _sortButtonGroup = new List<SongSortButton>();
@@ -304,7 +326,6 @@ namespace SongBrowserPlugin.UI
                 Logger.Debug("Creating filter buttons...");
 
                 float filterButtonX = curButtonX + (buttonWidth / 2.0f);
-                Vector2 iconButtonSize = new Vector2(buttonHeight, buttonHeight);
 
                 List<Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>> filterButtonSetup = new List<Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>>()
                 {
@@ -555,6 +576,20 @@ namespace SongBrowserPlugin.UI
             }
         }
 
+        private void OnClearButtonClickEvent()
+        {
+            Logger.Debug("Clearing all sorts and filters.");
+
+            _model.Settings.sortMode = SongSortMode.Original;
+            _model.Settings.filterMode = SongFilterMode.None;
+            _model.Settings.invertSortResults = false;
+            _model.Settings.Save();
+            
+            this._model.ProcessSongList();
+            RefreshSongList();
+            RefreshSortButtonUI();
+        }
+
         /// <summary>
         /// Sort button clicked.
         /// </summary>
@@ -569,16 +604,16 @@ namespace SongBrowserPlugin.UI
             }
 
             _model.Settings.sortMode = sortMode;
-            _model.Settings.Save();
 
             // update the seed
             if (_model.Settings.sortMode == SongSortMode.Random)
             {
                 this.Model.Settings.randomSongSeed = Guid.NewGuid().GetHashCode();
-                this.Model.Settings.Save();
             }
 
-            UpdateSongList();
+            _model.Settings.Save();
+
+            this._model.ProcessSongList();
             RefreshSongList();
             RefreshSortButtonUI();
             RefreshQuickScrollButtons();

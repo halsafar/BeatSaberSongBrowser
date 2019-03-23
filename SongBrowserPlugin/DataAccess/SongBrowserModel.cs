@@ -23,9 +23,7 @@ namespace SongBrowserPlugin
 
         // song list management
         private double _customSongDirLastWriteTime = 0;
-        private List<BeatmapLevelSO> _filteredSongs;
         private List<BeatmapLevelSO> _sortedSongs;
-        private List<BeatmapLevelSO> _originalSongs;
         private Dictionary<String, SongLoaderPlugin.OverrideClasses.CustomLevel> _levelIdToCustomLevel;
         private Dictionary<String, double> _cachedLastWriteTimes;
         private Dictionary<string, int> _weights;
@@ -560,14 +558,16 @@ namespace SongBrowserPlugin
             }
 
             // Playlist filter will load the original songs.
+            List<BeatmapLevelSO> unsortedSongs = null;
+            List<BeatmapLevelSO> filteredSongs = null;
             if (this._settings.filterMode == SongFilterMode.Playlist && this.CurrentPlaylist != null)
             {
-                _originalSongs = null;
+                unsortedSongs = null;
             }
             else
             {
                 Logger.Debug("Using songs from level pack: {0}", this._currentLevelPack.packName);
-                _originalSongs = _levelPackToSongs[this._currentLevelPack.packName];
+                unsortedSongs = new List<BeatmapLevelSO>(_levelPackToSongs[this._currentLevelPack.packName]);
             }
 
             // filter
@@ -577,18 +577,18 @@ namespace SongBrowserPlugin
             switch (_settings.filterMode)
             {
                 case SongFilterMode.Favorites:
-                    FilterFavorites();
+                    filteredSongs = FilterFavorites();
                     break;
                 case SongFilterMode.Search:
-                    FilterSearch(_originalSongs);
+                    filteredSongs = FilterSearch(unsortedSongs);
                     break;
                 case SongFilterMode.Playlist:
-                    FilterPlaylist();
+                    filteredSongs = FilterPlaylist();
                     break;
                 case SongFilterMode.None:
                 default:
                     Logger.Info("No song filter selected...");
-                    _filteredSongs = _originalSongs;
+                    filteredSongs = unsortedSongs;
                     break;
             }
 
@@ -602,29 +602,29 @@ namespace SongBrowserPlugin
             switch (_settings.sortMode)
             {
                 case SongSortMode.Original:
-                    SortOriginal(_filteredSongs);
+                    SortOriginal(filteredSongs);
                     break;
                 case SongSortMode.Newest:
-                    SortNewest(_filteredSongs);
+                    SortNewest(filteredSongs);
                     break;
                 case SongSortMode.Author:
-                    SortAuthor(_filteredSongs);
+                    SortAuthor(filteredSongs);
                     break;
                 case SongSortMode.PlayCount:
-                    SortPlayCount(_filteredSongs);
+                    SortPlayCount(filteredSongs);
                     break;
                 case SongSortMode.PP:
-                    SortPerformancePoints(_filteredSongs);
+                    SortPerformancePoints(filteredSongs);
                     break;
                 case SongSortMode.Difficulty:
-                    SortDifficulty(_filteredSongs);
+                    SortDifficulty(filteredSongs);
                     break;
                 case SongSortMode.Random:
-                    SortRandom(_filteredSongs);
+                    SortRandom(filteredSongs);
                     break;
                 case SongSortMode.Default:
                 default:
-                    SortSongName(_filteredSongs);
+                    SortSongName(filteredSongs);
                     break;
             }
 
@@ -644,63 +644,62 @@ namespace SongBrowserPlugin
         /// For now the editing playlist will be considered the favorites playlist.
         /// Users can edit the settings file themselves.
         /// </summary>
-        private void FilterFavorites()
+        private List<BeatmapLevelSO> FilterFavorites()
         {
             Logger.Info("Filtering song list as favorites playlist...");
             if (this.CurrentEditingPlaylist != null)
             {
                 this.CurrentPlaylist = this.CurrentEditingPlaylist;
             }
-            this.FilterPlaylist();
+            return this.FilterPlaylist();
         }
 
-        private void FilterSearch(List<BeatmapLevelSO> levels)
+        private List<BeatmapLevelSO> FilterSearch(List<BeatmapLevelSO> levels)
         {
             // Make sure we can actually search.
             if (this._settings.searchTerms.Count <= 0)
             {
                 Logger.Error("Tried to search for a song with no valid search terms...");
                 SortSongName(levels);
-                return;
+                return levels;
             }
             string searchTerm = this._settings.searchTerms[0];
             if (String.IsNullOrEmpty(searchTerm))
             {
                 Logger.Error("Empty search term entered.");
                 SortSongName(levels);
-                return;
+                return levels;
             }
 
             Logger.Info("Filtering song list by search term: {0}", searchTerm);
             //_originalSongs.ForEach(x => Logger.Debug($"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()).ToString()));
 
-            _filteredSongs = levels
+            return levels
                 .Where(x => $"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()))
                 .ToList();
         }
 
-        private void FilterPlaylist()
+        private List<BeatmapLevelSO> FilterPlaylist()
         {
             // bail if no playlist, usually means the settings stored one the user then moved.
             if (this.CurrentPlaylist == null)
             {
                 Logger.Error("Trying to load a null playlist...");
-                _filteredSongs = _originalSongs;
                 this.Settings.filterMode = SongFilterMode.None;
-                return;
+                return null;
             }
 
             Logger.Debug("Filtering songs for playlist: {0}", this.CurrentPlaylist.playlistTitle);            
-            BeatmapLevelCollectionSO levelCollections = Resources.FindObjectsOfTypeAll<BeatmapLevelCollectionSO>().FirstOrDefault();
-            var levels = levelCollections.beatmapLevels;
-            //var levels = levelCollections.GetLevelsWithBeatmapCharacteristic(CurrentBeatmapCharacteristicSO);
 
             Dictionary<String, BeatmapLevelSO> levelDict = new Dictionary<string, BeatmapLevelSO>();
-            foreach (BeatmapLevelSO level in levels)
+            foreach (KeyValuePair<string, List<BeatmapLevelSO>> entry in _levelPackToSongs)
             {
-                if (!levelDict.ContainsKey(level.levelID))
+                foreach (BeatmapLevelSO level in entry.Value)
                 {
-                    levelDict.Add(level.levelID, level);
+                    if (!levelDict.ContainsKey(level.levelID))
+                    {
+                        levelDict.Add(level.levelID, level);
+                    }
                 }
             }
 
@@ -719,11 +718,9 @@ namespace SongBrowserPlugin
                     songList.Add(_keyToSong[ps.key]);
                 }
             }
-
-            _originalSongs = songList;
-            _filteredSongs = _originalSongs;
             
-            Logger.Debug("Playlist filtered song count: {0}", _filteredSongs.Count);
+            Logger.Debug("Playlist filtered song count: {0}", songList.Count);
+            return songList;
         }
 
         private void SortOriginal(List<BeatmapLevelSO> levels)
