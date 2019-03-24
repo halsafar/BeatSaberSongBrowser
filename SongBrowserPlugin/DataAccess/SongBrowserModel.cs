@@ -680,11 +680,19 @@ namespace SongBrowserPlugin
             }
 
             Logger.Info("Filtering song list by search term: {0}", searchTerm);
-            //_originalSongs.ForEach(x => Logger.Debug($"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()).ToString()));
 
-            return levels
-                .Where(x => $"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()))
-                .ToList();
+            var terms = searchTerm.Split(' ');
+            foreach (var term in terms)
+            {
+                levels = levels.Intersect(
+                    levels
+                        .Where(x => $"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(term.ToLower()))
+                        .ToList(
+                    )
+                ).ToList();
+            }
+
+            return levels;
         }
 
         private List<BeatmapLevelSO> FilterPlaylist()
