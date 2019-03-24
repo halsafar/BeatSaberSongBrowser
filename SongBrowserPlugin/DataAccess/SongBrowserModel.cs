@@ -705,6 +705,9 @@ namespace SongBrowserPlugin
                 return null;
             }
 
+            // Get song keys
+            PlaylistsCollection.MatchSongsForPlaylist(this.CurrentPlaylist, true);
+
             Logger.Debug("Filtering songs for playlist: {0}", this.CurrentPlaylist.playlistTitle);            
 
             Dictionary<String, BeatmapLevelSO> levelDict = new Dictionary<string, BeatmapLevelSO>();
@@ -722,16 +725,13 @@ namespace SongBrowserPlugin
             List<BeatmapLevelSO> songList = new List<BeatmapLevelSO>();
             foreach (PlaylistSong ps in this.CurrentPlaylist.songs)
             {
-                if (!String.IsNullOrEmpty(ps.levelId))
+                if (ps.level != null)
                 {
-                    if (levelDict.ContainsKey(ps.levelId))
-                    {
-                        songList.Add(levelDict[ps.levelId]);
-                    }
+                    songList.Add(levelDict[ps.level.levelID]);
                 }
-                else if (!String.IsNullOrEmpty(ps.key) && !ps.key.StartsWith("Level_") && _keyToSong.ContainsKey(ps.key))
+                else
                 {
-                    songList.Add(_keyToSong[ps.key]);
+                    Logger.Warning("Could not find song in playlist: {0}", ps.songName);
                 }
             }
             
