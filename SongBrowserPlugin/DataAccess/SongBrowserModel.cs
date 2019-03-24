@@ -680,11 +680,19 @@ namespace SongBrowserPlugin
             }
 
             Logger.Info("Filtering song list by search term: {0}", searchTerm);
-            //_originalSongs.ForEach(x => Logger.Debug($"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()).ToString()));
 
-            return levels
-                .Where(x => $"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()))
-                .ToList();
+            var terms = searchTerm.Split(' ');
+            foreach (var term in terms)
+            {
+                levels = levels.Intersect(
+                    levels
+                        .Where(x => $"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(term.ToLower()))
+                        .ToList(
+                    )
+                ).ToList();
+            }
+
+            return levels;
         }
 
         private List<BeatmapLevelSO> FilterPlaylist()
@@ -696,6 +704,9 @@ namespace SongBrowserPlugin
                 this.Settings.filterMode = SongFilterMode.None;
                 return null;
             }
+
+            // Get song keys
+            PlaylistsCollection.MatchSongsForPlaylist(this.CurrentPlaylist, true);
 
             Logger.Debug("Filtering songs for playlist: {0}", this.CurrentPlaylist.playlistTitle);            
 
@@ -714,16 +725,13 @@ namespace SongBrowserPlugin
             List<BeatmapLevelSO> songList = new List<BeatmapLevelSO>();
             foreach (PlaylistSong ps in this.CurrentPlaylist.songs)
             {
-                if (!String.IsNullOrEmpty(ps.levelId))
+                if (ps.level != null)
                 {
-                    if (levelDict.ContainsKey(ps.levelId))
-                    {
-                        songList.Add(levelDict[ps.levelId]);
-                    }
+                    songList.Add(levelDict[ps.level.levelID]);
                 }
-                else if (!ps.key.StartsWith("Level_") && _keyToSong.ContainsKey(ps.key))
+                else
                 {
-                    songList.Add(_keyToSong[ps.key]);
+                    Logger.Warning("Could not find song in playlist: {0}", ps.songName);
                 }
             }
             
