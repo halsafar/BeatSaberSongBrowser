@@ -729,7 +729,7 @@ namespace SongBrowserPlugin
                         songList.Add(levelDict[ps.levelId]);
                     }
                 }
-                else if (!ps.key.StartsWith("Level_") && _keyToSong.ContainsKey(ps.key))
+                else if (!String.IsNullOrEmpty(ps.key) && !ps.key.StartsWith("Level_") && _keyToSong.ContainsKey(ps.key))
                 {
                     songList.Add(_keyToSong[ps.key]);
                 }
