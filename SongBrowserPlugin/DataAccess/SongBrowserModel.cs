@@ -301,7 +301,11 @@ namespace SongBrowserPlugin
                     if (!String.IsNullOrEmpty(version))
                     {
                         _levelIdToSongVersion.Add(level.levelID, version);
-                        _keyToSong.Add(version, level);
+
+                        if (!_keyToSong.ContainsKey(version))
+                        {
+                            _keyToSong.Add(version, level);
+                        }
                     }
                 }
             }
