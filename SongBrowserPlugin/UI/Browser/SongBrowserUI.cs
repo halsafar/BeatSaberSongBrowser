@@ -1275,6 +1275,25 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
+        /// Select a level pack.
+        /// </summary>
+        /// <param name="levelPackId"></param>
+        public void SelectLevelPack(String levelPackId)
+        {
+            if (_levelPacksTableView == null)
+            {
+                Logger.Debug("Cannot set level pack yet, have not acquired BeatSaber UI Elements...");
+                return;
+            }
+
+            var levelPackCollection = _levelPackViewController.GetPrivateField<IBeatmapLevelPackCollection>("_levelPackCollection");
+            var index = levelPackCollection.beatmapLevelPacks.ToList().FindIndex(x => x.packID == levelPackId);
+
+            _levelPacksTableView.SelectCellWithIdx(index);
+            _levelPacksTableView.HandleDidSelectColumnEvent(null, index);
+        }
+
+        /// <summary>
         /// Scroll TableView to proper row, fire events.
         /// </summary>
         /// <param name="table"></param>

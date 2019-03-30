@@ -507,7 +507,7 @@ namespace SongBrowserPlugin
         /// <param name="pack"></param>
         public void SetCurrentLevelPack(IBeatmapLevelPack pack)
         {
-            Logger.Debug("Setting level packs back to their original values!");
+            Logger.Debug("Setting current level pack [{0}]: {1}", pack.packID, pack.packName);
 
             this.ResetLevelPacks();
 
@@ -524,6 +524,8 @@ namespace SongBrowserPlugin
                 Logger.Debug("Owned level pack...  Enabling SongBrowser...");
                 _isPreviewLevelPack = false;
             }
+
+            this.Settings.currentLevelPackName = pack.packID;
         }
 
         /// <summary>

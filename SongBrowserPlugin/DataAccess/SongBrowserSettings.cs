@@ -55,6 +55,7 @@ namespace SongBrowserPlugin.DataAccess
         public String currentDirectory = default(String);
         public String currentPlaylistFile = default(String);
         public String currentEditingPlaylistFile = default(String);
+        public String currentLevelPackName = default(String);
 
         public bool randomInstantQueue = false;
         public bool deleteNumberedSongFolder = true;
