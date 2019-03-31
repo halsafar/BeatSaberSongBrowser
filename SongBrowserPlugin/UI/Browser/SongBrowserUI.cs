@@ -558,7 +558,6 @@ namespace SongBrowserPlugin.UI
 
         /// <summary>
         /// Handler for level pack selection.
-        /// UNUSED
         /// </summary>
         /// <param name="arg1"></param>
         /// <param name="arg2"></param>
@@ -568,11 +567,9 @@ namespace SongBrowserPlugin.UI
 
             try
             {
-                if (this._model.Settings.filterMode == SongFilterMode.Playlist)
-                {
-                    this._model.Settings.filterMode = SongFilterMode.None;
-                    this._model.Settings.Save();
-                }
+                // reset filter mode always here
+                this._model.Settings.filterMode = SongFilterMode.None;
+                this._model.Settings.Save();
 
                 this._model.SetCurrentLevelPack(arg2);
                 this._model.ProcessSongList();
@@ -840,15 +837,18 @@ namespace SongBrowserPlugin.UI
                     {
                         try
                         {
+                            // determine the index we are deleting so we can keep the cursor near the same spot after
                             List<IPreviewBeatmapLevel> levels = _levelPackLevelsTableView.GetPrivateField<IBeatmapLevelPack>("_pack").beatmapLevelCollection.beatmapLevels.ToList();
                             int selectedIndex = levels.FindIndex(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID);
 
-                            SongDownloader.Instance.DeleteSong(new Song(SongLoader.CustomLevels.First(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID)));
+                            // we are only deleting custom levels, find the song, delete it
+                            var song = new Song(SongLoader.CustomLevels.First(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID));
+                            SongDownloader.Instance.DeleteSong(song);
 
                             if (selectedIndex > -1)
                             {
-                                int removedLevels = levels.RemoveAll(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID);
-                                Logger.Log("Removed " + removedLevels + " level(s) from song list!");
+                                this._model.RemoveSongFromLevelPack(this._model.CurrentLevelPack, _levelDetailViewController.selectedDifficultyBeatmap.level.levelID);
+                                Logger.Log("Removed {0} from custom song list!", song.songName);
 
                                 this.UpdateLevelDataModel();
                                 this.RefreshSongList();
@@ -1051,6 +1051,7 @@ namespace SongBrowserPlugin.UI
             BeatmapDifficulty difficulty = this._levelDifficultyViewController.selectedDifficulty;
             string njsText;
             string difficultyString = difficulty.ToString();
+            Logger.Debug(difficultyString);
 
             //Grab NJS for difficulty
             //Default to 10 if a standard level
@@ -1482,9 +1483,9 @@ namespace SongBrowserPlugin.UI
                     _model.CurrentBeatmapCharacteristicSO = _beatmapCharacteristicSelectionViewController.GetPrivateField<BeatmapCharacteristicSO>("_selectedBeatmapCharacteristic");
                 }
 
-                this.UpdateLevelPackSelection();
-
                 _model.UpdateLevelRecords();
+
+                UpdateLevelPackSelection();
             }
             catch (Exception e)
             {
@@ -1492,6 +1493,17 @@ namespace SongBrowserPlugin.UI
             }
         }
 
+        /// <summary>
+        /// Update the level pack model.
+        /// </summary>
+        public void UpdateLevelPackModel()
+        {
+            _model.UpdateLevelPackOriginalLists();
+        }
+
+        /// <summary>
+        /// Logic for fixing BeatSaber's level pack selection bugs.
+        /// </summary>
         public void UpdateLevelPackSelection()
         {
             if (_levelPackViewController != null)
@@ -1512,7 +1524,20 @@ namespace SongBrowserPlugin.UI
                 else if (currentSelected == null || (currentSelected.packID != _model.Settings.currentLevelId))
                 {
                     Logger.Debug("Automatically selecting level pack: {0}", _model.Settings.currentLevelPackId);
+
+                    // HACK - BeatSaber seems to always go back to OST1 internally.
+                    //      - Lets force it to the last pack id but not have SongBrowser functions fire.
+                    // Turn off our event processing
+                    _levelPackViewController.didSelectPackEvent -= _levelPackViewController_didSelectPackEvent;
+                    _levelPacksTableView.didSelectPackEvent -= _levelPacksTableView_didSelectPackEvent;
+
+                    var levelPack = GetLevelPackByPackId(_model.Settings.currentLevelPackId);
                     this.SelectLevelPack(_model.Settings.currentLevelPackId);
+                    this._model.SetCurrentLevelPack(levelPack);
+                    this._model.ProcessSongList();
+
+                    _levelPacksTableView.didSelectPackEvent += _levelPacksTableView_didSelectPackEvent;
+                    _levelPackViewController.didSelectPackEvent += _levelPackViewController_didSelectPackEvent;
                 }
             }
         }

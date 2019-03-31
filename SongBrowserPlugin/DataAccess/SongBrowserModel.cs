@@ -226,24 +226,6 @@ namespace SongBrowserPlugin
             Stopwatch timer = new Stopwatch();
             timer.Start();
 
-            BeatmapLevelPackSO[] levelPacks = Resources.FindObjectsOfTypeAll<BeatmapLevelPackSO>();
-            foreach (BeatmapLevelPackSO levelPack in levelPacks)
-            {
-                Logger.Debug("Attempting to get song list from levelPack: {0}...", levelPack);
-                var beatmapLevelPack = levelPack as BeatmapLevelPackSO;
-
-                // TODO - need to rethink interface here, not all level packs can be cast this high, some sort functions need it.
-                //      - this helps prevent DLC from breaking everything
-                if (beatmapLevelPack == null)
-                {                    
-                    continue;
-                }
-                
-                _levelPackToSongs[levelPack.packName] = (beatmapLevelPack.beatmapLevelCollection as BeatmapLevelCollectionSO).GetPrivateField<BeatmapLevelSO[]>("_beatmapLevels").ToList();
-                Logger.Debug("Got {0} songs from level collections...", _levelPackToSongs[levelPack.packName].Count);
-                //_levelPackToSongs[levelPack.packName].ForEach(x => Logger.Debug("{0} by {1} = {2}", x.name, x.levelAuthorName, x.levelID));
-            }
-
             // Calculate some information about the custom song dir
             String customSongsPath = Path.Combine(Environment.CurrentDirectory, CUSTOM_SONGS_DIR);
             String revSlashCustomSongPath = customSongsPath.Replace('\\', '/');
@@ -354,6 +336,46 @@ namespace SongBrowserPlugin
             timer.Stop();
 
             Logger.Info("Updating songs infos took {0}ms", timer.ElapsedMilliseconds);
+        }
+
+        /// <summary>
+        /// Get a copy of the unfiltered, unsorted list of songs from level packs.
+        /// </summary>
+        public void UpdateLevelPackOriginalLists()
+        {
+            BeatmapLevelPackSO[] levelPacks = Resources.FindObjectsOfTypeAll<BeatmapLevelPackSO>();
+            foreach (BeatmapLevelPackSO levelPack in levelPacks)
+            {
+                Logger.Debug("Attempting to get song list from levelPack: {0}...", levelPack);
+                var beatmapLevelPack = levelPack as BeatmapLevelPackSO;
+
+                // TODO - need to rethink interface here, not all level packs can be cast this high, some sort functions need it.
+                //      - this helps prevent DLC from breaking everything
+                if (beatmapLevelPack == null)
+                {
+                    continue;
+                }
+
+                _levelPackToSongs[levelPack.packName] = (beatmapLevelPack.beatmapLevelCollection as BeatmapLevelCollectionSO).GetPrivateField<BeatmapLevelSO[]>("_beatmapLevels").ToList();
+                Logger.Debug("Got {0} songs from level collections...", _levelPackToSongs[levelPack.packName].Count);
+                //_levelPackToSongs[levelPack.packName].ForEach(x => Logger.Debug("{0} by {1} = {2}", x.name, x.levelAuthorName, x.levelID));
+            }
+        }
+
+        /// <summary>
+        /// SongLoader doesn't fire event when we delete a song.
+        /// </summary>
+        /// <param name="levelPack"></param>
+        /// <param name="levelId"></param>
+        public void RemoveSongFromLevelPack(IBeatmapLevelPack levelPack, String levelId)
+        {
+            if (!_levelPackToSongs.ContainsKey(levelPack.packName))
+            {
+                Logger.Debug("Trying to remove song from level pack [{0}] but we do not have any information on it...", levelPack.packName);
+                return;
+            }
+
+            _levelPackToSongs[levelPack.packName].RemoveAll(x => x.levelID == levelId);
         }
 
         /// <summary>
@@ -557,9 +579,15 @@ namespace SongBrowserPlugin
                 return;
             }
 
-            if (_levelPackToSongs.Count == 0 || this._currentLevelPack == null || !this._levelPackToSongs.ContainsKey(this._currentLevelPack.packName))
+            if (_levelPackToSongs.Count == 0)
             {
-                Logger.Debug("Cannot process songs yet, songs infos have not been processed...");
+                Logger.Debug("Cannot process songs yet, level packs have not been processed...");
+                return;
+            }
+
+            if (this._currentLevelPack == null || !this._levelPackToSongs.ContainsKey(this._currentLevelPack.packName))
+            {
+                Logger.Debug("Cannot process songs yet, no level pack selected...");
                 return;
             }
 

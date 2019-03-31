@@ -75,6 +75,7 @@ namespace SongBrowserPlugin
             else
             {
                 SongLoader.SongsLoadedEvent += OnSongLoaderLoadedSongs;
+                _songBrowserUI.UpdateLevelPackModel();
             }
         }
 
@@ -88,6 +89,7 @@ namespace SongBrowserPlugin
             Logger.Trace("OnSongLoaderLoadedSongs-SongBrowserApplication()");
             try
             {
+                _songBrowserUI.UpdateLevelPackModel();
                 _songBrowserUI.UpdateLevelDataModel();
                 _songBrowserUI.RefreshSongList();
             }
