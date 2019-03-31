@@ -517,6 +517,7 @@ namespace SongBrowserPlugin
             }
 
             this.Settings.currentLevelPackId = pack.packID;
+            this.Settings.Save();
         }
 
         /// <summary>
