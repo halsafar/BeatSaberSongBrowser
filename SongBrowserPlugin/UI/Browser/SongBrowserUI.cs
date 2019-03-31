@@ -14,6 +14,7 @@ using System.Text;
 using TMPro;
 using Logger = SongBrowserPlugin.Logging.Logger;
 using SongBrowserPlugin.DataAccess.BeatSaverApi;
+using System.Collections;
 
 namespace SongBrowserPlugin.UI
 {
@@ -212,16 +213,6 @@ namespace SongBrowserPlugin.UI
                 this.InstallHandlers();
 
                 this.ResizeStatsPanel();
-
-                // make sure the quick scroll buttons don't desync with regular scrolling
-                _tableViewPageDownButton.onClick.AddListener(delegate ()
-                {
-                    this.RefreshQuickScrollButtons();
-                });
-                _tableViewPageUpButton.onClick.AddListener(delegate ()
-                {
-                    this.RefreshQuickScrollButtons();
-                });
 
                 _uiCreated = true;
                 Logger.Debug("Done Creating UI...");
@@ -513,19 +504,37 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         private void InstallHandlers()
         {
-            // handlers
+            // level pack, level, difficulty handlers, characteristics
             TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelPackLevelsTableView, "_tableView");
+
+            tableView.didSelectCellWithIdxEvent -= HandleDidSelectTableViewRow;
             tableView.didSelectCellWithIdxEvent += HandleDidSelectTableViewRow;
+
+            _levelPackLevelsViewController.didSelectLevelEvent -= OnDidSelectLevelEvent;
             _levelPackLevelsViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
+
+            _levelDifficultyViewController.didSelectDifficultyEvent -= OnDidSelectDifficultyEvent;
             _levelDifficultyViewController.didSelectDifficultyEvent += OnDidSelectDifficultyEvent;
 
-            var packListTableView = _levelPacksTableView;
-
+            _levelPacksTableView.didSelectPackEvent -= _levelPacksTableView_didSelectPackEvent;
             _levelPacksTableView.didSelectPackEvent += _levelPacksTableView_didSelectPackEvent;
+            _levelPackViewController.didSelectPackEvent -= _levelPackViewController_didSelectPackEvent;
             _levelPackViewController.didSelectPackEvent += _levelPackViewController_didSelectPackEvent;
-                  
+
+            _beatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent -= OnDidSelectBeatmapCharacteristic;
             _beatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent += OnDidSelectBeatmapCharacteristic;
 
+            // make sure the quick scroll buttons don't desync with regular scrolling
+            _tableViewPageDownButton.onClick.AddListener(delegate ()
+            {
+                this.RefreshQuickScrollButtons();
+            });
+            _tableViewPageUpButton.onClick.AddListener(delegate ()
+            {
+                this.RefreshQuickScrollButtons();
+            });
+
+            // finished level
             ResultsViewController resultsViewController = _levelSelectionFlowCoordinator.GetPrivateField<ResultsViewController>("_resultsViewController");
             resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
         }
@@ -536,7 +545,15 @@ namespace SongBrowserPlugin.UI
         /// <param name="obj"></param>
         private void ResultsViewController_continueButtonPressedEvent(ResultsViewController obj)
         {
+            StartCoroutine(this.UpdateLevelPackSelectionEndOfFrame());
+        }
+
+        public IEnumerator UpdateLevelPackSelectionEndOfFrame()
+        {
+            yield return new WaitForEndOfFrame();
+
             this.UpdateLevelPackSelection();
+            SelectAndScrollToLevel(_levelPackLevelsTableView, _model.LastSelectedLevelId);
         }
 
         /// <summary>
@@ -1365,7 +1382,7 @@ namespace SongBrowserPlugin.UI
                     return;
                 }
 
-                Logger.Debug("Selecting level pack index: {0}", index);
+                Logger.Info("Selecting level pack index: {0}", pack.packName);
                 var tableView = _levelPacksTableView.GetPrivateField<TableView>("_tableView");
 
                 _levelPacksTableView.SelectCellWithIdx(index);
@@ -1422,7 +1439,7 @@ namespace SongBrowserPlugin.UI
                 // the header counts as an index...
                 selectedIndex += 1;
 
-                Logger.Debug("Scrolling to idx: {0}", selectedIndex);
+                Logger.Debug("Scrolling level list to idx: {0}", selectedIndex);
 
                 TableView tableView = _levelPackLevelsTableView.GetPrivateField<TableView>("_tableView");
 

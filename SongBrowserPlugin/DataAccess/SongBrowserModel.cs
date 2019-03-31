@@ -398,7 +398,7 @@ namespace SongBrowserPlugin
             // bail
             if (scoreSaberDataFile == null)
             {
-                Logger.Warning("Cannot fetch song difficulty for score saber data...");
+                Logger.Warning("Score saber data is not ready yet...");
                 return;
             }
 
