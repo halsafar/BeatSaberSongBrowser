@@ -223,15 +223,6 @@ namespace SongBrowserPlugin
         /// </summary>
         public void UpdateLevelRecords()
         {
-            // get a default beatmap characteristic...
-            if (this.CurrentBeatmapCharacteristicSO == null)
-            {
-                // TODO - this probably needs to be queried or passed in earlier, hack for now
-                // StandardBeatmapCharacteristic
-                Logger.Info("No Beatmap Characteristic selected... selecting default...");
-                this.CurrentBeatmapCharacteristicSO = Resources.FindObjectsOfTypeAll<BeatmapCharacteristicCollectionSO>().FirstOrDefault().beatmapCharacteristics[0];
-            }
-
             Stopwatch timer = new Stopwatch();
             timer.Start();
 
@@ -525,7 +516,7 @@ namespace SongBrowserPlugin
                 _isPreviewLevelPack = false;
             }
 
-            this.Settings.currentLevelPackName = pack.packID;
+            this.Settings.currentLevelPackId = pack.packID;
         }
 
         /// <summary>

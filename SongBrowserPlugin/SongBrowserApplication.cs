@@ -212,6 +212,17 @@ namespace SongBrowserPlugin
         {
             Logger.Trace("HandleModeSelection()");
             this._songBrowserUI.CreateUI(mode);
+            StartCoroutine(this.UpdateBrowserUI());
+        }
+
+        /// <summary>
+        /// Wait until the end of the frame to finish updating everything.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator UpdateBrowserUI()
+        {
+            yield return new WaitForEndOfFrame();
+
             this._songBrowserUI.UpdateLevelDataModel();
             this._songBrowserUI.RefreshSongList();
         }
