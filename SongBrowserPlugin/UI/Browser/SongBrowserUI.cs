@@ -525,6 +525,18 @@ namespace SongBrowserPlugin.UI
             _levelPackViewController.didSelectPackEvent += _levelPackViewController_didSelectPackEvent;
                   
             _beatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent += OnDidSelectBeatmapCharacteristic;
+
+            ResultsViewController resultsViewController = _levelSelectionFlowCoordinator.GetPrivateField<ResultsViewController>("_resultsViewController");
+            resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
+        }
+
+        /// <summary>
+        /// Handle updating the level pack selection after returning from a song.
+        /// </summary>
+        /// <param name="obj"></param>
+        private void ResultsViewController_continueButtonPressedEvent(ResultsViewController obj)
+        {
+            this.UpdateLevelPackSelection();
         }
 
         /// <summary>
@@ -1453,33 +1465,38 @@ namespace SongBrowserPlugin.UI
                     _model.CurrentBeatmapCharacteristicSO = _beatmapCharacteristicSelectionViewController.GetPrivateField<BeatmapCharacteristicSO>("_selectedBeatmapCharacteristic");
                 }
 
-                if (_levelPackViewController != null)
-                {
-                    IBeatmapLevelPack currentSelected = GetCurrentSelectedLevelPackFromBeatSaber();
-                    Logger.Debug("Current selected level pack: {0}", currentSelected);
-
-                    if (String.IsNullOrEmpty(_model.Settings.currentLevelPackId))
-                    {
-                        if (currentSelected == null)
-                        {
-                            Logger.Debug("No level pack selected, acquiring the first available...");
-                            var levelPackCollection = _levelPackViewController.GetPrivateField<IBeatmapLevelPackCollection>("_levelPackCollection");
-                            currentSelected = levelPackCollection.beatmapLevelPacks[0];
-                        }
-                        this._model.SetCurrentLevelPack(currentSelected);
-                    }
-                    else if (currentSelected == null || (currentSelected.packID != _model.Settings.currentLevelId))
-                    {
-                        Logger.Debug("Automatically selecting level pack: {0}", _model.Settings.currentLevelPackId);
-                        this.SelectLevelPack(_model.Settings.currentLevelPackId);
-                    }
-                }
+                this.UpdateLevelPackSelection();
 
                 _model.UpdateLevelRecords();
             }
             catch (Exception e)
             {
                 Logger.Exception("SongBrowser UI crashed trying to update the internal song lists: ", e);
+            }
+        }
+
+        public void UpdateLevelPackSelection()
+        {
+            if (_levelPackViewController != null)
+            {
+                IBeatmapLevelPack currentSelected = GetCurrentSelectedLevelPackFromBeatSaber();
+                Logger.Debug("Current selected level pack: {0}", currentSelected);
+
+                if (String.IsNullOrEmpty(_model.Settings.currentLevelPackId))
+                {
+                    if (currentSelected == null)
+                    {
+                        Logger.Debug("No level pack selected, acquiring the first available...");
+                        var levelPackCollection = _levelPackViewController.GetPrivateField<IBeatmapLevelPackCollection>("_levelPackCollection");
+                        currentSelected = levelPackCollection.beatmapLevelPacks[0];
+                    }
+                    this._model.SetCurrentLevelPack(currentSelected);
+                }
+                else if (currentSelected == null || (currentSelected.packID != _model.Settings.currentLevelId))
+                {
+                    Logger.Debug("Automatically selecting level pack: {0}", _model.Settings.currentLevelPackId);
+                    this.SelectLevelPack(_model.Settings.currentLevelPackId);
+                }
             }
         }
 
