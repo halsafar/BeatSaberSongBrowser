@@ -223,35 +223,8 @@ namespace SongBrowserPlugin
         /// </summary>
         public void UpdateLevelRecords()
         {
-            // get a default beatmap characteristic...
-            if (this.CurrentBeatmapCharacteristicSO == null)
-            {
-                // TODO - this probably needs to be queried or passed in earlier, hack for now
-                // StandardBeatmapCharacteristic
-                Logger.Info("No Beatmap Characteristic selected... selecting default...");
-                this.CurrentBeatmapCharacteristicSO = Resources.FindObjectsOfTypeAll<BeatmapCharacteristicCollectionSO>().FirstOrDefault().beatmapCharacteristics[0];
-            }
-
             Stopwatch timer = new Stopwatch();
             timer.Start();
-
-            BeatmapLevelPackSO[] levelPacks = Resources.FindObjectsOfTypeAll<BeatmapLevelPackSO>();
-            foreach (BeatmapLevelPackSO levelPack in levelPacks)
-            {
-                Logger.Debug("Attempting to get song list from levelPack: {0}...", levelPack);
-                var beatmapLevelPack = levelPack as BeatmapLevelPackSO;
-
-                // TODO - need to rethink interface here, not all level packs can be cast this high, some sort functions need it.
-                //      - this helps prevent DLC from breaking everything
-                if (beatmapLevelPack == null)
-                {                    
-                    continue;
-                }
-                
-                _levelPackToSongs[levelPack.packName] = (beatmapLevelPack.beatmapLevelCollection as BeatmapLevelCollectionSO).GetPrivateField<BeatmapLevelSO[]>("_beatmapLevels").ToList();
-                Logger.Debug("Got {0} songs from level collections...", _levelPackToSongs[levelPack.packName].Count);
-                //_levelPackToSongs[levelPack.packName].ForEach(x => Logger.Debug("{0} by {1} = {2}", x.name, x.levelAuthorName, x.levelID));
-            }
 
             // Calculate some information about the custom song dir
             String customSongsPath = Path.Combine(Environment.CurrentDirectory, CUSTOM_SONGS_DIR);
@@ -366,6 +339,46 @@ namespace SongBrowserPlugin
         }
 
         /// <summary>
+        /// Get a copy of the unfiltered, unsorted list of songs from level packs.
+        /// </summary>
+        public void UpdateLevelPackOriginalLists()
+        {
+            BeatmapLevelPackSO[] levelPacks = Resources.FindObjectsOfTypeAll<BeatmapLevelPackSO>();
+            foreach (BeatmapLevelPackSO levelPack in levelPacks)
+            {
+                Logger.Debug("Attempting to get song list from levelPack: {0}...", levelPack);
+                var beatmapLevelPack = levelPack as BeatmapLevelPackSO;
+
+                // TODO - need to rethink interface here, not all level packs can be cast this high, some sort functions need it.
+                //      - this helps prevent DLC from breaking everything
+                if (beatmapLevelPack == null)
+                {
+                    continue;
+                }
+
+                _levelPackToSongs[levelPack.packName] = (beatmapLevelPack.beatmapLevelCollection as BeatmapLevelCollectionSO).GetPrivateField<BeatmapLevelSO[]>("_beatmapLevels").ToList();
+                Logger.Debug("Got {0} songs from level collections...", _levelPackToSongs[levelPack.packName].Count);
+                //_levelPackToSongs[levelPack.packName].ForEach(x => Logger.Debug("{0} by {1} = {2}", x.name, x.levelAuthorName, x.levelID));
+            }
+        }
+
+        /// <summary>
+        /// SongLoader doesn't fire event when we delete a song.
+        /// </summary>
+        /// <param name="levelPack"></param>
+        /// <param name="levelId"></param>
+        public void RemoveSongFromLevelPack(IBeatmapLevelPack levelPack, String levelId)
+        {
+            if (!_levelPackToSongs.ContainsKey(levelPack.packName))
+            {
+                Logger.Debug("Trying to remove song from level pack [{0}] but we do not have any information on it...", levelPack.packName);
+                return;
+            }
+
+            _levelPackToSongs[levelPack.packName].RemoveAll(x => x.levelID == levelId);
+        }
+
+        /// <summary>
         /// Update the gameplay play counts.
         /// </summary>
         /// <param name="gameplayMode"></param>
@@ -407,7 +420,7 @@ namespace SongBrowserPlugin
             // bail
             if (scoreSaberDataFile == null)
             {
-                Logger.Warning("Cannot fetch song difficulty for score saber data...");
+                Logger.Warning("Score saber data is not ready yet...");
                 return;
             }
 
@@ -507,7 +520,7 @@ namespace SongBrowserPlugin
         /// <param name="pack"></param>
         public void SetCurrentLevelPack(IBeatmapLevelPack pack)
         {
-            Logger.Debug("Setting level packs back to their original values!");
+            Logger.Debug("Setting current level pack [{0}]: {1}", pack.packID, pack.packName);
 
             this.ResetLevelPacks();
 
@@ -524,6 +537,9 @@ namespace SongBrowserPlugin
                 Logger.Debug("Owned level pack...  Enabling SongBrowser...");
                 _isPreviewLevelPack = false;
             }
+
+            this.Settings.currentLevelPackId = pack.packID;
+            this.Settings.Save();
         }
 
         /// <summary>
@@ -563,9 +579,15 @@ namespace SongBrowserPlugin
                 return;
             }
 
-            if (_levelPackToSongs.Count == 0 || this._currentLevelPack == null || !this._levelPackToSongs.ContainsKey(this._currentLevelPack.packName))
+            if (_levelPackToSongs.Count == 0)
             {
-                Logger.Debug("Cannot process songs yet, songs infos have not been processed...");
+                Logger.Debug("Cannot process songs yet, level packs have not been processed...");
+                return;
+            }
+
+            if (this._currentLevelPack == null || !this._levelPackToSongs.ContainsKey(this._currentLevelPack.packName))
+            {
+                Logger.Debug("Cannot process songs yet, no level pack selected...");
                 return;
             }
 

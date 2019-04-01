@@ -11,12 +11,10 @@ using System.IO;
 using SongLoaderPlugin;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
 using TMPro;
 using Logger = SongBrowserPlugin.Logging.Logger;
 using SongBrowserPlugin.DataAccess.BeatSaverApi;
-using CustomUI.BeatSaber;
-using SongBrowserPlugin.Internals;
+using System.Collections;
 
 namespace SongBrowserPlugin.UI
 {
@@ -164,7 +162,7 @@ namespace SongBrowserPlugin.UI
                 _levelPackLevelsViewController = _levelSelectionFlowCoordinator.GetPrivateField<LevelPackLevelsViewController>("_levelPackLevelsViewController");
                 Logger.Debug("Acquired LevelPackLevelsViewController [{0}]", _levelPackLevelsViewController.GetInstanceID());
 
-                _levelPackLevelsTableView = this._levelPackLevelsViewController.GetComponentInChildren<LevelPackLevelsTableView>();
+                _levelPackLevelsTableView = this._levelPackLevelsViewController.GetPrivateField<LevelPackLevelsTableView>("_levelPackLevelsTableView");
                 Logger.Debug("Acquired LevelPackLevelsTableView [{0}]", _levelPackLevelsTableView.GetInstanceID());
 
                 _levelDetailViewController = _levelSelectionFlowCoordinator.GetPrivateField<StandardLevelDetailViewController>("_levelDetailViewController");
@@ -215,16 +213,6 @@ namespace SongBrowserPlugin.UI
                 this.InstallHandlers();
 
                 this.ResizeStatsPanel();
-
-                // make sure the quick scroll buttons don't desync with regular scrolling
-                _tableViewPageDownButton.onClick.AddListener(delegate ()
-                {
-                    this.RefreshQuickScrollButtons();
-                });
-                _tableViewPageUpButton.onClick.AddListener(delegate ()
-                {
-                    this.RefreshQuickScrollButtons();
-                });
 
                 _uiCreated = true;
                 Logger.Debug("Done Creating UI...");
@@ -516,23 +504,60 @@ namespace SongBrowserPlugin.UI
         /// </summary>
         private void InstallHandlers()
         {
-            // handlers
+            // level pack, level, difficulty handlers, characteristics
             TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelPackLevelsTableView, "_tableView");
+
+            tableView.didSelectCellWithIdxEvent -= HandleDidSelectTableViewRow;
             tableView.didSelectCellWithIdxEvent += HandleDidSelectTableViewRow;
+
+            _levelPackLevelsViewController.didSelectLevelEvent -= OnDidSelectLevelEvent;
             _levelPackLevelsViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
+
+            _levelDifficultyViewController.didSelectDifficultyEvent -= OnDidSelectDifficultyEvent;
             _levelDifficultyViewController.didSelectDifficultyEvent += OnDidSelectDifficultyEvent;
 
-            var packListTableView = _levelPacksTableView;
-
+            _levelPacksTableView.didSelectPackEvent -= _levelPacksTableView_didSelectPackEvent;
             _levelPacksTableView.didSelectPackEvent += _levelPacksTableView_didSelectPackEvent;
+            _levelPackViewController.didSelectPackEvent -= _levelPackViewController_didSelectPackEvent;
             _levelPackViewController.didSelectPackEvent += _levelPackViewController_didSelectPackEvent;
-                  
+
+            _beatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent -= OnDidSelectBeatmapCharacteristic;
             _beatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent += OnDidSelectBeatmapCharacteristic;
+
+            // make sure the quick scroll buttons don't desync with regular scrolling
+            _tableViewPageDownButton.onClick.AddListener(delegate ()
+            {
+                this.RefreshQuickScrollButtons();
+            });
+            _tableViewPageUpButton.onClick.AddListener(delegate ()
+            {
+                this.RefreshQuickScrollButtons();
+            });
+
+            // finished level
+            ResultsViewController resultsViewController = _levelSelectionFlowCoordinator.GetPrivateField<ResultsViewController>("_resultsViewController");
+            resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
+        }
+
+        /// <summary>
+        /// Handle updating the level pack selection after returning from a song.
+        /// </summary>
+        /// <param name="obj"></param>
+        private void ResultsViewController_continueButtonPressedEvent(ResultsViewController obj)
+        {
+            StartCoroutine(this.UpdateLevelPackSelectionEndOfFrame());
+        }
+
+        public IEnumerator UpdateLevelPackSelectionEndOfFrame()
+        {
+            yield return new WaitForEndOfFrame();
+
+            this.UpdateLevelPackSelection();
+            SelectAndScrollToLevel(_levelPackLevelsTableView, _model.LastSelectedLevelId);
         }
 
         /// <summary>
         /// Handler for level pack selection.
-        /// UNUSED
         /// </summary>
         /// <param name="arg1"></param>
         /// <param name="arg2"></param>
@@ -542,11 +567,9 @@ namespace SongBrowserPlugin.UI
 
             try
             {
-                if (this._model.Settings.filterMode == SongFilterMode.Playlist)
-                {
-                    this._model.Settings.filterMode = SongFilterMode.None;
-                    this._model.Settings.Save();
-                }
+                // reset filter mode always here
+                this._model.Settings.filterMode = SongFilterMode.None;
+                this._model.Settings.Save();
 
                 this._model.SetCurrentLevelPack(arg2);
                 this._model.ProcessSongList();
@@ -641,8 +664,7 @@ namespace SongBrowserPlugin.UI
             }
 
             //Scroll to start of the list
-            var levelsTableView = _levelPackLevelsViewController.GetPrivateField<LevelPackLevelsTableView>("_levelPackLevelsTableView");
-            TableView listTableView = levelsTableView.GetPrivateField<TableView>("_tableView");
+            TableView listTableView = _levelPackLevelsTableView.GetPrivateField<TableView>("_tableView");
             listTableView.ScrollToCellWithIdx(0, TableView.ScrollPositionType.Beginning, false);
         }
 
@@ -815,23 +837,25 @@ namespace SongBrowserPlugin.UI
                     {
                         try
                         {
-                            var levelsTableView = _levelPackLevelsViewController.GetPrivateField<LevelPackLevelsTableView>("_levelPackLevelsTableView");
-                            List<IPreviewBeatmapLevel> levels = levelsTableView.GetPrivateField<IBeatmapLevelPack>("_pack").beatmapLevelCollection.beatmapLevels.ToList();
+                            // determine the index we are deleting so we can keep the cursor near the same spot after
+                            List<IPreviewBeatmapLevel> levels = _levelPackLevelsTableView.GetPrivateField<IBeatmapLevelPack>("_pack").beatmapLevelCollection.beatmapLevels.ToList();
                             int selectedIndex = levels.FindIndex(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID);
 
-                            SongDownloader.Instance.DeleteSong(new Song(SongLoader.CustomLevels.First(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID)));
+                            // we are only deleting custom levels, find the song, delete it
+                            var song = new Song(SongLoader.CustomLevels.First(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID));
+                            SongDownloader.Instance.DeleteSong(song);
 
                             if (selectedIndex > -1)
                             {
-                                int removedLevels = levels.RemoveAll(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID);
-                                Logger.Log("Removed " + removedLevels + " level(s) from song list!");
+                                this._model.RemoveSongFromLevelPack(this._model.CurrentLevelPack, _levelDetailViewController.selectedDifficultyBeatmap.level.levelID);
+                                Logger.Log("Removed {0} from custom song list!", song.songName);
 
                                 this.UpdateLevelDataModel();
                                 this.RefreshSongList();
 
-                                TableView listTableView = levelsTableView.GetPrivateField<TableView>("_tableView");
+                                TableView listTableView = _levelPackLevelsTableView.GetPrivateField<TableView>("_tableView");
                                 listTableView.ScrollToCellWithIdx(selectedIndex, TableView.ScrollPositionType.Beginning, false);
-                                levelsTableView.SetPrivateField("_selectedRow", selectedIndex);
+                                _levelPackLevelsTableView.SetPrivateField("_selectedRow", selectedIndex);
                                 listTableView.SelectCellWithIdx(selectedIndex, true);
                             }
                         }
@@ -1027,6 +1051,7 @@ namespace SongBrowserPlugin.UI
             BeatmapDifficulty difficulty = this._levelDifficultyViewController.selectedDifficulty;
             string njsText;
             string difficultyString = difficulty.ToString();
+            Logger.Debug(difficultyString);
 
             //Grab NJS for difficulty
             //Default to 10 if a standard level
@@ -1275,6 +1300,109 @@ namespace SongBrowserPlugin.UI
         }
 
         /// <summary>
+        /// Acquire the level pack collection.
+        /// </summary>
+        /// <returns></returns>
+        private IBeatmapLevelPackCollection GetLevelPackCollection()
+        {
+            if (_levelPackViewController == null)
+            {
+                return null;
+            }
+
+            IBeatmapLevelPackCollection levelPackCollection = _levelPackViewController.GetPrivateField<IBeatmapLevelPackCollection>("_levelPackCollection");
+            return levelPackCollection;
+        }
+
+        /// <summary>
+        /// Get the currently selected level pack within the LevelPackLevelViewController hierarchy.
+        /// </summary>
+        /// <returns></returns>
+        private IBeatmapLevelPack GetCurrentSelectedLevelPackFromBeatSaber()
+        {
+            if (_levelPackLevelsTableView == null)
+            {
+                return null;
+            }
+
+            var pack = _levelPackLevelsTableView.GetPrivateField<IBeatmapLevelPack>("_pack");
+            return pack;
+        }
+
+        /// <summary>
+        /// Get level pack by level pack id.
+        /// </summary>
+        /// <param name="levelPackId"></param>
+        /// <returns></returns>
+        private IBeatmapLevelPack GetLevelPackByPackId(String levelPackId)
+        {
+            IBeatmapLevelPackCollection levelPackCollection = GetLevelPackCollection();
+            if (levelPackCollection == null)
+            {
+                return null;
+            }
+
+            IBeatmapLevelPack levelPack = levelPackCollection.beatmapLevelPacks.ToList().First(x => x.packID == levelPackId);
+            return levelPack;
+        }
+
+        /// <summary>
+        /// Get level pack index by level pack id.
+        /// </summary>
+        /// <param name="levelPackId"></param>
+        /// <returns></returns>
+        private int GetLevelPackIndexByPackId(String levelPackId)
+        {
+            IBeatmapLevelPackCollection levelPackCollection = GetLevelPackCollection();
+            if (levelPackCollection == null)
+            {
+                return -1;
+            }
+
+            int index = levelPackCollection.beatmapLevelPacks.ToList().FindIndex(x => x.packID == levelPackId);
+            return index;
+        }
+
+        /// <summary>
+        /// Select a level pack.
+        /// </summary>
+        /// <param name="levelPackId"></param>
+        public void SelectLevelPack(String levelPackId)
+        {
+            Logger.Trace("SelectLevelPack({0})", levelPackId);
+
+            try
+            {
+                var levelPacks = GetLevelPackCollection();
+                var index = GetLevelPackIndexByPackId(levelPackId);
+                var pack = GetLevelPackByPackId(levelPackId);
+
+                if (index < 0)
+                {
+                    Logger.Debug("Cannot select level packs yet...");
+                    return;
+                }
+
+                Logger.Info("Selecting level pack index: {0}", pack.packName);
+                var tableView = _levelPacksTableView.GetPrivateField<TableView>("_tableView");
+
+                _levelPacksTableView.SelectCellWithIdx(index);
+                tableView.SelectCellWithIdx(index, true);
+                tableView.ScrollToCellWithIdx(0, TableView.ScrollPositionType.Beginning, false);
+                for (int i = 0; i < index; i++)
+                {
+                    tableView.PageScrollDown();
+                }
+
+                Logger.Debug("Done selecting level pack!");
+            }
+            catch (Exception e)
+            {
+                Logger.Exception(e);
+            }
+        }
+
+        /// <summary>
         /// Scroll TableView to proper row, fire events.
         /// </summary>
         /// <param name="table"></param>
@@ -1309,11 +1437,12 @@ namespace SongBrowserPlugin.UI
             selectedIndex = levels.FindIndex(x => x.levelID == levelID);
             if (selectedIndex >= 0)
             {
-                Logger.Debug("Scrolling to idx: {0}", selectedIndex);
+                // the header counts as an index...
+                selectedIndex += 1;
 
-                TableView listTableView = _levelPackLevelsViewController
-                    .GetPrivateField<LevelPackLevelsTableView>("_levelPackLevelsTableView")
-                    .GetPrivateField<TableView>("_tableView");
+                Logger.Debug("Scrolling level list to idx: {0}", selectedIndex);
+
+                TableView tableView = _levelPackLevelsTableView.GetPrivateField<TableView>("_tableView");
 
                 var scrollPosType = TableView.ScrollPositionType.Center;
                 if (selectedIndex == 0)
@@ -1325,7 +1454,10 @@ namespace SongBrowserPlugin.UI
                     scrollPosType = TableView.ScrollPositionType.End;
                 }
 
-                listTableView.ScrollToCellWithIdx(selectedIndex, scrollPosType, true);
+                _levelPackLevelsTableView.HandleDidSelectRowEvent(tableView, selectedIndex);
+                tableView.ScrollToCellWithIdx(selectedIndex, TableView.ScrollPositionType.Beginning, true);
+                tableView.SelectCellWithIdx(selectedIndex);
+
                 RefreshQuickScrollButtons();
 
                 _lastRow = selectedIndex;
@@ -1345,19 +1477,68 @@ namespace SongBrowserPlugin.UI
             {
                 Logger.Trace("UpdateLevelDataModel()");
 
-                if (_model.CurrentLevelPack == null && _levelPackViewController != null)
+                // get a current beatmap characteristic...
+                if (_model.CurrentBeatmapCharacteristicSO == null && _beatmapCharacteristicSelectionViewController != null)
                 {
-                    // TODO - is this acceptable?  review....
-                    Logger.Debug("No level pack selected, acquiring the first available...");
-                    var levelPackCollection = _levelPackViewController.GetPrivateField<IBeatmapLevelPackCollection>("_levelPackCollection");
-                    this._model.SetCurrentLevelPack(levelPackCollection.beatmapLevelPacks[0]);
+                    _model.CurrentBeatmapCharacteristicSO = _beatmapCharacteristicSelectionViewController.GetPrivateField<BeatmapCharacteristicSO>("_selectedBeatmapCharacteristic");
                 }
 
                 _model.UpdateLevelRecords();
+
+                UpdateLevelPackSelection();
             }
             catch (Exception e)
             {
                 Logger.Exception("SongBrowser UI crashed trying to update the internal song lists: ", e);
+            }
+        }
+
+        /// <summary>
+        /// Update the level pack model.
+        /// </summary>
+        public void UpdateLevelPackModel()
+        {
+            _model.UpdateLevelPackOriginalLists();
+        }
+
+        /// <summary>
+        /// Logic for fixing BeatSaber's level pack selection bugs.
+        /// </summary>
+        public void UpdateLevelPackSelection()
+        {
+            if (_levelPackViewController != null)
+            {
+                IBeatmapLevelPack currentSelected = GetCurrentSelectedLevelPackFromBeatSaber();
+                Logger.Debug("Current selected level pack: {0}", currentSelected);
+
+                if (String.IsNullOrEmpty(_model.Settings.currentLevelPackId))
+                {
+                    if (currentSelected == null)
+                    {
+                        Logger.Debug("No level pack selected, acquiring the first available...");
+                        var levelPackCollection = _levelPackViewController.GetPrivateField<IBeatmapLevelPackCollection>("_levelPackCollection");
+                        currentSelected = levelPackCollection.beatmapLevelPacks[0];
+                    }
+                    this._model.SetCurrentLevelPack(currentSelected);
+                }
+                else if (currentSelected == null || (currentSelected.packID != _model.Settings.currentLevelId))
+                {
+                    Logger.Debug("Automatically selecting level pack: {0}", _model.Settings.currentLevelPackId);
+
+                    // HACK - BeatSaber seems to always go back to OST1 internally.
+                    //      - Lets force it to the last pack id but not have SongBrowser functions fire.
+                    // Turn off our event processing
+                    _levelPackViewController.didSelectPackEvent -= _levelPackViewController_didSelectPackEvent;
+                    _levelPacksTableView.didSelectPackEvent -= _levelPacksTableView_didSelectPackEvent;
+
+                    var levelPack = GetLevelPackByPackId(_model.Settings.currentLevelPackId);
+                    this.SelectLevelPack(_model.Settings.currentLevelPackId);
+                    this._model.SetCurrentLevelPack(levelPack);
+                    this._model.ProcessSongList();
+
+                    _levelPacksTableView.didSelectPackEvent += _levelPacksTableView_didSelectPackEvent;
+                    _levelPackViewController.didSelectPackEvent += _levelPackViewController_didSelectPackEvent;
+                }
             }
         }
 
