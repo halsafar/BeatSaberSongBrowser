@@ -303,11 +303,14 @@ namespace SongBrowserPlugin
             // load the current editing playlist or make one
             if (!String.IsNullOrEmpty(this.Settings.currentEditingPlaylistFile))
             {
+                Logger.Debug("Loading playlist for editing: {0}", this.Settings.currentEditingPlaylistFile);
                 CurrentEditingPlaylist = Playlist.LoadPlaylist(this.Settings.currentEditingPlaylistFile);
+                PlaylistsCollection.MatchSongsForPlaylist(CurrentEditingPlaylist);
             }
 
             if (CurrentEditingPlaylist == null)
             {
+                Logger.Debug("Current editing playlist does not exit, create...");
                 CurrentEditingPlaylist = new Playlist
                 {
                     playlistTitle = "Song Browser Favorites",
@@ -321,7 +324,7 @@ namespace SongBrowserPlugin
             CurrentEditingPlaylistLevelIds = new HashSet<string>();
             foreach (PlaylistSong ps in CurrentEditingPlaylist.songs)
             {
-                CurrentEditingPlaylistLevelIds.Add(ps.levelId);
+                CurrentEditingPlaylistLevelIds.Add(ps.level.levelID);
             }            
 
             // Actually sort and filter
@@ -471,7 +474,6 @@ namespace SongBrowserPlugin
             });
 
             this.CurrentEditingPlaylistLevelIds.Add(songInfo.levelID);
-
             this.CurrentEditingPlaylist.SavePlaylist();
         }
 
@@ -486,7 +488,7 @@ namespace SongBrowserPlugin
                 return;
             }
 
-            this.CurrentEditingPlaylist.songs.RemoveAll(x => x.levelId == songInfo.levelID);
+            this.CurrentEditingPlaylist.songs.RemoveAll(x => x.level.levelID == songInfo.levelID);
             this.CurrentEditingPlaylistLevelIds.Remove(songInfo.levelID);
 
             this.CurrentEditingPlaylist.SavePlaylist();

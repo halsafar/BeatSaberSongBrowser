@@ -749,6 +749,7 @@ namespace SongBrowserPlugin.UI
             try
             {
                 Logger.Trace("OnDidSelectLevelEvent()");
+
                 if (level == null)
                 {
                     Logger.Debug("No level selected?");
