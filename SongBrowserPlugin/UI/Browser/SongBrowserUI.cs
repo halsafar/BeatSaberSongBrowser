@@ -811,6 +811,7 @@ namespace SongBrowserPlugin.UI
             _deleteButton.interactable = (level.levelID.Length >= 32);
 
             this.RefreshScoreSaberData(level);
+            this.RefreshAddFavoriteButton(level.levelID);
         }
 
         /// <summary>
@@ -1016,6 +1017,8 @@ namespace SongBrowserPlugin.UI
                 {
                     Logger.Info("Remove {0} from editing playlist", songInfo.songName);
                     _model.RemoveSongFromEditingPlaylist(songInfo);
+                    this._model.ProcessSongList();
+                    this.RefreshSongList();
                 }
                 else
                 {
@@ -1435,38 +1438,50 @@ namespace SongBrowserPlugin.UI
             // try to find the index and scroll to it
             int selectedIndex = 0;
             List<IPreviewBeatmapLevel> levels = table.GetPrivateField<IBeatmapLevelPack>("_pack").beatmapLevelCollection.beatmapLevels.ToList();
-            selectedIndex = levels.FindIndex(x => x.levelID == levelID);
-            if (selectedIndex >= 0)
+
+            // check if we have any levels
+            if (levels.Count <= 0)
             {
-                // the header counts as an index...
-                selectedIndex += 1;
+                return;
+            }
 
-                Logger.Debug("Scrolling level list to idx: {0}", selectedIndex);
-
-                TableView tableView = _levelPackLevelsTableView.GetPrivateField<TableView>("_tableView");
-
-                var scrollPosType = TableView.ScrollPositionType.Center;
-                if (selectedIndex == 0)
-                {
-                    scrollPosType = TableView.ScrollPositionType.Beginning;
-                }
-                if (selectedIndex == _model.SortedSongList.Count-1)
-                {
-                    scrollPosType = TableView.ScrollPositionType.End;
-                }
-
-                _levelPackLevelsTableView.HandleDidSelectRowEvent(tableView, selectedIndex);
-                tableView.ScrollToCellWithIdx(selectedIndex, TableView.ScrollPositionType.Beginning, true);
-                tableView.SelectCellWithIdx(selectedIndex);
-
-                RefreshQuickScrollButtons();
-
-                _lastRow = selectedIndex;
+            // acquire the index or try the last row
+            selectedIndex = levels.FindIndex(x => x.levelID == levelID);
+            if (selectedIndex < 0)
+            {
+                // this might look like an off by one error but the _level list we keep is missing the header entry BeatSaber.
+                // so the last row is +1 the max index, the count.
+                int maxCount = _model.SortedSongList.Count;
+                Logger.Debug("Song is not in the level pack, cannot scroll to it...  Using last known row");
+                selectedIndex = Math.Min(maxCount, _lastRow);
             }
             else
             {
-                Logger.Debug("Song is not in the level pack, cannot scroll to it...");
+                // the header counts as an index, so if the index came from the level array we have to add 1.
+                selectedIndex += 1;
             }
+
+            Logger.Debug("Scrolling level list to idx: {0}", selectedIndex);
+
+            TableView tableView = _levelPackLevelsTableView.GetPrivateField<TableView>("_tableView");
+
+            var scrollPosType = TableView.ScrollPositionType.Center;
+            if (selectedIndex == 0)
+            {
+                scrollPosType = TableView.ScrollPositionType.Beginning;
+            }
+            if (selectedIndex == _model.SortedSongList.Count - 1)
+            {
+                scrollPosType = TableView.ScrollPositionType.End;
+            }
+
+            _levelPackLevelsTableView.HandleDidSelectRowEvent(tableView, selectedIndex);
+            tableView.ScrollToCellWithIdx(selectedIndex, TableView.ScrollPositionType.Beginning, true);
+            tableView.SelectCellWithIdx(selectedIndex);
+
+            RefreshQuickScrollButtons();
+
+            _lastRow = selectedIndex;
         }
 
         /// <summary>

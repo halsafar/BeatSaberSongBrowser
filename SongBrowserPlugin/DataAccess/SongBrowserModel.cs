@@ -301,7 +301,7 @@ namespace SongBrowserPlugin
             }
 
             // load the current editing playlist or make one
-            if (!String.IsNullOrEmpty(this.Settings.currentEditingPlaylistFile))
+            if (CurrentEditingPlaylist == null && !String.IsNullOrEmpty(this.Settings.currentEditingPlaylistFile))
             {
                 Logger.Debug("Loading playlist for editing: {0}", this.Settings.currentEditingPlaylistFile);
                 CurrentEditingPlaylist = Playlist.LoadPlaylist(this.Settings.currentEditingPlaylistFile);
@@ -489,7 +489,7 @@ namespace SongBrowserPlugin
             }
 
             this.CurrentEditingPlaylist.songs.RemoveAll(x => x.level.levelID == songInfo.levelID);
-            this.CurrentEditingPlaylistLevelIds.Remove(songInfo.levelID);
+            this.CurrentEditingPlaylistLevelIds.RemoveWhere(x => x == songInfo.levelID);
 
             this.CurrentEditingPlaylist.SavePlaylist();
         }
