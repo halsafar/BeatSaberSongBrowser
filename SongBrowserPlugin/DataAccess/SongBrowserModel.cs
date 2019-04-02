@@ -324,8 +324,14 @@ namespace SongBrowserPlugin
             CurrentEditingPlaylistLevelIds = new HashSet<string>();
             foreach (PlaylistSong ps in CurrentEditingPlaylist.songs)
             {
-                CurrentEditingPlaylistLevelIds.Add(ps.level.levelID);
-            }            
+                // Sometimes we cannot match a song
+                if (ps.level == null)
+                {
+                    continue;
+                }
+
+                CurrentEditingPlaylistLevelIds.Add(ps.level.levelID);                
+            }
 
             // Actually sort and filter
             this.ProcessSongList();
