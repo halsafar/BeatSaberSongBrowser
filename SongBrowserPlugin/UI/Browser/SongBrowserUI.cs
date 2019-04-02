@@ -552,8 +552,15 @@ namespace SongBrowserPlugin.UI
         {
             yield return new WaitForEndOfFrame();
 
-            this.UpdateLevelPackSelection();
-            SelectAndScrollToLevel(_levelPackLevelsTableView, _model.LastSelectedLevelId);
+            try
+            {
+                this.UpdateLevelPackSelection();
+                SelectAndScrollToLevel(_levelPackLevelsTableView, _model.LastSelectedLevelId);
+            }
+            catch (Exception e)
+            {
+                Logger.Exception("Exception:", e);
+            }
         }
 
         /// <summary>
