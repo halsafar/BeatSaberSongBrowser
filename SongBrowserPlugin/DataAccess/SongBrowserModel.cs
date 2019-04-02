@@ -494,7 +494,7 @@ namespace SongBrowserPlugin
                 return;
             }
 
-            this.CurrentEditingPlaylist.songs.RemoveAll(x => x.level.levelID == songInfo.levelID);
+            this.CurrentEditingPlaylist.songs.RemoveAll(x => x.level != null && x.level.levelID == songInfo.levelID);
             this.CurrentEditingPlaylistLevelIds.RemoveWhere(x => x == songInfo.levelID);
 
             this.CurrentEditingPlaylist.SavePlaylist();
