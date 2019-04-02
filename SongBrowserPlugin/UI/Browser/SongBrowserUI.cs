@@ -764,9 +764,6 @@ namespace SongBrowserPlugin.UI
 
                 _model.LastSelectedLevelId = level.levelID;
 
-                RefreshAddFavoriteButton(level.levelID);
-                RefreshQuickScrollButtons();
-
                 HandleDidSelectLevelRow(level);
             }
             catch (Exception e)
@@ -810,8 +807,9 @@ namespace SongBrowserPlugin.UI
 
             _deleteButton.interactable = (level.levelID.Length >= 32);
 
-            this.RefreshScoreSaberData(level);
-            this.RefreshAddFavoriteButton(level.levelID);
+            RefreshScoreSaberData(level);
+            RefreshQuickScrollButtons();
+            RefreshAddFavoriteButton(level.levelID);
         }
 
         /// <summary>
@@ -1017,8 +1015,12 @@ namespace SongBrowserPlugin.UI
                 {
                     Logger.Info("Remove {0} from editing playlist", songInfo.songName);
                     _model.RemoveSongFromEditingPlaylist(songInfo);
-                    this._model.ProcessSongList();
-                    this.RefreshSongList();
+
+                    if (_model.Settings.filterMode == SongFilterMode.Favorites)
+                    {
+                        this._model.ProcessSongList();
+                        this.RefreshSongList();
+                    }
                 }
                 else
                 {
