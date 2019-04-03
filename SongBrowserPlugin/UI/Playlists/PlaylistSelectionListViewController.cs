@@ -40,7 +40,7 @@ namespace SongBrowserPlugin.UI
                 rectTransform.sizeDelta = new Vector2(74f, 0f);
                 rectTransform.pivot = new Vector2(0.4f, 0.5f);
 
-                _pageUpButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageUpButton")), rectTransform, false);
+                _pageUpButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().Last(x => (x.name == "PageUpButton")), rectTransform, false);
                 (_pageUpButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 1f);
                 (_pageUpButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 1f);
                 (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -10f);
@@ -51,7 +51,7 @@ namespace SongBrowserPlugin.UI
                     _songsTableView.PageScrollUp();
                 });
 
-                _pageDownButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageDownButton")), rectTransform, false);
+                _pageDownButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().Last(x => (x.name == "PageDownButton")), rectTransform, false);
                 (_pageDownButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0f);
                 (_pageDownButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0f);
                 (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 10f);

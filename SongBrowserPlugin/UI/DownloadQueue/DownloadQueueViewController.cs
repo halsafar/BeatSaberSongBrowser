@@ -42,7 +42,7 @@ namespace SongBrowserPlugin.UI.DownloadQueue
                 _titleText.alignment = TextAlignmentOptions.Top;
                 _titleText.fontSize = 6f;
 
-                _pageUpButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageUpButton")), rectTransform, false);
+                _pageUpButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().Last(x => (x.name == "PageUpButton")), rectTransform, false);
                 (_pageUpButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 1f);
                 (_pageUpButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 1f);
                 (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -14f);
@@ -53,7 +53,7 @@ namespace SongBrowserPlugin.UI.DownloadQueue
                     _queuedSongsTableView.PageScrollUp();
                 });
 
-                _pageDownButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageDownButton")), rectTransform, false);
+                _pageDownButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().Last(x => (x.name == "PageDownButton")), rectTransform, false);
                 (_pageDownButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0f);
                 (_pageDownButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0f);
                 (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 8f);
