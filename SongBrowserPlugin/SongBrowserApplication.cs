@@ -34,7 +34,9 @@ namespace SongBrowserPlugin
             {
                 return;
             }
+
             new GameObject("Beat Saber SongBrowser Plugin").AddComponent<SongBrowserApplication>();
+
             SongBrowserApplication.MainProgressBar = SongBrowserPlugin.UI.ProgressBar.Create();
 
             Console.WriteLine("SongBrowser Plugin Loaded()");
@@ -45,7 +47,7 @@ namespace SongBrowserPlugin
         /// </summary>
         private void Awake()
         {
-            Logger.Trace("Awake()");
+            Logger.Trace("Awake-SongBrowserApplication()");
 
             Instance = this;
 
@@ -59,25 +61,12 @@ namespace SongBrowserPlugin
         /// </summary>
         public void Start()
         {
-            Logger.Trace("Start()");
+            Logger.Trace("Start-SongBrowserApplication()");
 
             AcquireUIElements();
+            InstallHandlers();
 
             StartCoroutine(ScrappedData.Instance.DownloadScrappedData((List<ScrappedSong> songs) => { }));
-            StartCoroutine(WaitForSongListUI());
-        }
-
-        /// <summary>
-        /// Wait for the song list to be visible to draw it.
-        /// </summary>
-        /// <returns></returns>
-        private IEnumerator WaitForSongListUI()
-        {
-            Logger.Trace("WaitForSongListUI()");
-
-            yield return new WaitUntil(delegate () { return Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().Any() && Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().Any(); });
-
-            Logger.Debug("Found Solo and Party FreePlayFlowCoordinators...");
 
             if (SongLoaderPlugin.SongLoader.AreSongsLoaded)
             {
@@ -86,9 +75,8 @@ namespace SongBrowserPlugin
             else
             {
                 SongLoader.SongsLoadedEvent += OnSongLoaderLoadedSongs;
+                _songBrowserUI.UpdateLevelPackModel();
             }
-
-            _songBrowserUI.RefreshSongList();
         }
 
         /// <summary>
@@ -98,10 +86,12 @@ namespace SongBrowserPlugin
         /// <param name="levels"></param>
         private void OnSongLoaderLoadedSongs(SongLoader loader, List<CustomLevel> levels)
         {
-            Logger.Trace("OnSongLoaderLoadedSongs");
+            Logger.Trace("OnSongLoaderLoadedSongs-SongBrowserApplication()");
             try
             {
-                _songBrowserUI.UpdateSongList();
+                _songBrowserUI.UpdateLevelPackModel();
+                _songBrowserUI.UpdateLevelDataModel();
+                _songBrowserUI.RefreshSongList();
             }
             catch (Exception e)
             {
@@ -119,9 +109,7 @@ namespace SongBrowserPlugin
             Logger.Trace("OnScoreSaberDataDownloaded");
             try
             {
-                // TODO - this should be in the SongBrowserUI which is acting like the view controller for the SongBrowser
                 _songBrowserUI.Model.UpdateScoreSaberDataMapping();
-                //_songBrowserUI.RefreshScoreSaberData(null);
                 if (_songBrowserUI.Model.Settings.sortMode == SongSortMode.PP)
                 {
                     _songBrowserUI.Model.ProcessSongList();
@@ -130,14 +118,14 @@ namespace SongBrowserPlugin
             }
             catch (Exception e)
             {
-                Logger.Exception("Exception during OnSongLoaderLoadedSongs: ", e);
+                Logger.Exception("Exception during OnScoreSaberDataDownloaded: ", e);
             }
         }
 
         /// <summary>
         /// Get a handle to the view controllers we are going to add elements to.
         /// </summary>
-        public void AcquireUIElements()
+        private void AcquireUIElements()
         {
             Logger.Trace("AcquireUIElements()");        
             try
@@ -153,18 +141,32 @@ namespace SongBrowserPlugin
                     //Logger.Debug("Adding Icon: {0}", sprite.name);
                     CachedIcons.Add(sprite.name, sprite);
                 }
-                // Append our own event to appropriate events so we can refresh the song list before the user sees it.
-                MainFlowCoordinator mainFlow = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-                Button soloFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloFreePlayButton");
-                Button partyFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PartyFreePlayButton");
 
-                soloFreePlayButton.onClick.AddListener(HandleSoloModeSelection);
-                partyFreePlayButton.onClick.AddListener(HandlePartyModeSelection);
+                /*foreach (RectTransform rect in Resources.FindObjectsOfTypeAll<RectTransform>())
+                {
+                    Logger.Debug("RectTransform: {0}", rect.name);
+                }*/
             }
             catch (Exception e)
             {
                 Logger.Exception("Exception AcquireUIElements(): ", e);
             }
+        }
+
+        /// <summary>
+        /// Install Our Handlers so we can react to ingame events.
+        /// </summary>
+        private void InstallHandlers()
+        {
+            // Append our own event to appropriate events so we can refresh the song list before the user sees it.
+            MainFlowCoordinator mainFlow = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
+            Button soloFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloFreePlayButton");
+            Button partyFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PartyFreePlayButton");
+            Button campaignButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "CampaignButton");
+
+            soloFreePlayButton.onClick.AddListener(HandleSoloModeSelection);
+            partyFreePlayButton.onClick.AddListener(HandlePartyModeSelection);
+            campaignButton.onClick.AddListener(HandleCampaignModeSelection);
         }
 
         /// <summary>
@@ -176,6 +178,7 @@ namespace SongBrowserPlugin
         {
             Logger.Trace("HandleSoloModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.SoloFreePlay);
+            this._songBrowserUI.Show();
         }
 
         /// <summary>
@@ -187,6 +190,19 @@ namespace SongBrowserPlugin
         {
             Logger.Trace("HandlePartyModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.Party);
+            this._songBrowserUI.Show();
+        }
+
+        /// <summary>
+        /// Handle Party Mode
+        /// </summary>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
+        private void HandleCampaignModeSelection()
+        {
+            Logger.Trace("HandleCampaignModeSelection()");
+            HandleModeSelection(MainMenuViewController.MenuButton.SoloCampaign);
+            this._songBrowserUI.Hide();
         }
 
         /// <summary>
@@ -198,7 +214,18 @@ namespace SongBrowserPlugin
         {
             Logger.Trace("HandleModeSelection()");
             this._songBrowserUI.CreateUI(mode);
-            this._songBrowserUI.UpdateSongList();
+            StartCoroutine(this.UpdateBrowserUI());
+        }
+
+        /// <summary>
+        /// Wait until the end of the frame to finish updating everything.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator UpdateBrowserUI()
+        {
+            yield return new WaitForEndOfFrame();
+
+            this._songBrowserUI.UpdateLevelDataModel();
             this._songBrowserUI.RefreshSongList();
         }
 

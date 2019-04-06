@@ -36,7 +36,6 @@ namespace SongBrowserPlugin.UI
                 _searchKeyboard.cancelButtonWasPressedEvent += () => { backButtonPressed?.Invoke(); };
                 _searchKeyboard.okButtonWasPressedEvent += () => { searchButtonPressed?.Invoke(_inputString); };
 
-                //_inputText = BeatSaberUI.CreateText(rectTransform, "Search...", new Vector2(0f, 22f));
                 _inputText = BeatSaberUI.CreateText(rectTransform, "Search...", new Vector2(0f, 22f));
                 _inputText.alignment = TextAlignmentOptions.Center;
                 _inputText.fontSize = 6f;
@@ -54,7 +53,7 @@ namespace SongBrowserPlugin.UI
         {
             if (_inputText != null)
             {
-                _inputText.text = _inputString.ToUpper();
+                _inputText.text = _inputString?.ToUpper() ?? "";
                 if (string.IsNullOrEmpty(_inputString))
                 {
                     _searchKeyboard.OkButtonInteractivity = false;
@@ -75,7 +74,6 @@ namespace SongBrowserPlugin.UI
         {
             _inputString = "";
             backButtonPressed?.Invoke();
-            //DismissViewControllerCoroutine(null, false);
         }
 
 #if DEBUG

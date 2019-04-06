@@ -1,10 +1,12 @@
 ﻿using HMUI;
 using SongBrowserPlugin.DataAccess;
+using SongBrowserPlugin.Internals;
 using SongLoaderPlugin;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
@@ -17,6 +19,8 @@ namespace SongBrowserPlugin.UI
 
         public List<Playlist> playlistList = new List<Playlist>();
 
+        public bool highlightDownloadedPlaylists = false;
+
         private Button _pageUpButton;
         private Button _pageDownButton;
 
@@ -27,15 +31,19 @@ namespace SongBrowserPlugin.UI
 
         protected override void DidActivate(bool firstActivation, ActivationType type)
         {
+
+
             if (firstActivation && type == ActivationType.AddedToHierarchy)
             {
-                rectTransform.anchorMin = new Vector2(0.3f, 0f);
-                rectTransform.anchorMax = new Vector2(0.7f, 1f);
+                rectTransform.anchorMin = new Vector2(0.5f, 0f);
+                rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                rectTransform.sizeDelta = new Vector2(74f, 0f);
+                rectTransform.pivot = new Vector2(0.4f, 0.5f);
 
-                _pageUpButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageUpButton")), rectTransform, false);
+                _pageUpButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().Last(x => (x.name == "PageUpButton")), rectTransform, false);
                 (_pageUpButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 1f);
                 (_pageUpButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 1f);
-                (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -14f);
+                (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -10f);
                 (_pageUpButton.transform as RectTransform).sizeDelta = new Vector2(40f, 10f);
                 _pageUpButton.interactable = true;
                 _pageUpButton.onClick.AddListener(delegate ()
@@ -43,10 +51,10 @@ namespace SongBrowserPlugin.UI
                     _songsTableView.PageScrollUp();
                 });
 
-                _pageDownButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageDownButton")), rectTransform, false);
+                _pageDownButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().Last(x => (x.name == "PageDownButton")), rectTransform, false);
                 (_pageDownButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0f);
                 (_pageDownButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0f);
-                (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 11f);
+                (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 10f);
                 (_pageDownButton.transform as RectTransform).sizeDelta = new Vector2(40f, 10f);
                 _pageDownButton.interactable = true;
                 _pageDownButton.onClick.AddListener(delegate ()
@@ -55,44 +63,40 @@ namespace SongBrowserPlugin.UI
                 });
 
                 _songListTableCellInstance = Resources.FindObjectsOfTypeAll<LevelListTableCell>().First(x => (x.name == "LevelListTableCell"));
-                _songsTableView = new GameObject().AddComponent<TableView>();
-                _songsTableView.transform.SetParent(rectTransform, false);
+
+                RectTransform container = new GameObject("CustomListContainer", typeof(RectTransform)).transform as RectTransform;
+                container.SetParent(rectTransform, false);
+                container.sizeDelta = new Vector2(60f, 0f);
+
+                _songsTableView = new GameObject("CustomTableView", typeof(RectTransform)).AddComponent<TableView>();
+                _songsTableView.gameObject.AddComponent<RectMask2D>();
+                _songsTableView.transform.SetParent(container, false);
 
                 _songsTableView.SetPrivateField("_isInitialized", false);
                 _songsTableView.SetPrivateField("_preallocatedCells", new TableView.CellsGroup[0]);
                 _songsTableView.Init();
 
-                RectMask2D viewportMask = Instantiate(Resources.FindObjectsOfTypeAll<RectMask2D>().First(), _songsTableView.transform, false);
-                viewportMask.transform.DetachChildren();
-                _songsTableView.GetComponentsInChildren<RectTransform>().First(x => x.name == "Content").transform.SetParent(viewportMask.rectTransform, false);
-
-                (_songsTableView.transform as RectTransform).anchorMin = new Vector2(0f, 0.5f);
-                (_songsTableView.transform as RectTransform).anchorMax = new Vector2(1f, 0.5f);
+                (_songsTableView.transform as RectTransform).anchorMin = new Vector2(0f, 0f);
+                (_songsTableView.transform as RectTransform).anchorMax = new Vector2(1f, 1f);
                 (_songsTableView.transform as RectTransform).sizeDelta = new Vector2(0f, 60f);
-                (_songsTableView.transform as RectTransform).position = new Vector3(0f, 0f, 2.4f);
-                (_songsTableView.transform as RectTransform).anchoredPosition = new Vector3(0f, -3f);
-
-                _songsTableView.SetPrivateField("_pageUpButton", _pageUpButton);
-                _songsTableView.SetPrivateField("_pageDownButton", _pageDownButton);
+                (_songsTableView.transform as RectTransform).anchoredPosition = new Vector2(0f, 0f);
 
                 _songsTableView.dataSource = this;
-                _songsTableView.ScrollToRow(0, false);
+                _songsTableView.ScrollToCellWithIdx(0, TableView.ScrollPositionType.Beginning, false);
                 _lastSelectedRow = -1;
-                _songsTableView.didSelectRowEvent += _songsTableView_DidSelectRowEvent;
+                _songsTableView.didSelectCellWithIdxEvent += _songsTableView_DidSelectRowEvent;
             }
             else
             {
                 _songsTableView.ReloadData();
-                _songsTableView.ScrollToRow(0, false);
+                _songsTableView.ScrollToCellWithIdx(0, TableView.ScrollPositionType.Beginning, false);
                 _lastSelectedRow = -1;
             }
         }
 
         internal void Refresh()
         {
-            _songsTableView.ReloadData();
-            if (_lastSelectedRow > -1)
-                _songsTableView.SelectRow(_lastSelectedRow);
+            _songsTableView.RefreshTable();
         }
 
         protected override void DidDeactivate(DeactivationType type)
@@ -110,8 +114,7 @@ namespace SongBrowserPlugin.UI
             if (_songsTableView != null)
             {
                 _songsTableView.ReloadData();
-                _songsTableView.ScrollToRow(0, false);
-                _songsTableView.SelectRow(0, true);
+                _songsTableView.ScrollToCellWithIdx(0, TableView.ScrollPositionType.Center, false);
             }
         }
 
@@ -121,29 +124,52 @@ namespace SongBrowserPlugin.UI
             didSelectRow?.Invoke(playlistList[row]);
         }
 
-        public float RowHeight()
+        public float CellSize()
         {
             return 10f;
         }
 
-        public int NumberOfRows()
+        public int NumberOfCells()
         {
             return playlistList.Count;
         }
 
-        public TableCell CellForRow(int row)
+        public TableCell CellForIdx(int row)
         {
             LevelListTableCell _tableCell = Instantiate(_songListTableCellInstance);
 
             _tableCell.reuseIdentifier = "PlaylistTableCell";
-            _tableCell.songName = playlistList[row].Title;
-            _tableCell.author = playlistList[row].Author;
+            _tableCell.GetPrivateField<TextMeshProUGUI>("_songNameText").text = playlistList[row].playlistTitle;
+            _tableCell.GetPrivateField<TextMeshProUGUI>("_authorText").text = playlistList[row].playlistAuthor;
+            _tableCell.GetPrivateField<UnityEngine.UI.Image>("_coverImage").sprite = playlistList[row].icon;
 
-            if (playlistList[row].Image != null)
-                _tableCell.coverImage = Base64Sprites.Base64ToSprite(playlistList[row].Image);
+            _tableCell.SetPrivateField("_beatmapCharacteristicAlphas", new float[0]);
+            _tableCell.SetPrivateField("_beatmapCharacteristicImages", new UnityEngine.UI.Image[0]);
+            _tableCell.SetPrivateField("_bought", true);
+
+            foreach (var icon in _tableCell.GetComponentsInChildren<UnityEngine.UI.Image>().Where(x => x.name.StartsWith("LevelTypeIcon")))
+            {
+                Destroy(icon.gameObject);
+            }
+
+            if (highlightDownloadedPlaylists)
+            {
+                if (PlaylistsCollection.loadedPlaylists.Any(x => x.PlaylistEqual(playlistList[row])))
+                {
+                    foreach (UnityEngine.UI.Image img in _tableCell.GetComponentsInChildren<UnityEngine.UI.Image>())
+                    {
+                        img.color = new Color(1f, 1f, 1f, 0.2f);
+                    }
+                    foreach (TextMeshProUGUI text in _tableCell.GetComponentsInChildren<TextMeshProUGUI>())
+                    {
+                        text.faceColor = new Color(1f, 1f, 1f, 0.2f);
+                    }
+                }
+            }
 
             return _tableCell;
         }
+
 #if DEBUG
         private void LateUpdate()
         {
@@ -160,12 +186,12 @@ namespace SongBrowserPlugin.UI
             }
             else if (Input.GetKeyDown(KeyCode.N))
             {
-                _lastSelectedRow = (_lastSelectedRow - 1) % _songsTableView.dataSource.NumberOfRows();
+                _lastSelectedRow = (_lastSelectedRow - 1) % _songsTableView.dataSource.NumberOfCells();
                 if (_lastSelectedRow < 0)
                 {
-                    _lastSelectedRow = _songsTableView.dataSource.NumberOfRows() - 1;
+                    _lastSelectedRow = _songsTableView.dataSource.NumberOfCells() - 1;
                 }
-                _songsTableView.ScrollToRow(_lastSelectedRow, true);
+                _songsTableView.ScrollToCellWithIdx(_lastSelectedRow, TableView.ScrollPositionType.Beginning, false);
                 this._songsTableView_DidSelectRowEvent(_songsTableView, _lastSelectedRow);
             }
 
@@ -175,8 +201,8 @@ namespace SongBrowserPlugin.UI
             }
             else if (Input.GetKeyDown(KeyCode.M))
             {
-                _lastSelectedRow = (_lastSelectedRow + 1) % _songsTableView.dataSource.NumberOfRows();
-                _songsTableView.ScrollToRow(_lastSelectedRow, true);
+                _lastSelectedRow = (_lastSelectedRow + 1) % _songsTableView.dataSource.NumberOfCells();
+                _songsTableView.ScrollToCellWithIdx(_lastSelectedRow, TableView.ScrollPositionType.End, false);
                 this._songsTableView_DidSelectRowEvent(_songsTableView, _lastSelectedRow);
             }
         }

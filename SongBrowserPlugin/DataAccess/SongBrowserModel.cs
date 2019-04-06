@@ -1,5 +1,4 @@
 ﻿using SongBrowserPlugin.DataAccess;
-using SongBrowserPlugin.DataAccess.FileSystem;
 using SongBrowserPlugin.UI;
 using SongLoaderPlugin;
 using SongLoaderPlugin.OverrideClasses;
@@ -8,7 +7,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using UnityEngine;
 using Logger = SongBrowserPlugin.Logging.Logger;
 
@@ -25,9 +23,7 @@ namespace SongBrowserPlugin
 
         // song list management
         private double _customSongDirLastWriteTime = 0;
-        private List<LevelSO> _filteredSongs;
-        private List<LevelSO> _sortedSongs;
-        private List<LevelSO> _originalSongs;
+        private List<BeatmapLevelSO> _sortedSongs;
         private Dictionary<String, SongLoaderPlugin.OverrideClasses.CustomLevel> _levelIdToCustomLevel;
         private Dictionary<String, double> _cachedLastWriteTimes;
         private Dictionary<string, int> _weights;
@@ -35,13 +31,16 @@ namespace SongBrowserPlugin
         private Dictionary<string, ScoreSaberData> _levelIdToScoreSaberData = null;
         private Dictionary<string, int> _levelIdToPlayCount;
         private Dictionary<string, string> _levelIdToSongVersion;
-        private Dictionary<string, LevelSO> _keyToSong;
-        private Dictionary<String, DirectoryNode> _directoryTree;
-        private Stack<DirectoryNode> _directoryStack = new Stack<DirectoryNode>();
+        private Dictionary<string, BeatmapLevelSO> _keyToSong;
 
         public BeatmapCharacteristicSO CurrentBeatmapCharacteristicSO;
 
         public static Action<List<CustomLevel>> didFinishProcessingSongs;
+
+        private IBeatmapLevelPack _currentLevelPack;
+        private Dictionary<string, List<BeatmapLevelSO>>  _levelPackToSongs;
+
+        private bool _isPreviewLevelPack;
 
         /// <summary>
         /// Get the settings the model is using.
@@ -57,7 +56,7 @@ namespace SongBrowserPlugin
         /// <summary>
         /// Get the sorted song list for the current working directory.
         /// </summary>
-        public List<LevelSO> SortedSongList
+        public List<BeatmapLevelSO> SortedSongList
         {
             get
             {
@@ -88,17 +87,6 @@ namespace SongBrowserPlugin
         }
 
         /// <summary>
-        /// How deep is the directory stack.
-        /// </summary>
-        public int DirStackSize
-        {
-            get
-            {
-                return _directoryStack.Count;
-            }
-        }
-
-        /// <summary>
         /// Get the last selected (stored in settings) level id.
         /// </summary>
         public String LastSelectedLevelId
@@ -115,23 +103,6 @@ namespace SongBrowserPlugin
             }
         }
 
-        /// <summary>
-        /// Get the last known directory the user visited.
-        /// </summary>
-        public String CurrentDirectory
-        {
-            get
-            {
-                return _settings.currentDirectory;
-            }
-
-            set
-            {
-                _settings.currentDirectory = value;
-                _settings.Save();
-            }
-        }
-
         private Playlist _currentPlaylist;
 
         /// <summary>
@@ -143,7 +114,7 @@ namespace SongBrowserPlugin
             {
                 if (_currentPlaylist == null)
                 {
-                    _currentPlaylist = PlaylistsReader.ParsePlaylist(this._settings.currentPlaylistFile);
+                    _currentPlaylist = Playlist.LoadPlaylist(this._settings.currentPlaylistFile);
                 }
 
                 return _currentPlaylist;
@@ -151,8 +122,24 @@ namespace SongBrowserPlugin
 
             set
             {
-                _settings.currentPlaylistFile = value.Path;
+                _settings.currentPlaylistFile = value.fileLoc;
                 _currentPlaylist = value;
+            }
+        }
+
+        public bool IsCurrentLevelPackPreview
+        {
+            get
+            {
+                return _isPreviewLevelPack;
+            }
+        }
+
+        public IBeatmapLevelPack CurrentLevelPack
+        {
+            get
+            {
+                return _currentLevelPack;
             }
         }
 
@@ -171,7 +158,10 @@ namespace SongBrowserPlugin
             _levelIdToScoreSaberData = new Dictionary<string, ScoreSaberData>();
             _levelIdToPlayCount = new Dictionary<string, int>();
             _levelIdToSongVersion = new Dictionary<string, string>();
-            _keyToSong = new Dictionary<string, LevelSO>();
+            _keyToSong = new Dictionary<string, BeatmapLevelSO>();
+            _levelPackToSongs = new Dictionary<string, List<BeatmapLevelSO>>();
+
+            CurrentEditingPlaylistLevelIds = new HashSet<string>();
 
             // Weights used for keeping the original songs in order
             // Invert the weights from the game so we can order by descending and make LINQ work with us...
@@ -231,29 +221,10 @@ namespace SongBrowserPlugin
         /// <summary>
         /// Get the song cache from the game.
         /// </summary>
-        public void UpdateSongLists(BeatmapCharacteristicSO gameplayMode)
+        public void UpdateLevelRecords()
         {
-            // give up
-            if (gameplayMode == null)
-            {
-                Logger.Debug("Always null first time if user waits for SongLoader event, which they should...");
-                return;
-            }
-
             Stopwatch timer = new Stopwatch();
             timer.Start();
-
-            // Get the level collection from song loader
-            LevelCollectionSO levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionSO>().FirstOrDefault();
-
-            // Stash everything we need
-            _originalSongs = levelCollections.GetLevelsWithBeatmapCharacteristic(gameplayMode).ToList();
-
-            Logger.Debug("Got {0} songs from level collections...", _originalSongs.Count);
-            //_originalSongs.ForEach(x => Logger.Debug("{0} by {1} = {2}", x.name, x.levelAuthorName, x.levelID));
-
-            _sortedSongs = _originalSongs;
-            CurrentBeatmapCharacteristicSO = gameplayMode;
 
             // Calculate some information about the custom song dir
             String customSongsPath = Path.Combine(Environment.CurrentDirectory, CUSTOM_SONGS_DIR);
@@ -266,7 +237,6 @@ namespace SongBrowserPlugin
                 _customSongDirLastWriteTime = currentCustomSongDirLastWriteTIme;
             }
 
-            // This operation scales well
             if (!Directory.Exists(customSongsPath))
             {
                 Logger.Error("CustomSong directory is missing...");
@@ -281,10 +251,13 @@ namespace SongBrowserPlugin
             {
                 // If we already know this levelID, don't both updating it.
                 // SongLoader should filter duplicates but in case of failure we don't want to crash
-
                 if (!_cachedLastWriteTimes.ContainsKey(level.levelID) || customSongDirChanged)
                 {
-                    _cachedLastWriteTimes[level.levelID] = (File.GetLastWriteTimeUtc(level.customSongInfo.path) - EPOCH).TotalMilliseconds;
+                    // Always use the newest date.
+                    var lastWriteTime = File.GetLastWriteTimeUtc(level.customSongInfo.path);
+                    var lastCreateTime = File.GetCreationTimeUtc(level.customSongInfo.path);
+                    var lastTime = lastWriteTime > lastCreateTime ? lastWriteTime : lastCreateTime;
+                    _cachedLastWriteTimes[level.levelID] = (lastTime - EPOCH).TotalMilliseconds;
                 }
 
                 if (!_levelIdToCustomLevel.ContainsKey(level.levelID))
@@ -300,9 +273,12 @@ namespace SongBrowserPlugin
                     String version = level.customSongInfo.path.Replace(revSlashCustomSongPath, "").Replace(currentDirectoryName, "").Replace("/", "");
                     if (!String.IsNullOrEmpty(version))
                     {
-                        //Logger.Debug("MATCH");
                         _levelIdToSongVersion.Add(level.levelID, version);
-                        _keyToSong.Add(version, level);
+
+                        if (!_keyToSong.ContainsKey(version))
+                        {
+                            _keyToSong.Add(version, level);
+                        }
                     }
                 }
             }
@@ -313,7 +289,6 @@ namespace SongBrowserPlugin
             // Update song Infos, directory tree, and sort
             this.UpdateScoreSaberDataMapping();
             this.UpdatePlayCounts();
-            this.UpdateDirectoryTree(customSongsPath);
 
             // Check if we need to upgrade settings file favorites
             try
@@ -326,28 +301,37 @@ namespace SongBrowserPlugin
             }
 
             // load the current editing playlist or make one
-            if (!String.IsNullOrEmpty(this.Settings.currentEditingPlaylistFile))
+            if (CurrentEditingPlaylist == null && !String.IsNullOrEmpty(this.Settings.currentEditingPlaylistFile))
             {
-                CurrentEditingPlaylist = PlaylistsReader.ParsePlaylist(this.Settings.currentEditingPlaylistFile);
+                Logger.Debug("Loading playlist for editing: {0}", this.Settings.currentEditingPlaylistFile);
+                CurrentEditingPlaylist = Playlist.LoadPlaylist(this.Settings.currentEditingPlaylistFile);
+                PlaylistsCollection.MatchSongsForPlaylist(CurrentEditingPlaylist);
             }
 
             if (CurrentEditingPlaylist == null)
             {
+                Logger.Debug("Current editing playlist does not exit, create...");
                 CurrentEditingPlaylist = new Playlist
                 {
-                    Title = "Song Browser Favorites",
-                    Author = "SongBrowserPlugin",
-                    Path = this.Settings.currentEditingPlaylistFile,
-                    Image = Base64Sprites.PlaylistIconB64,
-                    Songs = new List<PlaylistSong>(),
+                    playlistTitle = "Song Browser Favorites",
+                    playlistAuthor = "SongBrowserPlugin",
+                    fileLoc = this.Settings.currentEditingPlaylistFile,
+                    image = Base64Sprites.PlaylistIconB64,
+                    songs = new List<PlaylistSong>(),
                 };
             }
 
             CurrentEditingPlaylistLevelIds = new HashSet<string>();
-            foreach (PlaylistSong ps in CurrentEditingPlaylist.Songs)
+            foreach (PlaylistSong ps in CurrentEditingPlaylist.songs)
             {
-                CurrentEditingPlaylistLevelIds.Add(ps.LevelId);
-            }            
+                // Sometimes we cannot match a song
+                if (ps.level == null)
+                {
+                    continue;
+                }
+
+                CurrentEditingPlaylistLevelIds.Add(ps.level.levelID);                
+            }
 
             // Actually sort and filter
             this.ProcessSongList();
@@ -361,7 +345,46 @@ namespace SongBrowserPlugin
             timer.Stop();
 
             Logger.Info("Updating songs infos took {0}ms", timer.ElapsedMilliseconds);
-            Logger.Debug("Song Browser knows about {0} songs from SongLoader...", _originalSongs.Count);
+        }
+
+        /// <summary>
+        /// Get a copy of the unfiltered, unsorted list of songs from level packs.
+        /// </summary>
+        public void UpdateLevelPackOriginalLists()
+        {
+            BeatmapLevelPackSO[] levelPacks = Resources.FindObjectsOfTypeAll<BeatmapLevelPackSO>();
+            foreach (BeatmapLevelPackSO levelPack in levelPacks)
+            {
+                Logger.Debug("Attempting to get song list from levelPack: {0}...", levelPack);
+                var beatmapLevelPack = levelPack as BeatmapLevelPackSO;
+
+                // TODO - need to rethink interface here, not all level packs can be cast this high, some sort functions need it.
+                //      - this helps prevent DLC from breaking everything
+                if (beatmapLevelPack == null)
+                {
+                    continue;
+                }
+
+                _levelPackToSongs[levelPack.packName] = (beatmapLevelPack.beatmapLevelCollection as BeatmapLevelCollectionSO).GetPrivateField<BeatmapLevelSO[]>("_beatmapLevels").ToList();
+                Logger.Debug("Got {0} songs from level collections...", _levelPackToSongs[levelPack.packName].Count);
+                //_levelPackToSongs[levelPack.packName].ForEach(x => Logger.Debug("{0} by {1} = {2}", x.name, x.levelAuthorName, x.levelID));
+            }
+        }
+
+        /// <summary>
+        /// SongLoader doesn't fire event when we delete a song.
+        /// </summary>
+        /// <param name="levelPack"></param>
+        /// <param name="levelId"></param>
+        public void RemoveSongFromLevelPack(IBeatmapLevelPack levelPack, String levelId)
+        {
+            if (!_levelPackToSongs.ContainsKey(levelPack.packName))
+            {
+                Logger.Debug("Trying to remove song from level pack [{0}] but we do not have any information on it...", levelPack.packName);
+                return;
+            }
+
+            _levelPackToSongs[levelPack.packName].RemoveAll(x => x.levelID == levelId);
         }
 
         /// <summary>
@@ -374,21 +397,17 @@ namespace SongBrowserPlugin
             PlayerDataModelSO playerData = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().FirstOrDefault();
             IEnumerable<BeatmapDifficulty> difficultyIterator = Enum.GetValues(typeof(BeatmapDifficulty)).Cast<BeatmapDifficulty>();
 
-            foreach (var level in _originalSongs)
+            foreach (KeyValuePair<string, List<BeatmapLevelSO>> entry in _levelPackToSongs)
             {
-                if (!_levelIdToPlayCount.ContainsKey(level.levelID))
+                foreach (var level in entry.Value)
                 {
-                    // Skip folders
-                    if (level.levelID.StartsWith("Folder_"))
+                    if (!_levelIdToPlayCount.ContainsKey(level.levelID))
                     {
-                        _levelIdToPlayCount.Add(level.levelID, 0);
-                    }
-                    else
-                    {
+                        // Skip folders
                         int playCountSum = 0;
                         foreach (BeatmapDifficulty difficulty in difficultyIterator)
                         {
-                            PlayerLevelStatsData stats = playerData.currentLocalPlayer.GetPlayerLevelStatsData(level.levelID, difficulty);
+                            PlayerLevelStatsData stats = playerData.currentLocalPlayer.GetPlayerLevelStatsData(level.levelID, difficulty, this.CurrentBeatmapCharacteristicSO);
                             playCountSum += stats.playCount;
                         }
                         _levelIdToPlayCount.Add(level.levelID, playCountSum);
@@ -410,7 +429,7 @@ namespace SongBrowserPlugin
             // bail
             if (scoreSaberDataFile == null)
             {
-                Logger.Warning("Cannot fetch song difficulty for score saber data...");
+                Logger.Warning("Score saber data is not ready yet...");
                 return;
             }
 
@@ -443,174 +462,6 @@ namespace SongBrowserPlugin
         }
 
         /// <summary>
-        /// Make the directory tree.
-        /// </summary>
-        /// <param name="customSongsPath"></param>
-        private void UpdateDirectoryTree(String customSongsPath)
-        {
-            // Determine folder mapping
-            Uri customSongDirUri = new Uri(customSongsPath);
-
-            _directoryTree = new Dictionary<string, DirectoryNode>
-            {
-                [CUSTOM_SONGS_DIR] = new DirectoryNode(CUSTOM_SONGS_DIR)
-            };
-
-            if (_settings.folderSupportEnabled)
-            {
-                foreach (LevelSO level in _originalSongs)
-                {
-                    AddItemToDirectoryTree(customSongDirUri, level);
-                }
-            }
-            else
-            {
-                _directoryTree[CUSTOM_SONGS_DIR].Levels = _originalSongs;
-            }
-                    
-            // Determine starting location
-            DirectoryNode currentNode = _directoryTree[CUSTOM_SONGS_DIR];
-            _directoryStack.Push(currentNode);
-
-            // Try to navigate directory path
-            if (!String.IsNullOrEmpty(this.CurrentDirectory))
-            {
-                String[] paths = this.CurrentDirectory.Split('/');
-                for (int i = 1; i < paths.Length; i++)
-                {
-                    if (currentNode.Nodes.ContainsKey(paths[i]))
-                    {
-                        currentNode = currentNode.Nodes[paths[i]];
-                        _directoryStack.Push(currentNode);
-                    }
-                }
-            }
-
-            //PrintDirectory(_directoryTree[CUSTOM_SONGS_DIR], 1);
-        }
-
-        /// <summary>
-        /// Add a song to directory tree.  Determine its place in the tree by walking the split directory path.
-        /// </summary>
-        /// <param name="customSongDirUri"></param>
-        /// <param name="level"></param>
-        private void AddItemToDirectoryTree(Uri customSongDirUri, LevelSO level)
-        {
-            //Logger.Debug("Processing item into directory tree: {0}", level.levelID);
-            DirectoryNode currentNode = _directoryTree[CUSTOM_SONGS_DIR];
-            
-            // Just add original songs to root and bail
-            if (level.levelID.Length < 32)
-            {
-                currentNode.Levels.Add(level);
-                return;
-            }
-
-            CustomSongInfo songInfo = _levelIdToCustomLevel[level.levelID].customSongInfo;            
-            Uri customSongUri = new Uri(songInfo.path);
-            Uri pathDiff = customSongDirUri.MakeRelativeUri(customSongUri);
-            string relPath = Uri.UnescapeDataString(pathDiff.OriginalString);
-            string[] paths = relPath.Split('/');
-            Sprite folderIcon = Base64Sprites.FolderIcon;
-
-            // Prevent cache directory from building into the tree, will add all its leafs to root.
-            bool forceIntoRoot = false;
-            //Logger.Debug("Processing path: {0}", songInfo.path);
-            if (paths.Length > 2)
-            {
-                forceIntoRoot = paths[1].Contains(".cache");
-                Regex r = new Regex(@"^\d{1,}-\d{1,}");
-                if (r.Match(paths[1]).Success)
-                {
-                    forceIntoRoot = true;
-                }
-            }
-
-            for (int i = 1; i < paths.Length; i++)
-            {
-                string path = paths[i];                
-
-                if (path == Path.GetFileName(songInfo.path))
-                {
-                    //Logger.Debug("\tLevel Found Adding {0}->{1}", currentNode.Key, level.levelID);
-                    currentNode.Levels.Add(level);
-                    break;
-                }
-                else if (currentNode.Nodes.ContainsKey(path))
-                {                    
-                    currentNode = currentNode.Nodes[path];
-                }
-                else if (!forceIntoRoot)
-                {
-                    currentNode.Nodes[path] = new DirectoryNode(path);
-                    FolderLevel folderLevel = new FolderLevel();
-                    folderLevel.Init(relPath, path, folderIcon);
-
-                    //Logger.Debug("\tAdding folder level {0}->{1}", currentNode.Key, path);
-                    currentNode.Levels.Add(folderLevel);
-
-                    _cachedLastWriteTimes[folderLevel.levelID] = (File.GetLastWriteTimeUtc(relPath) - EPOCH).TotalMilliseconds;
-
-                    currentNode = currentNode.Nodes[path];
-                }
-            }
-        }
-
-        /// <summary>
-        /// Push a dir onto the stack.
-        /// </summary>
-        public void PushDirectory(IBeatmapLevel level)
-        {
-            DirectoryNode currentNode = _directoryStack.Peek();
-            Logger.Debug("Pushing directory {0}", level.songName);
-
-            if (!currentNode.Nodes.ContainsKey(level.songName))
-            {
-                Logger.Debug("Trying to push a directory that doesn't exist at this level.");
-                return;
-            }
-
-            _directoryStack.Push(currentNode.Nodes[level.songName]);
-
-            this.CurrentDirectory = level.levelID;
-                
-            ProcessSongList();            
-        }
-
-        /// <summary>
-        /// Pop a dir off the stack.
-        /// </summary>
-        public void PopDirectory()
-        {
-            if (_directoryStack.Count > 1)
-            {
-                _directoryStack.Pop();
-                String currentDir = "";
-                foreach (DirectoryNode node in _directoryStack)
-                {
-                    currentDir = node.Key + "/" + currentDir;
-                }
-                this.CurrentDirectory = "Folder_" + currentDir;
-                ProcessSongList();
-            }      
-        }
-
-        /// <summary>
-        /// Print the directory structure parsed.
-        /// </summary>
-        /// <param name="node"></param>
-        /// <param name="depth"></param>
-        private void PrintDirectory(DirectoryNode node, int depth)
-        {
-            Console.WriteLine("Dir: {0}".PadLeft(depth*4, ' '), node.Key);
-            node.Levels.ForEach(x => Console.WriteLine("{0}".PadLeft((depth + 1)*4, ' '), x.levelID));
-            foreach (KeyValuePair<string, DirectoryNode> childNode in node.Nodes)
-            {
-                PrintDirectory(childNode.Value, depth + 1);
-            }            
-        }
-
-        /// <summary>
         /// Add Song to Editing Playlist
         /// </summary>
         /// <param name="songInfo"></param>
@@ -621,16 +472,15 @@ namespace SongBrowserPlugin
                 return;
             }
 
-            this.CurrentEditingPlaylist.Songs.Add(new PlaylistSong()
+            this.CurrentEditingPlaylist.songs.Add(new PlaylistSong()
             {
-                SongName = songInfo.songName,
-                LevelId = songInfo.levelID,
-                Key = _levelIdToSongVersion.ContainsKey(songInfo.levelID) ? _levelIdToSongVersion[songInfo.levelID] : songInfo.levelID,                
+                songName = songInfo.songName,
+                levelId = songInfo.levelID,
+                key = _levelIdToSongVersion.ContainsKey(songInfo.levelID) ? _levelIdToSongVersion[songInfo.levelID] : songInfo.levelID,                
             });
 
             this.CurrentEditingPlaylistLevelIds.Add(songInfo.levelID);
-
-            PlaylistWriter.WritePlaylist(this.CurrentEditingPlaylist, this.CurrentEditingPlaylist.Path);
+            this.CurrentEditingPlaylist.SavePlaylist();
         }
 
         /// <summary>
@@ -644,10 +494,71 @@ namespace SongBrowserPlugin
                 return;
             }
 
-            this.CurrentEditingPlaylist.Songs.RemoveAll(x => x.LevelId == songInfo.levelID);
-            this.CurrentEditingPlaylistLevelIds.Remove(songInfo.levelID);
+            this.CurrentEditingPlaylist.songs.RemoveAll(x => x.level != null && x.level.levelID == songInfo.levelID);
+            this.CurrentEditingPlaylistLevelIds.RemoveWhere(x => x == songInfo.levelID);
 
-            PlaylistWriter.WritePlaylist(this.CurrentEditingPlaylist, this.CurrentEditingPlaylist.Path);
+            this.CurrentEditingPlaylist.SavePlaylist();
+        }
+
+        /// <summary>
+        /// Resets all the level packs back to their original values.
+        /// </summary>
+        /// <param name="pack"></param>
+        private void ResetLevelPacks()
+        {
+            Logger.Debug("Setting level packs back to their original values!");
+
+            BeatmapLevelPackSO[] levelPacks = Resources.FindObjectsOfTypeAll<BeatmapLevelPackSO>();
+            foreach (BeatmapLevelPackSO levelPack in levelPacks)
+            {
+                if (!_levelPackToSongs.ContainsKey(levelPack.packName))
+                {
+                    Logger.Debug("We know nothing about pack: {0}", levelPack.packName);
+                    continue;
+                }
+
+                var levels = _levelPackToSongs[levelPack.packName].ToArray();
+                ReflectionUtil.SetPrivateField(levelPack.beatmapLevelCollection, "_beatmapLevels", levels);
+            }
+        }
+
+        /// <summary>
+        /// Set current level pack, reset all packs just in case.
+        /// </summary>
+        /// <param name="pack"></param>
+        public void SetCurrentLevelPack(IBeatmapLevelPack pack)
+        {
+            Logger.Debug("Setting current level pack [{0}]: {1}", pack.packID, pack.packName);
+
+            this.ResetLevelPacks();
+
+            this._currentLevelPack = pack;
+
+            var beatmapLevelPack = pack as BeatmapLevelPackSO;
+            if (beatmapLevelPack == null)
+            {
+                Logger.Debug("DLC Detected...  Disabling SongBrowser...");
+                _isPreviewLevelPack = true;
+            }
+            else
+            {
+                Logger.Debug("Owned level pack...  Enabling SongBrowser...");
+                _isPreviewLevelPack = false;
+            }
+
+            this.Settings.currentLevelPackId = pack.packID;
+            this.Settings.Save();
+        }
+
+        /// <summary>
+        /// Overwrite the current level pack.
+        /// </summary>
+        private void OverwriteCurrentLevelPack()
+        {
+            Logger.Debug("Overwriting levelPack [{0}] beatmapLevelCollection", this._currentLevelPack);
+            IBeatmapLevelPack levelPack = this._currentLevelPack;
+            var levels = _sortedSongs.ToArray();
+            ReflectionUtil.SetPrivateField(levelPack.beatmapLevelCollection, "_beatmapLevels", levels);
         }
         
         /// <summary>
@@ -658,7 +569,7 @@ namespace SongBrowserPlugin
             Logger.Trace("ProcessSongList()");
 
             // This has come in handy many times for debugging issues with Newest.
-            /*foreach (LevelSO level in _originalSongs)
+            /*foreach (BeatmapLevelSO level in _originalSongs)
             {
                 if (_levelIdToCustomLevel.ContainsKey(level.levelID))
                 {
@@ -670,21 +581,35 @@ namespace SongBrowserPlugin
                 }
             }*/
 
-            if (_directoryStack.Count <= 0)
+            // TODO - remove as part of unifying song list interface
+            if (_isPreviewLevelPack)
             {
-                Logger.Debug("Cannot process songs yet, songs infos have not been processed...");
+                return;
+            }
+
+            if (_levelPackToSongs.Count == 0)
+            {
+                Logger.Debug("Cannot process songs yet, level packs have not been processed...");
+                return;
+            }
+
+            if (this._currentLevelPack == null || !this._levelPackToSongs.ContainsKey(this._currentLevelPack.packName))
+            {
+                Logger.Debug("Cannot process songs yet, no level pack selected...");
                 return;
             }
 
             // Playlist filter will load the original songs.
+            List<BeatmapLevelSO> unsortedSongs = null;
+            List<BeatmapLevelSO> filteredSongs = null;
             if (this._settings.filterMode == SongFilterMode.Playlist && this.CurrentPlaylist != null)
             {
-                _originalSongs = null;
+                unsortedSongs = null;
             }
             else
             {
-                Logger.Debug("Showing songs for directory: {0}", _directoryStack.Peek().Key);
-                _originalSongs = _directoryStack.Peek().Levels;
+                Logger.Debug("Using songs from level pack: {0}", this._currentLevelPack.packName);
+                unsortedSongs = new List<BeatmapLevelSO>(_levelPackToSongs[this._currentLevelPack.packName]);
             }
 
             // filter
@@ -694,18 +619,18 @@ namespace SongBrowserPlugin
             switch (_settings.filterMode)
             {
                 case SongFilterMode.Favorites:
-                    FilterFavorites();
+                    filteredSongs = FilterFavorites();
                     break;
                 case SongFilterMode.Search:
-                    FilterSearch(_originalSongs);
+                    filteredSongs = FilterSearch(unsortedSongs);
                     break;
                 case SongFilterMode.Playlist:
-                    FilterPlaylist();
+                    filteredSongs = FilterPlaylist();
                     break;
                 case SongFilterMode.None:
                 default:
                     Logger.Info("No song filter selected...");
-                    _filteredSongs = _originalSongs;
+                    filteredSongs = unsortedSongs;
                     break;
             }
 
@@ -719,29 +644,29 @@ namespace SongBrowserPlugin
             switch (_settings.sortMode)
             {
                 case SongSortMode.Original:
-                    SortOriginal(_filteredSongs);
+                    SortOriginal(filteredSongs);
                     break;
                 case SongSortMode.Newest:
-                    SortNewest(_filteredSongs);
+                    SortNewest(filteredSongs);
                     break;
                 case SongSortMode.Author:
-                    SortAuthor(_filteredSongs);
+                    SortAuthor(filteredSongs);
                     break;
                 case SongSortMode.PlayCount:
-                    SortPlayCount(_filteredSongs);
+                    SortPlayCount(filteredSongs);
                     break;
                 case SongSortMode.PP:
-                    SortPerformancePoints(_filteredSongs);
+                    SortPerformancePoints(filteredSongs);
                     break;
                 case SongSortMode.Difficulty:
-                    SortDifficulty(_filteredSongs);
+                    SortDifficulty(filteredSongs);
                     break;
                 case SongSortMode.Random:
-                    SortRandom(_filteredSongs);
+                    SortRandom(filteredSongs);
                     break;
                 case SongSortMode.Default:
                 default:
-                    SortSongName(_filteredSongs);
+                    SortSongName(filteredSongs);
                     break;
             }
 
@@ -753,6 +678,7 @@ namespace SongBrowserPlugin
             stopwatch.Stop();
             Logger.Info("Sorting songs took {0}ms", stopwatch.ElapsedMilliseconds);
 
+            this.OverwriteCurrentLevelPack();
             //_sortedSongs.ForEach(x => Logger.Debug(x.levelID));
         }    
         
@@ -760,95 +686,100 @@ namespace SongBrowserPlugin
         /// For now the editing playlist will be considered the favorites playlist.
         /// Users can edit the settings file themselves.
         /// </summary>
-        private void FilterFavorites()
+        private List<BeatmapLevelSO> FilterFavorites()
         {
             Logger.Info("Filtering song list as favorites playlist...");
             if (this.CurrentEditingPlaylist != null)
             {
                 this.CurrentPlaylist = this.CurrentEditingPlaylist;
             }
-            this.FilterPlaylist();
+            return this.FilterPlaylist();
         }
 
-        private void FilterSearch(List<LevelSO> levels)
+        private List<BeatmapLevelSO> FilterSearch(List<BeatmapLevelSO> levels)
         {
             // Make sure we can actually search.
             if (this._settings.searchTerms.Count <= 0)
             {
                 Logger.Error("Tried to search for a song with no valid search terms...");
                 SortSongName(levels);
-                return;
+                return levels;
             }
             string searchTerm = this._settings.searchTerms[0];
             if (String.IsNullOrEmpty(searchTerm))
             {
                 Logger.Error("Empty search term entered.");
                 SortSongName(levels);
-                return;
+                return levels;
             }
 
             Logger.Info("Filtering song list by search term: {0}", searchTerm);
-            _originalSongs.ForEach(x => Logger.Debug($"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()).ToString()));
 
-            _filteredSongs = levels
-                .Where(x => $"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(searchTerm.ToLower()))
-                .ToList();
+            var terms = searchTerm.Split(' ');
+            foreach (var term in terms)
+            {
+                levels = levels.Intersect(
+                    levels
+                        .Where(x => $"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(term.ToLower()))
+                        .ToList(
+                    )
+                ).ToList();
+            }
+
+            return levels;
         }
 
-        private void FilterPlaylist()
+        private List<BeatmapLevelSO> FilterPlaylist()
         {
             // bail if no playlist, usually means the settings stored one the user then moved.
             if (this.CurrentPlaylist == null)
             {
                 Logger.Error("Trying to load a null playlist...");
-                _filteredSongs = _originalSongs;
                 this.Settings.filterMode = SongFilterMode.None;
-                return;
+                return null;
             }
 
-            Logger.Debug("Filtering songs for playlist: {0}", this.CurrentPlaylist.Title);            
-            LevelCollectionSO levelCollections = Resources.FindObjectsOfTypeAll<LevelCollectionSO>().FirstOrDefault();
-            var levels = levelCollections.GetLevelsWithBeatmapCharacteristic(CurrentBeatmapCharacteristicSO);
+            // Get song keys
+            PlaylistsCollection.MatchSongsForPlaylist(this.CurrentPlaylist, true);
 
-            //Dictionary<String, LevelSO> levelDict = levels.Select((val, index) => new { LevelId = val.levelID, Level = val }).ToDictionary(i => i.LevelId, i => i.Level);
-            Dictionary<String, LevelSO> levelDict = new Dictionary<string, LevelSO>();
-            foreach (LevelSO level in levels)
-            {
-                if (!levelDict.ContainsKey(level.levelID))
-                {
-                    levelDict.Add(level.levelID, level);
-                }
-            }
+            Logger.Debug("Filtering songs for playlist: {0}", this.CurrentPlaylist.playlistTitle);            
 
-            List<LevelSO> songList = new List<LevelSO>();
-            foreach (PlaylistSong ps in this.CurrentPlaylist.Songs)
+            Dictionary<String, BeatmapLevelSO> levelDict = new Dictionary<string, BeatmapLevelSO>();
+            foreach (KeyValuePair<string, List<BeatmapLevelSO>> entry in _levelPackToSongs)
             {
-                if (!String.IsNullOrEmpty(ps.LevelId))
+                foreach (BeatmapLevelSO level in entry.Value)
                 {
-                    if (levelDict.ContainsKey(ps.LevelId))
+                    if (!levelDict.ContainsKey(level.levelID))
                     {
-                        songList.Add(levelDict[ps.LevelId]);
+                        levelDict.Add(level.levelID, level);
                     }
                 }
-                else if (!ps.Key.StartsWith("Level_") && _keyToSong.ContainsKey(ps.Key))
-                {
-                    songList.Add(_keyToSong[ps.Key]);
-                }
             }
 
-            _originalSongs = songList;
-            _filteredSongs = _originalSongs;
+            List<BeatmapLevelSO> songList = new List<BeatmapLevelSO>();
+            foreach (PlaylistSong ps in this.CurrentPlaylist.songs)
+            {
+                if (ps.level != null)
+                {
+                    songList.Add(levelDict[ps.level.levelID]);
+                }
+                else
+                {
+                    Logger.Warning("Could not find song in playlist: {0}", ps.songName);
+                }
+            }
             
-            Logger.Debug("Playlist filtered song count: {0}", _filteredSongs.Count);
+            Logger.Debug("Playlist filtered song count: {0}", songList.Count);
+            return songList;
         }
 
-        private void SortOriginal(List<LevelSO> levels)
+        private void SortOriginal(List<BeatmapLevelSO> levels)
         {
             Logger.Info("Sorting song list as original");
             _sortedSongs = levels;
         }
 
-        private void SortNewest(List<LevelSO> levels)
+        private void SortNewest(List<BeatmapLevelSO> levels)
         {
             Logger.Info("Sorting song list as newest.");
             _sortedSongs = levels
@@ -857,7 +788,7 @@ namespace SongBrowserPlugin
                 .ToList();
         }
 
-        private void SortAuthor(List<LevelSO> levels)
+        private void SortAuthor(List<BeatmapLevelSO> levels)
         {
             Logger.Info("Sorting song list by author");
             _sortedSongs = levels
@@ -866,7 +797,7 @@ namespace SongBrowserPlugin
                 .ToList();
         }
 
-        private void SortPlayCount(List<LevelSO> levels)
+        private void SortPlayCount(List<BeatmapLevelSO> levels)
         {
             Logger.Info("Sorting song list by playcount");
             _sortedSongs = levels
@@ -875,7 +806,7 @@ namespace SongBrowserPlugin
                 .ToList();
         }
 
-        private void SortPerformancePoints(List<LevelSO> levels)
+        private void SortPerformancePoints(List<BeatmapLevelSO> levels)
         {
             Logger.Info("Sorting song list by performance points...");
 
@@ -884,7 +815,7 @@ namespace SongBrowserPlugin
                 .ToList();
         }
 
-        private void SortDifficulty(List<LevelSO> levels)
+        private void SortDifficulty(List<BeatmapLevelSO> levels)
         {
             Logger.Info("Sorting song list by difficulty...");
 
@@ -894,25 +825,18 @@ namespace SongBrowserPlugin
             {
                 if (!levelIdToDifficultyValue.ContainsKey(level.levelID))
                 {
-                    // Skip folders
-                    if (level.levelID.StartsWith("Folder_"))
-                    {
-                        levelIdToDifficultyValue.Add(level.levelID, 0);
+                    int difficultyValue = 0;
+
+                    // Get the beatmap difficulties
+                    var difficulties = level.difficultyBeatmapSets
+                        .Where(x => x.beatmapCharacteristic == this.CurrentBeatmapCharacteristicSO)
+                        .SelectMany(x => x.difficultyBeatmaps);
+
+                    foreach (IDifficultyBeatmap difficultyBeatmap in difficulties)
+                    {                            
+                        difficultyValue += _difficultyWeights[difficultyBeatmap.difficulty];
                     }
-                    else
-                    {
-                        int difficultyValue = 0;
-                        foreach (BeatmapDifficulty difficulty in difficultyIterator)
-                        {
-                            IDifficultyBeatmap beatmap = level.GetDifficultyBeatmap(difficulty);
-                            if (beatmap != null)
-                            {
-                                difficultyValue += _difficultyWeights[difficulty];
-                                break;
-                            }
-                        }
-                        levelIdToDifficultyValue.Add(level.levelID, difficultyValue);
-                    }
+                    levelIdToDifficultyValue.Add(level.levelID, difficultyValue);                    
                 }
             }
 
@@ -920,9 +844,10 @@ namespace SongBrowserPlugin
                 .OrderBy(x => levelIdToDifficultyValue[x.levelID])
                 .ThenBy(x => x.songName)
                 .ToList();
+            _sortedSongs = levels;
         }
 
-        private void SortRandom(List<LevelSO> levels)
+        private void SortRandom(List<BeatmapLevelSO> levels)
         {
             Logger.Info("Sorting song list by random (seed={0})...", this.Settings.randomSongSeed);
 
@@ -933,7 +858,7 @@ namespace SongBrowserPlugin
                 .ToList();
         }        
 
-        private void SortSongName(List<LevelSO> levels)
+        private void SortSongName(List<BeatmapLevelSO> levels)
         {
             Logger.Info("Sorting song list as default (songName)");
             _sortedSongs = levels

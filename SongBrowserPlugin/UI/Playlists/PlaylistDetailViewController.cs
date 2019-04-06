@@ -1,4 +1,6 @@
-﻿using SongBrowserPlugin.DataAccess;
+﻿using CustomUI.BeatSaber;
+using SongBrowserPlugin.DataAccess;
+using SongLoaderPlugin;
 using System;
 using System.Linq;
 using TMPro;
@@ -6,11 +8,13 @@ using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
 using Logger = SongBrowserPlugin.Logging.Logger;
+using Sprites = SongBrowserPlugin.UI.Base64Sprites;
 
 namespace SongBrowserPlugin.UI
 {
     class PlaylistDetailViewController : VRUIViewController
     {
+
         public event Action<Playlist> downloadButtonPressed;
         public event Action<Playlist> selectButtonPressed;
 
@@ -20,30 +24,34 @@ namespace SongBrowserPlugin.UI
 
         private Button _downloadButton;
         private Button _selectButton;
+        private string _selectButtonText = "Select";
 
         private TextMeshProUGUI authorText;
         private TextMeshProUGUI totalSongsText;
         private TextMeshProUGUI downloadedSongsText;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="firstActivation"></param>
-        /// <param name="type"></param>
+        private StandardLevelDetailView _levelDetails;
+
+        public bool addDownloadButton = true;
+        private Image coverImage;
+
         protected override void DidActivate(bool firstActivation, ActivationType type)
         {
-
             if (firstActivation && type == ActivationType.AddedToHierarchy)
             {
+                gameObject.SetActive(true);
+                _levelDetails = GetComponentsInChildren<StandardLevelDetailView>(true).First(x => x.name == "LevelDetail");
+                _levelDetails.gameObject.SetActive(true);
+
                 RemoveCustomUIElements(rectTransform);
 
                 Destroy(GetComponentsInChildren<LevelParamsPanel>().First(x => x.name == "LevelParamsPanel").gameObject);
 
-                RectTransform yourStats = GetComponentsInChildren<RectTransform>(true).First(x => x.name == "YourStats");
+                RectTransform yourStats = GetComponentsInChildren<RectTransform>(true).First(x => x.name == "Stats");
                 yourStats.gameObject.SetActive(true);
 
-                RectTransform buttonsRect = GetComponentsInChildren<RectTransform>().First(x => x.name == "Buttons");
-                buttonsRect.anchoredPosition = new Vector2(0f, 6f);
+                //RectTransform buttonsRect = GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayButtons");
+                //buttonsRect.anchoredPosition = new Vector2(0f, 6f);
 
                 TextMeshProUGUI[] _textComponents = GetComponentsInChildren<TextMeshProUGUI>();
 
@@ -51,35 +59,41 @@ namespace SongBrowserPlugin.UI
                 {
                     songNameText = _textComponents.First(x => x.name == "SongNameText");
                     _textComponents.First(x => x.name == "Title").text = "Playlist";
-                    _textComponents.First(x => x.name == "Title").fontSize = 2.5f;
 
-                    _textComponents.First(x => x.name == "YourStatsTitle").text = "Playlist Info";
-
-                    _textComponents.First(x => x.name == "HighScoreText").text = "Author";
-                    authorText = _textComponents.First(x => x.name == "HighScoreValueText");
+                    _textComponents.First(x => x.name == "Title" && x.transform.parent.name == "MaxCombo").text = "Author";
+                    authorText = _textComponents.First(x => x.name == "Value" && x.transform.parent.name == "MaxCombo");
                     authorText.rectTransform.sizeDelta = new Vector2(24f, 0f);
 
-                    _textComponents.First(x => x.name == "MaxComboText").text = "Total songs";
-                    totalSongsText = _textComponents.First(x => x.name == "MaxComboValueText");
+                    _textComponents.First(x => x.name == "Title" && x.transform.parent.name == "Highscore").text = "Total songs";
+                    totalSongsText = _textComponents.First(x => x.name == "Value" && x.transform.parent.name == "Highscore");
 
-                    _textComponents.First(x => x.name == "MaxRankText").text = "Downloaded";
-                    _textComponents.First(x => x.name == "MaxRankText").rectTransform.sizeDelta = new Vector2(18f, 3f);
-                    downloadedSongsText = _textComponents.First(x => x.name == "MaxRankValueText");
+                    _textComponents.First(x => x.name == "Title" && x.transform.parent.name == "MaxRank").text = "Downloaded";
+                    downloadedSongsText = _textComponents.First(x => x.name == "Value" && x.transform.parent.name == "MaxRank");
                 }
                 catch (Exception e)
                 {
-                    Logger.Exception("Unable to convert detail view controller! Exception:  ", e);
+                    Logger.Exception("Unable to convert detail view controller! Exception:  " + e);
                 }
 
-                _selectButton = GetComponentsInChildren<Button>().First(x => x.name == "PlayButton");
-                _selectButton.GetComponentsInChildren<TextMeshProUGUI>().First().text = "SELECT";
+                _selectButton = _levelDetails.playButton;
+                _selectButton.SetButtonText(_selectButtonText);
+                _selectButton.ToggleWordWrapping(false);
                 _selectButton.onClick.RemoveAllListeners();
                 _selectButton.onClick.AddListener(() => { selectButtonPressed?.Invoke(_currentPlaylist); });
 
-                _downloadButton = GetComponentsInChildren<Button>().First(x => x.name == "PracticeButton");
-                _downloadButton.GetComponentsInChildren<Image>().First(x => x.name == "Icon").sprite = Base64Sprites.DownloadIcon;
-                _downloadButton.onClick.RemoveAllListeners();
-                _downloadButton.onClick.AddListener(() => { downloadButtonPressed?.Invoke(_currentPlaylist); });
+                if (addDownloadButton)
+                {
+                    _downloadButton = _levelDetails.practiceButton;
+                    _downloadButton.SetButtonIcon(Sprites.DownloadIcon);
+                    _downloadButton.onClick.RemoveAllListeners();
+                    _downloadButton.onClick.AddListener(() => { downloadButtonPressed?.Invoke(_currentPlaylist); });
+                }
+                else
+                {
+                    Destroy(_levelDetails.practiceButton.gameObject);
+                }
+
+                coverImage = _levelDetails.GetPrivateField<Image>("_coverImage");
             }
         }
 
@@ -88,32 +102,41 @@ namespace SongBrowserPlugin.UI
             _downloadButton.interactable = !downloaded;
         }
 
-        /// <summary>
-        /// Disable / Enable the select and play buttons.
-        /// </summary>
-        /// <param name="enableSelect"></param>
-        /// <param name="enableDownload"></param>
-        public void UpdateButtons(bool enableSelect, bool enableDownload)
+        public void SetSelectButtonState(bool enabled)
         {
-            _selectButton.interactable = enableSelect;
-            _downloadButton.interactable = enableDownload;
+            _selectButton.interactable = enabled;
         }
 
-        /// <summary>
-        /// Set the content.
-        /// </summary>
-        /// <param name="p"></param>
+        public void SetSelectButtonText(string text)
+        {
+            _selectButtonText = text;
+            if (_selectButton != null)
+            {
+                _selectButton.SetButtonText(_selectButtonText);
+            }
+        }
+
         public void SetContent(Playlist newPlaylist)
         {
             _currentPlaylist = newPlaylist;
 
-            songNameText.text = newPlaylist.Title;
+            songNameText.text = newPlaylist.playlistTitle;
 
-            authorText.text = newPlaylist.Author;
-            totalSongsText.text = newPlaylist.Songs.Count.ToString();
-            downloadedSongsText.text = newPlaylist.Songs.Where(x => x.Level != null).Count().ToString();
+            authorText.text = newPlaylist.playlistAuthor;
 
-            SetDownloadState(newPlaylist.Songs.All(x => x.Level != null));
+            coverImage.sprite = _currentPlaylist.icon;
+
+            if (newPlaylist.songs.Count > 0)
+            {
+                totalSongsText.text = newPlaylist.songs.Count.ToString();
+                downloadedSongsText.text = newPlaylist.songs.Where(x => x.level != null).Count().ToString();
+                SetDownloadState(newPlaylist.songs.All(x => x.level != null));
+            }
+            else
+            {
+                totalSongsText.text = newPlaylist.playlistSongCount.ToString();
+                downloadedSongsText.text = "??";
+            }
         }
 
         void RemoveCustomUIElements(Transform parent)
