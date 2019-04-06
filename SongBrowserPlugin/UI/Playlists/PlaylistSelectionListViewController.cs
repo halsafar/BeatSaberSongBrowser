@@ -31,19 +31,17 @@ namespace SongBrowserPlugin.UI
 
         protected override void DidActivate(bool firstActivation, ActivationType type)
         {
-
-
             if (firstActivation && type == ActivationType.AddedToHierarchy)
             {
                 rectTransform.anchorMin = new Vector2(0.5f, 0f);
                 rectTransform.anchorMax = new Vector2(0.5f, 1f);
-                rectTransform.sizeDelta = new Vector2(74f, 0f);
-                rectTransform.pivot = new Vector2(0.4f, 0.5f);
+                rectTransform.sizeDelta = new Vector2(75f, 0f);
+                rectTransform.pivot = new Vector2(0.5f, 0.5f);
 
                 _pageUpButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().Last(x => (x.name == "PageUpButton")), rectTransform, false);
                 (_pageUpButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 1f);
                 (_pageUpButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 1f);
-                (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -10f);
+                (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -9f);
                 (_pageUpButton.transform as RectTransform).sizeDelta = new Vector2(40f, 10f);
                 _pageUpButton.interactable = true;
                 _pageUpButton.onClick.AddListener(delegate ()
@@ -51,10 +49,10 @@ namespace SongBrowserPlugin.UI
                     _songsTableView.PageScrollUp();
                 });
 
-                _pageDownButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().Last(x => (x.name == "PageDownButton")), rectTransform, false);
+                _pageDownButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageDownButton")), rectTransform, false);
                 (_pageDownButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0f);
                 (_pageDownButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0f);
-                (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 10f);
+                (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 9f);
                 (_pageDownButton.transform as RectTransform).sizeDelta = new Vector2(40f, 10f);
                 _pageDownButton.interactable = true;
                 _pageDownButton.onClick.AddListener(delegate ()
@@ -66,7 +64,10 @@ namespace SongBrowserPlugin.UI
 
                 RectTransform container = new GameObject("CustomListContainer", typeof(RectTransform)).transform as RectTransform;
                 container.SetParent(rectTransform, false);
-                container.sizeDelta = new Vector2(60f, 0f);
+                container.anchorMin = new Vector2(0f, 0.5f);
+                container.anchorMax = new Vector2(1f, 0.5f);
+                container.sizeDelta = new Vector2(0f, 0f);
+                container.anchoredPosition = new Vector2(0f, 0f);
 
                 _songsTableView = new GameObject("CustomTableView", typeof(RectTransform)).AddComponent<TableView>();
                 _songsTableView.gameObject.AddComponent<RectMask2D>();
@@ -139,7 +140,9 @@ namespace SongBrowserPlugin.UI
             LevelListTableCell _tableCell = Instantiate(_songListTableCellInstance);
 
             _tableCell.reuseIdentifier = "PlaylistTableCell";
-            _tableCell.GetPrivateField<TextMeshProUGUI>("_songNameText").text = playlistList[row].playlistTitle;
+            var songNameText = _tableCell.GetPrivateField<TextMeshProUGUI>("_songNameText");
+            songNameText.text = playlistList[row].playlistTitle;
+            songNameText.overflowMode = TextOverflowModes.Overflow;
             _tableCell.GetPrivateField<TextMeshProUGUI>("_authorText").text = playlistList[row].playlistAuthor;
             _tableCell.GetPrivateField<UnityEngine.UI.Image>("_coverImage").sprite = playlistList[row].icon;
 

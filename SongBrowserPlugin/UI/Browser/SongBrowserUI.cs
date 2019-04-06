@@ -613,6 +613,9 @@ namespace SongBrowserPlugin.UI
             }
         }
 
+        /// <summary>
+        /// Remove all filters, update song list, save.
+        /// </summary>
         private void OnClearButtonClickEvent()
         {
             Logger.Debug("Clearing all sorts and filters.");
