@@ -207,6 +207,12 @@ namespace SongBrowserPlugin.UI
         /// <param name="text"></param>
         static public void SetButtonText(Button button, string text)
         {
+            Polyglot.LocalizedTextMeshProUGUI localizer = button.GetComponentInChildren<Polyglot.LocalizedTextMeshProUGUI>();
+            if (localizer != null)
+            {
+                GameObject.Destroy(localizer);
+            }
+
             TextMeshProUGUI txt = button.GetComponentsInChildren<TextMeshProUGUI>().FirstOrDefault(x => x.name == "Text");
             if (txt != null)
             {
