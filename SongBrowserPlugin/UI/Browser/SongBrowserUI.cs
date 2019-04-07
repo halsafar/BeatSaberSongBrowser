@@ -1530,7 +1530,12 @@ namespace SongBrowserPlugin.UI
                 }
 
                 _model.UpdateLevelRecords();
-                UpdateLevelPackSelection();
+
+                bool didUpdateLevelPack = UpdateLevelPackSelection();
+                if (!didUpdateLevelPack)
+                {
+                    _model.ProcessSongList();
+                }
             }
             catch (Exception e)
             {
@@ -1550,7 +1555,7 @@ namespace SongBrowserPlugin.UI
         /// Logic for fixing BeatSaber's level pack selection bugs.
         /// 
         /// </summary>
-        public void UpdateLevelPackSelection()
+        public bool UpdateLevelPackSelection()
         {
             if (_levelPackViewController != null)
             {
@@ -1584,8 +1589,12 @@ namespace SongBrowserPlugin.UI
 
                     _levelPacksTableView.didSelectPackEvent += _levelPacksTableView_didSelectPackEvent;
                     _levelPackViewController.didSelectPackEvent += _levelPackViewController_didSelectPackEvent;
+
+                    return true;
                 }
             }
+
+            return false;
         }
 
         //Pull njs from a difficulty, based on private function from SongLoader

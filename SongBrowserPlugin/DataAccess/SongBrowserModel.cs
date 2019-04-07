@@ -334,7 +334,7 @@ namespace SongBrowserPlugin
             }
 
             // Actually sort and filter
-            this.ProcessSongList();
+            //this.ProcessSongList();
 
             // Signal complete
             if (SongLoader.CustomLevels.Count > 0)
