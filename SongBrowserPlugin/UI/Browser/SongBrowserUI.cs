@@ -46,7 +46,7 @@ namespace SongBrowserPlugin.UI
 
         private DismissableNavigationController _levelSelectionNavigationController;        
 
-        private RectTransform _tableViewRectTransform;
+        private RectTransform _levelPackLevelsTableViewRectTransform;
 
         private Button _tableViewPageUpButton;
         private Button _tableViewPageDownButton;
@@ -180,11 +180,12 @@ namespace SongBrowserPlugin.UI
                 _levelDifficultyViewController = _standardLevelDetailView.GetPrivateField<BeatmapDifficultySegmentedControlController>("_beatmapDifficultySegmentedControlController");
                 Logger.Debug("Acquired BeatmapDifficultySegmentedControlController [{0}]", _levelDifficultyViewController.GetInstanceID());
 
-                _tableViewRectTransform = _levelPackLevelsTableView.transform as RectTransform;
-                Logger.Debug("Acquired TableViewRectTransform from LevelPackLevelsTableView [{0}]", _tableViewRectTransform.GetInstanceID());
+                _levelPackLevelsTableViewRectTransform = _levelPackLevelsTableView.transform as RectTransform;
+                Logger.Debug("Acquired TableViewRectTransform from LevelPackLevelsTableView [{0}]", _levelPackLevelsTableViewRectTransform.GetInstanceID());
 
-                _tableViewPageUpButton = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageUpButton");
-                _tableViewPageDownButton = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageDownButton");
+                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelPackLevelsTableView, "_tableView");
+                _tableViewPageUpButton = tableView.GetPrivateField<Button>("_pageUpButton");
+                _tableViewPageDownButton = tableView.GetPrivateField<Button>("_pageDownButton");
                 Logger.Debug("Acquired Page Up and Down buttons...");
 
                 _playButton = _standardLevelDetailView.GetComponentsInChildren<Button>().FirstOrDefault(x => x.name == "PlayButton");
@@ -213,6 +214,7 @@ namespace SongBrowserPlugin.UI
                 this.InstallHandlers();
 
                 this.ResizeStatsPanel();
+                this.ResizeSongTable();
 
                 _uiCreated = true;
                 Logger.Debug("Done Creating UI...");
@@ -247,21 +249,17 @@ namespace SongBrowserPlugin.UI
                 Button playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
                 RectTransform playButtonRect = (playButton.transform as RectTransform);
                 Sprite arrowIcon = SongBrowserApplication.Instance.CachedIcons["ArrowIcon"];
-                Sprite borderSprite = SongBrowserApplication.Instance.CachedIcons["RoundRectBigStroke"];
-
-                // Resize some of the UI
-                _tableViewRectTransform.sizeDelta = new Vector2(0f, -20f);
-                _tableViewRectTransform.anchoredPosition = new Vector2(0f, -2.5f);
+                Sprite borderSprite = SongBrowserApplication.Instance.CachedIcons["RoundRectBigStroke"];            
 
                 // Create Sorting Songs By-Buttons
                 Logger.Debug("Creating sort by buttons...");
                 float buttonSpacing = 0.5f;                                
                 float fontSize = 2.0f;
                 float buttonWidth = 12.25f;
-                float buttonHeight = 5.5f;
+                float buttonHeight = 5.0f;
                 float startButtonX = 24.50f;
                 float curButtonX = 0.0f;
-                float buttonY = -6.0f;
+                float buttonY = -5.25f;
                 Vector2 iconButtonSize = new Vector2(buttonHeight, buttonHeight);
 
                 // Create cancel button
@@ -270,7 +268,7 @@ namespace SongBrowserPlugin.UI
                     sortButtonTransform, 
                     otherButtonTemplate, 
                     Base64Sprites.XIcon, 
-                    new Vector2(startButtonX - buttonHeight - (buttonSpacing * 2.0f), buttonY), 
+                    new Vector2(startButtonX - buttonHeight, buttonY), 
                     new Vector2(iconButtonSize.x, iconButtonSize.y),
                     new Vector2(3.5f, 3.5f),
                     new Vector2(1.0f, 1.0f),
@@ -280,7 +278,7 @@ namespace SongBrowserPlugin.UI
                     OnClearButtonClickEvent();
                 });
 
-                startButtonX += (buttonHeight + buttonSpacing);
+                startButtonX += (buttonHeight * 2.0f);
 
                 // define sort buttons
                 string[] sortButtonNames = new string[]
@@ -344,6 +342,7 @@ namespace SongBrowserPlugin.UI
                 }
 
                 // Create add favorite button
+                playButtonsRect.localScale = new Vector3(0.95f, 0.95f, 0.95f);
                 Logger.Debug("Creating Add to favorites button...");
                 _addFavoriteButton = UIBuilder.CreateIconButton(playButtonsRect,
                     practiceButton,
@@ -447,9 +446,24 @@ namespace SongBrowserPlugin.UI
             UIBuilder.SetStatButtonIcon(_njsStatButton, Base64Sprites.SpeedIcon);
 
             // shrink title
-            var titleText = this._levelDetailViewController.GetComponentsInChildren<TextMeshProUGUI>(true).First(x => x.name == "SongNameText");
-            
+            var titleText = this._levelDetailViewController.GetComponentsInChildren<TextMeshProUGUI>(true).First(x => x.name == "SongNameText");            
             titleText.fontSize = 5.0f;
+        }
+
+        /// <summary>
+        /// Resize some of the song table elements.
+        /// </summary>
+        public void ResizeSongTable()
+        {
+            // Reposition the table view a bit
+            _levelPackLevelsTableViewRectTransform.anchoredPosition = new Vector2(0f, -2.5f);
+
+            // Move the page up/down buttons a bit
+            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelPackLevelsTableView, "_tableView");
+            RectTransform pageUpButton = _tableViewPageUpButton.transform as RectTransform;
+            RectTransform pageDownButton = _tableViewPageDownButton.transform as RectTransform;
+            pageUpButton.anchoredPosition = new Vector2(pageUpButton.anchoredPosition.x, pageUpButton.anchoredPosition.y - 1f);
+            pageDownButton.anchoredPosition = new Vector2(pageDownButton.anchoredPosition.x, pageDownButton.anchoredPosition.y + 1f);
         }
 
         /// <summary>
@@ -1155,7 +1169,7 @@ namespace SongBrowserPlugin.UI
             {
                 try
                 {
-                    _tableViewPageUpButton = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageUpButton");
+                    _tableViewPageUpButton = _levelPackLevelsTableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageUpButton");
                     (_tableViewPageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -1f);
                 }
                 catch (Exception)
@@ -1169,7 +1183,7 @@ namespace SongBrowserPlugin.UI
             {
                 try
                 {
-                    _tableViewPageDownButton = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageDownButton");
+                    _tableViewPageDownButton = _levelPackLevelsTableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageDownButton");
                     (_tableViewPageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 1f);
                 }
                 catch (Exception)
