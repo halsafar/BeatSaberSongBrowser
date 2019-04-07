@@ -214,7 +214,7 @@ namespace SongBrowserPlugin.UI
                 this.InstallHandlers();
 
                 this.ResizeStatsPanel();
-                this.ResizeSongTable();
+                this.ResizeSongUI();
 
                 _uiCreated = true;
                 Logger.Debug("Done Creating UI...");
@@ -341,8 +341,7 @@ namespace SongBrowserPlugin.UI
                     _filterButtonGroup.Add(filterButton);                    
                 }
 
-                // Create add favorite button
-                playButtonsRect.localScale = new Vector3(0.95f, 0.95f, 0.95f);
+                // Create add favorite button                
                 Logger.Debug("Creating Add to favorites button...");
                 _addFavoriteButton = UIBuilder.CreateIconButton(playButtonsRect,
                     practiceButton,
@@ -453,7 +452,7 @@ namespace SongBrowserPlugin.UI
         /// <summary>
         /// Resize some of the song table elements.
         /// </summary>
-        public void ResizeSongTable()
+        public void ResizeSongUI()
         {
             // Reposition the table view a bit
             _levelPackLevelsTableViewRectTransform.anchoredPosition = new Vector2(0f, -2.5f);
@@ -464,6 +463,11 @@ namespace SongBrowserPlugin.UI
             RectTransform pageDownButton = _tableViewPageDownButton.transform as RectTransform;
             pageUpButton.anchoredPosition = new Vector2(pageUpButton.anchoredPosition.x, pageUpButton.anchoredPosition.y - 1f);
             pageDownButton.anchoredPosition = new Vector2(pageDownButton.anchoredPosition.x, pageDownButton.anchoredPosition.y + 1f);
+
+            // shrink play button container
+            RectTransform playContainerRect = _standardLevelDetailView.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayContainer");
+            RectTransform playButtonsRect = playContainerRect.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayButtons");
+            playButtonsRect.localScale = new Vector3(0.95f, 0.95f, 0.95f);
         }
 
         /// <summary>
@@ -1526,7 +1530,6 @@ namespace SongBrowserPlugin.UI
                 }
 
                 _model.UpdateLevelRecords();
-
                 UpdateLevelPackSelection();
             }
             catch (Exception e)
@@ -1545,6 +1548,7 @@ namespace SongBrowserPlugin.UI
 
         /// <summary>
         /// Logic for fixing BeatSaber's level pack selection bugs.
+        /// 
         /// </summary>
         public void UpdateLevelPackSelection()
         {
