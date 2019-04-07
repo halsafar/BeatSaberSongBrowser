@@ -1482,7 +1482,7 @@ namespace SongBrowserPlugin.UI
                 // this might look like an off by one error but the _level list we keep is missing the header entry BeatSaber.
                 // so the last row is +1 the max index, the count.
                 int maxCount = _model.SortedSongList.Count;
-                Logger.Debug("Song is not in the level pack, cannot scroll to it...  Using last known row");
+                Logger.Debug("Song is not in the level pack, cannot scroll to it...  Using last known row {0}/{1}", _lastRow, maxCount);
                 selectedIndex = Math.Min(maxCount, _lastRow);
             }
             else
@@ -1572,7 +1572,7 @@ namespace SongBrowserPlugin.UI
                     }
                     this._model.SetCurrentLevelPack(currentSelected);
                 }
-                else if (currentSelected == null || (currentSelected.packID != _model.Settings.currentLevelId))
+                else if (currentSelected == null || (currentSelected.packID != _model.Settings.currentLevelPackId))
                 {
                     Logger.Debug("Automatically selecting level pack: {0}", _model.Settings.currentLevelPackId);
 
