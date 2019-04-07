@@ -592,14 +592,7 @@ namespace SongBrowserPlugin.UI
 
             try
             {
-                // reset filter mode always here
-                this._model.Settings.filterMode = SongFilterMode.None;
-                this._model.Settings.Save();
-
-                this._model.SetCurrentLevelPack(arg2);
-                this._model.ProcessSongList();
-
-                RefreshSongList();
+                //RefreshSongList();
                 RefreshSortButtonUI();
                 RefreshQuickScrollButtons();
             }
@@ -621,6 +614,13 @@ namespace SongBrowserPlugin.UI
 
             try
             {
+                // reset filter mode always here
+                this._model.Settings.filterMode = SongFilterMode.None;
+                this._model.Settings.Save();
+
+                this._model.SetCurrentLevelPack(arg2);
+                this._model.ProcessSongList();
+
                 RefreshSongList();
                 RefreshSortButtonUI();
                 RefreshQuickScrollButtons();
@@ -1166,48 +1166,26 @@ namespace SongBrowserPlugin.UI
         /// Update interactive state of the quick scroll buttons.
         /// </summary>
         private void RefreshQuickScrollButtons()
-        {
-            // if you are ever viewing the song list with less than 5 songs the up/down buttons do not exist.
-            // just try and fetch them and ignore the exception.
-            if (_tableViewPageUpButton == null)
-            {
-                try
-                {
-                    _tableViewPageUpButton = _levelPackLevelsTableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageUpButton");
-                    (_tableViewPageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -1f);
-                }
-                catch (Exception)
-                {
-                    // We don't care if this fails.
-                    return;
-                }
-            }
-
-            if (_tableViewPageDownButton == null)
-            {
-                try
-                {
-                    _tableViewPageDownButton = _levelPackLevelsTableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageDownButton");
-                    (_tableViewPageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 1f);
-                }
-                catch (Exception)
-                {
-                    // We don't care if this fails.
-                    return;
-                }
-            }
-
+        {         
             // Refresh the fast scroll buttons
             if (_tableViewPageUpButton != null && _pageUpFastButton != null)
             {
                 _pageUpFastButton.interactable = _tableViewPageUpButton.interactable;
                 _pageUpFastButton.gameObject.SetActive(_tableViewPageUpButton.IsActive());
             }
+            else
+            {
+                _pageUpFastButton.gameObject.SetActive(false);
+            }
 
-            if (_tableViewPageDownButton != null && _pageUpFastButton != null)
+            if (_tableViewPageDownButton != null && _pageDownFastButton != null)
             {
                 _pageDownFastButton.interactable = _tableViewPageDownButton.interactable;
-                _pageDownFastButton.gameObject.SetActive(_tableViewPageDownButton.IsActive());
+                _pageDownFastButton.gameObject.SetActive(_tableViewPageDownButton.IsActive());                
+            }
+            else
+            {
+                _pageDownFastButton.gameObject.SetActive(false);
             }
         }
 
@@ -1587,10 +1565,14 @@ namespace SongBrowserPlugin.UI
                     this._model.SetCurrentLevelPack(levelPack);
                     this._model.ProcessSongList();
 
-                    _levelPacksTableView.didSelectPackEvent += _levelPacksTableView_didSelectPackEvent;
                     _levelPackViewController.didSelectPackEvent += _levelPackViewController_didSelectPackEvent;
-
+                    _levelPacksTableView.didSelectPackEvent += _levelPacksTableView_didSelectPackEvent;
+                    
                     return true;
+                }
+                else
+                {
+                    this._model.SetCurrentLevelPack(currentSelected);
                 }
             }
 
