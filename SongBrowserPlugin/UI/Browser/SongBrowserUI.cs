@@ -615,8 +615,11 @@ namespace SongBrowserPlugin.UI
             try
             {
                 // reset filter mode always here
-                this._model.Settings.filterMode = SongFilterMode.None;
-                this._model.Settings.Save();
+                if (this._model.Settings.currentLevelPackId != arg2.packID)// this._model.Settings.filterMode == SongFilterMode.Playlist)
+                {
+                    this._model.Settings.filterMode = SongFilterMode.None;
+                    this._model.Settings.Save();
+                }                
 
                 this._model.SetCurrentLevelPack(arg2);
                 this._model.ProcessSongList();
