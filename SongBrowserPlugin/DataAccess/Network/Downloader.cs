@@ -1,6 +1,6 @@
 ﻿using SimpleJSON;
-using SongBrowserPlugin.DataAccess;
-using SongBrowserPlugin.DataAccess.BeatSaverApi;
+using SongBrowser.DataAccess;
+using SongBrowser.DataAccess.BeatSaverApi;
 using SongLoaderPlugin;
 using SongLoaderPlugin.OverrideClasses;
 using System;
@@ -15,9 +15,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
-using Logger = SongBrowserPlugin.Logging.Logger;
+using Logger = SongBrowser.Logging.Logger;
 
-namespace SongBrowserPlugin
+namespace SongBrowser
 {
     // https://github.com/andruzzzhka/BeatSaverDownloader/blob/master/BeatSaverDownloader/Misc/SongDownloader.cs
     public class SongDownloader : MonoBehaviour

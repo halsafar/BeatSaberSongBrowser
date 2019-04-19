@@ -6,17 +6,17 @@ using System.Globalization;
 using UnityEngine.UI;
 using HMUI;
 using VRUI;
-using SongBrowserPlugin.DataAccess;
+using SongBrowser.DataAccess;
 using System.IO;
 using SongLoaderPlugin;
 using System.Security.Cryptography;
 using System.Text;
 using TMPro;
-using Logger = SongBrowserPlugin.Logging.Logger;
-using SongBrowserPlugin.DataAccess.BeatSaverApi;
+using Logger = SongBrowser.Logging.Logger;
+using SongBrowser.DataAccess.BeatSaverApi;
 using System.Collections;
 
-namespace SongBrowserPlugin.UI
+namespace SongBrowser.UI
 {
     /// <summary>
     /// Hijack the flow coordinator.  Have access to all StandardLevel easily.
@@ -46,7 +46,7 @@ namespace SongBrowserPlugin.UI
 
         private DismissableNavigationController _levelSelectionNavigationController;        
 
-        private RectTransform _tableViewRectTransform;
+        private RectTransform _levelPackLevelsTableViewRectTransform;
 
         private Button _tableViewPageUpButton;
         private Button _tableViewPageDownButton;
@@ -180,11 +180,12 @@ namespace SongBrowserPlugin.UI
                 _levelDifficultyViewController = _standardLevelDetailView.GetPrivateField<BeatmapDifficultySegmentedControlController>("_beatmapDifficultySegmentedControlController");
                 Logger.Debug("Acquired BeatmapDifficultySegmentedControlController [{0}]", _levelDifficultyViewController.GetInstanceID());
 
-                _tableViewRectTransform = _levelPackLevelsTableView.transform as RectTransform;
-                Logger.Debug("Acquired TableViewRectTransform from LevelPackLevelsTableView [{0}]", _tableViewRectTransform.GetInstanceID());
+                _levelPackLevelsTableViewRectTransform = _levelPackLevelsTableView.transform as RectTransform;
+                Logger.Debug("Acquired TableViewRectTransform from LevelPackLevelsTableView [{0}]", _levelPackLevelsTableViewRectTransform.GetInstanceID());
 
-                _tableViewPageUpButton = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageUpButton");
-                _tableViewPageDownButton = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageDownButton");
+                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelPackLevelsTableView, "_tableView");
+                _tableViewPageUpButton = tableView.GetPrivateField<Button>("_pageUpButton");
+                _tableViewPageDownButton = tableView.GetPrivateField<Button>("_pageDownButton");
                 Logger.Debug("Acquired Page Up and Down buttons...");
 
                 _playButton = _standardLevelDetailView.GetComponentsInChildren<Button>().FirstOrDefault(x => x.name == "PlayButton");
@@ -213,6 +214,7 @@ namespace SongBrowserPlugin.UI
                 this.InstallHandlers();
 
                 this.ResizeStatsPanel();
+                this.ResizeSongUI();
 
                 _uiCreated = true;
                 Logger.Debug("Done Creating UI...");
@@ -247,21 +249,17 @@ namespace SongBrowserPlugin.UI
                 Button playButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
                 RectTransform playButtonRect = (playButton.transform as RectTransform);
                 Sprite arrowIcon = SongBrowserApplication.Instance.CachedIcons["ArrowIcon"];
-                Sprite borderSprite = SongBrowserApplication.Instance.CachedIcons["RoundRectBigStroke"];
-
-                // Resize some of the UI
-                _tableViewRectTransform.sizeDelta = new Vector2(0f, -20f);
-                _tableViewRectTransform.anchoredPosition = new Vector2(0f, -2.5f);
+                Sprite borderSprite = SongBrowserApplication.Instance.CachedIcons["RoundRectBigStroke"];            
 
                 // Create Sorting Songs By-Buttons
                 Logger.Debug("Creating sort by buttons...");
                 float buttonSpacing = 0.5f;                                
                 float fontSize = 2.0f;
                 float buttonWidth = 12.25f;
-                float buttonHeight = 5.5f;
+                float buttonHeight = 5.0f;
                 float startButtonX = 24.50f;
                 float curButtonX = 0.0f;
-                float buttonY = -6.0f;
+                float buttonY = -5.25f;
                 Vector2 iconButtonSize = new Vector2(buttonHeight, buttonHeight);
 
                 // Create cancel button
@@ -270,7 +268,7 @@ namespace SongBrowserPlugin.UI
                     sortButtonTransform, 
                     otherButtonTemplate, 
                     Base64Sprites.XIcon, 
-                    new Vector2(startButtonX - buttonHeight - (buttonSpacing * 2.0f), buttonY), 
+                    new Vector2(startButtonX - buttonHeight, buttonY), 
                     new Vector2(iconButtonSize.x, iconButtonSize.y),
                     new Vector2(3.5f, 3.5f),
                     new Vector2(1.0f, 1.0f),
@@ -280,7 +278,7 @@ namespace SongBrowserPlugin.UI
                     OnClearButtonClickEvent();
                 });
 
-                startButtonX += (buttonHeight + buttonSpacing);
+                startButtonX += (buttonHeight * 2.0f);
 
                 // define sort buttons
                 string[] sortButtonNames = new string[]
@@ -343,7 +341,7 @@ namespace SongBrowserPlugin.UI
                     _filterButtonGroup.Add(filterButton);                    
                 }
 
-                // Create add favorite button
+                // Create add favorite button                
                 Logger.Debug("Creating Add to favorites button...");
                 _addFavoriteButton = UIBuilder.CreateIconButton(playButtonsRect,
                     practiceButton,
@@ -447,9 +445,29 @@ namespace SongBrowserPlugin.UI
             UIBuilder.SetStatButtonIcon(_njsStatButton, Base64Sprites.SpeedIcon);
 
             // shrink title
-            var titleText = this._levelDetailViewController.GetComponentsInChildren<TextMeshProUGUI>(true).First(x => x.name == "SongNameText");
-            
+            var titleText = this._levelDetailViewController.GetComponentsInChildren<TextMeshProUGUI>(true).First(x => x.name == "SongNameText");            
             titleText.fontSize = 5.0f;
+        }
+
+        /// <summary>
+        /// Resize some of the song table elements.
+        /// </summary>
+        public void ResizeSongUI()
+        {
+            // Reposition the table view a bit
+            _levelPackLevelsTableViewRectTransform.anchoredPosition = new Vector2(0f, -2.5f);
+
+            // Move the page up/down buttons a bit
+            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_levelPackLevelsTableView, "_tableView");
+            RectTransform pageUpButton = _tableViewPageUpButton.transform as RectTransform;
+            RectTransform pageDownButton = _tableViewPageDownButton.transform as RectTransform;
+            pageUpButton.anchoredPosition = new Vector2(pageUpButton.anchoredPosition.x, pageUpButton.anchoredPosition.y - 1f);
+            pageDownButton.anchoredPosition = new Vector2(pageDownButton.anchoredPosition.x, pageDownButton.anchoredPosition.y + 1f);
+
+            // shrink play button container
+            RectTransform playContainerRect = _standardLevelDetailView.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayContainer");
+            RectTransform playButtonsRect = playContainerRect.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayButtons");
+            playButtonsRect.localScale = new Vector3(0.95f, 0.95f, 0.95f);
         }
 
         /// <summary>
@@ -574,14 +592,7 @@ namespace SongBrowserPlugin.UI
 
             try
             {
-                // reset filter mode always here
-                this._model.Settings.filterMode = SongFilterMode.None;
-                this._model.Settings.Save();
-
-                this._model.SetCurrentLevelPack(arg2);
-                this._model.ProcessSongList();
-
-                RefreshSongList();
+                //RefreshSongList();
                 RefreshSortButtonUI();
                 RefreshQuickScrollButtons();
             }
@@ -603,6 +614,16 @@ namespace SongBrowserPlugin.UI
 
             try
             {
+                // reset filter mode always here
+                if (this._model.Settings.currentLevelPackId != arg2.packID)// this._model.Settings.filterMode == SongFilterMode.Playlist)
+                {
+                    this._model.Settings.filterMode = SongFilterMode.None;
+                    this._model.Settings.Save();
+                }                
+
+                this._model.SetCurrentLevelPack(arg2);
+                this._model.ProcessSongList();
+
                 RefreshSongList();
                 RefreshSortButtonUI();
                 RefreshQuickScrollButtons();
@@ -613,6 +634,9 @@ namespace SongBrowserPlugin.UI
             }
         }
 
+        /// <summary>
+        /// Remove all filters, update song list, save.
+        /// </summary>
         private void OnClearButtonClickEvent()
         {
             Logger.Debug("Clearing all sorts and filters.");
@@ -1145,48 +1169,26 @@ namespace SongBrowserPlugin.UI
         /// Update interactive state of the quick scroll buttons.
         /// </summary>
         private void RefreshQuickScrollButtons()
-        {
-            // if you are ever viewing the song list with less than 5 songs the up/down buttons do not exist.
-            // just try and fetch them and ignore the exception.
-            if (_tableViewPageUpButton == null)
-            {
-                try
-                {
-                    _tableViewPageUpButton = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageUpButton");
-                    (_tableViewPageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -1f);
-                }
-                catch (Exception)
-                {
-                    // We don't care if this fails.
-                    return;
-                }
-            }
-
-            if (_tableViewPageDownButton == null)
-            {
-                try
-                {
-                    _tableViewPageDownButton = _tableViewRectTransform.GetComponentsInChildren<Button>().First(x => x.name == "PageDownButton");
-                    (_tableViewPageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 1f);
-                }
-                catch (Exception)
-                {
-                    // We don't care if this fails.
-                    return;
-                }
-            }
-
+        {         
             // Refresh the fast scroll buttons
             if (_tableViewPageUpButton != null && _pageUpFastButton != null)
             {
                 _pageUpFastButton.interactable = _tableViewPageUpButton.interactable;
                 _pageUpFastButton.gameObject.SetActive(_tableViewPageUpButton.IsActive());
             }
+            else
+            {
+                _pageUpFastButton.gameObject.SetActive(false);
+            }
 
-            if (_tableViewPageDownButton != null && _pageUpFastButton != null)
+            if (_tableViewPageDownButton != null && _pageDownFastButton != null)
             {
                 _pageDownFastButton.interactable = _tableViewPageDownButton.interactable;
-                _pageDownFastButton.gameObject.SetActive(_tableViewPageDownButton.IsActive());
+                _pageDownFastButton.gameObject.SetActive(_tableViewPageDownButton.IsActive());                
+            }
+            else
+            {
+                _pageDownFastButton.gameObject.SetActive(false);
             }
         }
 
@@ -1461,7 +1463,7 @@ namespace SongBrowserPlugin.UI
                 // this might look like an off by one error but the _level list we keep is missing the header entry BeatSaber.
                 // so the last row is +1 the max index, the count.
                 int maxCount = _model.SortedSongList.Count;
-                Logger.Debug("Song is not in the level pack, cannot scroll to it...  Using last known row");
+                Logger.Debug("Song is not in the level pack, cannot scroll to it...  Using last known row {0}/{1}", _lastRow, maxCount);
                 selectedIndex = Math.Min(maxCount, _lastRow);
             }
             else
@@ -1510,7 +1512,11 @@ namespace SongBrowserPlugin.UI
 
                 _model.UpdateLevelRecords();
 
-                UpdateLevelPackSelection();
+                bool didUpdateLevelPack = UpdateLevelPackSelection();
+                if (!didUpdateLevelPack)
+                {
+                    _model.ProcessSongList();
+                }
             }
             catch (Exception e)
             {
@@ -1528,8 +1534,9 @@ namespace SongBrowserPlugin.UI
 
         /// <summary>
         /// Logic for fixing BeatSaber's level pack selection bugs.
+        /// 
         /// </summary>
-        public void UpdateLevelPackSelection()
+        public bool UpdateLevelPackSelection()
         {
             if (_levelPackViewController != null)
             {
@@ -1546,7 +1553,7 @@ namespace SongBrowserPlugin.UI
                     }
                     this._model.SetCurrentLevelPack(currentSelected);
                 }
-                else if (currentSelected == null || (currentSelected.packID != _model.Settings.currentLevelId))
+                else if (currentSelected == null || (currentSelected.packID != _model.Settings.currentLevelPackId))
                 {
                     Logger.Debug("Automatically selecting level pack: {0}", _model.Settings.currentLevelPackId);
 
@@ -1561,10 +1568,18 @@ namespace SongBrowserPlugin.UI
                     this._model.SetCurrentLevelPack(levelPack);
                     this._model.ProcessSongList();
 
-                    _levelPacksTableView.didSelectPackEvent += _levelPacksTableView_didSelectPackEvent;
                     _levelPackViewController.didSelectPackEvent += _levelPackViewController_didSelectPackEvent;
+                    _levelPacksTableView.didSelectPackEvent += _levelPacksTableView_didSelectPackEvent;
+                    
+                    return true;
+                }
+                else
+                {
+                    this._model.SetCurrentLevelPack(currentSelected);
                 }
             }
+
+            return false;
         }
 
         //Pull njs from a difficulty, based on private function from SongLoader

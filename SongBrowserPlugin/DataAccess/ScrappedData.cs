@@ -8,9 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
-using Logger = SongBrowserPlugin.Logging.Logger;
+using Logger = SongBrowser.Logging.Logger;
 
-namespace SongBrowserPlugin.DataAccess
+namespace SongBrowser.DataAccess
 {
     public class ScrappedSong
     {

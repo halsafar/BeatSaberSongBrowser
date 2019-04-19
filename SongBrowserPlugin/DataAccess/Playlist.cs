@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 using SimpleJSON;
-using SongBrowserPlugin.DataAccess.BeatSaverApi;
+using SongBrowser.DataAccess.BeatSaverApi;
 using SongLoaderPlugin;
 using System;
 using System.Collections;
@@ -10,10 +10,10 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
-using Logger = SongBrowserPlugin.Logging.Logger;
-using Sprites = SongBrowserPlugin.UI.Base64Sprites;
+using Logger = SongBrowser.Logging.Logger;
+using Sprites = SongBrowser.UI.Base64Sprites;
 
-namespace SongBrowserPlugin.DataAccess
+namespace SongBrowser.DataAccess
 {
     public static class PlaylistsCollection
     {

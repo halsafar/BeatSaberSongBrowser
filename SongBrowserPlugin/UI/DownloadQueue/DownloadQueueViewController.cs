@@ -1,7 +1,7 @@
 ﻿using CustomUI.BeatSaber;
 using CustomUI.Utilities;
 using HMUI;
-using SongBrowserPlugin.DataAccess.BeatSaverApi;
+using SongBrowser.DataAccess.BeatSaverApi;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,11 +10,11 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
-using Logger = SongBrowserPlugin.Logging.Logger;
+using Logger = SongBrowser.Logging.Logger;
 
 // Modified From: https://github.com/andruzzzhka/BeatSaverDownloader
 // - Adding queue count
-namespace SongBrowserPlugin.UI.DownloadQueue
+namespace SongBrowser.UI.DownloadQueue
 {
     class DownloadQueueViewController : VRUIViewController, TableView.IDataSource
     {

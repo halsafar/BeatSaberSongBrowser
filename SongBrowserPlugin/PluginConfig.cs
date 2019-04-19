@@ -6,12 +6,12 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
-using SongBrowserPlugin;
+using SongBrowser;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Logger = SongBrowserPlugin.Logging.Logger;
+using Logger = SongBrowser.Logging.Logger;
 
-namespace SongBrowserPlugin
+namespace SongBrowser
 {
     // Downloader config
     class PluginConfig

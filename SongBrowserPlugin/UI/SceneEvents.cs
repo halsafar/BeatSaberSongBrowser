@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace SongBrowserPlugin
+namespace SongBrowser
 {
     public class SceneEvents : MonoBehaviour
     {

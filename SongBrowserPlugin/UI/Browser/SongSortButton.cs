@@ -1,7 +1,7 @@
-﻿using SongBrowserPlugin.DataAccess;
+﻿using SongBrowser.DataAccess;
 using UnityEngine.UI;
 
-namespace SongBrowserPlugin.UI
+namespace SongBrowser.UI
 {
     public class SongSortButton
     {

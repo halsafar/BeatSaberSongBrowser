@@ -1,12 +1,12 @@
-﻿using SongBrowserPlugin.DataAccess;
-using SongBrowserPlugin.DataAccess.BeatSaverApi;
+﻿using SongBrowser.DataAccess;
+using SongBrowser.DataAccess.BeatSaverApi;
 using System.Linq;
 using System.Reflection;
 using TMPro;
 using UnityEngine;
 
 // From: https://github.com/andruzzzhka/BeatSaverDownloader
-namespace SongBrowserPlugin.UI.DownloadQueue
+namespace SongBrowser.UI.DownloadQueue
 {
     class DownloadQueueTableCell : LevelListTableCell
     {

@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 
 
-namespace SongBrowserPlugin.UI
+namespace SongBrowser.UI
 {
     class Base64Sprites
     {
@@ -61,12 +61,12 @@ namespace SongBrowserPlugin.UI
             SpeedIcon = Base64Sprites.Base64ToSprite(SpeedIconB64);
             StarIcon = Base64Sprites.Base64ToSprite(StarIconB64);
             GraphIcon = Base64Sprites.Base64ToSprite(GraphIconB64);
-            DeleteIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowserPlugin.Assets.DeleteIcon.png");
+            DeleteIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.DeleteIcon.png");
             XIcon = Base64Sprites.Base64ToSprite(XIconB64);
 
             SortButtonStroke = Base64Sprites.Base64ToSprite(SortButtonStrokeB64);
 
-            BeastSaberLogo = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowserPlugin.Assets.BeastSaberLogo.png");            
+            BeastSaberLogo = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.BeastSaberLogo.png");            
         }
 
         public static string SpriteToBase64(Sprite input)

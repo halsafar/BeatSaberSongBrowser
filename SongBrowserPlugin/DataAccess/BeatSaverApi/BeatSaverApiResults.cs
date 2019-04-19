@@ -6,7 +6,7 @@ using SongLoaderPlugin.OverrideClasses;
 
 
 // From: https://github.com/andruzzzhka/BeatSaverDownloader
-namespace SongBrowserPlugin.DataAccess.BeatSaverApi
+namespace SongBrowser.DataAccess.BeatSaverApi
 {
     public enum SongQueueState { Queued, Downloading, Downloaded, Error };
 

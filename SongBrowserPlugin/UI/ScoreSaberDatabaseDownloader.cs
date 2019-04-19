@@ -1,13 +1,13 @@
 ﻿using Mobcast.Coffee.AssetSystem;
-using SongBrowserPlugin.DataAccess;
-using SongBrowserPlugin.DataAccess.Network;
+using SongBrowser.DataAccess;
+using SongBrowser.DataAccess.Network;
 using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
-using Logger = SongBrowserPlugin.Logging.Logger;
+using Logger = SongBrowser.Logging.Logger;
 
-namespace SongBrowserPlugin.UI
+namespace SongBrowser.UI
 {
     public class ScoreSaberDatabaseDownloader : MonoBehaviour
     {

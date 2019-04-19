@@ -8,9 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
-using Sprites = SongBrowserPlugin.UI.Base64Sprites;
+using Sprites = SongBrowser.UI.Base64Sprites;
 
-namespace SongBrowserPlugin.Internals
+namespace SongBrowser.Internals
 {
     public static class CustomHelpers
     {
@@ -28,7 +28,7 @@ namespace SongBrowserPlugin.Internals
                 tableView.SelectCellWithIdx(rows.First(), callbackTable);
         }
 
-        public static IBeatmapLevelPack GetLevelPackWithLevels(BeatmapLevelSO[] levels, string packName = null, Sprite packCover = null)
+        public static BeatmapLevelPackSO GetLevelPackWithLevels(BeatmapLevelSO[] levels, string packName = null, Sprite packCover = null, string packID = null)
         {
             CustomLevelCollectionSO levelCollection = ScriptableObject.CreateInstance<CustomLevelCollectionSO>();
             levelCollection.SetPrivateField("_levelList", levels.ToList());
@@ -37,6 +37,7 @@ namespace SongBrowserPlugin.Internals
             CustomBeatmapLevelPackSO pack = CustomBeatmapLevelPackSO.GetPack(levelCollection);
             pack.SetPrivateField("_packName", string.IsNullOrEmpty(packName) ? "Custom Songs" : packName);
             pack.SetPrivateField("_coverImage", packCover ?? Sprites.BeastSaberLogo);
+            pack.SetPrivateField("_packID", string.IsNullOrEmpty(packID) ? "" : packID);
             pack.SetPrivateField("_isPackAlwaysOwned", true);
 
             return pack;

@@ -5,7 +5,7 @@ using System.Text;
 using System;
 using UnityEngine;
 
-using Logger = SongBrowserPlugin.Logging.Logger;
+using Logger = SongBrowser.Logging.Logger;
 
 // Modified Version of:
 // https://github.com/mob-sakai/AssetSystem/blob/master/Assets/Mobcast/Coffee/AssetSystem/CacheableDownloadHandler.cs

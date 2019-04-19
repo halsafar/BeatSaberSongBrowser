@@ -11,7 +11,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace SongBrowserPlugin.UI
+namespace SongBrowser.UI
 {
     // Modified version of:
     // https://raw.githubusercontent.com/xyonico/BeatSaberSongLoader/master/SongLoaderPlugin/ProgressBar.cs

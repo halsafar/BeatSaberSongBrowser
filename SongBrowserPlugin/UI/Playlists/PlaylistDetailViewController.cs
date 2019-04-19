@@ -1,5 +1,5 @@
 ﻿using CustomUI.BeatSaber;
-using SongBrowserPlugin.DataAccess;
+using SongBrowser.DataAccess;
 using SongLoaderPlugin;
 using System;
 using System.Linq;
@@ -7,10 +7,10 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
-using Logger = SongBrowserPlugin.Logging.Logger;
-using Sprites = SongBrowserPlugin.UI.Base64Sprites;
+using Logger = SongBrowser.Logging.Logger;
+using Sprites = SongBrowser.UI.Base64Sprites;
 
-namespace SongBrowserPlugin.UI
+namespace SongBrowser.UI
 {
     class PlaylistDetailViewController : VRUIViewController
     {
@@ -40,6 +40,8 @@ namespace SongBrowserPlugin.UI
             if (firstActivation && type == ActivationType.AddedToHierarchy)
             {
                 gameObject.SetActive(true);
+                rectTransform.sizeDelta = new Vector2(60f, 0f);
+
                 _levelDetails = GetComponentsInChildren<StandardLevelDetailView>(true).First(x => x.name == "LevelDetail");
                 _levelDetails.gameObject.SetActive(true);
 
@@ -59,6 +61,7 @@ namespace SongBrowserPlugin.UI
                 {
                     songNameText = _textComponents.First(x => x.name == "SongNameText");
                     _textComponents.First(x => x.name == "Title").text = "Playlist";
+                    songNameText.enableWordWrapping = true;
 
                     _textComponents.First(x => x.name == "Title" && x.transform.parent.name == "MaxCombo").text = "Author";
                     authorText = _textComponents.First(x => x.name == "Value" && x.transform.parent.name == "MaxCombo");

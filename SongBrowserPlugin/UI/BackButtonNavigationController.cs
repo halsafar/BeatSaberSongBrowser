@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using UnityEngine.UI;
 using VRUI;
 
-namespace SongBrowserPlugin.UI
+namespace SongBrowser.UI
 {
     class BackButtonNavigationController : VRUINavigationController
     {

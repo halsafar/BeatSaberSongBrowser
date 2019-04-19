@@ -1,5 +1,5 @@
-﻿using SongBrowserPlugin.DataAccess;
-using SongBrowserPlugin.UI;
+﻿using SongBrowser.DataAccess;
+using SongBrowser.UI;
 using SongLoaderPlugin;
 using SongLoaderPlugin.OverrideClasses;
 using System;
@@ -8,9 +8,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using UnityEngine;
-using Logger = SongBrowserPlugin.Logging.Logger;
+using Logger = SongBrowser.Logging.Logger;
 
-namespace SongBrowserPlugin
+namespace SongBrowser
 {
     public class SongBrowserModel
     {
@@ -38,7 +38,7 @@ namespace SongBrowserPlugin
         public static Action<List<CustomLevel>> didFinishProcessingSongs;
 
         private IBeatmapLevelPack _currentLevelPack;
-        private Dictionary<string, List<BeatmapLevelSO>>  _levelPackToSongs;
+        private Dictionary<string, List<BeatmapLevelSO>> _levelPackToSongs;
 
         private bool _isPreviewLevelPack;
 
@@ -314,7 +314,7 @@ namespace SongBrowserPlugin
                 CurrentEditingPlaylist = new Playlist
                 {
                     playlistTitle = "Song Browser Favorites",
-                    playlistAuthor = "SongBrowserPlugin",
+                    playlistAuthor = "SongBrowser",
                     fileLoc = this.Settings.currentEditingPlaylistFile,
                     image = Base64Sprites.PlaylistIconB64,
                     songs = new List<PlaylistSong>(),
@@ -330,11 +330,11 @@ namespace SongBrowserPlugin
                     continue;
                 }
 
-                CurrentEditingPlaylistLevelIds.Add(ps.level.levelID);                
+                CurrentEditingPlaylistLevelIds.Add(ps.level.levelID);
             }
 
             // Actually sort and filter
-            this.ProcessSongList();
+            //this.ProcessSongList();
 
             // Signal complete
             if (SongLoader.CustomLevels.Count > 0)
@@ -395,7 +395,6 @@ namespace SongBrowserPlugin
         {
             // Build a map of levelId to sum of all playcounts and sort.
             PlayerDataModelSO playerData = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().FirstOrDefault();
-            IEnumerable<BeatmapDifficulty> difficultyIterator = Enum.GetValues(typeof(BeatmapDifficulty)).Cast<BeatmapDifficulty>();
 
             foreach (KeyValuePair<string, List<BeatmapLevelSO>> entry in _levelPackToSongs)
             {
@@ -405,13 +404,18 @@ namespace SongBrowserPlugin
                     {
                         // Skip folders
                         int playCountSum = 0;
-                        foreach (BeatmapDifficulty difficulty in difficultyIterator)
+                        foreach (IDifficultyBeatmapSet set in level.difficultyBeatmapSets)
                         {
-                            PlayerLevelStatsData stats = playerData.currentLocalPlayer.GetPlayerLevelStatsData(level.levelID, difficulty, this.CurrentBeatmapCharacteristicSO);
-                            playCountSum += stats.playCount;
+                            foreach (IDifficultyBeatmap beatmap in set.difficultyBeatmaps)
+                            {
+                                PlayerLevelStatsData stats = playerData.currentLocalPlayer.GetPlayerLevelStatsData(level.levelID, beatmap.difficulty, set.beatmapCharacteristic);
+                                playCountSum += stats.playCount;
+                            }
                         }
                         _levelIdToPlayCount.Add(level.levelID, playCountSum);
                     }
+
+
                 }
             }
         }
@@ -442,7 +446,7 @@ namespace SongBrowserPlugin
                 }
 
                 ScoreSaberData scoreSaberData = null;
-                
+
                 // try to version match first
                 if (_levelIdToSongVersion.ContainsKey(level.levelID))
                 {
@@ -458,7 +462,7 @@ namespace SongBrowserPlugin
                     //Logger.Debug("{0} = {1}pp", level.songName, pp);
                     _levelIdToScoreSaberData.Add(level.levelID, scoreSaberData);
                 }
-            }            
+            }
         }
 
         /// <summary>
@@ -476,7 +480,7 @@ namespace SongBrowserPlugin
             {
                 songName = songInfo.songName,
                 levelId = songInfo.levelID,
-                key = _levelIdToSongVersion.ContainsKey(songInfo.levelID) ? _levelIdToSongVersion[songInfo.levelID] : songInfo.levelID,                
+                key = _levelIdToSongVersion.ContainsKey(songInfo.levelID) ? _levelIdToSongVersion[songInfo.levelID] : songInfo.levelID,
             });
 
             this.CurrentEditingPlaylistLevelIds.Add(songInfo.levelID);
@@ -560,7 +564,7 @@ namespace SongBrowserPlugin
             var levels = _sortedSongs.ToArray();
             ReflectionUtil.SetPrivateField(levelPack.beatmapLevelCollection, "_beatmapLevels", levels);
         }
-        
+
         /// <summary>
         /// Sort the song list based on the settings.
         /// </summary>
@@ -680,8 +684,8 @@ namespace SongBrowserPlugin
 
             this.OverwriteCurrentLevelPack();
             //_sortedSongs.ForEach(x => Logger.Debug(x.levelID));
-        }    
-        
+        }
+
         /// <summary>
         /// For now the editing playlist will be considered the favorites playlist.
         /// Users can edit the settings file themselves.
@@ -742,7 +746,7 @@ namespace SongBrowserPlugin
             // Get song keys
             PlaylistsCollection.MatchSongsForPlaylist(this.CurrentPlaylist, true);
 
-            Logger.Debug("Filtering songs for playlist: {0}", this.CurrentPlaylist.playlistTitle);            
+            Logger.Debug("Filtering songs for playlist: {0}", this.CurrentPlaylist.playlistTitle);
 
             Dictionary<String, BeatmapLevelSO> levelDict = new Dictionary<string, BeatmapLevelSO>();
             foreach (KeyValuePair<string, List<BeatmapLevelSO>> entry in _levelPackToSongs)
@@ -768,7 +772,7 @@ namespace SongBrowserPlugin
                     Logger.Warning("Could not find song in playlist: {0}", ps.songName);
                 }
             }
-            
+
             Logger.Debug("Playlist filtered song count: {0}", songList.Count);
             return songList;
         }
@@ -820,7 +824,7 @@ namespace SongBrowserPlugin
             Logger.Info("Sorting song list by difficulty...");
 
             IEnumerable<BeatmapDifficulty> difficultyIterator = Enum.GetValues(typeof(BeatmapDifficulty)).Cast<BeatmapDifficulty>();
-            Dictionary<string, int>  levelIdToDifficultyValue = new Dictionary<string, int>();
+            Dictionary<string, int> levelIdToDifficultyValue = new Dictionary<string, int>();
             foreach (var level in levels)
             {
                 if (!levelIdToDifficultyValue.ContainsKey(level.levelID))
@@ -833,10 +837,10 @@ namespace SongBrowserPlugin
                         .SelectMany(x => x.difficultyBeatmaps);
 
                     foreach (IDifficultyBeatmap difficultyBeatmap in difficulties)
-                    {                            
+                    {
                         difficultyValue += _difficultyWeights[difficultyBeatmap.difficulty];
                     }
-                    levelIdToDifficultyValue.Add(level.levelID, difficultyValue);                    
+                    levelIdToDifficultyValue.Add(level.levelID, difficultyValue);
                 }
             }
 
@@ -856,7 +860,7 @@ namespace SongBrowserPlugin
             _sortedSongs = levels
                 .OrderBy(x => rnd.Next())
                 .ToList();
-        }        
+        }
 
         private void SortSongName(List<BeatmapLevelSO> levels)
         {
