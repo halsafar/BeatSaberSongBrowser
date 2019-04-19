@@ -7,8 +7,8 @@
     <ProjectGuid>{6F9B6801-9F4B-4D1F-805D-271C95733814}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SongBrowserPlugin</RootNamespace>
-    <AssemblyName>SongBrowserPlugin</AssemblyName>
+    <RootNamespace>SongBrowser</RootNamespace>
+    <AssemblyName>SongBrowser</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <LangVersion>6</LangVersion>
