@@ -1,5 +1,5 @@
-﻿using SongBrowserPlugin.DataAccess;
-using SongBrowserPlugin.UI;
+﻿using SongBrowser.DataAccess;
+using SongBrowser.UI;
 using SongLoaderPlugin;
 using SongLoaderPlugin.OverrideClasses;
 using System;
@@ -8,9 +8,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using UnityEngine;
-using Logger = SongBrowserPlugin.Logging.Logger;
+using Logger = SongBrowser.Logging.Logger;
 
-namespace SongBrowserPlugin
+namespace SongBrowser
 {
     public class SongBrowserModel
     {
@@ -314,7 +314,7 @@ namespace SongBrowserPlugin
                 CurrentEditingPlaylist = new Playlist
                 {
                     playlistTitle = "Song Browser Favorites",
-                    playlistAuthor = "SongBrowserPlugin",
+                    playlistAuthor = "SongBrowser",
                     fileLoc = this.Settings.currentEditingPlaylistFile,
                     image = Base64Sprites.PlaylistIconB64,
                     songs = new List<PlaylistSong>(),

@@ -1,7 +1,7 @@
 ﻿using Mobcast.Coffee.AssetSystem;
 using UnityEngine.Networking;
 
-namespace SongBrowserPlugin.DataAccess.Network
+namespace SongBrowser.DataAccess.Network
 {
     /// <summary>
 	/// Cacheable download handler for score saber tsv file.

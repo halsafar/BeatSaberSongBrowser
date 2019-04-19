@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 
 
-namespace SongBrowserPlugin.UI
+namespace SongBrowser.UI
 {
     class Base64Sprites
     {

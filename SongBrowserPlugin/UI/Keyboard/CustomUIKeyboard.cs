@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
-using Logger = SongBrowserPlugin.Logging.Logger;
+using Logger = SongBrowser.Logging.Logger;
 
-namespace SongBrowserPlugin.UI
+namespace SongBrowser.UI
 {
     // https://github.com/andruzzzhka/BeatSaverDownloader/blob/master/BeatSaverDownloader/PluginUI/UIElements/CustomUIKeyboard.cs
     class CustomUIKeyboard : MonoBehaviour

@@ -6,17 +6,17 @@ using System.Globalization;
 using UnityEngine.UI;
 using HMUI;
 using VRUI;
-using SongBrowserPlugin.DataAccess;
+using SongBrowser.DataAccess;
 using System.IO;
 using SongLoaderPlugin;
 using System.Security.Cryptography;
 using System.Text;
 using TMPro;
-using Logger = SongBrowserPlugin.Logging.Logger;
-using SongBrowserPlugin.DataAccess.BeatSaverApi;
+using Logger = SongBrowser.Logging.Logger;
+using SongBrowser.DataAccess.BeatSaverApi;
 using System.Collections;
 
-namespace SongBrowserPlugin.UI
+namespace SongBrowser.UI
 {
     /// <summary>
     /// Hijack the flow coordinator.  Have access to all StandardLevel easily.

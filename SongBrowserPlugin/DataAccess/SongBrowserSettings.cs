@@ -1,14 +1,14 @@
-﻿using SongBrowserPlugin.UI;
+﻿using SongBrowser.UI;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using SongBrowserPlugin.Logging;
-using Logger = SongBrowserPlugin.Logging.Logger;
+using SongBrowser.Logging;
+using Logger = SongBrowser.Logging.Logger;
 
-namespace SongBrowserPlugin.DataAccess
+namespace SongBrowser.DataAccess
 {
     [Serializable]
     public enum SongSortMode
@@ -175,7 +175,7 @@ namespace SongBrowserPlugin.DataAccess
                 Playlist p = new Playlist
                 {
                     playlistTitle = "Song Browser Favorites",
-                    playlistAuthor = "SongBrowserPlugin",
+                    playlistAuthor = "SongBrowser",
                     fileLoc = "",
                     image = Base64Sprites.PlaylistIconB64,
                     songs = new List<PlaylistSong>(),
@@ -236,7 +236,7 @@ namespace SongBrowserPlugin.DataAccess
                 p = new Playlist
                 {
                     playlistTitle = "Song Browser Favorites",
-                    playlistAuthor = "SongBrowserPlugin",
+                    playlistAuthor = "SongBrowser",
                     fileLoc = "",
                     image = Base64Sprites.PlaylistIconB64,
                     songs = new List<PlaylistSong>(),

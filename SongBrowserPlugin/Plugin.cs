@@ -1,16 +1,16 @@
 ﻿using UnityEngine.SceneManagement;
 using IllusionPlugin;
 using UnityEngine;
-using SongBrowserPlugin.UI;
-using Logger = SongBrowserPlugin.Logging.Logger;
-using SongBrowserPlugin.DataAccess;
+using SongBrowser.UI;
+using Logger = SongBrowser.Logging.Logger;
+using SongBrowser.DataAccess;
 using System.Collections.Generic;
-using SongBrowserPlugin.Internals;
+using SongBrowser.Internals;
 using System;
 using SongLoaderPlugin;
 using SongLoaderPlugin.OverrideClasses;
 
-namespace SongBrowserPlugin
+namespace SongBrowser
 {
     public class Plugin : IPlugin
     {

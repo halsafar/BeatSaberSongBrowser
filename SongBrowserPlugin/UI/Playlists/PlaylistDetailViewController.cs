@@ -1,5 +1,5 @@
 ﻿using CustomUI.BeatSaber;
-using SongBrowserPlugin.DataAccess;
+using SongBrowser.DataAccess;
 using SongLoaderPlugin;
 using System;
 using System.Linq;
@@ -7,10 +7,10 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
-using Logger = SongBrowserPlugin.Logging.Logger;
-using Sprites = SongBrowserPlugin.UI.Base64Sprites;
+using Logger = SongBrowser.Logging.Logger;
+using Sprites = SongBrowser.UI.Base64Sprites;
 
-namespace SongBrowserPlugin.UI
+namespace SongBrowser.UI
 {
     class PlaylistDetailViewController : VRUIViewController
     {

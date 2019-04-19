@@ -1,11 +1,11 @@
 ﻿using SimpleJSON;
-using SongBrowserPlugin.Logging;
+using SongBrowser.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Logger = SongBrowserPlugin.Logging.Logger;
+using Logger = SongBrowser.Logging.Logger;
 
-namespace SongBrowserPlugin.DataAccess
+namespace SongBrowser.DataAccess
 {
     public class ScoreSaberDifficulty
     {

@@ -1,4 +1,4 @@
-﻿using SongBrowserPlugin.DataAccess;
+﻿using SongBrowser.DataAccess;
 using System;
 using System.Linq;
 using TMPro;
@@ -6,10 +6,10 @@ using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
 using Image = UnityEngine.UI.Image;
-using Logger = SongBrowserPlugin.Logging.Logger;
+using Logger = SongBrowser.Logging.Logger;
 
 
-namespace SongBrowserPlugin.UI
+namespace SongBrowser.UI
 {
     public static class UIBuilder
     {

@@ -1,9 +1,9 @@
 ﻿using CustomUI.BeatSaber;
 using SimpleJSON;
-using SongBrowserPlugin.DataAccess;
-using SongBrowserPlugin.DataAccess.BeatSaverApi;
-using SongBrowserPlugin.Internals;
-using SongBrowserPlugin.UI.DownloadQueue;
+using SongBrowser.DataAccess;
+using SongBrowser.DataAccess.BeatSaverApi;
+using SongBrowser.Internals;
+using SongBrowser.UI.DownloadQueue;
 using SongLoaderPlugin;
 using System;
 using System.Collections;
@@ -14,9 +14,9 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 using VRUI;
-using Logger = SongBrowserPlugin.Logging.Logger;
+using Logger = SongBrowser.Logging.Logger;
 
-namespace SongBrowserPlugin.UI
+namespace SongBrowser.UI
 {
     // https://github.com/andruzzzhka/BeatSaverDownloader/blob/master/BeatSaverDownloader/UI/FlowCoordinators/PlaylistsFlowCoordinator.cs
     // +Keyboard Input

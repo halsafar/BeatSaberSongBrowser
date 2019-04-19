@@ -8,9 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
-using Sprites = SongBrowserPlugin.UI.Base64Sprites;
+using Sprites = SongBrowser.UI.Base64Sprites;
 
-namespace SongBrowserPlugin.Internals
+namespace SongBrowser.Internals
 {
     public static class CustomHelpers
     {

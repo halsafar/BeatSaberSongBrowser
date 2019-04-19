@@ -1,6 +1,6 @@
 ﻿using HMUI;
-using SongBrowserPlugin.DataAccess;
-using SongBrowserPlugin.Internals;
+using SongBrowser.DataAccess;
+using SongBrowser.Internals;
 using SongLoaderPlugin;
 using System;
 using System.Collections.Generic;
@@ -11,7 +11,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
 
-namespace SongBrowserPlugin.UI
+namespace SongBrowser.UI
 {
     class PlaylistListViewController : VRUIViewController, TableView.IDataSource
     {

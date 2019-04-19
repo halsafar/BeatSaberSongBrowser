@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace SongBrowserPlugin.Internals
+namespace SongBrowser.Internals
 {
     class BSEvents : MonoBehaviour
     {

@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
 
-namespace SongBrowserPlugin.UI
+namespace SongBrowser.UI
 {
     // https://github.com/andruzzzhka/BeatSaverDownloader/blob/master/BeatSaverDownloader/PluginUI/ViewControllers/SearchKeyboardViewController.cs
     class SearchKeyboardViewController : VRUIViewController

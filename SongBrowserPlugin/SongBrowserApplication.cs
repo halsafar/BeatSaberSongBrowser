@@ -1,5 +1,5 @@
-﻿using SongBrowserPlugin.DataAccess;
-using SongBrowserPlugin.UI;
+﻿using SongBrowser.DataAccess;
+using SongBrowser.UI;
 using SongLoaderPlugin;
 using SongLoaderPlugin.OverrideClasses;
 using System;
@@ -8,9 +8,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-using Logger = SongBrowserPlugin.Logging.Logger;
+using Logger = SongBrowser.Logging.Logger;
 
-namespace SongBrowserPlugin
+namespace SongBrowser
 {
     public class SongBrowserApplication : MonoBehaviour
     {
@@ -22,7 +22,7 @@ namespace SongBrowserPlugin
 
         public Dictionary<String, Sprite> CachedIcons;
 
-        public static SongBrowserPlugin.UI.ProgressBar MainProgressBar;
+        public static SongBrowser.UI.ProgressBar MainProgressBar;
 
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace SongBrowserPlugin
 
             new GameObject("Beat Saber SongBrowser Plugin").AddComponent<SongBrowserApplication>();
 
-            SongBrowserApplication.MainProgressBar = SongBrowserPlugin.UI.ProgressBar.Create();
+            SongBrowserApplication.MainProgressBar = SongBrowser.UI.ProgressBar.Create();
 
             Console.WriteLine("SongBrowser Plugin Loaded()");
         }

@@ -7,7 +7,7 @@ using System.Linq;
 using UnityEngine;
 
 // From: https://github.com/andruzzzhka/BeatSaverDownloader
-namespace SongBrowserPlugin.DataAccess
+namespace SongBrowser.DataAccess
 {
     class LoadScripts
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SongBrowserPlugin.Logging
+namespace SongBrowser.Logging
 {
     public enum LogLevel
     {
