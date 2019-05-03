@@ -572,7 +572,11 @@ namespace SongBrowser.UI
 
             try
             {
-                this.UpdateLevelPackSelection();
+                bool didUpdateLevelPack = this.UpdateLevelPackSelection();
+                if (!didUpdateLevelPack)
+                {
+                    _model.ProcessSongList();
+                }
                 SelectAndScrollToLevel(_levelPackLevelsTableView, _model.LastSelectedLevelId);
             }
             catch (Exception e)
