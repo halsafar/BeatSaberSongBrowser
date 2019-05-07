@@ -572,7 +572,11 @@ namespace SongBrowser.UI
 
             try
             {
-                this.UpdateLevelPackSelection();
+                bool didUpdateLevelPack = this.UpdateLevelPackSelection();
+                if (!didUpdateLevelPack)
+                {
+                    _model.ProcessSongList();
+                }
                 SelectAndScrollToLevel(_levelPackLevelsTableView, _model.LastSelectedLevelId);
             }
             catch (Exception e)
@@ -869,14 +873,15 @@ namespace SongBrowser.UI
                         try
                         {
                             // determine the index we are deleting so we can keep the cursor near the same spot after
+                            // the header counts as an index, so if the index came from the level array we have to add 1.
                             List<IPreviewBeatmapLevel> levels = _levelPackLevelsTableView.GetPrivateField<IBeatmapLevelPack>("_pack").beatmapLevelCollection.beatmapLevels.ToList();
-                            int selectedIndex = levels.FindIndex(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID);
+                            int selectedIndex = 1 + levels.FindIndex(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID);
 
                             // we are only deleting custom levels, find the song, delete it
                             var song = new Song(SongLoader.CustomLevels.First(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID));
                             SongDownloader.Instance.DeleteSong(song);
 
-                            if (selectedIndex > -1)
+                            if (selectedIndex > 0)
                             {
                                 this._model.RemoveSongFromLevelPack(this._model.CurrentLevelPack, _levelDetailViewController.selectedDifficultyBeatmap.level.levelID);
                                 Logger.Log("Removed {0} from custom song list!", song.songName);
