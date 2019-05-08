@@ -217,7 +217,8 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy "$(TargetDir)$(TargetFileName)" "C:\Program Files\Oculus\Software\Software\hyperbolic-magnetism-beat-saber\Plugins" /Y</PostBuildEvent>
+    <PostBuildEvent>IF EXIST "C:\Program Files\Oculus\Software\Software\hyperbolic-magnetism-beat-saber\Plugins" xcopy "$(TargetDir)$(TargetFileName)" "C:\Program Files\Oculus\Software\Software\hyperbolic-magnetism-beat-saber\Plugins" /Y
+IF EXIST "C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins" xcopy "$(TargetDir)$(TargetFileName)" "C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins" /Y</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
          Other similar extension points exist, see Microsoft.Common.targets.
