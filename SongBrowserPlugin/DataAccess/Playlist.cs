@@ -27,11 +27,15 @@ namespace SongBrowser.DataAccess
 
                 if (PluginConfig.beatDropInstalled)
                 {
-                    string[] beatDropJSONPlaylists = Directory.GetFiles(Path.Combine(PluginConfig.beatDropPlaylistsLocation, "playlists"), "*.json");
-                    string[] beatDropBPLISTPlaylists = Directory.GetFiles(Path.Combine(PluginConfig.beatDropPlaylistsLocation, "playlists"), "*.bplist");
-                    playlistFiles.AddRange(beatDropJSONPlaylists);
-                    playlistFiles.AddRange(beatDropBPLISTPlaylists);
-                    Logger.Log($"Found {beatDropJSONPlaylists.Length + beatDropBPLISTPlaylists.Length} playlists in BeatDrop folder");
+                    String beatDropPath = Path.Combine(PluginConfig.beatDropPlaylistsLocation, "playlists");
+                    if (Directory.Exists(beatDropPath))
+                    {
+                        string[] beatDropJSONPlaylists = Directory.GetFiles(beatDropPath, "*.json");
+                        string[] beatDropBPLISTPlaylists = Directory.GetFiles(beatDropPath, "*.bplist");
+                        playlistFiles.AddRange(beatDropJSONPlaylists);
+                        playlistFiles.AddRange(beatDropBPLISTPlaylists);
+                        Logger.Log($"Found {beatDropJSONPlaylists.Length + beatDropBPLISTPlaylists.Length} playlists in BeatDrop folder");
+                    }
                 }
 
                 string[] localJSONPlaylists = Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, "Playlists"), "*.json");
