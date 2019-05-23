@@ -183,7 +183,8 @@ namespace SongBrowser.DataAccess
                 p.CreateNew(playlistPath);
             }
 
-            if (String.IsNullOrEmpty(retVal.currentEditingPlaylistFile))
+            // If we do not have an editing playlist or the current one is missing, reset to default.
+            if (String.IsNullOrEmpty(retVal.currentEditingPlaylistFile) || !File.Exists(retVal.currentEditingPlaylistFile))
             {
                 retVal.currentEditingPlaylistFile = playlistPath;
             }
