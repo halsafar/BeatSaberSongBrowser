@@ -237,8 +237,8 @@ namespace SongBrowser.UI
                 // Gather some transforms and templates to use.
                 RectTransform sortButtonTransform = this._levelSelectionNavigationController.transform as RectTransform;
                 RectTransform otherButtonTransform = this._levelDetailViewController.transform as RectTransform;
-                Button sortButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "SettingsButton"));
-                Button otherButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "SettingsButton"));
+                Button sortButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "HowToPlayButton"));
+                Button otherButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "HowToPlayButton"));
 
                 RectTransform playContainerRect = _standardLevelDetailView.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayContainer");
                 RectTransform playButtonsRect = playContainerRect.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayButtons");
@@ -1364,7 +1364,7 @@ namespace SongBrowser.UI
                 return null;
             }
 
-            IBeatmapLevelPack levelPack = levelPackCollection.beatmapLevelPacks.ToList().First(x => x.packID == levelPackId);
+            IBeatmapLevelPack levelPack = levelPackCollection.beatmapLevelPacks.ToList().FirstOrDefault(x => x.packID == levelPackId);
             return levelPack;
         }
 
