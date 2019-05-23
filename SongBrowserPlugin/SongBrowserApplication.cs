@@ -213,6 +213,7 @@ namespace SongBrowser
         private void HandleModeSelection(MainMenuViewController.MenuButton mode)
         {
             Logger.Trace("HandleModeSelection()");
+            _songBrowserUI.UpdateLevelPackModel(true);
             this._songBrowserUI.CreateUI(mode);
             StartCoroutine(this.UpdateBrowserUI());
         }

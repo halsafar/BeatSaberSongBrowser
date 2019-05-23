@@ -237,8 +237,8 @@ namespace SongBrowser.UI
                 // Gather some transforms and templates to use.
                 RectTransform sortButtonTransform = this._levelSelectionNavigationController.transform as RectTransform;
                 RectTransform otherButtonTransform = this._levelDetailViewController.transform as RectTransform;
-                Button sortButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "SettingsButton"));
-                Button otherButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "SettingsButton"));
+                Button sortButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "HowToPlayButton"));
+                Button otherButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "HowToPlayButton"));
 
                 RectTransform playContainerRect = _standardLevelDetailView.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayContainer");
                 RectTransform playButtonsRect = playContainerRect.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayButtons");
@@ -252,12 +252,12 @@ namespace SongBrowser.UI
                 Sprite borderSprite = SongBrowserApplication.Instance.CachedIcons["RoundRectBigStroke"];            
 
                 // Create Sorting Songs By-Buttons
-                Logger.Debug("Creating sort by buttons...");
+                Logger.Debug("Start creation of UI...");
                 float buttonSpacing = 0.5f;                                
                 float fontSize = 2.0f;
                 float buttonWidth = 12.25f;
                 float buttonHeight = 5.0f;
-                float startButtonX = 24.50f;
+                float startButtonX = 22.50f;
                 float curButtonX = 0.0f;
                 float buttonY = -5.25f;
                 Vector2 iconButtonSize = new Vector2(buttonHeight, buttonHeight);
@@ -278,9 +278,11 @@ namespace SongBrowser.UI
                     OnClearButtonClickEvent();
                 });
 
-                startButtonX += (buttonHeight * 2.0f);
+                startButtonX += (buttonHeight);
 
                 // define sort buttons
+                Logger.Debug("Create sort buttons...");
+
                 string[] sortButtonNames = new string[]
                 {
                     "Song", "Author", "Newest", "Plays", "PP", "Difficult", "Random"
@@ -311,12 +313,12 @@ namespace SongBrowser.UI
                 // Create filter buttons
                 Logger.Debug("Creating filter buttons...");
 
-                float filterButtonX = curButtonX + (buttonWidth / 2.0f);
+                float filterButtonX = curButtonX + (buttonWidth);
 
                 List<Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>> filterButtonSetup = new List<Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>>()
                 {
                     Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Favorites, OnFavoriteFilterButtonClickEvent, Base64Sprites.StarFullIcon),
-                    Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Playlist, OnPlaylistButtonClickEvent, Base64Sprites.PlaylistIcon),
+                    //Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Playlist, OnPlaylistButtonClickEvent, Base64Sprites.PlaylistIcon),
                     Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Search, OnSearchButtonClickEvent, Base64Sprites.SearchIcon),
                 };
 
@@ -1362,7 +1364,7 @@ namespace SongBrowser.UI
                 return null;
             }
 
-            IBeatmapLevelPack levelPack = levelPackCollection.beatmapLevelPacks.ToList().First(x => x.packID == levelPackId);
+            IBeatmapLevelPack levelPack = levelPackCollection.beatmapLevelPacks.ToList().FirstOrDefault(x => x.packID == levelPackId);
             return levelPack;
         }
 
@@ -1532,9 +1534,9 @@ namespace SongBrowser.UI
         /// <summary>
         /// Update the level pack model.
         /// </summary>
-        public void UpdateLevelPackModel()
+        public void UpdateLevelPackModel(bool refreshOnlyUnknown=false)
         {
-            _model.UpdateLevelPackOriginalLists();
+            _model.UpdateLevelPackOriginalLists(refreshOnlyUnknown);
         }
 
         /// <summary>

@@ -183,13 +183,25 @@ namespace SongBrowser.DataAccess
                 p.CreateNew(playlistPath);
             }
 
-            if (String.IsNullOrEmpty(retVal.currentEditingPlaylistFile))
+            // If we do not have an editing playlist or the current one is missing, reset to default.
+            if (String.IsNullOrEmpty(retVal.currentEditingPlaylistFile) || !File.Exists(retVal.currentEditingPlaylistFile))
             {
                 retVal.currentEditingPlaylistFile = playlistPath;
             }
 
+            ApplyFixes(retVal);
             
             return retVal;
+        }
+
+        private static void ApplyFixes(SongBrowserSettings settings)
+        {
+            if (String.Equals(settings.currentLevelPackId, "CustomMaps"))
+            {
+                settings.currentLevelPackId = "ModdedCustomMaps";
+            }
+
+            settings.Save();
         }
 
         /// <summary>

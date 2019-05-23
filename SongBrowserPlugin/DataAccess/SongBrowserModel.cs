@@ -350,7 +350,7 @@ namespace SongBrowser
         /// <summary>
         /// Get a copy of the unfiltered, unsorted list of songs from level packs.
         /// </summary>
-        public void UpdateLevelPackOriginalLists()
+        public void UpdateLevelPackOriginalLists(bool refreshOnlyUnknown)
         {
             BeatmapLevelPackSO[] levelPacks = Resources.FindObjectsOfTypeAll<BeatmapLevelPackSO>();
             foreach (BeatmapLevelPackSO levelPack in levelPacks)
@@ -362,6 +362,12 @@ namespace SongBrowser
                 //      - this helps prevent DLC from breaking everything
                 if (beatmapLevelPack == null)
                 {
+                    continue;
+                }
+
+                if (refreshOnlyUnknown && _levelPackToSongs.ContainsKey(levelPack.packName))
+                {
+                    Logger.Debug("Already know about {0}, not refreshing...", levelPack.packName);
                     continue;
                 }
 
@@ -515,7 +521,7 @@ namespace SongBrowser
             BeatmapLevelPackSO[] levelPacks = Resources.FindObjectsOfTypeAll<BeatmapLevelPackSO>();
             foreach (BeatmapLevelPackSO levelPack in levelPacks)
             {
-                if (!_levelPackToSongs.ContainsKey(levelPack.packName))
+                if (levelPack.packName == null || !_levelPackToSongs.ContainsKey(levelPack.packName))
                 {
                     Logger.Debug("We know nothing about pack: {0}", levelPack.packName);
                     continue;
