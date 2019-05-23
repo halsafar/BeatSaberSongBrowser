@@ -340,7 +340,14 @@ namespace SongBrowser.DataAccess
             Logger.Log($"Saving playlist \"{playlistTitle}\"...");
             try
             {
-                image = Sprites.SpriteToBase64(icon);
+                if (icon != null)
+                {
+                    image = Sprites.SpriteToBase64(icon);
+                }
+                else
+                {
+                    image = null;
+                }
                 playlistSongCount = songs.Count;
             }
             catch (Exception e)
