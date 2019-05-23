@@ -252,7 +252,7 @@ namespace SongBrowser.UI
                 Sprite borderSprite = SongBrowserApplication.Instance.CachedIcons["RoundRectBigStroke"];            
 
                 // Create Sorting Songs By-Buttons
-                Logger.Debug("Creating sort by buttons...");
+                Logger.Debug("Start creation of UI...");
                 float buttonSpacing = 0.5f;                                
                 float fontSize = 2.0f;
                 float buttonWidth = 12.25f;
@@ -281,6 +281,8 @@ namespace SongBrowser.UI
                 startButtonX += (buttonHeight * 2.0f);
 
                 // define sort buttons
+                Logger.Debug("Create sort buttons...");
+
                 string[] sortButtonNames = new string[]
                 {
                     "Song", "Author", "Newest", "Plays", "PP", "Difficult", "Random"
