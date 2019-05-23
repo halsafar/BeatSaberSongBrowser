@@ -27,7 +27,7 @@ namespace SongBrowser.UI.DownloadQueue
 
             _authorText = GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "Author");
             _songNameText = GetComponentsInChildren<TextMeshProUGUI>().First(x => x.name == "SongName");
-            _coverImage = GetComponentsInChildren<UnityEngine.UI.Image>().First(x => x.name == "CoverImage");
+            _coverRawImage = GetComponentsInChildren<UnityEngine.UI.RawImage>().First(x => x.name == "CoverImage");
             _bgImage = GetComponentsInChildren<UnityEngine.UI.Image>().First(x => x.name == "BG");
             _highlightImage = GetComponentsInChildren<UnityEngine.UI.Image>().First(x => x.name == "Highlight");
             _beatmapCharacteristicAlphas = new float[0];
@@ -41,7 +41,7 @@ namespace SongBrowser.UI.DownloadQueue
 
             _songNameText.text = string.Format("{0}\n<size=80%>{1}</size>", song.songName, song.songSubName);
             _authorText.text = song.authorName;
-            StartCoroutine(LoadScripts.LoadSpriteCoroutine(song.coverUrl, (cover) => { _coverImage.sprite = cover; }));
+            StartCoroutine(LoadScripts.LoadSpriteCoroutine(song.coverUrl, (cover) => { _coverRawImage.texture = cover.texture; }));
 
             _bgImage.enabled = true;
             _bgImage.sprite = Sprite.Create((new Texture2D(1, 1)), new Rect(0, 0, 1, 1), Vector2.one / 2f);
