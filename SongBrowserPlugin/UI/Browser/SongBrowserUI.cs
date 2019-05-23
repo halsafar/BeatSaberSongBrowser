@@ -1534,9 +1534,9 @@ namespace SongBrowser.UI
         /// <summary>
         /// Update the level pack model.
         /// </summary>
-        public void UpdateLevelPackModel()
+        public void UpdateLevelPackModel(bool refreshOnlyUnknown=false)
         {
-            _model.UpdateLevelPackOriginalLists();
+            _model.UpdateLevelPackOriginalLists(refreshOnlyUnknown);
         }
 
         /// <summary>
