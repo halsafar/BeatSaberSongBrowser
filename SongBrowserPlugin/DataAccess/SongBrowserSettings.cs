@@ -188,8 +188,19 @@ namespace SongBrowser.DataAccess
                 retVal.currentEditingPlaylistFile = playlistPath;
             }
 
+            ApplyFixes(retVal);
             
             return retVal;
+        }
+
+        private static void ApplyFixes(SongBrowserSettings settings)
+        {
+            if (String.Equals(settings.currentLevelPackId, "CustomMaps"))
+            {
+                settings.currentLevelPackId = "ModdedCustomMaps";
+            }
+
+            settings.Save();
         }
 
         /// <summary>
