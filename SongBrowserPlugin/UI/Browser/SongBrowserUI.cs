@@ -257,7 +257,7 @@ namespace SongBrowser.UI
                 float fontSize = 2.0f;
                 float buttonWidth = 12.25f;
                 float buttonHeight = 5.0f;
-                float startButtonX = 24.50f;
+                float startButtonX = 22.50f;
                 float curButtonX = 0.0f;
                 float buttonY = -5.25f;
                 Vector2 iconButtonSize = new Vector2(buttonHeight, buttonHeight);
@@ -278,7 +278,7 @@ namespace SongBrowser.UI
                     OnClearButtonClickEvent();
                 });
 
-                startButtonX += (buttonHeight * 2.0f);
+                startButtonX += (buttonHeight);
 
                 // define sort buttons
                 Logger.Debug("Create sort buttons...");
@@ -313,7 +313,7 @@ namespace SongBrowser.UI
                 // Create filter buttons
                 Logger.Debug("Creating filter buttons...");
 
-                float filterButtonX = curButtonX + (buttonWidth / 2.0f);
+                float filterButtonX = curButtonX + (buttonWidth);
 
                 List<Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>> filterButtonSetup = new List<Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>>()
                 {
