@@ -10,6 +10,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VRUI;
+using Logger = SongBrowser.Logging.Logger;
 
 namespace SongBrowser.UI
 {
@@ -69,13 +70,15 @@ namespace SongBrowser.UI
                 container.sizeDelta = new Vector2(0f, 0f);
                 container.anchoredPosition = new Vector2(0f, 0f);
 
-                _songsTableView = new GameObject("CustomTableView", typeof(RectTransform)).AddComponent<TableView>();
+                var gameObject = new GameObject("CustomTableView", typeof(RectTransform));
+                gameObject.SetActive(false);
+                _songsTableView = gameObject.AddComponent<TableView>();
                 _songsTableView.gameObject.AddComponent<RectMask2D>();
                 _songsTableView.transform.SetParent(container, false);
-
                 _songsTableView.SetPrivateField("_isInitialized", false);
                 _songsTableView.SetPrivateField("_preallocatedCells", new TableView.CellsGroup[0]);
                 _songsTableView.Init();
+                gameObject.SetActive(true);
 
                 (_songsTableView.transform as RectTransform).anchorMin = new Vector2(0f, 0f);
                 (_songsTableView.transform as RectTransform).anchorMax = new Vector2(1f, 1f);
@@ -144,8 +147,7 @@ namespace SongBrowser.UI
             songNameText.text = playlistList[row].playlistTitle;
             songNameText.overflowMode = TextOverflowModes.Overflow;
             _tableCell.GetPrivateField<TextMeshProUGUI>("_authorText").text = playlistList[row].playlistAuthor;
-            _tableCell.GetPrivateField<UnityEngine.UI.Image>("_coverImage").sprite = playlistList[row].icon;
-
+            _tableCell.GetPrivateField<RawImage>("_coverRawImage").texture = playlistList[row].icon.texture;
             _tableCell.SetPrivateField("_beatmapCharacteristicAlphas", new float[0]);
             _tableCell.SetPrivateField("_beatmapCharacteristicImages", new UnityEngine.UI.Image[0]);
             _tableCell.SetPrivateField("_bought", true);

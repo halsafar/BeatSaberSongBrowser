@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using TMPro;
 using UnityEngine;
+using Logger = SongBrowser.Logging.Logger;
 
 // From: https://github.com/andruzzzhka/BeatSaverDownloader
 namespace SongBrowser.UI.DownloadQueue

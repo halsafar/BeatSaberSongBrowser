@@ -33,7 +33,7 @@ namespace SongBrowser.UI
         private StandardLevelDetailView _levelDetails;
 
         public bool addDownloadButton = true;
-        private Image coverImage;
+        private RawImage coverImage;
 
         protected override void DidActivate(bool firstActivation, ActivationType type)
         {
@@ -96,7 +96,7 @@ namespace SongBrowser.UI
                     Destroy(_levelDetails.practiceButton.gameObject);
                 }
 
-                coverImage = _levelDetails.GetPrivateField<Image>("_coverImage");
+                coverImage = _levelDetails.GetPrivateField<RawImage>("_coverImage");
             }
         }
 
@@ -127,7 +127,7 @@ namespace SongBrowser.UI
 
             authorText.text = newPlaylist.playlistAuthor;
 
-            coverImage.sprite = _currentPlaylist.icon;
+            coverImage.texture = _currentPlaylist.icon.texture;
 
             if (newPlaylist.songs.Count > 0)
             {
