@@ -147,7 +147,10 @@ namespace SongBrowser.UI
             songNameText.text = playlistList[row].playlistTitle;
             songNameText.overflowMode = TextOverflowModes.Overflow;
             _tableCell.GetPrivateField<TextMeshProUGUI>("_authorText").text = playlistList[row].playlistAuthor;
-            _tableCell.GetPrivateField<RawImage>("_coverRawImage").texture = playlistList[row].icon.texture;
+            if (playlistList[row].icon != null)
+            {
+                _tableCell.GetPrivateField<RawImage>("_coverRawImage").texture = playlistList[row].icon.texture;
+            }
             _tableCell.SetPrivateField("_beatmapCharacteristicAlphas", new float[0]);
             _tableCell.SetPrivateField("_beatmapCharacteristicImages", new UnityEngine.UI.Image[0]);
             _tableCell.SetPrivateField("_bought", true);

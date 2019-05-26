@@ -127,7 +127,14 @@ namespace SongBrowser.UI
 
             authorText.text = newPlaylist.playlistAuthor;
 
-            coverImage.texture = _currentPlaylist.icon.texture;
+            if (_currentPlaylist.icon != null)
+            {
+                coverImage.texture = _currentPlaylist.icon.texture;
+            }
+            else
+            {
+                coverImage.texture = null;
+            }
 
             if (newPlaylist.songs.Count > 0)
             {
