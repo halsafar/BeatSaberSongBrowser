@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using TMPro;
 using UnityEngine;
+using Logger = SongBrowser.Logging.Logger;
 
 // From: https://github.com/andruzzzhka/BeatSaverDownloader
 namespace SongBrowser.UI.DownloadQueue
@@ -41,7 +42,7 @@ namespace SongBrowser.UI.DownloadQueue
 
             _songNameText.text = string.Format("{0}\n<size=80%>{1}</size>", song.songName, song.songSubName);
             _authorText.text = song.authorName;
-            StartCoroutine(LoadScripts.LoadSpriteCoroutine(song.coverUrl, (cover) => { _coverRawImage.texture = cover.texture; }));
+            StartCoroutine(LoadScripts.LoadSpriteCoroutine(song.coverUrl, (cover) => { if (cover != null) _coverRawImage.texture = cover.texture ; }));
 
             _bgImage.enabled = true;
             _bgImage.sprite = Sprite.Create((new Texture2D(1, 1)), new Rect(0, 0, 1, 1), Vector2.one / 2f);

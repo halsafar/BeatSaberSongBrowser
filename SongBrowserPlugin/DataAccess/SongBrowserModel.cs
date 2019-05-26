@@ -775,7 +775,7 @@ namespace SongBrowser
                 }
                 else
                 {
-                    Logger.Warning("Could not find song in playlist: {0}", ps.songName);
+                    Logger.Debug("Could not find song in playlist: {0}", ps.songName);
                 }
             }
 

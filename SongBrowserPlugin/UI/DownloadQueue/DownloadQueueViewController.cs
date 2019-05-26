@@ -64,29 +64,28 @@ namespace SongBrowser.UI.DownloadQueue
                     _queuedSongsTableView.PageScrollDown();
                 });
 
-                _queuedSongsTableView = new GameObject().AddComponent<TableView>();
+                var gameObject = new GameObject();
+                gameObject.SetActive(false);
+                _queuedSongsTableView = gameObject.AddComponent<TableView>();
                 _queuedSongsTableView.transform.SetParent(rectTransform, false);
-
                 _queuedSongsTableView.SetPrivateField("_isInitialized", false);
                 _queuedSongsTableView.SetPrivateField("_preallocatedCells", new TableView.CellsGroup[0]);
                 _queuedSongsTableView.Init();
+                gameObject.SetActive(true);
 
                 RectMask2D viewportMask = Instantiate(Resources.FindObjectsOfTypeAll<RectMask2D>().First(), _queuedSongsTableView.transform, false);
                 viewportMask.transform.DetachChildren();
                 _queuedSongsTableView.GetComponentsInChildren<RectTransform>().First(x => x.name == "Content").transform.SetParent(viewportMask.rectTransform, false);
-
                 (_queuedSongsTableView.transform as RectTransform).anchorMin = new Vector2(0.3f, 0.5f);
                 (_queuedSongsTableView.transform as RectTransform).anchorMax = new Vector2(0.7f, 0.5f);
                 (_queuedSongsTableView.transform as RectTransform).sizeDelta = new Vector2(0f, 60f);
                 (_queuedSongsTableView.transform as RectTransform).anchoredPosition = new Vector3(0f, -3f);
-
                 ReflectionUtil.SetPrivateField(_queuedSongsTableView, "_pageUpButton", _pageUpButton);
                 ReflectionUtil.SetPrivateField(_queuedSongsTableView, "_pageDownButton", _pageDownButton);
-
                 _queuedSongsTableView.selectionType = TableViewSelectionType.None;
                 _queuedSongsTableView.dataSource = this;
 
-                _abortButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(36f, -30f), new Vector2(20f, 10f), AbortDownloads, "Abort All");
+                _abortButton = BeatSaberUI.CreateUIButton(rectTransform, "PlayButton", new Vector2(36f, -30f), new Vector2(20f, 10f), AbortDownloads, "Abort All");
                 _abortButton.ToggleWordWrapping(false);
             }
         }
