@@ -8,13 +8,13 @@ using HMUI;
 using VRUI;
 using SongBrowser.DataAccess;
 using System.IO;
-using SongLoaderPlugin;
 using System.Security.Cryptography;
 using System.Text;
 using TMPro;
 using Logger = SongBrowser.Logging.Logger;
 using SongBrowser.DataAccess.BeatSaverApi;
 using System.Collections;
+using SongCore.Utilities;
 
 namespace SongBrowser.UI
 {
@@ -830,8 +830,8 @@ namespace SongBrowser.UI
             Logger.Trace("OnDidSelectDifficultyEvent({0})", beatmap);
 
             _deleteButton.interactable = (_levelDetailViewController.selectedDifficultyBeatmap.level.levelID.Length >= 32);
-
             this.RefreshScoreSaberData(_levelDetailViewController.selectedDifficultyBeatmap.level);
+            this.RefreshNoteJumpSpeed(beatmap);
         }
 
         /// <summary>
@@ -880,7 +880,7 @@ namespace SongBrowser.UI
                             int selectedIndex = 1 + levels.FindIndex(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID);
 
                             // we are only deleting custom levels, find the song, delete it
-                            var song = new Song(SongLoader.CustomLevels.First(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID));
+                            var song = new Song(SongCore.Loader.CustomLevels.First(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID));
                             SongDownloader.Instance.DeleteSong(song);
 
                             if (selectedIndex > 0)
@@ -1093,43 +1093,8 @@ namespace SongBrowser.UI
             }
 
             BeatmapDifficulty difficulty = this._levelDifficultyViewController.selectedDifficulty;
-            string njsText;
             string difficultyString = difficulty.ToString();
             Logger.Debug(difficultyString);
-
-            //Grab NJS for difficulty
-            //Default to 10 if a standard level
-            float njs = 0;
-            if (!_model.LevelIdToCustomSongInfos.ContainsKey(level.levelID))
-            {
-                njsText = "OST";
-            }
-            else
-            {
-                //Grab the matching difficulty level
-                SongLoaderPlugin.OverrideClasses.CustomLevel customLevel = _model.LevelIdToCustomSongInfos[level.levelID];
-                CustomSongInfo.DifficultyLevel difficultyLevel = null;
-                foreach (var diffLevel in customLevel.customSongInfo.difficultyLevels)
-                {
-                    if (diffLevel.difficulty == difficultyString)
-                    {
-                        difficultyLevel = diffLevel;                            
-                        break;
-                    }
-                }
-
-                // set njs text
-                if (difficultyLevel == null || String.IsNullOrEmpty(difficultyLevel.json))
-                {
-                    njsText = "NA";
-                }
-                else
-                {
-                    njs = GetNoteJump(difficultyLevel.json);
-                    njsText = njs.ToString();
-                }
-            }
-            UIBuilder.SetStatButtonText(_njsStatButton, njsText);
 
             // check if we have score saber data
             if (this._model.LevelIdToScoreSaberData != null)
@@ -1167,9 +1132,16 @@ namespace SongBrowser.UI
                 Logger.Debug("No ScoreSaberData available...  Cannot display pp/star stats...");
             }
 
-
-
             Logger.Debug("Done refreshing score saber stats.");
+        }
+
+        /// <summary>
+        /// Helper to refresh the NJS widget.
+        /// </summary>
+        /// <param name="beatmap"></param>
+        private void RefreshNoteJumpSpeed(BeatmapDifficulty beatmap)
+        {
+            UIBuilder.SetStatButtonText(_njsStatButton, String.Format("{0}", beatmap.NoteJumpMovementSpeed()));
         }
 
         /// <summary>

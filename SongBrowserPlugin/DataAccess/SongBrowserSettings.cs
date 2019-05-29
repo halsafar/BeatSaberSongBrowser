@@ -211,7 +211,7 @@ namespace SongBrowser.DataAccess
         /// </summary>
         /// <param name="levelIdToCustomLevel"></param>
         /// <param name="levelIdToSongVersion"></param>
-        public void ConvertFavoritesToPlaylist(Dictionary<String, SongLoaderPlugin.OverrideClasses.CustomLevel> levelIdToCustomLevel,
+        public void ConvertFavoritesToPlaylist(Dictionary<String, CustomPreviewBeatmapLevel> levelIdToCustomLevel,
                                                Dictionary<string, string> levelIdToSongVersion)
         {
             // Check if we have favorites to convert to the playlist

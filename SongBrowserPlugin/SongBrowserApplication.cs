@@ -1,7 +1,5 @@
 ﻿using SongBrowser.DataAccess;
 using SongBrowser.UI;
-using SongLoaderPlugin;
-using SongLoaderPlugin.OverrideClasses;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -68,13 +66,13 @@ namespace SongBrowser
 
             StartCoroutine(ScrappedData.Instance.DownloadScrappedData((List<ScrappedSong> songs) => { }));
 
-            if (SongLoaderPlugin.SongLoader.AreSongsLoaded)
+            if (SongCore.Loader.AreSongsLoaded)
             {
-                OnSongLoaderLoadedSongs(null, SongLoader.CustomLevels);
+                OnSongLoaderLoadedSongs(null, SongCore.Loader.CustomLevels);
             }
             else
             {
-                SongLoader.SongsLoadedEvent += OnSongLoaderLoadedSongs;
+                SongCore.Loader.SongsLoadedEvent += OnSongLoaderLoadedSongs;
                 _songBrowserUI.UpdateLevelPackModel();
             }
         }
@@ -84,7 +82,7 @@ namespace SongBrowser
         /// </summary>
         /// <param name="loader"></param>
         /// <param name="levels"></param>
-        private void OnSongLoaderLoadedSongs(SongLoader loader, List<CustomLevel> levels)
+        private void OnSongLoaderLoadedSongs(SongCore.Loader loader, List<CustomPreviewBeatmapLevel> levels)
         {
             Logger.Trace("OnSongLoaderLoadedSongs-SongBrowserApplication()");
             try
