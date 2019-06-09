@@ -782,7 +782,7 @@ namespace SongBrowser.UI
         /// Various ways of detecting if a level is not properly selected.  Seems most hit the first one.
         /// </summary>
         private void OnDidSelectLevelEvent(LevelPackLevelsViewController view, IPreviewBeatmapLevel level)
-        {            
+        {
             try
             {
                 Logger.Trace("OnDidSelectLevelEvent()");
