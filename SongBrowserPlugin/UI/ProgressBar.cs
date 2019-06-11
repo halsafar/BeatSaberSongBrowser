@@ -96,7 +96,7 @@ namespace SongBrowser.UI
             }
         }
 
-        private void SongBrowserFinishedProcessingSongs(List<CustomPreviewBeatmapLevel> arg2)
+        private void SongBrowserFinishedProcessingSongs(Dictionary<string, CustomPreviewBeatmapLevel> arg2)
         {
             _showingMessage = false;
             _headerText.text = arg2.Count + " songs processed";

@@ -82,7 +82,7 @@ namespace SongBrowser
         /// </summary>
         /// <param name="loader"></param>
         /// <param name="levels"></param>
-        private void OnSongLoaderLoadedSongs(SongCore.Loader loader, List<CustomPreviewBeatmapLevel> levels)
+        private void OnSongLoaderLoadedSongs(SongCore.Loader loader, Dictionary<string, CustomPreviewBeatmapLevel> levels)
         {
             Logger.Trace("OnSongLoaderLoadedSongs-SongBrowserApplication()");
             try

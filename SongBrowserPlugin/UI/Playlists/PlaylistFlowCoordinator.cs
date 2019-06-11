@@ -150,7 +150,7 @@ namespace SongBrowser.UI
                     };
                 }
 
-                if (beatSaverSong != null && !SongCore.Loader.CustomLevels.Any(x => x.levelID.Substring(0, 32) == beatSaverSong.hash.ToUpper()))
+                if (beatSaverSong != null && !SongCore.Loader.CustomLevels.Any(x => x.Value.levelID.Substring(0, 32) == beatSaverSong.hash.ToUpper()))
                 {
                     _downloadQueueViewController.EnqueueSong(beatSaverSong, true);
                 }

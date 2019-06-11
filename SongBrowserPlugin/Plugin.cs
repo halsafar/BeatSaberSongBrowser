@@ -59,7 +59,7 @@ namespace SongBrowser
             }
         }
 
-        public void SongCore_SongsLoadedEvent(SongCore.Loader sender, List<CustomPreviewBeatmapLevel> levels)
+        public void SongCore_SongsLoadedEvent(SongCore.Loader sender, Dictionary<string, CustomPreviewBeatmapLevel> levels)
         {
             try
             {

@@ -13,7 +13,7 @@ namespace SongBrowser
 {
     public class SongBrowserModel
     {
-        private const String CUSTOM_SONGS_DIR = "CustomSongs";
+        private readonly String CUSTOM_SONGS_DIR = Path.Combine("Beat Saber_Data", "CustomLevels");
 
         private readonly DateTime EPOCH = new DateTime(1970, 1, 1);
 
@@ -33,7 +33,7 @@ namespace SongBrowser
 
         public BeatmapCharacteristicSO CurrentBeatmapCharacteristicSO;
 
-        public static Action<List<CustomPreviewBeatmapLevel>> didFinishProcessingSongs;
+        public static Action<Dictionary<string, CustomPreviewBeatmapLevel>> didFinishProcessingSongs;
 
         private IBeatmapLevelPack _currentLevelPack;
         private Dictionary<string, List<BeatmapLevelSO>> _levelPackToSongs;
@@ -244,33 +244,33 @@ namespace SongBrowser
             // Get LastWriteTimes   
             Stopwatch lastWriteTimer = new Stopwatch();
             lastWriteTimer.Start();
-            foreach (var level in SongCore.Loader.CustomLevels)
+            foreach (KeyValuePair<string, CustomPreviewBeatmapLevel> level in SongCore.Loader.CustomLevels)
             {
                 // If we already know this levelID, don't both updating it.
                 // SongLoader should filter duplicates but in case of failure we don't want to crash
-                if (!_cachedLastWriteTimes.ContainsKey(level.levelID) || customSongDirChanged)
+                if (!_cachedLastWriteTimes.ContainsKey(level.Value.levelID) || customSongDirChanged)
                 {
                     // Always use the newest date.
-                    var lastWriteTime = File.GetLastWriteTimeUtc(level.customLevelPath);
-                    var lastCreateTime = File.GetCreationTimeUtc(level.customLevelPath);
+                    var lastWriteTime = File.GetLastWriteTimeUtc(level.Value.customLevelPath);
+                    var lastCreateTime = File.GetCreationTimeUtc(level.Value.customLevelPath);
                     var lastTime = lastWriteTime > lastCreateTime ? lastWriteTime : lastCreateTime;
-                    _cachedLastWriteTimes[level.levelID] = (lastTime - EPOCH).TotalMilliseconds;
+                    _cachedLastWriteTimes[level.Value.levelID] = (lastTime - EPOCH).TotalMilliseconds;
                 }
 
-                if (!_levelIdToCustomLevel.ContainsKey(level.levelID))
+                if (!_levelIdToCustomLevel.ContainsKey(level.Value.levelID))
                 {
-                    _levelIdToCustomLevel.Add(level.levelID, level);
+                    _levelIdToCustomLevel.Add(level.Value.levelID, level.Value);
                 }
 
-                if (!_levelIdToSongVersion.ContainsKey(level.levelID))
+                if (!_levelIdToSongVersion.ContainsKey(level.Value.levelID))
                 {
-                    DirectoryInfo info = new DirectoryInfo(level.customLevelPath);
+                    DirectoryInfo info = new DirectoryInfo(level.Value.customLevelPath);
                     string currentDirectoryName = info.Name;
 
-                    String version = level.customLevelPath.Replace(revSlashCustomSongPath, "").Replace(currentDirectoryName, "").Replace("/", "");
+                    String version = level.Value.customLevelPath.Replace(revSlashCustomSongPath, "").Replace(currentDirectoryName, "").Replace("/", "");
                     if (!String.IsNullOrEmpty(version))
                     {
-                        _levelIdToSongVersion.Add(level.levelID, version);
+                        _levelIdToSongVersion.Add(level.Value.levelID, version);
                     }
                 }
             }
@@ -439,7 +439,7 @@ namespace SongBrowser
             foreach (var level in SongCore.Loader.CustomLevels)
             {
                 // Skip
-                if (_levelIdToScoreSaberData.ContainsKey(level.levelID))
+                if (_levelIdToScoreSaberData.ContainsKey(level.Value.levelID))
                 {
                     continue;
                 }
@@ -447,9 +447,9 @@ namespace SongBrowser
                 ScoreSaberData scoreSaberData = null;
 
                 // try to version match first
-                if (_levelIdToSongVersion.ContainsKey(level.levelID))
+                if (_levelIdToSongVersion.ContainsKey(level.Value.levelID))
                 {
-                    String version = _levelIdToSongVersion[level.levelID];
+                    String version = _levelIdToSongVersion[level.Value.levelID];
                     if (scoreSaberDataFile.SongVersionToScoreSaberData.ContainsKey(version))
                     {
                         scoreSaberData = scoreSaberDataFile.SongVersionToScoreSaberData[version];
@@ -459,7 +459,7 @@ namespace SongBrowser
                 if (scoreSaberData != null)
                 {
                     //Logger.Debug("{0} = {1}pp", level.songName, pp);
-                    _levelIdToScoreSaberData.Add(level.levelID, scoreSaberData);
+                    _levelIdToScoreSaberData.Add(level.Value.levelID, scoreSaberData);
                 }
             }
         }
@@ -479,7 +479,8 @@ namespace SongBrowser
             {
                 songName = songInfo.songName,
                 levelId = songInfo.levelID,
-                key = _levelIdToSongVersion.ContainsKey(songInfo.levelID) ? _levelIdToSongVersion[songInfo.levelID] : songInfo.levelID,
+                hash = songInfo.levelID,
+                key = _levelIdToSongVersion.ContainsKey(songInfo.levelID) ? _levelIdToSongVersion[songInfo.levelID] : "",
             });
 
             this.CurrentEditingPlaylistLevelIds.Add(songInfo.levelID);

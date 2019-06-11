@@ -56,9 +56,9 @@ namespace SongBrowser
         }
         //bananbread song id
 
-        private void SongLoader_SongsLoadedEvent(SongCore.Loader sender, List<CustomPreviewBeatmapLevel> levels)
+        private void SongLoader_SongsLoadedEvent(SongCore.Loader sender, Dictionary<string, CustomPreviewBeatmapLevel> levels)
         {
-            _alreadyDownloadedSongs = levels.Select(x => new Song(x)).ToList();
+            _alreadyDownloadedSongs = levels.Select(x => new Song(x.Value)).ToList();
         }
 
         public IEnumerator DownloadSongCoroutine(Song songInfo)
@@ -181,7 +181,7 @@ namespace SongBrowser
                     string dirName = new DirectoryInfo(customSongsPath).Name;
 
                     SongCore.Loader.SongsLoadedEvent -= Plugin.Instace.SongCore_SongsLoadedEvent;
-                    Action<SongCore.Loader, List<CustomPreviewBeatmapLevel>> songsLoadedAction = null;
+                    Action<SongCore.Loader, Dictionary<string, CustomPreviewBeatmapLevel>> songsLoadedAction = null;
                     songsLoadedAction = (arg1, arg2) =>
                     {
                         SongCore.Loader.SongsLoadedEvent -= songsLoadedAction;
@@ -330,8 +330,7 @@ namespace SongBrowser
             {
                 return _alreadyDownloadedSongs.Any(x => x.Compare(song));
             }
-            else
-                return false;
+
             return false;
         }
 

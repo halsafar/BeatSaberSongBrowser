@@ -154,22 +154,22 @@ namespace SongBrowser.DataAccess
                         {
                             if (!string.IsNullOrEmpty(x.levelId)) //check that we have levelId and if we do, try to match level
                             {
-                                x.level = SongCore.Loader.CustomLevels.FirstOrDefault(y => y.levelID == x.levelId);
+                                x.level = SongCore.Loader.CustomLevels.FirstOrDefault(y => y.Value.levelID == x.levelId).Value;
                             }
                             if (x.level == null && !string.IsNullOrEmpty(x.hash)) //if level is still null, check that we have hash and if we do, try to match level
                             {
-                                x.level = SongCore.Loader.CustomLevels.FirstOrDefault(y => y.levelID.StartsWith(x.hash.ToUpper()));
+                                x.level = SongCore.Loader.CustomLevels.FirstOrDefault(y => y.Value.levelID.StartsWith(x.hash.ToUpper())).Value;
                             }
                             if (x.level == null && !string.IsNullOrEmpty(x.key)) //if level is still null, check that we have key and if we do, try to match level
                             {
                                 ScrappedSong song = ScrappedData.Songs.FirstOrDefault(z => z.Key == x.key);
                                 if (song != null)
                                 {
-                                    x.level = SongCore.Loader.CustomLevels.FirstOrDefault(y => y.levelID.StartsWith(song.Hash));
+                                    x.level = SongCore.Loader.CustomLevels.FirstOrDefault(y => y.Value.levelID.StartsWith(song.Hash)).Value;
                                 }
                                 else
                                 {
-                                    x.level = SongCore.Loader.CustomLevels.FirstOrDefault(y => y.customLevelPath.Contains(x.key));
+                                    x.level = SongCore.Loader.CustomLevels.FirstOrDefault(y => y.Value.customLevelPath.Contains(x.key)).Value;
                                 }
                             }
                         }

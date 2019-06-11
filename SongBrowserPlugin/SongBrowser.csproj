@@ -47,10 +47,6 @@
     <Reference Include="BeatSaberCustomUI">
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\BeatSaberCustomUI.dll</HintPath>
     </Reference>
-    <Reference Include="BS_Utils, Version=1.2.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\BS_Utils.dll</HintPath>
-    </Reference>
     <Reference Include="IllusionPlugin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\Old IPA\IPA\Data\Managed\IllusionPlugin.dll</HintPath>
     </Reference>
@@ -63,8 +59,7 @@
     <Reference Include="ProBuilderCore">
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\ProBuilderCore.dll</HintPath>
     </Reference>
-    <Reference Include="SongCore, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="SongCore">
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Plugins\SongCore.dll</HintPath>
     </Reference>
     <Reference Include="System" />
