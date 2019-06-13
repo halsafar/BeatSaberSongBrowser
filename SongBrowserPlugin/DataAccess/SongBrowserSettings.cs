@@ -200,6 +200,10 @@ namespace SongBrowser.DataAccess
             {
                 settings.currentLevelPackId = "ModdedCustomMaps";
             }
+            else if (String.Equals(settings.currentLevelPackId, "ModdedCustomMaps"))
+            {
+                settings.currentLevelPackId = PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID;
+            }
 
             settings.Save();
         }
