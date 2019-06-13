@@ -334,12 +334,21 @@ namespace SongBrowser.DataAccess
                 NewLineHandling = System.Xml.NewLineHandling.Entitize
             };
 
-            using (var stream = new StreamWriter(path, false, Utf8Encoding))
+            // https://docs.microsoft.com/en-gb/visualstudio/code-quality/ca2202-do-not-dispose-objects-multiple-times?view=vs-2015
+            StreamWriter stream = null;
+            try
             {
+                stream = new StreamWriter(path, false, Utf8Encoding);
                 using (var writer = XmlWriter.Create(stream, settings))
                 {
+                    stream = null;
                     SettingsSerializer.Serialize(writer, this);
                 }
+            }
+            finally
+            {
+                if (stream != null)
+                    stream.Dispose();
             }
         }
     }
