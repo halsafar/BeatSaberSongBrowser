@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using static StandardLevelInfoSaveData;
 using Logger = SongBrowser.Logging.Logger;
 
 namespace SongBrowser
@@ -232,7 +233,6 @@ namespace SongBrowser
                     if (m.Success)
                     {
                         String version = m.Groups[1].Value;
-                        Logger.Debug("SongKey: {0}={1}", level.Value.levelID, version);
                         _levelIdToSongVersion.Add(level.Value.levelID, version);
                     }
                 }
@@ -733,43 +733,34 @@ namespace SongBrowser
 
             IEnumerable<BeatmapDifficulty> difficultyIterator = Enum.GetValues(typeof(BeatmapDifficulty)).Cast<BeatmapDifficulty>();
             Dictionary<string, int> levelIdToDifficultyValue = new Dictionary<string, int>();
-            /*foreach (IPreviewBeatmapLevel level in levels)
+            foreach (IPreviewBeatmapLevel level in levels)
             {
-                IBeatmapLevelData levelData = null;
-                if (level as BeatmapLevelSO != null)
+                // only need to process a level once
+                if (levelIdToDifficultyValue.ContainsKey(level.levelID))
                 {
-                    Logger.Debug("Normal LevelData");
-                    levelData = (level as BeatmapLevelSO).beatmapLevelData;
-                }
-                else if (_levelIdToCustomLevel.ContainsKey(level.levelID))
-                {
-                    Logger.Debug("Custom LevelData");
-                    levelData = (_levelIdToCustomLevel[level.levelID] as CustomBeatmapLevel).beatmapLevelData;
-                }
-                
-                if (levelData == null)
-                {
-                    Logger.Debug("NO LevelData!!");
                     continue;
                 }
 
-                if (!levelIdToDifficultyValue.ContainsKey(level.levelID))
+                // TODO - fix, not honoring beatmap characteristic. 
+                int difficultyValue = 0;
+                if (level as BeatmapLevelSO != null)
                 {
-                    int difficultyValue = 0;
-
-                    // Get the beatmap difficulties
-                    Logger.Debug("levelData.difficultyBeatmapSets={0}", levelData.difficultyBeatmapSets);
-                    var difficulties = levelData.difficultyBeatmapSets
-                        .Where(x => x.beatmapCharacteristic == this.CurrentBeatmapCharacteristicSO)
-                        .SelectMany(x => x.difficultyBeatmaps);                    
-
-                    foreach (IDifficultyBeatmap difficultyBeatmap in difficulties)
-                    {
-                        difficultyValue += _difficultyWeights[difficultyBeatmap.difficulty];
-                    }
-                    levelIdToDifficultyValue.Add(level.levelID, difficultyValue);
+                    var beatmapSet = (level as BeatmapLevelSO).difficultyBeatmapSets;
+                    difficultyValue = beatmapSet                        
+                        .SelectMany(x => x.difficultyBeatmaps)
+                        .Sum(x => _difficultyWeights[x.difficulty]);
                 }
-            }*/
+                else if (_levelIdToCustomLevel.ContainsKey(level.levelID))
+                {                   
+                    var beatmapSet = (_levelIdToCustomLevel[level.levelID] as CustomPreviewBeatmapLevel).standardLevelInfoSaveData.difficultyBeatmapSets;
+                    difficultyValue = beatmapSet
+                        .SelectMany(x => x.difficultyBeatmaps)
+                        .Sum(x => _difficultyWeights[(BeatmapDifficulty)Enum.Parse(typeof(BeatmapDifficulty), x.difficulty)]);
+                }
+
+                Logger.Debug("Difficulty value: {0}", difficultyValue);
+                levelIdToDifficultyValue.Add(level.levelID, difficultyValue);                
+            }
 
             return levels
                 .OrderBy(x => levelIdToDifficultyValue[x.levelID])
