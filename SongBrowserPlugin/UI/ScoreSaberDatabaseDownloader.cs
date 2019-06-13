@@ -44,11 +44,6 @@ namespace SongBrowser.UI
             StartCoroutine(WaitForDownload());
         }
 
-        private void DownloadScoreSaberData()
-        {
-
-        }
-
         /// <summary>
         /// Wait for score saber related files to download.
         /// </summary>

@@ -238,32 +238,5 @@ namespace SongBrowser.UI
                 didFinishEvent?.Invoke(null);
             }
         }
-
-#if DEBUG
-        /// <summary>
-        /// Useful playlist navigation.
-        /// Shift+Enter downloads.
-        /// Enter selects.
-        /// </summary>
-        public void LateUpdate()
-        {
-            bool isShiftKeyDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-
-            if (isShiftKeyDown && Input.GetKeyDown(KeyCode.Return))
-            {
-                _playlistDetailViewController_downloadButtonPressed(_lastPlaylist);
-            }
-            else if (Input.GetKeyDown(KeyCode.Return))
-            {
-                _playlistDetailViewController_selectButtonPressed(_lastPlaylist);
-            }
-
-            // leave
-            if (Input.GetKeyDown(KeyCode.Escape))
-            {
-                _playlistsNavigationController_didFinishEvent();
-            }
-        }
-#endif
     }
 }

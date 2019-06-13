@@ -18,8 +18,6 @@ namespace SongBrowser
         private SongBrowserUI _songBrowserUI;
         private ScoreSaberDatabaseDownloader _ppDownloader;
 
-        public Dictionary<String, Sprite> CachedIcons;
-
         public static SongBrowser.UI.ProgressBar MainProgressBar;
 
 
@@ -61,7 +59,6 @@ namespace SongBrowser
         {
             Logger.Trace("Start-SongBrowserApplication()");
 
-            AcquireUIElements();
             InstallHandlers();
 
             StartCoroutine(ScrappedData.Instance.DownloadScrappedData((List<ScrappedSong> songs) => { }));
@@ -74,6 +71,16 @@ namespace SongBrowser
             {
                 SongCore.Loader.SongsLoadedEvent += OnSongLoaderLoadedSongs;
             }
+
+            /*foreach (RectTransform rect in Resources.FindObjectsOfTypeAll<RectTransform>())
+            {
+                Logger.Debug("RectTransform: {0}", rect.name);
+            }*/
+
+            /*foreach (Sprite sprite in Resources.FindObjectsOfTypeAll<Sprite>())
+            {
+                Logger.Debug("Adding Icon: {0}", sprite.name);
+            }*/
         }
 
         /// <summary>
@@ -115,37 +122,6 @@ namespace SongBrowser
             catch (Exception e)
             {
                 Logger.Exception("Exception during OnScoreSaberDataDownloaded: ", e);
-            }
-        }
-
-        /// <summary>
-        /// Get a handle to the view controllers we are going to add elements to.
-        /// </summary>
-        private void AcquireUIElements()
-        {
-            Logger.Trace("AcquireUIElements()");        
-            try
-            {
-                CachedIcons = new Dictionary<String, Sprite>();
-                foreach (Sprite sprite in Resources.FindObjectsOfTypeAll<Sprite>())
-                {
-                    if (CachedIcons.ContainsKey(sprite.name))
-                    {
-                        continue;
-                    }
-
-                    //Logger.Debug("Adding Icon: {0}", sprite.name);
-                    CachedIcons.Add(sprite.name, sprite);
-                }
-
-                /*foreach (RectTransform rect in Resources.FindObjectsOfTypeAll<RectTransform>())
-                {
-                    Logger.Debug("RectTransform: {0}", rect.name);
-                }*/
-            }
-            catch (Exception e)
-            {
-                Logger.Exception("Exception AcquireUIElements(): ", e);
             }
         }
 
@@ -234,44 +210,5 @@ namespace SongBrowser
             Button buttonInstance = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == buttonName));
             buttonInstance.onClick.Invoke();
         }
-
-#if DEBUG
-        /// <summary>
-        /// Map some key presses directly to UI interactions to make testing easier.
-        /// </summary>
-        private void LateUpdate()
-        {            
-            // z,x,c,v can be used to get into a song, b will hit continue button after song ends
-            if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.Z))
-            {
-                InvokeBeatSaberButton("PartyFreePlayButton");
-            }
-            else if (Input.GetKeyDown(KeyCode.Z))
-            {
-                InvokeBeatSaberButton("SoloFreePlayButton");
-            }
-
-            if (Input.GetKeyDown(KeyCode.Alpha0))
-            {
-                InvokeBeatSaberButton("SettingsButton");
-            }
-
-            if (Input.GetKeyDown(KeyCode.Alpha9))
-            {
-                InvokeBeatSaberButton("ApplyButton");
-            }
-
-            if (Input.GetKeyDown(KeyCode.Alpha8))
-            {
-                Console.WriteLine("CLICKING OK BUTTON");
-                var settings = Resources.FindObjectsOfTypeAll<VRUI.VRUIViewController>().First(x => x.name == "SettingsViewController");
-                var button = settings.GetComponentsInChildren<Button>().Where(x => x.name == "OkButton");
-                foreach (Button b in button)
-                {
-                    b.onClick.Invoke();
-                }                
-            }
-        }
-#endif
     }
 }

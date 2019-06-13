@@ -176,43 +176,5 @@ namespace SongBrowser.UI
 
             return _tableCell;
         }
-
-#if DEBUG
-        private void LateUpdate()
-        {
-            CheckDebugUserInput();
-        }
-
-        private void CheckDebugUserInput()
-        {
-            bool isShiftKeyDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-
-            if (Input.GetKeyDown(KeyCode.N) && isShiftKeyDown)
-            {
-                _songsTableView.PageScrollUp();
-            }
-            else if (Input.GetKeyDown(KeyCode.N))
-            {
-                _lastSelectedRow = (_lastSelectedRow - 1) % _songsTableView.dataSource.NumberOfCells();
-                if (_lastSelectedRow < 0)
-                {
-                    _lastSelectedRow = _songsTableView.dataSource.NumberOfCells() - 1;
-                }
-                _songsTableView.ScrollToCellWithIdx(_lastSelectedRow, TableView.ScrollPositionType.Beginning, false);
-                this._songsTableView_DidSelectRowEvent(_songsTableView, _lastSelectedRow);
-            }
-
-            if (Input.GetKeyDown(KeyCode.M) && isShiftKeyDown)
-            {
-                _songsTableView.PageScrollDown();
-            }
-            else if (Input.GetKeyDown(KeyCode.M))
-            {
-                _lastSelectedRow = (_lastSelectedRow + 1) % _songsTableView.dataSource.NumberOfCells();
-                _songsTableView.ScrollToCellWithIdx(_lastSelectedRow, TableView.ScrollPositionType.End, false);
-                this._songsTableView_DidSelectRowEvent(_songsTableView, _lastSelectedRow);
-            }
-        }
-#endif
     }
 }
