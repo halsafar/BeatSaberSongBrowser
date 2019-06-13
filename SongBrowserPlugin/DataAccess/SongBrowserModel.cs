@@ -767,7 +767,6 @@ namespace SongBrowser
                         .Sum(x => _difficultyWeights[(BeatmapDifficulty)Enum.Parse(typeof(BeatmapDifficulty), x.difficulty)]);
                 }
 
-                Logger.Debug("Difficulty value: {0}", difficultyValue);
                 levelIdToDifficultyValue.Add(level.levelID, difficultyValue);                
             }
 
