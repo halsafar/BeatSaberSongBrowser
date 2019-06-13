@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using Logger = SongBrowser.Logging.Logger;
 
@@ -200,9 +201,8 @@ namespace SongBrowser
                 return;
             }
 
-            IEnumerable<string> directories = Directory.EnumerateDirectories(customSongsPath, "*.*", SearchOption.AllDirectories);
-
             // Map some data for custom songs
+            Regex r = new Regex(@"(\d+-\d+)", RegexOptions.IgnoreCase);
             Stopwatch lastWriteTimer = new Stopwatch();
             lastWriteTimer.Start();
             foreach (KeyValuePair<string, CustomPreviewBeatmapLevel> level in SongCore.Loader.CustomLevels)
@@ -227,10 +227,12 @@ namespace SongBrowser
                 {
                     DirectoryInfo info = new DirectoryInfo(level.Value.customLevelPath);
                     string currentDirectoryName = info.Name;
-
-                    String version = level.Value.customLevelPath.Replace(revSlashCustomSongPath, "").Replace(currentDirectoryName, "").Replace("/", "");
-                    if (!String.IsNullOrEmpty(version))
+                    
+                    Match m = r.Match(level.Value.customLevelPath);
+                    if (m.Success)
                     {
+                        String version = m.Groups[1].Value;
+                        Logger.Debug("SongKey: {0}={1}", level.Value.levelID, version);
                         _levelIdToSongVersion.Add(level.Value.levelID, version);
                     }
                 }
