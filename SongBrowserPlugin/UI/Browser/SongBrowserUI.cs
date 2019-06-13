@@ -578,6 +578,15 @@ namespace SongBrowser.UI
         }
 
         /// <summary>
+        /// Helper for common filter cancellation logic.
+        /// </summary>
+        public void CancelFilter()
+        {
+            _model.Settings.filterMode = SongFilterMode.None;
+            SongCore.Loader.Instance.RefreshLevelPacks();            
+        }
+
+        /// <summary>
         /// Handle updating the level pack selection after returning from a song.
         /// </summary>
         /// <param name="obj"></param>
@@ -665,12 +674,11 @@ namespace SongBrowser.UI
         {
             Logger.Debug("Clearing all sorts and filters.");
 
-            _model.Settings.sortMode = SongSortMode.Original;
-            _model.Settings.filterMode = SongFilterMode.None;
             _model.Settings.invertSortResults = false;
+            CancelFilter();
             _model.Settings.Save();
-            
-            this._model.ProcessSongList(GetCurrentSelectedLevelPack());
+
+            ProcessSongList();
             RefreshSongUI();
         }
 
@@ -734,13 +742,12 @@ namespace SongBrowser.UI
             }
             else
             {
-                _model.Settings.filterMode = SongFilterMode.None;
-                SongCore.Loader.Instance.RefreshLevelPacks();
+                CancelFilter();
             }
 
             _model.Settings.Save();
-            ProcessSongList();
 
+            ProcessSongList();
             RefreshSongUI();
         }
 
@@ -753,16 +760,17 @@ namespace SongBrowser.UI
             Logger.Debug("Filter button - {0} - pressed.", SongFilterMode.Search.ToString());
             if (_model.Settings.filterMode != SongFilterMode.Search)
             {
+                SelectLevelPack(PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID);
                 this.ShowSearchKeyboard();
             }
             else
             {
-                _model.Settings.filterMode = SongFilterMode.None;
+                CancelFilter();
                 ProcessSongList();
-
                 RefreshSongUI();
-            }
-            _model.Settings.Save();            
+
+                _model.Settings.Save();
+            }                        
         }
 
         /// <summary>
@@ -776,16 +784,18 @@ namespace SongBrowser.UI
 
             if (_model.Settings.filterMode != SongFilterMode.Playlist)
             {
+                SelectLevelPack(PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID);
                 _playListFlowCoordinator.parentFlowCoordinator = _levelSelectionFlowCoordinator;
                 _levelSelectionFlowCoordinator.InvokePrivateMethod("PresentFlowCoordinator", new object[] { _playListFlowCoordinator, null, false, false });                                
             }
             else
             {
-                _model.Settings.filterMode = SongFilterMode.None;
-                _model.Settings.Save();
+                CancelFilter();
+                
                 ProcessSongList();
-
                 RefreshSongUI();
+
+                _model.Settings.Save();
             }
         }
 
