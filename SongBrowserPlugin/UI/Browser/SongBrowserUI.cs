@@ -674,6 +674,7 @@ namespace SongBrowser.UI
         {
             Logger.Debug("Clearing all sorts and filters.");
 
+            _model.Settings.sortMode = SongSortMode.Original;
             _model.Settings.invertSortResults = false;
             CancelFilter();
             _model.Settings.Save();
