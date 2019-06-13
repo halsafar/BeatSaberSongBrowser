@@ -189,7 +189,7 @@ namespace SongBrowser
                     };
                     SongCore.Loader.SongsLoadedEvent += songsLoadedAction;
 
-                    SongCore.Loader.Instance.RetrieveNewSong(dirName);
+                    SongCore.Loader.Instance.RefreshSongs();
 
                 }
                 catch (Exception e)
