@@ -1,11 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using SimpleJSON;
-using SongLoaderPlugin;
-using SongLoaderPlugin.OverrideClasses;
 
-
-// From: https://github.com/andruzzzhka/BeatSaverDownloader
 namespace SongBrowser.DataAccess.BeatSaverApi
 {
     public enum SongQueueState { Queued, Downloading, Downloaded, Error };
@@ -18,12 +16,13 @@ namespace SongBrowser.DataAccess.BeatSaverApi
         public string jsonPath;
         public int? offset;
 
-        public DifficultyLevel(CustomSongInfo.DifficultyLevel difficultyLevel)
-        {
-            difficulty = difficultyLevel.difficulty;
-            difficultyRank = difficultyLevel.difficultyRank;
-            jsonPath = difficultyLevel.jsonPath;
-        }
+        //bananbread api
+        //      public DifficultyLevel(CustomSongInfo.DifficultyLevel difficultyLevel)
+        //      {
+        //          difficulty = difficultyLevel.difficulty;
+        //          difficultyRank = difficultyLevel.difficultyRank;
+        //          jsonPath = difficultyLevel.jsonPath;
+        //      }
 
         public DifficultyLevel(string Difficulty, int DifficultyRank, string JsonPath, int Offset = 0)
         {
@@ -44,7 +43,7 @@ namespace SongBrowser.DataAccess.BeatSaverApi
         public string downloads;
         public string upvotes;
         public string plays;
-        public string beattext;
+        public string description;
         public string uploadtime;
         public string songName;
         public string songSubName;
@@ -77,7 +76,7 @@ namespace SongBrowser.DataAccess.BeatSaverApi
             upvotes = jsonNode["upVotes"];
             downvotes = jsonNode["downVotes"];
             plays = jsonNode["playedCount"];
-            beattext = jsonNode["description"];
+            description = jsonNode["description"];
             uploadtime = jsonNode["createdAt"];
             songName = jsonNode["songName"];
             songSubName = jsonNode["songSubName"];
@@ -139,7 +138,7 @@ namespace SongBrowser.DataAccess.BeatSaverApi
             upvotes = jsonNode["upVotes"];
             downvotes = jsonNode["downVotes"];
             plays = jsonNode["playedCount"];
-            beattext = jsonNode["description"];
+            description = jsonNode["description"];
             uploadtime = jsonNode["createdAt"];
             songName = jsonNode["songName"];
             songSubName = jsonNode["songSubName"];
@@ -177,7 +176,32 @@ namespace SongBrowser.DataAccess.BeatSaverApi
         }
 
 
-
+        //bananbread api
+        public Song(CustomPreviewBeatmapLevel _data)
+        {
+            songName = _data.songName;
+            songSubName = _data.songSubName;
+            authorName = _data.songAuthorName;
+            difficultyLevels = ConvertDifficultyLevels(_data.standardLevelInfoSaveData.difficultyBeatmapSets.SelectMany(x => x.difficultyBeatmaps).ToArray());
+            path = _data.customLevelPath;
+            //bananabread id hash
+            hash = SongCore.Collections.hashForLevelID(_data.levelID);
+            //  hash = SongCore.Utilities.Utils.GetCustomLevelHash(_data);
+        }
+        /*
+        public Song(StandardLevelInfoSaveData _data, string songPath)
+        {
+            songName = _data.songName;
+            songSubName = _data.songSubName;
+            authorName = _data.songAuthorName;
+            difficultyLevels = ConvertDifficultyLevels(_data.difficultyBeatmapSets.SelectMany(x => x.difficultyBeatmaps).ToArray());
+            path = songPath;
+            //bananabread id hash
+            hash = ;
+            //  hash = SongCore.Utilities.Utils.GetCustomLevelHash(_data, songPath);
+        }
+        */
+        /*
         public Song(CustomLevel _data)
         {
             songName = _data.songName;
@@ -187,10 +211,9 @@ namespace SongBrowser.DataAccess.BeatSaverApi
             path = _data.customSongInfo.path;
             hash = _data.levelID.Substring(0, 32);
         }
-
+        //bananbread api
         public Song(CustomSongInfo _song)
         {
-
             songName = _song.songName;
             songSubName = _song.songSubName;
             authorName = _song.songAuthorName;
@@ -198,8 +221,28 @@ namespace SongBrowser.DataAccess.BeatSaverApi
             path = _song.path;
             hash = _song.levelId.Substring(0, 32);
         }
-
+        */
+        //bananbread api
+        /*
         public DifficultyLevel[] ConvertDifficultyLevels(CustomSongInfo.DifficultyLevel[] _difficultyLevels)
+        {
+            if (_difficultyLevels != null && _difficultyLevels.Length > 0)
+            {
+                DifficultyLevel[] buffer = new DifficultyLevel[_difficultyLevels.Length];
+                for (int i = 0; i < _difficultyLevels.Length; i++)
+                {
+                    buffer[i] = new DifficultyLevel(_difficultyLevels[i]);
+                }
+                return buffer;
+            }
+            else
+            {
+                return null;
+            }
+        }
+        */
+
+        public DifficultyLevel[] ConvertDifficultyLevels(IDifficultyBeatmap[] _difficultyLevels)
         {
             if (_difficultyLevels != null && _difficultyLevels.Length > 0)
             {
@@ -207,7 +250,7 @@ namespace SongBrowser.DataAccess.BeatSaverApi
 
                 for (int i = 0; i < _difficultyLevels.Length; i++)
                 {
-                    buffer[i] = new DifficultyLevel(_difficultyLevels[i]);
+                    buffer[i] = new DifficultyLevel(_difficultyLevels[i].difficulty.ToString(), _difficultyLevels[i].difficultyRank, string.Empty);
                 }
 
 
@@ -218,9 +261,7 @@ namespace SongBrowser.DataAccess.BeatSaverApi
                 return null;
             }
         }
-
-
-        public DifficultyLevel[] ConvertDifficultyLevels(IDifficultyBeatmap[] _difficultyLevels)
+        public DifficultyLevel[] ConvertDifficultyLevels(StandardLevelInfoSaveData.DifficultyBeatmap[] _difficultyLevels)
         {
             if (_difficultyLevels != null && _difficultyLevels.Length > 0)
             {

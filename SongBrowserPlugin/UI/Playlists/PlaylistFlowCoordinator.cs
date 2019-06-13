@@ -4,13 +4,11 @@ using SongBrowser.DataAccess;
 using SongBrowser.DataAccess.BeatSaverApi;
 using SongBrowser.Internals;
 using SongBrowser.UI.DownloadQueue;
-using SongLoaderPlugin;
+using SongCore.Utilities;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 using VRUI;
@@ -86,7 +84,7 @@ namespace SongBrowser.UI
 
         private void _downloadQueueViewController_allSongsDownloaded()
         {
-            SongLoader.Instance.RefreshSongs(false);
+            SongCore.Loader.Instance.RefreshSongs(false);
             _downloadingPlaylist = false;
         }
 
@@ -152,7 +150,7 @@ namespace SongBrowser.UI
                     };
                 }
 
-                if (beatSaverSong != null && !SongLoader.CustomLevels.Any(x => x.levelID.Substring(0, 32) == beatSaverSong.hash.ToUpper()))
+                if (beatSaverSong != null && !SongCore.Loader.CustomLevels.Any(x => x.Value.levelID.Substring(0, 32) == beatSaverSong.hash.ToUpper()))
                 {
                     _downloadQueueViewController.EnqueueSong(beatSaverSong, true);
                 }

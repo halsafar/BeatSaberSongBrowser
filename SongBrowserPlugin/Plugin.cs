@@ -1,20 +1,19 @@
 ﻿using UnityEngine.SceneManagement;
 using IllusionPlugin;
-using UnityEngine;
 using SongBrowser.UI;
 using Logger = SongBrowser.Logging.Logger;
 using SongBrowser.DataAccess;
 using System.Collections.Generic;
 using SongBrowser.Internals;
 using System;
-using SongLoaderPlugin;
-using SongLoaderPlugin.OverrideClasses;
+
 
 namespace SongBrowser
 {
     public class Plugin : IPlugin
     {
-        public const string VERSION_NUMBER = "4.1.0";
+        public const string VERSION_NUMBER = "4.2.0";
+        public static Plugin Instace;
 
         public string Name
         {
@@ -28,6 +27,8 @@ namespace SongBrowser
 
         public void OnApplicationStart()
         {
+            Instace = this;
+
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
             SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
 
@@ -36,7 +37,7 @@ namespace SongBrowser
             Base64Sprites.Init();
 
             PlaylistsCollection.ReloadPlaylists();
-            SongLoader.SongsLoadedEvent += SongLoader_SongsLoadedEvent;
+            SongCore.Loader.SongsLoadedEvent += SongCore_SongsLoadedEvent;
 
             BSEvents.OnLoad();
             BSEvents.menuSceneLoadedFresh += OnMenuSceneLoadedFresh;
@@ -58,7 +59,7 @@ namespace SongBrowser
             }
         }
 
-        private void SongLoader_SongsLoadedEvent(SongLoader sender, List<CustomLevel> levels)
+        public void SongCore_SongsLoadedEvent(SongCore.Loader sender, Dictionary<string, CustomPreviewBeatmapLevel> levels)
         {
             try
             {

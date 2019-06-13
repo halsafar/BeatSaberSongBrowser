@@ -1,7 +1,5 @@
 ﻿using SongBrowser.DataAccess;
 using SongBrowser.UI;
-using SongLoaderPlugin;
-using SongLoaderPlugin.OverrideClasses;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -68,14 +66,13 @@ namespace SongBrowser
 
             StartCoroutine(ScrappedData.Instance.DownloadScrappedData((List<ScrappedSong> songs) => { }));
 
-            if (SongLoaderPlugin.SongLoader.AreSongsLoaded)
+            if (SongCore.Loader.AreSongsLoaded)
             {
-                OnSongLoaderLoadedSongs(null, SongLoader.CustomLevels);
+                OnSongLoaderLoadedSongs(null, SongCore.Loader.CustomLevels);
             }
             else
             {
-                SongLoader.SongsLoadedEvent += OnSongLoaderLoadedSongs;
-                _songBrowserUI.UpdateLevelPackModel();
+                SongCore.Loader.SongsLoadedEvent += OnSongLoaderLoadedSongs;
             }
         }
 
@@ -84,12 +81,11 @@ namespace SongBrowser
         /// </summary>
         /// <param name="loader"></param>
         /// <param name="levels"></param>
-        private void OnSongLoaderLoadedSongs(SongLoader loader, List<CustomLevel> levels)
+        private void OnSongLoaderLoadedSongs(SongCore.Loader loader, Dictionary<string, CustomPreviewBeatmapLevel> levels)
         {
             Logger.Trace("OnSongLoaderLoadedSongs-SongBrowserApplication()");
             try
             {
-                _songBrowserUI.UpdateLevelPackModel();
                 _songBrowserUI.UpdateLevelDataModel();
                 _songBrowserUI.RefreshSongList();
             }
@@ -112,7 +108,7 @@ namespace SongBrowser
                 _songBrowserUI.Model.UpdateScoreSaberDataMapping();
                 if (_songBrowserUI.Model.Settings.sortMode == SongSortMode.PP)
                 {
-                    _songBrowserUI.Model.ProcessSongList();
+                    _songBrowserUI.ProcessSongList();
                     _songBrowserUI.RefreshSongList();
                 }
             }
@@ -213,7 +209,6 @@ namespace SongBrowser
         private void HandleModeSelection(MainMenuViewController.MenuButton mode)
         {
             Logger.Trace("HandleModeSelection()");
-            _songBrowserUI.UpdateLevelPackModel(true);
             this._songBrowserUI.CreateUI(mode);
             StartCoroutine(this.UpdateBrowserUI());
         }

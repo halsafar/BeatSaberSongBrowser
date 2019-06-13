@@ -1,15 +1,11 @@
-﻿using HMUI;
-using SongLoaderPlugin;
-using SongLoaderPlugin.OverrideClasses;
-using System;
+﻿using System.Collections.Generic;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using System.Linq;
+using SongCore.Utilities;
 
 namespace SongBrowser.UI
 {
@@ -87,7 +83,7 @@ namespace SongBrowser.UI
 
         private void SceneManagerOnActiveSceneChanged(Scene oldScene, Scene newScene)
         {
-            if (newScene.name == SongLoader.MenuSceneName)
+            if (newScene.name == "MenuCore")
             {
                 if (_showingMessage)
                 {
@@ -100,7 +96,7 @@ namespace SongBrowser.UI
             }
         }
 
-        private void SongBrowserFinishedProcessingSongs(List<CustomLevel> arg2)
+        private void SongBrowserFinishedProcessingSongs(Dictionary<string, CustomPreviewBeatmapLevel> arg2)
         {
             _showingMessage = false;
             _headerText.text = arg2.Count + " songs processed";
