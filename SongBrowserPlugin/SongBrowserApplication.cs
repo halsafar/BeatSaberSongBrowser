@@ -73,7 +73,6 @@ namespace SongBrowser
             else
             {
                 SongCore.Loader.SongsLoadedEvent += OnSongLoaderLoadedSongs;
-                _songBrowserUI.UpdateLevelPackModel();
             }
         }
 
@@ -87,7 +86,6 @@ namespace SongBrowser
             Logger.Trace("OnSongLoaderLoadedSongs-SongBrowserApplication()");
             try
             {
-                _songBrowserUI.UpdateLevelPackModel();
                 _songBrowserUI.UpdateLevelDataModel();
                 _songBrowserUI.RefreshSongList();
             }
@@ -110,7 +108,7 @@ namespace SongBrowser
                 _songBrowserUI.Model.UpdateScoreSaberDataMapping();
                 if (_songBrowserUI.Model.Settings.sortMode == SongSortMode.PP)
                 {
-                    _songBrowserUI.Model.ProcessSongList();
+                    _songBrowserUI.ProcessSongList();
                     _songBrowserUI.RefreshSongList();
                 }
             }
@@ -211,7 +209,6 @@ namespace SongBrowser
         private void HandleModeSelection(MainMenuViewController.MenuButton mode)
         {
             Logger.Trace("HandleModeSelection()");
-            _songBrowserUI.UpdateLevelPackModel(true);
             this._songBrowserUI.CreateUI(mode);
             StartCoroutine(this.UpdateBrowserUI());
         }
