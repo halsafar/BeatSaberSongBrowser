@@ -280,12 +280,21 @@ namespace SongBrowser
             foreach (PlaylistSong ps in CurrentEditingPlaylist.songs)
             {
                 // Sometimes we cannot match a song
-                if (ps.level == null)
+                string levelId = null;
+                if (ps.level != null)
+                {
+                    levelId = ps.level.levelID;
+                }
+                else if (!String.IsNullOrEmpty(ps.levelId))
+                {
+                    levelId = ps.levelId;
+                }
+                else
                 {
                     continue;
                 }
 
-                CurrentEditingPlaylistLevelIds.Add(ps.level.levelID);
+                CurrentEditingPlaylistLevelIds.Add(levelId);
             }
 
             // Signal complete
@@ -646,9 +655,9 @@ namespace SongBrowser
             List<IPreviewBeatmapLevel> songList = new List<IPreviewBeatmapLevel>();
             foreach (PlaylistSong ps in this.CurrentPlaylist.songs)
             {
-                if (ps.level != null)
+                if (ps.level != null && levelDict.ContainsKey(ps.level.levelID))
                 {
-                    songList.Add(levelDict[ps.level.levelID] as IPreviewBeatmapLevel);
+                    songList.Add(levelDict[ps.level.levelID]);
                 }
                 else
                 {
