@@ -708,21 +708,6 @@ namespace SongBrowser.UI
             this.ProcessSongList();
             RefreshSongUI();
 
-            // TODO - Restore this or remove it - Handle instant queue logic
-            /*if (_model.Settings.sortMode == SongSortMode.Random && _model.Settings.randomInstantQueue)
-            {
-                int index = 0;
-                if (_model.SortedSongList.Count > index)
-                {
-                    this.SelectAndScrollToLevel(_levelPackLevelsTableView, _model.SortedSongList[index].levelID);
-                    var beatMapDifficulties = _model.SortedSongList[index].difficultyBeatmapSets
-                        .Where(x => x.beatmapCharacteristic == _model.CurrentBeatmapCharacteristicSO)
-                        .SelectMany(x => x.difficultyBeatmaps);
-                    this._levelDifficultyViewController.HandleDifficultySegmentedControlDidSelectCell(null, beatMapDifficulties.Count() - 1);
-                    _playButton.onClick.Invoke();
-                }
-            }*/
-
             //Scroll to start of the list
             TableView listTableView = _levelPackLevelsTableView.GetPrivateField<TableView>("_tableView");
             listTableView.ScrollToCellWithIdx(0, TableView.ScrollPositionType.Beginning, false);
@@ -927,33 +912,6 @@ namespace SongBrowser.UI
                 });
             _levelSelectionFlowCoordinator.InvokePrivateMethod("PresentViewController", new object[] { _deleteDialog, null, false });
         }        
-
-        /// <summary>
-        /// Create MD5 of a file.
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public static string CreateMD5FromFile(string path)
-        {
-            string hash = "";
-            if (!File.Exists(path)) return null;
-            using (MD5 md5 = MD5.Create())
-            {
-                using (var stream = File.OpenRead(path))
-                {
-                    byte[] hashBytes = md5.ComputeHash(stream);
-
-                    StringBuilder sb = new StringBuilder();
-                    foreach (byte hashByte in hashBytes)
-                    {
-                        sb.Append(hashByte.ToString("X2"));
-                    }
-
-                    hash = sb.ToString();
-                    return hash;
-                }
-            }
-        }
 
         /// <summary>
         /// Handle selection of a playlist.  Show just the songs in the playlist.
