@@ -629,7 +629,6 @@ namespace SongBrowser.UI
 
             try
             {
-                //RefreshSongList();
                 RefreshSortButtonUI();
                 RefreshQuickScrollButtons();
             }
@@ -655,8 +654,11 @@ namespace SongBrowser.UI
                 if (this._model.Settings.currentLevelPackId != arg2.packID)
                 {
                     this._model.Settings.filterMode = SongFilterMode.None;
-                    this._model.Settings.Save();
-                }                
+                }
+
+                // save level pack
+                this._model.Settings.currentLevelPackId = arg2.packID;
+                this._model.Settings.Save();
 
                 this._model.ProcessSongList(arg2);
                 RefreshSongUI();
