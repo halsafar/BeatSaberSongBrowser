@@ -19,6 +19,8 @@ namespace SongBrowser.DataAccess
         public List<DifficultyStats> Diffs { get; set; }
         public long Bpm { get; set; }
         public long PlayedCount { get; set; }
+        public long Upvotes { get; set; }
+        public long Downvotes { get; set; }
     }
 
     public class DifficultyStats
@@ -69,7 +71,7 @@ namespace SongBrowser.DataAccess
             }
             catch (Exception e)
             {
-                Logger.Exception("Exception hitting scrappedDataURL", e);
+                Logger.Error(e);
                 yield break;
             }
 
@@ -77,7 +79,7 @@ namespace SongBrowser.DataAccess
             {
                 yield return null;
                 time += Time.deltaTime;
-                if (time >= 5f && asyncRequest.progress == 0f)
+                if (time >= 5f && asyncRequest.progress <= float.Epsilon)
                 {
                     www.Abort();
                     timeout = true;

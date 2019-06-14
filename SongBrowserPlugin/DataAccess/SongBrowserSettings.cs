@@ -21,6 +21,7 @@ namespace SongBrowser.DataAccess
         Difficulty,
         Random,
         PP,
+        UpVotes,
 
         // Deprecated
         Favorites,

@@ -29,6 +29,7 @@ namespace SongBrowser
         private Dictionary<String, double> _cachedLastWriteTimes;
         private Dictionary<string, int> _weights;
         private Dictionary<BeatmapDifficulty, int> _difficultyWeights;
+        private Dictionary<string, ScrappedSong> _levelHashToDownloaderData = null;
         private Dictionary<string, ScoreSaberData> _levelIdToScoreSaberData = null;
         private Dictionary<string, int> _levelIdToPlayCount;
         private Dictionary<string, string> _levelIdToSongVersion;
@@ -384,6 +385,25 @@ namespace SongBrowser
                     //Logger.Debug("{0} = {1}pp", level.songName, pp);
                     _levelIdToScoreSaberData.Add(level.Value.levelID, scoreSaberData);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Map the downloader data for quick lookup.
+        /// </summary>
+        /// <param name="songs"></param>
+        public void UpdateDownloaderDataMapping(List<ScrappedSong> songs)
+        {
+            _levelHashToDownloaderData = new Dictionary<string, ScrappedSong>();
+            foreach (ScrappedSong song in songs)
+            {
+                if (_levelHashToDownloaderData.ContainsKey(song.Hash))
+                {
+                    continue;
+                }
+
+                //Logger.Debug("Adding: {0}={1}", song.SongName, song.Hash);
+                _levelHashToDownloaderData.Add(song.Hash, song);
             }
         }
 
@@ -804,6 +824,20 @@ namespace SongBrowser
             return levels
                 .OrderBy(x => x.songName)
                 .ThenBy(x => x.songAuthorName)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Sorting by Downloader UpVotes.
+        /// </summary>
+        /// <param name="levelIds"></param>
+        /// <returns></returns>
+        private List<IPreviewBeatmapLevel> SortUpVotes(List<IPreviewBeatmapLevel> levelIds)
+        {
+            Logger.Info("Sorting song list by author");
+            //SongCore.Utilities.Hashing.GetCustomLevelHash(x)
+            return levelIds
+                .OrderBy(x => _levelHashToDownloaderData[x.levelID.Substring(0, 32)].Upvotes)
                 .ToList();
         }
     }

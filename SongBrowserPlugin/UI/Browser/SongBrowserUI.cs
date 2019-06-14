@@ -285,12 +285,12 @@ namespace SongBrowser.UI
 
                 string[] sortButtonNames = new string[]
                 {
-                    "Song", "Author", "Newest", "Plays", "PP", "Difficult", "Random"
+                    "Song", "Author", "UpVotes", "Newest", "Plays", "PP", "Difficult", "Random"
                 };
 
                 SongSortMode[] sortModes = new SongSortMode[]
                 {
-                    SongSortMode.Default, SongSortMode.Author, SongSortMode.Newest, SongSortMode.PlayCount, SongSortMode.PP, SongSortMode.Difficulty, SongSortMode.Random
+                    SongSortMode.Default, SongSortMode.Author, SongSortMode.UpVotes, SongSortMode.Newest, SongSortMode.PlayCount, SongSortMode.PP, SongSortMode.Difficulty, SongSortMode.Random
                 };
                 
                 _sortButtonGroup = new List<SongSortButton>();

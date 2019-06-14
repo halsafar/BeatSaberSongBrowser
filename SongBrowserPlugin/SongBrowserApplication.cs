@@ -62,7 +62,7 @@ namespace SongBrowser
             InstallHandlers();
 
             // Initialize Downloader Scrapped Data
-            StartCoroutine(ScrappedData.Instance.DownloadScrappedData((List<ScrappedSong> songs) => { }));            
+            StartCoroutine(ScrappedData.Instance.DownloadScrappedData(OnDownloaderScrappedDataDownloaded));
 
             if (SongCore.Loader.AreSongsLoaded)
             {
@@ -116,6 +116,28 @@ namespace SongBrowser
             {
                 _songBrowserUI.Model.UpdateScoreSaberDataMapping();
                 if (_songBrowserUI.Model.Settings.sortMode == SongSortMode.PP)
+                {
+                    _songBrowserUI.ProcessSongList();
+                    _songBrowserUI.RefreshSongList();
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Exception("Exception during OnScoreSaberDataDownloaded: ", e);
+            }
+        }
+
+        /// <summary>
+        /// Update mapping of scrapped song data.
+        /// </summary>
+        private void OnDownloaderScrappedDataDownloaded(List<ScrappedSong> songs)
+        {
+            Logger.Trace("OnScoreSaberDataDownloaded");
+            try
+            {
+                PlaylistsCollection.MatchSongsForAllPlaylists(true);
+                _songBrowserUI.Model.UpdateDownloaderDataMapping(songs);
+                if (_songBrowserUI.Model.Settings.sortMode == SongSortMode.UpVotes)
                 {
                     _songBrowserUI.ProcessSongList();
                     _songBrowserUI.RefreshSongList();
