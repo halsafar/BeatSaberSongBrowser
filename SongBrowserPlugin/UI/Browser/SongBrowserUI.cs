@@ -562,9 +562,9 @@ namespace SongBrowser.UI
         /// <summary>
         /// Helper to reduce code duplication...
         /// </summary>
-        private void RefreshSongUI()
+        private void RefreshSongUI(bool scrollToLevel=true)
         {
-            RefreshSongList();
+            RefreshSongList(scrollToLevel);
             RefreshSortButtonUI();
             RefreshQuickScrollButtons();
         }
@@ -661,7 +661,21 @@ namespace SongBrowser.UI
                 this._model.Settings.Save();
 
                 this._model.ProcessSongList(arg2);
-                RefreshSongUI();
+
+                // trickery to handle Downloader playlist level packs
+                // We need to avoid scrolling to a level and then select the header
+                bool scrollToLevel = true;
+                if (arg2.packID.Contains("Playlist_"))
+                {
+                    scrollToLevel = false;
+                }
+
+                RefreshSongUI(scrollToLevel);
+                
+                if (!scrollToLevel)
+                {
+                    ScrollToLevelByRow(0);
+                }
             }
             catch (Exception e)
             {
@@ -1218,7 +1232,7 @@ namespace SongBrowser.UI
         /// <summary>
         /// Try to refresh the song list.  Broken for now.
         /// </summary>
-        public void RefreshSongList()
+        public void RefreshSongList(bool scrollToLevel=true)
         {
             Logger.Info("Refreshing the song list view.");
             try
@@ -1257,7 +1271,10 @@ namespace SongBrowser.UI
                     }
                 }
 
-                SelectAndScrollToLevel(_levelPackLevelsTableView, selectedLevelID);          
+                if (scrollToLevel)
+                {
+                    SelectAndScrollToLevel(_levelPackLevelsTableView, selectedLevelID);
+                }
             }
             catch (Exception e)
             {
@@ -1452,6 +1469,15 @@ namespace SongBrowser.UI
                 selectedIndex += 1;
             }
 
+            ScrollToLevelByRow(selectedIndex);
+        }
+
+        /// <summary>
+        /// Scroll to a level by Row
+        /// </summary>
+        /// <param name="selectedIndex"></param>
+        public void ScrollToLevelByRow(int selectedIndex)
+        {
             Logger.Debug("Scrolling level list to idx: {0}", selectedIndex);
 
             TableView tableView = _levelPackLevelsTableView.GetPrivateField<TableView>("_tableView");
