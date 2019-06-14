@@ -1,7 +1,4 @@
-﻿using SimpleJSON;
-using SongBrowser.DataAccess;
-using SongBrowser.DataAccess.BeatSaverApi;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -13,11 +10,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
+using Newtonsoft.Json.Linq;
 using Logger = SongBrowser.Logging.Logger;
+using SongBrowser.DataAccess.BeatSaverApi;
+using SongBrowser.DataAccess;
 
 namespace SongBrowser
 {
-    // https://github.com/andruzzzhka/BeatSaverDownloader/blob/master/BeatSaverDownloader/Misc/SongDownloader.cs
     public class SongDownloader : MonoBehaviour
     {
         public event Action<Song> songDownloaded;
@@ -58,7 +57,7 @@ namespace SongBrowser
 
         private void SongLoader_SongsLoadedEvent(SongCore.Loader sender, Dictionary<string, CustomPreviewBeatmapLevel> levels)
         {
-            _alreadyDownloadedSongs = levels.Select(x => new Song(x.Value)).ToList();
+            _alreadyDownloadedSongs = levels.Values.Select(x => new Song(x)).ToList();
         }
 
         public IEnumerator DownloadSongCoroutine(Song songInfo)
@@ -72,7 +71,7 @@ namespace SongBrowser
 
             try
             {
-                www = UnityWebRequest.Get(songInfo.downloadUrl);
+                www = UnityWebRequest.Get(songInfo.downloadURL);
 
                 asyncRequest = www.SendWebRequest();
             }
@@ -150,8 +149,16 @@ namespace SongBrowser
                 Logger.Info("Extracting...");
                 _extractingZip = true;
                 ZipArchive archive = new ZipArchive(zipStream, ZipArchiveMode.Read);
-                await Task.Run(() => archive.ExtractToDirectory(customSongsPath)).ConfigureAwait(false);
+                string path = customSongsPath + "/" + songInfo.key + " (" + songInfo.songName + " - " + songInfo.levelAuthorName + ")";
+                if (Directory.Exists(path))
+                {
+                    int pathNum = 1;
+                    while (Directory.Exists(path + $" ({pathNum})")) ++pathNum;
+                    path += $" ({pathNum})";
+                }
+                await Task.Run(() => archive.ExtractToDirectory(path)).ConfigureAwait(false);
                 archive.Dispose();
+                songInfo.path = path;
             }
             catch (Exception e)
             {
@@ -162,8 +169,40 @@ namespace SongBrowser
             }
             zipStream.Close();
 
-            songInfo.path = Directory.GetDirectories(customSongsPath).FirstOrDefault();
-
+            //Correct subfolder
+            /*
+            try
+            {
+                string path = Directory.GetDirectories(customSongsPath).FirstOrDefault();
+                SongCore.Utilities.Utils.GrantAccess(path);
+                DirectoryInfo subfolder = new DirectoryInfo(path).GetDirectories().FirstOrDefault();
+                if(subfolder != null)
+                {
+                    Console.WriteLine(path);
+                    Console.WriteLine(subfolder.FullName);
+                    string newPath = CustomLevelPathHelper.customLevelsDirectoryPath + "/" + songInfo.id + " " + subfolder.Name;
+                    if (Directory.Exists(newPath))
+                    {
+                        int pathNum = 1;
+                        while (Directory.Exists(newPath + $" ({pathNum})")) ++pathNum;
+                        newPath = newPath + $" ({pathNum})";
+                    }
+                    Console.WriteLine(newPath);
+                    Directory.Move(subfolder.FullName, newPath);
+                    if (SongCore.Utilities.Utils.IsDirectoryEmpty(path))
+                    {
+                        Directory.Delete(path);
+                    }
+                    songInfo.path = newPath;
+                }
+                else
+                    Console.WriteLine("subfoldern null");
+            }
+            catch(Exception ex)
+            {
+                Logger.Error($"Unable to prepare Extracted Zip! \n {ex}");
+            }
+            */
             if (string.IsNullOrEmpty(songInfo.path))
             {
                 songInfo.path = customSongsPath;
@@ -178,18 +217,18 @@ namespace SongBrowser
                 try
                 {
 
-                    string dirName = new DirectoryInfo(customSongsPath).Name;
+                    //          string dirName = new DirectoryInfo(customSongsPath).Name;
 
-                    SongCore.Loader.SongsLoadedEvent -= Plugin.Instace.SongCore_SongsLoadedEvent;
+                    SongCore.Loader.SongsLoadedEvent -= Plugin.Instance.SongCore_SongsLoadedEvent;
                     Action<SongCore.Loader, Dictionary<string, CustomPreviewBeatmapLevel>> songsLoadedAction = null;
                     songsLoadedAction = (arg1, arg2) =>
                     {
                         SongCore.Loader.SongsLoadedEvent -= songsLoadedAction;
-                        SongCore.Loader.SongsLoadedEvent += Plugin.Instace.SongCore_SongsLoadedEvent;
+                        SongCore.Loader.SongsLoadedEvent += Plugin.Instance.SongCore_SongsLoadedEvent;
                     };
                     SongCore.Loader.SongsLoadedEvent += songsLoadedAction;
 
-                    SongCore.Loader.Instance.RefreshSongs();
+                    SongCore.Loader.Instance.RefreshSongs(false);
 
                 }
                 catch (Exception e)
@@ -321,6 +360,8 @@ namespace SongBrowser
 
                 Logger.Info($"{_alreadyDownloadedSongs.RemoveAll(x => x.Compare(song))} song removed");
             }).ConfigureAwait(false);
+
+
         }
 
 
@@ -330,14 +371,14 @@ namespace SongBrowser
             {
                 return _alreadyDownloadedSongs.Any(x => x.Compare(song));
             }
-
-            return false;
+            else
+                return false;
         }
 
         public static string GetLevelID(Song song)
         {
             Console.WriteLine("LevelID for: " + song.path);
-            string[] values = new string[] { song.hash, song.songName, song.songSubName, song.authorName, song.beatsPerMinute };
+            string[] values = new string[] { song.hash, song.songName, song.songSubName, song.levelAuthorName, song.bpm.ToString() };
             return string.Join("∎", values) + "∎";
         }
 
@@ -376,7 +417,7 @@ namespace SongBrowser
 
         public IEnumerator RequestSongByLevelIDCoroutine(string levelId, Action<Song> callback)
         {
-            UnityWebRequest wwwId = UnityWebRequest.Get($"{PluginConfig.beatsaverURL}/api/songs/search/hash/" + levelId);
+            UnityWebRequest wwwId = UnityWebRequest.Get($"{PluginConfig.beatsaverURL}/api/maps/by-hash/" + levelId);
             wwwId.timeout = 10;
 
             yield return wwwId.SendWebRequest();
@@ -388,16 +429,15 @@ namespace SongBrowser
             }
             else
             {
-                JSONNode node = JSON.Parse(wwwId.downloadHandler.text);
-
-                if (node["songs"].Count == 0)
+                JObject jNode = JObject.Parse(wwwId.downloadHandler.text);
+                if (jNode.Children().Count() == 0)
                 {
                     Logger.Error($"Song {levelId} doesn't exist on BeatSaver!");
                     callback?.Invoke(null);
                     yield break;
                 }
 
-                Song _tempSong = Song.FromSearchNode(node["songs"][0]);
+                Song _tempSong = Song.FromSearchNode((JObject)jNode);
                 callback?.Invoke(_tempSong);
             }
         }
@@ -409,7 +449,7 @@ namespace SongBrowser
 
         public IEnumerator RequestSongByKeyCoroutine(string key, Action<Song> callback)
         {
-            UnityWebRequest wwwId = UnityWebRequest.Get($"{PluginConfig.beatsaverURL}/api/songs/detail/" + key);
+            UnityWebRequest wwwId = UnityWebRequest.Get($"{PluginConfig.beatsaverURL}/api/maps/detail/" + key);
             wwwId.timeout = 10;
 
             yield return wwwId.SendWebRequest();
@@ -421,9 +461,9 @@ namespace SongBrowser
             }
             else
             {
-                JSONNode node = JSON.Parse(wwwId.downloadHandler.text);
+                JObject node = JObject.Parse(wwwId.downloadHandler.text);
 
-                Song _tempSong = new Song(node["song"]);
+                Song _tempSong = new Song((JObject)node, false);
                 callback?.Invoke(_tempSong);
             }
         }

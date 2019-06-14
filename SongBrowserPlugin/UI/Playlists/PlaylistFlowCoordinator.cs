@@ -1,5 +1,5 @@
 ﻿using CustomUI.BeatSaber;
-using SimpleJSON;
+using Newtonsoft.Json.Linq;
 using SongBrowser.DataAccess;
 using SongBrowser.DataAccess.BeatSaverApi;
 using SongBrowser.Internals;
@@ -143,10 +143,10 @@ namespace SongBrowser.UI
                     beatSaverSong = new Song()
                     {
                         songName = item.songName,
-                        id = item.key,
+                        _id = item.key,
                         downloadingProgress = 0f,
                         hash = (item.levelId == null ? "" : item.levelId),
-                        downloadUrl = archiveUrl
+                        downloadURL = archiveUrl
                     };
                 }
 
@@ -164,7 +164,7 @@ namespace SongBrowser.UI
             bool _usingHash = false;
             if (!string.IsNullOrEmpty(song.key))
             {
-                url = $"{PluginConfig.beatsaverURL}/api/songs/detail/{song.key}";
+                url = $"{PluginConfig.beatsaverURL}/api/maps/detail/{song.key}";
                 if (!string.IsNullOrEmpty(playlist.customDetailUrl))
                 {
                     url = playlist.customDetailUrl + song.key;
@@ -172,13 +172,13 @@ namespace SongBrowser.UI
             }
             else if (!string.IsNullOrEmpty(song.hash))
             {
-                url = $"{PluginConfig.beatsaverURL}/api/songs/search/hash/{song.hash}";
+                url = $"{PluginConfig.beatsaverURL}/api/maps/by-hash/{song.hash}";
                 _usingHash = true;
             }
             else if (!string.IsNullOrEmpty(song.levelId))
             {
                 string hash = CustomHelpers.CheckHex(song.levelId.Substring(0, Math.Min(32, song.levelId.Length)));
-                url = $"{PluginConfig.beatsaverURL}/api/songs/search/hash/{hash}";
+                url = $"{PluginConfig.beatsaverURL}/api/maps/by-hash/{hash}";
                 _usingHash = true;
             }
             else
@@ -198,21 +198,20 @@ namespace SongBrowser.UI
             {
                 try
                 {
-                    JSONNode node = JSON.Parse(www.downloadHandler.text);
-
+                    JObject jNode = JObject.Parse(www.downloadHandler.text);
                     if (_usingHash)
                     {
-                        if (node["songs"].Count == 0)
+                        if (jNode["songs"].Count() == 0)
                         {
                             Logger.Error($"Song {song.songName} doesn't exist on BeatSaver!");
                             songCallback?.Invoke(null);
                             yield break;
                         }
-                        songCallback?.Invoke(Song.FromSearchNode(node["songs"][0]));
+                        songCallback?.Invoke(Song.FromSearchNode(jNode));
                     }
                     else
                     {
-                        songCallback?.Invoke(new Song(node["song"]));
+                        songCallback?.Invoke(new Song((JObject)jNode, false));
                     }
                 }
                 catch (Exception e)

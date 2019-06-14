@@ -131,7 +131,6 @@
     <Compile Include="Internals\SimpleJSON.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="PluginConfig.cs" />
-    <Compile Include="UI\SceneEvents.cs" />
     <Compile Include="UI\BackButtonNavigationController.cs" />
     <Compile Include="UI\DownloadQueue\DownloadQueueTableCell.cs" />
     <Compile Include="UI\DownloadQueue\DownloadQueueViewController.cs" />

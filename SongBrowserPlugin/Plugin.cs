@@ -13,7 +13,7 @@ namespace SongBrowser
     public class Plugin : IPlugin
     {
         public const string VERSION_NUMBER = "5.0.0";
-        public static Plugin Instace;
+        public static Plugin Instance;
 
         public string Name
         {
@@ -27,7 +27,7 @@ namespace SongBrowser
 
         public void OnApplicationStart()
         {
-            Instace = this;
+            Instance = this;
 
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
             SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;

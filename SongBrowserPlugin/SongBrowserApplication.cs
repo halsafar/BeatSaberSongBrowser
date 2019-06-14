@@ -61,7 +61,8 @@ namespace SongBrowser
 
             InstallHandlers();
 
-            StartCoroutine(ScrappedData.Instance.DownloadScrappedData((List<ScrappedSong> songs) => { }));
+            // Initialize Downloader Scrapped Data
+            StartCoroutine(ScrappedData.Instance.DownloadScrappedData((List<ScrappedSong> songs) => { }));            
 
             if (SongCore.Loader.AreSongsLoaded)
             {
@@ -72,6 +73,7 @@ namespace SongBrowser
                 SongCore.Loader.SongsLoadedEvent += OnSongLoaderLoadedSongs;
             }
 
+            // Useful to dump game objects.
             /*foreach (RectTransform rect in Resources.FindObjectsOfTypeAll<RectTransform>())
             {
                 Logger.Debug("RectTransform: {0}", rect.name);

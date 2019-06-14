@@ -223,7 +223,7 @@ namespace SongBrowser.DataAccess
                 if (song != null)
                     key = song.Key;
                 else
-                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(hash, (Song bsSong) => { if (bsSong != null) key = bsSong.id; });
+                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(hash, (Song bsSong) => { if (bsSong != null) key = bsSong._id; });
             }
             else if (!string.IsNullOrEmpty(levelId))
             {
@@ -231,7 +231,7 @@ namespace SongBrowser.DataAccess
                 if (song != null)
                     key = song.Key;
                 else
-                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(levelId.Substring(0, Math.Min(32, levelId.Length)), (Song bsSong) => { if (bsSong != null) key = bsSong.id; });
+                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(levelId.Substring(0, Math.Min(32, levelId.Length)), (Song bsSong) => { if (bsSong != null) key = bsSong._id; });
             }
             else if (level != null)
             {
@@ -239,7 +239,7 @@ namespace SongBrowser.DataAccess
                 if (song != null)
                     key = song.Key;
                 else
-                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(level.levelID.Substring(0, Math.Min(32, level.levelID.Length)), (Song bsSong) => { if (bsSong != null) key = bsSong.id; });
+                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(level.levelID.Substring(0, Math.Min(32, level.levelID.Length)), (Song bsSong) => { if (bsSong != null) key = bsSong._id; });
             }
         }
     }

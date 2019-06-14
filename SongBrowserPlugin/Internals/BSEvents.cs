@@ -176,7 +176,7 @@ namespace SongBrowser.Internals
                     case LevelCompletionResults.LevelEndStateType.Failed:
                         InvokeAll(levelFailed, data, results);
                         break;
-                }
+                };
                 switch (results.levelEndAction)
                 {
                     case LevelCompletionResults.LevelEndAction.Quit:
@@ -186,7 +186,6 @@ namespace SongBrowser.Internals
                         InvokeAll(levelRestarted, data, results);
                         break;
                 }
-
             };
 
             InvokeAll(gameSceneLoaded);
