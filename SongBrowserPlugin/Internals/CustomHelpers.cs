@@ -59,5 +59,19 @@ namespace SongBrowser.Internals
             }
         }
 
+        public static bool IsModInstalled(string ModName)
+        {
+            foreach (var mod in IPA.Loader.PluginManager.Plugins)
+            {
+                if (mod.Name == ModName)
+                    return true;
+            }
+            foreach (var mod in IPA.Loader.PluginManager.AllPlugins)
+            {
+                if (mod.Metadata.Id == ModName)
+                    return true;
+            }
+            return false;
+        }
     }
 }

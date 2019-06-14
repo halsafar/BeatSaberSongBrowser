@@ -15,6 +15,7 @@ using Logger = SongBrowser.Logging.Logger;
 using SongBrowser.DataAccess.BeatSaverApi;
 using System.Collections;
 using SongCore.Utilities;
+using SongBrowser.Internals;
 
 namespace SongBrowser.UI
 {
@@ -885,10 +886,25 @@ namespace SongBrowser.UI
         }
 
         /// <summary>
+        /// Call Downloader delete.
+        /// </summary>
+        private void CallDownloaderDelete()
+        {
+            BeatSaverDownloader.UI.SongListTweaks.Instance.DeletePressed();
+        }
+
+        /// <summary>
         /// Pop up a delete dialog.
         /// </summary>
         private void HandleDeleteSelectedLevel()
         {
+            bool DownloaderInstalled = CustomHelpers.IsModInstalled("BeatSaverDownloader");
+            if (DownloaderInstalled)
+            {
+                CallDownloaderDelete();
+                return;
+            }
+
             IBeatmapLevel level = _levelDetailViewController.selectedDifficultyBeatmap.level;
             _deleteDialog.Init("Delete song", $"Do you really want to delete \"{ level.songName} {level.songSubName}\"?", "Delete", "Cancel",
                 (selectedButton) =>
@@ -900,24 +916,25 @@ namespace SongBrowser.UI
                         {
                             // determine the index we are deleting so we can keep the cursor near the same spot after
                             // the header counts as an index, so if the index came from the level array we have to add 1.
-                            List<IPreviewBeatmapLevel> levels = _levelPackLevelsTableView.GetPrivateField<IBeatmapLevelPack>("_pack").beatmapLevelCollection.beatmapLevels.ToList();
-                            int selectedIndex = 1 + levels.FindIndex(x => x.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID);
+                            var levelsTableView = _levelPackLevelsViewController.GetPrivateField<LevelPackLevelsTableView>("_levelPackLevelsTableView");
+                            List<IPreviewBeatmapLevel> levels = levelsTableView.GetPrivateField<IBeatmapLevelPack>("_pack").beatmapLevelCollection.beatmapLevels.ToList();
+                            int selectedIndex = levels.FindIndex(x => x.levelID == _standardLevelDetailView.selectedDifficultyBeatmap.level.levelID);
 
-                            // we are only deleting custom levels, find the song, delete it
-                            var song = new Song(SongCore.Loader.CustomLevels.First(x => x.Value.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID).Value);
-                            SongCore.Loader.Instance.DeleteSong(song.path);
-
-                            if (selectedIndex > 0)
+                            if (selectedIndex > -1)
                             {
+                                var song = new Song(SongCore.Loader.CustomLevels.First(x => x.Value.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID).Value);
+                                SongCore.Loader.Instance.DeleteSong(song.path);
                                 this._model.RemoveSongFromLevelPack(GetCurrentSelectedLevelPack(), _levelDetailViewController.selectedDifficultyBeatmap.level.levelID);
-                                Logger.Log("Removed {0} from custom song list!", song.songName);
 
                                 this.UpdateLevelDataModel();
                                 this.RefreshSongList();
 
-                                TableView listTableView = _levelPackLevelsTableView.GetPrivateField<TableView>("_tableView");
+                                int removedLevels = levels.RemoveAll(x => x.levelID == _standardLevelDetailView.selectedDifficultyBeatmap.level.levelID);
+                                Logger.Info("Removed " + removedLevels + " level(s) from song list!");
+
+                                TableView listTableView = levelsTableView.GetPrivateField<TableView>("_tableView");
                                 listTableView.ScrollToCellWithIdx(selectedIndex, TableView.ScrollPositionType.Beginning, false);
-                                _levelPackLevelsTableView.SetPrivateField("_selectedRow", selectedIndex);
+                                levelsTableView.SetPrivateField("_selectedRow", selectedIndex);
                                 listTableView.SelectCellWithIdx(selectedIndex, true);
                             }
                         }
