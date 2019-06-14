@@ -469,7 +469,7 @@ namespace SongBrowser.UI
             // shrink play button container
             RectTransform playContainerRect = _standardLevelDetailView.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayContainer");
             RectTransform playButtonsRect = playContainerRect.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayButtons");
-            playButtonsRect.localScale = new Vector3(0.95f, 0.95f, 0.95f);
+            playButtonsRect.localScale = new Vector3(0.825f, 0.825f, 0.825f);
         }
 
         /// <summary>
