@@ -905,7 +905,7 @@ namespace SongBrowser.UI
 
                             // we are only deleting custom levels, find the song, delete it
                             var song = new Song(SongCore.Loader.CustomLevels.First(x => x.Value.levelID == _levelDetailViewController.selectedDifficultyBeatmap.level.levelID).Value);
-                            SongDownloader.Instance.DeleteSong(song);
+                            SongCore.Loader.Instance.DeleteSong(song.path);
 
                             if (selectedIndex > 0)
                             {
