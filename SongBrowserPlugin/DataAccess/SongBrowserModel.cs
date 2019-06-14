@@ -615,7 +615,7 @@ namespace SongBrowser
             {
                 levels = levels.Intersect(
                     levels
-                        .Where(x => $"{x.songName} {x.songSubName} {x.songAuthorName}".ToLower().Contains(term.ToLower()))
+                        .Where(x => $"{x.songName} {x.songSubName} {x.songAuthorName} {x.levelAuthorName}".ToLower().Contains(term.ToLower()))
                         .ToList(
                     )
                 ).ToList();
