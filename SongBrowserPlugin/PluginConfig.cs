@@ -18,6 +18,8 @@ namespace SongBrowser
     {
         public static int maxSimultaneousDownloads = 3;
         public static string beatsaverURL = "https://beatsaver.com";
+        public static string scoresaberURL = "https://scoresaber.com";
+        public static String CUSTOM_SONG_LEVEL_PACK_ID = "custom_levelpack_CustomLevels";
 
         public static bool beatDropInstalled = false;
         public static string beatDropPlaylistsLocation = "";

@@ -200,6 +200,10 @@ namespace SongBrowser.DataAccess
             {
                 settings.currentLevelPackId = "ModdedCustomMaps";
             }
+            else if (String.Equals(settings.currentLevelPackId, "ModdedCustomMaps"))
+            {
+                settings.currentLevelPackId = PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID;
+            }
 
             settings.Save();
         }
@@ -211,7 +215,7 @@ namespace SongBrowser.DataAccess
         /// </summary>
         /// <param name="levelIdToCustomLevel"></param>
         /// <param name="levelIdToSongVersion"></param>
-        public void ConvertFavoritesToPlaylist(Dictionary<String, SongLoaderPlugin.OverrideClasses.CustomLevel> levelIdToCustomLevel,
+        public void ConvertFavoritesToPlaylist(Dictionary<String, CustomPreviewBeatmapLevel> levelIdToCustomLevel,
                                                Dictionary<string, string> levelIdToSongVersion)
         {
             // Check if we have favorites to convert to the playlist

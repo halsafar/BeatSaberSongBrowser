@@ -1,9 +1,4 @@
-﻿using SimpleJSON;
-using SongBrowser.DataAccess;
-using SongBrowser.DataAccess.BeatSaverApi;
-using SongLoaderPlugin;
-using SongLoaderPlugin.OverrideClasses;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -15,11 +10,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
+using Newtonsoft.Json.Linq;
 using Logger = SongBrowser.Logging.Logger;
+using SongBrowser.DataAccess.BeatSaverApi;
+using SongBrowser.DataAccess;
 
 namespace SongBrowser
 {
-    // https://github.com/andruzzzhka/BeatSaverDownloader/blob/master/BeatSaverDownloader/Misc/SongDownloader.cs
     public class SongDownloader : MonoBehaviour
     {
         public event Action<Song> songDownloaded;
@@ -45,19 +42,22 @@ namespace SongBrowser
         public void Awake()
         {
             DontDestroyOnLoad(gameObject);
-            if (!SongLoader.AreSongsLoaded)
+
+            if (!SongCore.Loader.AreSongsLoaded)
             {
-                SongLoader.SongsLoadedEvent += SongLoader_SongsLoadedEvent;
+                SongCore.Loader.SongsLoadedEvent += SongLoader_SongsLoadedEvent;
             }
             else
             {
-                SongLoader_SongsLoadedEvent(null, SongLoader.CustomLevels);
+                SongLoader_SongsLoadedEvent(null, SongCore.Loader.CustomLevels);
             }
-        }
 
-        private void SongLoader_SongsLoadedEvent(SongLoader sender, List<CustomLevel> levels)
+        }
+        //bananbread song id
+
+        private void SongLoader_SongsLoadedEvent(SongCore.Loader sender, Dictionary<string, CustomPreviewBeatmapLevel> levels)
         {
-            _alreadyDownloadedSongs = levels.Select(x => new Song(x)).ToList();
+            _alreadyDownloadedSongs = levels.Values.Select(x => new Song(x)).ToList();
         }
 
         public IEnumerator DownloadSongCoroutine(Song songInfo)
@@ -71,7 +71,7 @@ namespace SongBrowser
 
             try
             {
-                www = UnityWebRequest.Get(songInfo.downloadUrl);
+                www = UnityWebRequest.Get(songInfo.downloadURL);
 
                 asyncRequest = www.SendWebRequest();
             }
@@ -110,9 +110,7 @@ namespace SongBrowser
             }
             else
             {
-                Logger.Log("Received response from BeatSaver.com...");
-
-                string docPath = "";
+                Logger.Info("Received response from BeatSaver.com...");
                 string customSongsPath = "";
 
                 byte[] data = www.downloadHandler.data;
@@ -121,16 +119,13 @@ namespace SongBrowser
 
                 try
                 {
-                    docPath = Application.dataPath;
-                    docPath = docPath.Substring(0, docPath.Length - 5);
-                    docPath = docPath.Substring(0, docPath.LastIndexOf("/"));
-                    customSongsPath = docPath + "/CustomSongs/" + songInfo.id + "/";
+                    customSongsPath = CustomLevelPathHelper.customLevelsDirectoryPath;
                     if (!Directory.Exists(customSongsPath))
                     {
                         Directory.CreateDirectory(customSongsPath);
                     }
                     zipStream = new MemoryStream(data);
-                    Logger.Log("Downloaded zip!");
+                    Logger.Info("Downloaded zip!");
                 }
                 catch (Exception e)
                 {
@@ -151,11 +146,19 @@ namespace SongBrowser
         {
             try
             {
-                Logger.Log("Extracting...");
+                Logger.Info("Extracting...");
                 _extractingZip = true;
                 ZipArchive archive = new ZipArchive(zipStream, ZipArchiveMode.Read);
-                await Task.Run(() => archive.ExtractToDirectory(customSongsPath)).ConfigureAwait(false);
+                string path = customSongsPath + "/" + songInfo.key + " (" + songInfo.songName + " - " + songInfo.levelAuthorName + ")";
+                if (Directory.Exists(path))
+                {
+                    int pathNum = 1;
+                    while (Directory.Exists(path + $" ({pathNum})")) ++pathNum;
+                    path += $" ({pathNum})";
+                }
+                await Task.Run(() => archive.ExtractToDirectory(path)).ConfigureAwait(false);
                 archive.Dispose();
+                songInfo.path = path;
             }
             catch (Exception e)
             {
@@ -166,8 +169,40 @@ namespace SongBrowser
             }
             zipStream.Close();
 
-            songInfo.path = Directory.GetDirectories(customSongsPath).FirstOrDefault();
-
+            //Correct subfolder
+            /*
+            try
+            {
+                string path = Directory.GetDirectories(customSongsPath).FirstOrDefault();
+                SongCore.Utilities.Utils.GrantAccess(path);
+                DirectoryInfo subfolder = new DirectoryInfo(path).GetDirectories().FirstOrDefault();
+                if(subfolder != null)
+                {
+                    Console.WriteLine(path);
+                    Console.WriteLine(subfolder.FullName);
+                    string newPath = CustomLevelPathHelper.customLevelsDirectoryPath + "/" + songInfo.id + " " + subfolder.Name;
+                    if (Directory.Exists(newPath))
+                    {
+                        int pathNum = 1;
+                        while (Directory.Exists(newPath + $" ({pathNum})")) ++pathNum;
+                        newPath = newPath + $" ({pathNum})";
+                    }
+                    Console.WriteLine(newPath);
+                    Directory.Move(subfolder.FullName, newPath);
+                    if (SongCore.Utilities.Utils.IsDirectoryEmpty(path))
+                    {
+                        Directory.Delete(path);
+                    }
+                    songInfo.path = newPath;
+                }
+                else
+                    Console.WriteLine("subfoldern null");
+            }
+            catch(Exception ex)
+            {
+                Logger.Error($"Unable to prepare Extracted Zip! \n {ex}");
+            }
+            */
             if (string.IsNullOrEmpty(songInfo.path))
             {
                 songInfo.path = customSongsPath;
@@ -176,17 +211,25 @@ namespace SongBrowser
             _extractingZip = false;
             songInfo.songQueueState = SongQueueState.Downloaded;
             _alreadyDownloadedSongs.Add(songInfo);
-            Logger.Log($"Extracted {songInfo.songName} {songInfo.songSubName}!");
+            Logger.Info($"Extracted {songInfo.songName} {songInfo.songSubName}!");
 
             HMMainThreadDispatcher.instance.Enqueue(() => {
                 try
                 {
-                    string dirName = new DirectoryInfo(customSongsPath).Name;
-#if DEBUG
-                    Logger.Log("Original path: " + customSongsPath);
-                    Logger.Log("Folder name: " + dirName);
-#endif
-                    SongLoader.Instance.RetrieveNewSong(dirName);
+
+                    //          string dirName = new DirectoryInfo(customSongsPath).Name;
+
+                    SongCore.Loader.SongsLoadedEvent -= Plugin.Instance.SongCore_SongsLoadedEvent;
+                    Action<SongCore.Loader, Dictionary<string, CustomPreviewBeatmapLevel>> songsLoadedAction = null;
+                    songsLoadedAction = (arg1, arg2) =>
+                    {
+                        SongCore.Loader.SongsLoadedEvent -= songsLoadedAction;
+                        SongCore.Loader.SongsLoadedEvent += Plugin.Instance.SongCore_SongsLoadedEvent;
+                    };
+                    SongCore.Loader.SongsLoadedEvent += songsLoadedAction;
+
+                    SongCore.Loader.Instance.RefreshSongs(false);
+
                 }
                 catch (Exception e)
                 {
@@ -196,12 +239,17 @@ namespace SongBrowser
 
         }
 
-        public bool DeleteSong(Song song)
+        public void DeleteSong(Song song)
         {
             bool zippedSong = false;
             string path = "";
-
+            //      Console.WriteLine("Deleting: " + song.path);
+            SongCore.Loader.Instance.DeleteSong(song.path, false);
+            /*
             CustomLevel level = SongLoader.CustomLevels.FirstOrDefault(x => x.levelID.StartsWith(song.hash));
+
+            if (level != null)
+                SongLoader.Instance.RemoveSongWithLevelID(level.levelID);
 
             if (string.IsNullOrEmpty(song.path))
             {
@@ -212,98 +260,114 @@ namespace SongBrowser
             {
                 path = song.path;
             }
-
+            */
+            path = song.path.Replace('\\', '/');
             if (string.IsNullOrEmpty(path))
-                return false;
+                return;
             if (!Directory.Exists(path))
-                return false;
+            {
+                return;
+            }
 
             if (path.Contains("/.cache/"))
                 zippedSong = true;
 
-            if (zippedSong)
+            Task.Run(() =>
             {
-                Logger.Log("Deleting \"" + path.Substring(path.LastIndexOf('/')) + "\"...");
-                if (PluginConfig.deleteToRecycleBin)
+                if (zippedSong)
                 {
-                    FileOperationAPIWrapper.MoveToRecycleBin(path);
-                }
-                else
-                {
-                    Directory.Delete(path, true);
-                }
+                    Logger.Info("Deleting \"" + path.Substring(path.LastIndexOf('/')) + "\"...");
 
-                string songHash = Directory.GetParent(path).Name;
-
-                try
-                {
-                    if (Directory.GetFileSystemEntries(path.Substring(0, path.LastIndexOf('/'))).Length == 0)
+                    if (PluginConfig.deleteToRecycleBin)
                     {
-                        Logger.Log("Deleting empty folder \"" + path.Substring(0, path.LastIndexOf('/')) + "\"...");
-                        Directory.Delete(path.Substring(0, path.LastIndexOf('/')), false);
+                        FileOperationAPIWrapper.MoveToRecycleBin(path);
                     }
-                }
-                catch
-                {
-                    Logger.Warning("Can't find or delete empty folder!");
-                }
-
-                string docPath = Application.dataPath;
-                docPath = docPath.Substring(0, docPath.Length - 5);
-                docPath = docPath.Substring(0, docPath.LastIndexOf("/"));
-                string customSongsPath = docPath + "/CustomSongs/";
-
-                string hash = "";
-
-                foreach (string file in Directory.GetFiles(customSongsPath, "*.zip"))
-                {
-                    if (CreateMD5FromFile(file, out hash))
+                    else
                     {
-                        if (hash == songHash)
+                        Directory.Delete(path, true);
+                    }
+
+                    string songHash = Directory.GetParent(path).Name;
+
+                    try
+                    {
+                        if (Directory.GetFileSystemEntries(path.Substring(0, path.LastIndexOf('/'))).Length == 0)
                         {
-                            File.Delete(file);
-                            break;
+                            Logger.Info("Deleting empty folder \"" + path.Substring(0, path.LastIndexOf('/')) + "\"...");
+                            Directory.Delete(path.Substring(0, path.LastIndexOf('/')), false);
                         }
                     }
-                }
+                    catch
+                    {
+                        Logger.Warning("Can't find or delete empty folder!");
+                    }
 
-            }
-            else
-            {
-                Logger.Log("Deleting \"" + path.Substring(path.LastIndexOf('/')) + "\"...");
+                    string docPath = Application.dataPath;
+                    docPath = docPath.Substring(0, docPath.Length - 5);
+                    docPath = docPath.Substring(0, docPath.LastIndexOf("/"));
+                    string customSongsPath = docPath + "/CustomSongs/";
 
-                if (PluginConfig.deleteToRecycleBin)
-                {
-                    FileOperationAPIWrapper.MoveToRecycleBin(path);
+                    string hash = "";
+
+                    foreach (string file in Directory.GetFiles(customSongsPath, "*.zip"))
+                    {
+                        if (CreateMD5FromFile(file, out hash))
+                        {
+                            if (hash == songHash)
+                            {
+                                File.Delete(file);
+                                break;
+                            }
+                        }
+                    }
+
                 }
                 else
                 {
-                    Directory.Delete(path, true);
-                }
-
-                try
-                {
-                    if (Directory.GetFileSystemEntries(path.Substring(0, path.LastIndexOf('/'))).Length == 0)
+                    try
                     {
-                        Logger.Log("Deleting empty folder \"" + path.Substring(0, path.LastIndexOf('/')) + "\"...");
-                        Directory.Delete(path.Substring(0, path.LastIndexOf('/')), false);
-                    }
-                }
-                catch
-                {
-                    Logger.Warning("Unable to delete empty folder!");
-                }
-            }
+                        Logger.Info("Deleting \"" + path.Substring(0, path.LastIndexOf('/')) + "\"...");
 
-            if (level != null)
-                SongLoader.Instance.RemoveSongWithLevelID(level.levelID);
-            Logger.Log($"{_alreadyDownloadedSongs.RemoveAll(x => x.Compare(song))} song removed");
-            return true;
+                        if (PluginConfig.deleteToRecycleBin)
+                        {
+                            FileOperationAPIWrapper.MoveToRecycleBin(path);
+                        }
+                        else
+                        {
+                            Directory.Delete(path, true);
+                        }
+
+                        try
+                        {
+                            if (Directory.GetFileSystemEntries(path.Substring(0, path.LastIndexOf('/'))).Length == 0)
+                            {
+                                Logger.Info("Deleting empty folder \"" + path.Substring(0, path.LastIndexOf('/')) + "\"...");
+                                Directory.Delete(path.Substring(0, path.LastIndexOf('/')), false);
+                            }
+                        }
+                        catch
+                        {
+                            Logger.Warning("Unable to delete empty folder!");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("Error Deleting Song:" + song.path);
+                        Logger.Error(ex.ToString());
+                    }
+
+                }
+
+                Logger.Info($"{_alreadyDownloadedSongs.RemoveAll(x => x.Compare(song))} song removed");
+            }).ConfigureAwait(false);
+
+
         }
+
 
         public bool IsSongDownloaded(Song song)
         {
-            if (SongLoader.AreSongsLoaded)
+            if (SongCore.Loader.AreSongsLoaded)
             {
                 return _alreadyDownloadedSongs.Any(x => x.Compare(song));
             }
@@ -313,13 +377,15 @@ namespace SongBrowser
 
         public static string GetLevelID(Song song)
         {
-            string[] values = new string[] { song.hash, song.songName, song.songSubName, song.authorName, song.beatsPerMinute };
+            Console.WriteLine("LevelID for: " + song.path);
+            string[] values = new string[] { song.hash, song.songName, song.songSubName, song.levelAuthorName, song.bpm.ToString() };
             return string.Join("∎", values) + "∎";
         }
 
-        public static BeatmapLevelSO GetLevel(string levelId)
+        //bananabread songloader id
+        public static CustomPreviewBeatmapLevel GetLevel(string levelId)
         {
-            return SongLoader.CustomLevelCollectionSO.beatmapLevels.FirstOrDefault(x => x.levelID == levelId) as BeatmapLevelSO;
+            return SongCore.Loader.CustomBeatmapLevelPackCollectionSO.beatmapLevelPacks.SelectMany(x => x.beatmapLevelCollection.beatmapLevels).FirstOrDefault(x => x.levelID == levelId) as CustomPreviewBeatmapLevel;
         }
 
         public static bool CreateMD5FromFile(string path, out string hash)
@@ -351,7 +417,7 @@ namespace SongBrowser
 
         public IEnumerator RequestSongByLevelIDCoroutine(string levelId, Action<Song> callback)
         {
-            UnityWebRequest wwwId = UnityWebRequest.Get($"{PluginConfig.beatsaverURL}/api/songs/search/hash/" + levelId);
+            UnityWebRequest wwwId = UnityWebRequest.Get($"{PluginConfig.beatsaverURL}/api/maps/by-hash/" + levelId);
             wwwId.timeout = 10;
 
             yield return wwwId.SendWebRequest();
@@ -363,19 +429,15 @@ namespace SongBrowser
             }
             else
             {
-#if DEBUG
-                Logger.Log("Received response from BeatSaver...");
-#endif
-                JSONNode node = JSON.Parse(wwwId.downloadHandler.text);
-
-                if (node["songs"].Count == 0)
+                JObject jNode = JObject.Parse(wwwId.downloadHandler.text);
+                if (jNode.Children().Count() == 0)
                 {
                     Logger.Error($"Song {levelId} doesn't exist on BeatSaver!");
                     callback?.Invoke(null);
                     yield break;
                 }
 
-                Song _tempSong = Song.FromSearchNode(node["songs"][0]);
+                Song _tempSong = Song.FromSearchNode((JObject)jNode);
                 callback?.Invoke(_tempSong);
             }
         }
@@ -387,7 +449,7 @@ namespace SongBrowser
 
         public IEnumerator RequestSongByKeyCoroutine(string key, Action<Song> callback)
         {
-            UnityWebRequest wwwId = UnityWebRequest.Get($"{PluginConfig.beatsaverURL}/api/songs/detail/" + key);
+            UnityWebRequest wwwId = UnityWebRequest.Get($"{PluginConfig.beatsaverURL}/api/maps/detail/" + key);
             wwwId.timeout = 10;
 
             yield return wwwId.SendWebRequest();
@@ -399,12 +461,9 @@ namespace SongBrowser
             }
             else
             {
-#if DEBUG
-                Logger.Log("Received response from BeatSaver...");
-#endif
-                JSONNode node = JSON.Parse(wwwId.downloadHandler.text);
+                JObject node = JObject.Parse(wwwId.downloadHandler.text);
 
-                Song _tempSong = new Song(node["song"]);
+                Song _tempSong = new Song((JObject)node, false);
                 callback?.Invoke(_tempSong);
             }
         }

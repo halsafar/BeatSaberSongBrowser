@@ -1,7 +1,5 @@
 ﻿using SongBrowser.DataAccess;
 using SongBrowser.UI;
-using SongLoaderPlugin;
-using SongLoaderPlugin.OverrideClasses;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -19,8 +17,6 @@ namespace SongBrowser
         // Song Browser UI Elements
         private SongBrowserUI _songBrowserUI;
         private ScoreSaberDatabaseDownloader _ppDownloader;
-
-        public Dictionary<String, Sprite> CachedIcons;
 
         public static SongBrowser.UI.ProgressBar MainProgressBar;
 
@@ -63,20 +59,30 @@ namespace SongBrowser
         {
             Logger.Trace("Start-SongBrowserApplication()");
 
-            AcquireUIElements();
             InstallHandlers();
 
-            StartCoroutine(ScrappedData.Instance.DownloadScrappedData((List<ScrappedSong> songs) => { }));
+            // Initialize Downloader Scrapped Data
+            StartCoroutine(ScrappedData.Instance.DownloadScrappedData((List<ScrappedSong> songs) => { }));            
 
-            if (SongLoaderPlugin.SongLoader.AreSongsLoaded)
+            if (SongCore.Loader.AreSongsLoaded)
             {
-                OnSongLoaderLoadedSongs(null, SongLoader.CustomLevels);
+                OnSongLoaderLoadedSongs(null, SongCore.Loader.CustomLevels);
             }
             else
             {
-                SongLoader.SongsLoadedEvent += OnSongLoaderLoadedSongs;
-                _songBrowserUI.UpdateLevelPackModel();
+                SongCore.Loader.SongsLoadedEvent += OnSongLoaderLoadedSongs;
             }
+
+            // Useful to dump game objects.
+            /*foreach (RectTransform rect in Resources.FindObjectsOfTypeAll<RectTransform>())
+            {
+                Logger.Debug("RectTransform: {0}", rect.name);
+            }*/
+
+            /*foreach (Sprite sprite in Resources.FindObjectsOfTypeAll<Sprite>())
+            {
+                Logger.Debug("Adding Icon: {0}", sprite.name);
+            }*/
         }
 
         /// <summary>
@@ -84,12 +90,11 @@ namespace SongBrowser
         /// </summary>
         /// <param name="loader"></param>
         /// <param name="levels"></param>
-        private void OnSongLoaderLoadedSongs(SongLoader loader, List<CustomLevel> levels)
+        private void OnSongLoaderLoadedSongs(SongCore.Loader loader, Dictionary<string, CustomPreviewBeatmapLevel> levels)
         {
             Logger.Trace("OnSongLoaderLoadedSongs-SongBrowserApplication()");
             try
             {
-                _songBrowserUI.UpdateLevelPackModel();
                 _songBrowserUI.UpdateLevelDataModel();
                 _songBrowserUI.RefreshSongList();
             }
@@ -112,44 +117,13 @@ namespace SongBrowser
                 _songBrowserUI.Model.UpdateScoreSaberDataMapping();
                 if (_songBrowserUI.Model.Settings.sortMode == SongSortMode.PP)
                 {
-                    _songBrowserUI.Model.ProcessSongList();
+                    _songBrowserUI.ProcessSongList();
                     _songBrowserUI.RefreshSongList();
                 }
             }
             catch (Exception e)
             {
                 Logger.Exception("Exception during OnScoreSaberDataDownloaded: ", e);
-            }
-        }
-
-        /// <summary>
-        /// Get a handle to the view controllers we are going to add elements to.
-        /// </summary>
-        private void AcquireUIElements()
-        {
-            Logger.Trace("AcquireUIElements()");        
-            try
-            {
-                CachedIcons = new Dictionary<String, Sprite>();
-                foreach (Sprite sprite in Resources.FindObjectsOfTypeAll<Sprite>())
-                {
-                    if (CachedIcons.ContainsKey(sprite.name))
-                    {
-                        continue;
-                    }
-
-                    //Logger.Debug("Adding Icon: {0}", sprite.name);
-                    CachedIcons.Add(sprite.name, sprite);
-                }
-
-                /*foreach (RectTransform rect in Resources.FindObjectsOfTypeAll<RectTransform>())
-                {
-                    Logger.Debug("RectTransform: {0}", rect.name);
-                }*/
-            }
-            catch (Exception e)
-            {
-                Logger.Exception("Exception AcquireUIElements(): ", e);
             }
         }
 
@@ -213,7 +187,6 @@ namespace SongBrowser
         private void HandleModeSelection(MainMenuViewController.MenuButton mode)
         {
             Logger.Trace("HandleModeSelection()");
-            _songBrowserUI.UpdateLevelPackModel(true);
             this._songBrowserUI.CreateUI(mode);
             StartCoroutine(this.UpdateBrowserUI());
         }
@@ -239,44 +212,5 @@ namespace SongBrowser
             Button buttonInstance = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == buttonName));
             buttonInstance.onClick.Invoke();
         }
-
-#if DEBUG
-        /// <summary>
-        /// Map some key presses directly to UI interactions to make testing easier.
-        /// </summary>
-        private void LateUpdate()
-        {            
-            // z,x,c,v can be used to get into a song, b will hit continue button after song ends
-            if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.Z))
-            {
-                InvokeBeatSaberButton("PartyFreePlayButton");
-            }
-            else if (Input.GetKeyDown(KeyCode.Z))
-            {
-                InvokeBeatSaberButton("SoloFreePlayButton");
-            }
-
-            if (Input.GetKeyDown(KeyCode.Alpha0))
-            {
-                InvokeBeatSaberButton("SettingsButton");
-            }
-
-            if (Input.GetKeyDown(KeyCode.Alpha9))
-            {
-                InvokeBeatSaberButton("ApplyButton");
-            }
-
-            if (Input.GetKeyDown(KeyCode.Alpha8))
-            {
-                Console.WriteLine("CLICKING OK BUTTON");
-                var settings = Resources.FindObjectsOfTypeAll<VRUI.VRUIViewController>().First(x => x.name == "SettingsViewController");
-                var button = settings.GetComponentsInChildren<Button>().Where(x => x.name == "OkButton");
-                foreach (Button b in button)
-                {
-                    b.onClick.Invoke();
-                }                
-            }
-        }
-#endif
     }
 }

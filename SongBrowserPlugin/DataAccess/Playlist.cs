@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using SimpleJSON;
 using SongBrowser.DataAccess.BeatSaverApi;
-using SongLoaderPlugin;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -80,7 +79,7 @@ namespace SongBrowser.DataAccess
                                 loadedPlaylists.Add(playlist);
                                 Logger.Log($"Found \"{playlist.playlistTitle}\" by {playlist.playlistAuthor}");
 
-                                if (SongLoader.AreSongsLoaded)
+                                if (SongCore.Loader.AreSongsLoaded)
                                 {
                                     MatchSongsForPlaylist(playlist);
                                 }
@@ -141,7 +140,7 @@ namespace SongBrowser.DataAccess
 
         public static void MatchSongsForPlaylist(Playlist playlist, bool matchAll = false)
         {
-            if (!SongLoader.AreSongsLoaded || SongLoader.AreSongsLoading || playlist.playlistTitle == "All songs" || playlist.playlistTitle == "Your favorite songs") return;
+            if (!SongCore.Loader.AreSongsLoaded || SongCore.Loader.AreSongsLoading || playlist.playlistTitle == "All songs" || playlist.playlistTitle == "Your favorite songs") return;
             Logger.Log("Started matching songs for playlist \"" + playlist.playlistTitle + "\"...");
             if (!playlist.songs.All(x => x.level != null) || matchAll)
             {
@@ -155,22 +154,22 @@ namespace SongBrowser.DataAccess
                         {
                             if (!string.IsNullOrEmpty(x.levelId)) //check that we have levelId and if we do, try to match level
                             {
-                                x.level = SongLoader.CustomLevels.FirstOrDefault(y => y.levelID == x.levelId);
+                                x.level = SongCore.Loader.CustomLevels.FirstOrDefault(y => y.Value.levelID == x.levelId).Value;
                             }
                             if (x.level == null && !string.IsNullOrEmpty(x.hash)) //if level is still null, check that we have hash and if we do, try to match level
                             {
-                                x.level = SongLoader.CustomLevels.FirstOrDefault(y => y.levelID.StartsWith(x.hash.ToUpper()));
+                                x.level = SongCore.Loader.CustomLevels.FirstOrDefault(y => y.Value.levelID.StartsWith(x.hash.ToUpper())).Value;
                             }
                             if (x.level == null && !string.IsNullOrEmpty(x.key)) //if level is still null, check that we have key and if we do, try to match level
                             {
                                 ScrappedSong song = ScrappedData.Songs.FirstOrDefault(z => z.Key == x.key);
                                 if (song != null)
                                 {
-                                    x.level = SongLoader.CustomLevels.FirstOrDefault(y => y.levelID.StartsWith(song.Hash));
+                                    x.level = SongCore.Loader.CustomLevels.FirstOrDefault(y => y.Value.levelID.StartsWith(song.Hash)).Value;
                                 }
                                 else
                                 {
-                                    x.level = SongLoader.CustomLevels.FirstOrDefault(y => y.customSongInfo.path.Contains(x.key));
+                                    x.level = SongCore.Loader.CustomLevels.FirstOrDefault(y => y.Value.customLevelPath.Contains(x.key)).Value;
                                 }
                             }
                         }
@@ -207,7 +206,7 @@ namespace SongBrowser.DataAccess
         [NonSerialized]
         public string levelId;
         [NonSerialized]
-        public BeatmapLevelSO level;
+        public CustomPreviewBeatmapLevel level;
         [NonSerialized]
         public bool oneSaber;
         [NonSerialized]
@@ -224,7 +223,7 @@ namespace SongBrowser.DataAccess
                 if (song != null)
                     key = song.Key;
                 else
-                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(hash, (Song bsSong) => { if (bsSong != null) key = bsSong.id; });
+                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(hash, (Song bsSong) => { if (bsSong != null) key = bsSong._id; });
             }
             else if (!string.IsNullOrEmpty(levelId))
             {
@@ -232,7 +231,7 @@ namespace SongBrowser.DataAccess
                 if (song != null)
                     key = song.Key;
                 else
-                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(levelId.Substring(0, Math.Min(32, levelId.Length)), (Song bsSong) => { if (bsSong != null) key = bsSong.id; });
+                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(levelId.Substring(0, Math.Min(32, levelId.Length)), (Song bsSong) => { if (bsSong != null) key = bsSong._id; });
             }
             else if (level != null)
             {
@@ -240,7 +239,7 @@ namespace SongBrowser.DataAccess
                 if (song != null)
                     key = song.Key;
                 else
-                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(level.levelID.Substring(0, Math.Min(32, level.levelID.Length)), (Song bsSong) => { if (bsSong != null) key = bsSong.id; });
+                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(level.levelID.Substring(0, Math.Min(32, level.levelID.Length)), (Song bsSong) => { if (bsSong != null) key = bsSong._id; });
             }
         }
     }

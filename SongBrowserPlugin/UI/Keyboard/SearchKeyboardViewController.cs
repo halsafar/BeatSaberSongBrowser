@@ -75,42 +75,5 @@ namespace SongBrowser.UI
             _inputString = "";
             backButtonPressed?.Invoke();
         }
-
-#if DEBUG
-        /// <summary>
-        /// Emulate keyboard support.
-        /// </summary>
-        private void LateUpdate()
-        {
-            if (!this.isInViewControllerHierarchy) return;
-
-            if (Input.GetKeyDown(KeyCode.KeypadEnter) || Input.GetKeyDown(KeyCode.Return))
-            {
-                _searchKeyboard.OkButtonWasPressed();
-            }
-            else if (Input.GetKeyDown(KeyCode.Backspace))
-            {
-                this._searchKeyboard.DeleteButtonWasPressed();
-            }
-            else if (Input.GetKeyDown(KeyCode.Space))
-            {
-                this._searchKeyboard.KeyPressed(' ');
-            }
-            else if (Input.GetKeyDown(KeyCode.Escape))
-            {
-                this.Back();
-            }
-
-            IEnumerable<KeyCode> keycodeIterator = Enum.GetValues(typeof(KeyCode)).Cast<KeyCode>();
-            foreach (KeyCode keycode in keycodeIterator)
-            {
-                if (!((keycode >= KeyCode.A && keycode <= KeyCode.Z) || (keycode >= KeyCode.Alpha0 && keycode <= KeyCode.Alpha9))) continue;
-                if (Input.GetKeyDown(keycode))
-                {
-                    this._searchKeyboard.KeyPressed(keycode.ToString().ToCharArray()[0]);
-                }
-            }      
-        }
-#endif
     }
 }

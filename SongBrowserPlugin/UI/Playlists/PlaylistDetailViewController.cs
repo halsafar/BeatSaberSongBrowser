@@ -1,6 +1,6 @@
 ﻿using CustomUI.BeatSaber;
 using SongBrowser.DataAccess;
-using SongLoaderPlugin;
+using SongCore.Utilities;
 using System;
 using System.Linq;
 using TMPro;

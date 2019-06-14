@@ -11,7 +11,7 @@ namespace SongBrowser.UI
 {
     public class ScoreSaberDatabaseDownloader : MonoBehaviour
     {
-        public const String SCRAPED_SCORE_SABER_JSON_URL = "https://wes.ams3.digitaloceanspaces.com/beatstar/bssb.json";
+        public const String SCRAPED_SCORE_SABER_JSON_URL = "https://wes.ams3.cdn.digitaloceanspaces.com/beatstar/bssb.json";
 
         public static ScoreSaberDatabaseDownloader Instance;
 
@@ -42,11 +42,6 @@ namespace SongBrowser.UI
             Logger.Trace("Start()");
 
             StartCoroutine(WaitForDownload());
-        }
-
-        private void DownloadScoreSaberData()
-        {
-
         }
 
         /// <summary>
