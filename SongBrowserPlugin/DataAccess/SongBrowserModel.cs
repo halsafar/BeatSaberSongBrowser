@@ -1,5 +1,6 @@
 ﻿using SongBrowser.DataAccess;
 using SongBrowser.UI;
+using SongCore.OverrideClasses;
 using SongCore.Utilities;
 using System;
 using System.Collections.Generic;
@@ -432,9 +433,9 @@ namespace SongBrowser
         private void OverwriteCurrentLevelPack(IBeatmapLevelPack pack, List<IPreviewBeatmapLevel> sortedLevels)
         {
             Logger.Debug("Overwriting levelPack [{0}] beatmapLevelCollection.levels", pack);
-            if (pack.packID == PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID)
+            if (pack.packID == PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID || (pack as SongCoreCustomBeatmapLevelPack) != null)
             {
-                Logger.Debug("Overwriting CustomBeatMap Collection...");
+                Logger.Debug("Overwriting SongCore Level Pack collection...");
                 var newLevels = sortedLevels.Select(x => x as CustomPreviewBeatmapLevel);
                 ReflectionUtil.SetPrivateField(pack.beatmapLevelCollection, "_customPreviewBeatmapLevels", newLevels.ToArray());
             }
@@ -442,7 +443,7 @@ namespace SongBrowser
             {
                 // Hack to see if level pack is purchased or not.
                 BeatmapLevelPackSO beatmapLevelPack = pack as BeatmapLevelPackSO;
-                if (beatmapLevelPack != null)
+                if ((pack as BeatmapLevelPackSO) != null)
                 {
                     Logger.Debug("Owned level pack...");
                     var newLevels = sortedLevels.Select(x => x as BeatmapLevelSO);
@@ -450,7 +451,7 @@ namespace SongBrowser
                 }
                 else
                 {
-                    Logger.Debug("DLC Detected...");
+                    Logger.Debug("Unowned DLC Detected...");
                     var newLevels = sortedLevels.Select(x => x as PreviewBeatmapLevelSO);
                     ReflectionUtil.SetPrivateField(pack.beatmapLevelCollection, "_beatmapLevels", newLevels.ToArray());
                 }
