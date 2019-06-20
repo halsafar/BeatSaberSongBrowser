@@ -402,7 +402,6 @@ namespace SongBrowser
                     continue;
                 }
 
-                //Logger.Debug("Adding: {0}={1}", song.Upvotes, song.Hash);
                 _levelHashToDownloaderData.Add(song.Hash, song);
             }
         }
@@ -838,9 +837,8 @@ namespace SongBrowser
         private List<IPreviewBeatmapLevel> SortUpVotes(List<IPreviewBeatmapLevel> levelIds)
         {
             Logger.Info("Sorting song list by UpVotes");
-            //SongCore.Utilities.Hashing.GetCustomLevelHash(x)
             return levelIds
-                .OrderBy(x => _levelHashToDownloaderData[x.levelID.Split('_')[2]].Upvotes)
+                .OrderByDescending(x => _levelHashToDownloaderData.ContainsKey(x.levelID.Split('_')[2]) ? _levelHashToDownloaderData[x.levelID.Split('_')[2]].Upvotes : int.MinValue)
                 .ToList();
         }
     }

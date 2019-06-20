@@ -132,7 +132,7 @@ namespace SongBrowser
         /// </summary>
         private void OnDownloaderScrappedDataDownloaded(List<ScrappedSong> songs)
         {
-            Logger.Trace("OnScoreSaberDataDownloaded");
+            Logger.Trace("OnDownloaderScrappedDataDownloaded");
             try
             {
                 PlaylistsCollection.MatchSongsForAllPlaylists(true);
@@ -145,7 +145,7 @@ namespace SongBrowser
             }
             catch (Exception e)
             {
-                Logger.Exception("Exception during OnScoreSaberDataDownloaded: ", e);
+                Logger.Exception("Exception during OnDownloaderScrappedDataDownloaded: ", e);
             }
         }
 
