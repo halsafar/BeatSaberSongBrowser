@@ -29,6 +29,7 @@ namespace SongBrowser
         private Dictionary<String, double> _cachedLastWriteTimes;
         private Dictionary<string, int> _weights;
         private Dictionary<BeatmapDifficulty, int> _difficultyWeights;
+        private Dictionary<string, ScrappedSong> _levelHashToDownloaderData = null;
         private Dictionary<string, ScoreSaberData> _levelIdToScoreSaberData = null;
         private Dictionary<string, int> _levelIdToPlayCount;
         private Dictionary<string, string> _levelIdToSongVersion;
@@ -388,6 +389,24 @@ namespace SongBrowser
         }
 
         /// <summary>
+        /// Map the downloader data for quick lookup.
+        /// </summary>
+        /// <param name="songs"></param>
+        public void UpdateDownloaderDataMapping(List<ScrappedSong> songs)
+        {
+            _levelHashToDownloaderData = new Dictionary<string, ScrappedSong>();
+            foreach (ScrappedSong song in songs)
+            {
+                if (_levelHashToDownloaderData.ContainsKey(song.Hash))
+                {
+                    continue;
+                }
+
+                _levelHashToDownloaderData.Add(song.Hash, song);
+            }
+        }
+
+        /// <summary>
         /// Add Song to Editing Playlist
         /// </summary>
         /// <param name="songInfo"></param>
@@ -541,6 +560,9 @@ namespace SongBrowser
                     break;
                 case SongSortMode.Author:
                     sortedSongs = SortAuthor(filteredSongs);
+                    break;
+                case SongSortMode.UpVotes:
+                    sortedSongs = SortUpVotes(filteredSongs);
                     break;
                 case SongSortMode.PlayCount:
                     sortedSongs = SortPlayCount(filteredSongs);
@@ -804,6 +826,36 @@ namespace SongBrowser
             return levels
                 .OrderBy(x => x.songName)
                 .ThenBy(x => x.songAuthorName)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Sorting by Downloader UpVotes.
+        /// </summary>
+        /// <param name="levelIds"></param>
+        /// <returns></returns>
+        private List<IPreviewBeatmapLevel> SortUpVotes(List<IPreviewBeatmapLevel> levelIds)
+        {
+            Logger.Info("Sorting song list by UpVotes");
+
+            // Do not always have data when trying to sort by UpVotes
+            if (_levelHashToDownloaderData == null)
+            {
+                return levelIds;
+            }
+
+            return levelIds
+                .OrderByDescending(x => {
+                    var hash = x.levelID.Split('_')[2];
+                    if (_levelHashToDownloaderData.ContainsKey(hash))
+                    {
+                        return _levelHashToDownloaderData[hash].Upvotes;
+                    }
+                    else
+                    {
+                        return int.MinValue;
+                    }
+                })
                 .ToList();
         }
     }

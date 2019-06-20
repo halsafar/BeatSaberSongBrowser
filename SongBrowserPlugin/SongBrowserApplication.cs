@@ -136,10 +136,16 @@ namespace SongBrowser
             try
             {
                 PlaylistsCollection.MatchSongsForAllPlaylists(true);
+                _songBrowserUI.Model.UpdateDownloaderDataMapping(songs);
+                if (_songBrowserUI.Model.Settings.sortMode == SongSortMode.UpVotes)
+                {
+                    _songBrowserUI.ProcessSongList();
+                    _songBrowserUI.RefreshSongList();
+                }
             }
             catch (Exception e)
             {
-                Logger.Exception("Exception during OnScoreSaberDataDownloaded: ", e);
+                Logger.Exception("Exception during OnDownloaderScrappedDataDownloaded: ", e);
             }
         }
 
