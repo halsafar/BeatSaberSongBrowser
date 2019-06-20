@@ -1574,29 +1574,9 @@ namespace SongBrowser.UI
                     
                     return true;
                 }
-                else
-                {
-                   // this._model.SetCurrentLevelPack(currentSelected);
-                }
             }
 
             return false;
-        }
-
-        //Pull njs from a difficulty, based on private function from SongLoader
-        public float GetNoteJump(string json)
-        {
-            float noteJumpSpeed = 0;
-            var split = json.Split(':');
-            for (var i = 0; i < split.Length; i++)
-            {
-                if (split[i].Contains("_noteJumpSpeed"))
-                {
-                    noteJumpSpeed = Convert.ToSingle(split[i + 1].Split(',')[0], CultureInfo.InvariantCulture);
-                }
-            }
-
-            return noteJumpSpeed;
         }
     }
 }
