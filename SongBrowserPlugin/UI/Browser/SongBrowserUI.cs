@@ -51,7 +51,6 @@ namespace SongBrowser.UI
 
         private Button _tableViewPageUpButton;
         private Button _tableViewPageDownButton;
-        private Button _playButton;
 
         // New UI Elements
         private List<SongSortButton> _sortButtonGroup;
@@ -188,9 +187,6 @@ namespace SongBrowser.UI
                 _tableViewPageUpButton = tableView.GetPrivateField<Button>("_pageUpButton");
                 _tableViewPageDownButton = tableView.GetPrivateField<Button>("_pageDownButton");
                 Logger.Debug("Acquired Page Up and Down buttons...");
-
-                _playButton = _standardLevelDetailView.GetComponentsInChildren<Button>().FirstOrDefault(x => x.name == "PlayButton");
-                Logger.Debug("Acquired PlayButton [{0}]", _playButton.GetInstanceID());
 
                 _simpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
 
