@@ -837,8 +837,25 @@ namespace SongBrowser
         private List<IPreviewBeatmapLevel> SortUpVotes(List<IPreviewBeatmapLevel> levelIds)
         {
             Logger.Info("Sorting song list by UpVotes");
+
+            // Do not always have data when trying to sort by UpVotes
+            if (_levelHashToDownloaderData == null)
+            {
+                return levelIds;
+            }
+
             return levelIds
-                .OrderByDescending(x => _levelHashToDownloaderData.ContainsKey(x.levelID.Split('_')[2]) ? _levelHashToDownloaderData[x.levelID.Split('_')[2]].Upvotes : int.MinValue)
+                .OrderByDescending(x => {
+                    var hash = x.levelID.Split('_')[2];
+                    if (_levelHashToDownloaderData.ContainsKey(hash))
+                    {
+                        return _levelHashToDownloaderData[hash].Upvotes;
+                    }
+                    else
+                    {
+                        return int.MinValue;
+                    }
+                })
                 .ToList();
         }
     }
