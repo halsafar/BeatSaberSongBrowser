@@ -564,6 +564,9 @@ namespace SongBrowser
                 case SongSortMode.UpVotes:
                     sortedSongs = SortUpVotes(filteredSongs);
                     break;
+                case SongSortMode.Rating:
+                    sortedSongs = SortBeatSaverRating(filteredSongs);
+                    break;
                 case SongSortMode.PlayCount:
                     sortedSongs = SortPlayCount(filteredSongs);
                     break;
@@ -850,6 +853,36 @@ namespace SongBrowser
                     if (_levelHashToDownloaderData.ContainsKey(hash))
                     {
                         return _levelHashToDownloaderData[hash].Upvotes;
+                    }
+                    else
+                    {
+                        return int.MinValue;
+                    }
+                })
+                .ToList();
+        }
+
+        /// <summary>
+        /// Sorting by BeatSaver rating stat.
+        /// </summary>
+        /// <param name="levelIds"></param>
+        /// <returns></returns>
+        private List<IPreviewBeatmapLevel> SortBeatSaverRating(List<IPreviewBeatmapLevel> levelIds)
+        {
+            Logger.Info("Sorting song list by BeatSaver Rating");
+
+            // Do not always have data when trying to sort by UpVotes
+            if (_levelHashToDownloaderData == null)
+            {
+                return levelIds;
+            }
+
+            return levelIds
+                .OrderByDescending(x => {
+                    var hash = x.levelID.Split('_')[2];
+                    if (_levelHashToDownloaderData.ContainsKey(hash))
+                    {
+                        return _levelHashToDownloaderData[hash].Rating;
                     }
                     else
                     {

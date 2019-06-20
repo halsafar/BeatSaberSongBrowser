@@ -281,17 +281,16 @@ namespace SongBrowser.UI
 
                 startButtonX += (buttonHeight);
 
-                // define sort buttons
                 Logger.Debug("Create sort buttons...");
 
                 string[] sortButtonNames = new string[]
                 {
-                    "Song", "Author", "Newest", "Plays", "PP", "Difficult", "UpVotes", "Random"
+                    "Song", "Author", "Newest", "YourPlays", "PP", "Difficult", "UpVotes", "Rating", "Random"
                 };
 
                 SongSortMode[] sortModes = new SongSortMode[]
                 {
-                    SongSortMode.Default, SongSortMode.Author, SongSortMode.Newest, SongSortMode.PlayCount, SongSortMode.PP, SongSortMode.Difficulty,  SongSortMode.UpVotes, SongSortMode.Random
+                    SongSortMode.Default, SongSortMode.Author, SongSortMode.Newest, SongSortMode.PlayCount, SongSortMode.PP, SongSortMode.Difficulty,  SongSortMode.UpVotes, SongSortMode.Rating, SongSortMode.Random
                 };
                 
                 _sortButtonGroup = new List<SongSortButton>();

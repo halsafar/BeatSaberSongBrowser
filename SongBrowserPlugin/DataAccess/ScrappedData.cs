@@ -21,6 +21,8 @@ namespace SongBrowser.DataAccess
         public long PlayedCount { get; set; }
         public long Upvotes { get; set; }
         public long Downvotes { get; set; }
+        public float Heat { get; set; }
+        public float Rating { get; set; }
     }
 
     public class DifficultyStats
