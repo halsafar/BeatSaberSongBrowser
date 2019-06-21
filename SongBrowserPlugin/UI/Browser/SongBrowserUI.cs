@@ -250,7 +250,7 @@ namespace SongBrowser.UI
 
                 RectTransform playContainerRect = _standardLevelDetailView.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayContainer");
                 RectTransform playButtonsRect = playContainerRect.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayButtons");
-
+                
                 Button practiceButton = playButtonsRect.GetComponentsInChildren<Button>().First(x => x.name == "PracticeButton");
                 RectTransform practiceButtonRect = (practiceButton.transform as RectTransform);
 
@@ -260,9 +260,10 @@ namespace SongBrowser.UI
 
                 // Create Sorting Songs By-Buttons
                 Logger.Debug("Start creation of UI...");
-                float buttonSpacing = 0.25f;                                
-                float fontSize = 3.0f;
-                float buttonWidth = 13.0f;
+                float buttonSpacing = 0.5f;                                
+                float sortButtonFontSize = 2.25f;
+                float outerButtonFontSize = 3.0f;
+                float buttonWidth = 12.25f;
                 float buttonHeight = 5.0f;
                 float buttonX = -25f;
                 float buttonY = 37f;
@@ -270,7 +271,7 @@ namespace SongBrowser.UI
 
                 // Create outer UI
                 Logger.Debug("Creating outer UI...");
-                _clearSortFilterButton = UIBuilder.CreateIconButton(sortButtonTransform, otherButtonTemplate, 
+                _clearSortFilterButton = UIBuilder.CreateIconButton(_levelPackLevelsViewController.rectTransform, otherButtonTemplate, 
                     Base64Sprites.XIcon, 
                     new Vector2(buttonX - buttonHeight, buttonY),
                     new Vector2(iconButtonSize.x, iconButtonSize.y),
@@ -282,19 +283,19 @@ namespace SongBrowser.UI
                     OnClearButtonClickEvent();
                 });
 
-                // create sort by button
+                // create SortBy button
                 _sortByButton = _levelPackLevelsViewController.CreateUIButton("CreditsButton", new Vector2(-16f, buttonY), new Vector2(24f, buttonHeight), () =>
                 {
                     UpdateOuterUIState(UIState.SortBy);
                 }, "Sort By");
-                _sortByButton.SetButtonTextSize(fontSize);                
+                _sortByButton.SetButtonTextSize(outerButtonFontSize);                
 
-                // create filter by button
+                // create FilterBy button
                 _filterByButton = _levelPackLevelsViewController.CreateUIButton("CreditsButton", new Vector2(6f, buttonY), new Vector2(24f, buttonHeight), () =>
                 {
                     UpdateOuterUIState(UIState.FilterBy);
                 }, "Filter By");
-                _filterByButton.SetButtonTextSize(fontSize);
+                _filterByButton.SetButtonTextSize(outerButtonFontSize);
 
                 // create sort buttons
                 Logger.Debug("Create sort buttons...");
@@ -308,14 +309,14 @@ namespace SongBrowser.UI
                 {
                     SongSortMode.Default, SongSortMode.Author, SongSortMode.Newest, SongSortMode.PlayCount, SongSortMode.PP, SongSortMode.Difficulty,  SongSortMode.UpVotes, SongSortMode.Rating, SongSortMode.Random
                 };
-                
+
                 _sortButtonGroup = new List<SongSortButton>();
                 for (int i = 0; i < sortButtonNames.Length; i++)
                 {
                     float curButtonX = buttonX + (buttonWidth*i) + (buttonSpacing*i);
                     SongSortButton sortButton = new SongSortButton();
                     sortButton.SortMode = sortModes[i];
-                    sortButton.Button = _levelPackLevelsViewController.CreateUIButton("CreditsButton",
+                    sortButton.Button = _levelPackLevelsViewController.CreateUIButton("ApplyButton",
                         new Vector2(curButtonX, buttonY), new Vector2(buttonWidth, buttonHeight),
                         () =>
                         {
@@ -323,19 +324,16 @@ namespace SongBrowser.UI
                             UpdateOuterUIState(UIState.Main);
                         },
                         sortButtonNames[i]);
-                    sortButton.Button.SetButtonTextSize(fontSize);
-                    sortButton.Button.ToggleWordWrapping(false);
+                    sortButton.Button.SetButtonTextSize(sortButtonFontSize);
+                    sortButton.Button.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(2, 2, 2, 2);
+                    sortButton.Button.ToggleWordWrapping(false);                                        
+                    sortButton.Button.name = "Sort" + sortModes[i].ToString() + "Button";  
                     
                     _sortButtonGroup.Add(sortButton);
-                    sortButton.Button.name = "Sort" + sortModes[i].ToString() + "Button";
-                    sortButton.Button.gameObject.SetActive(false);
                 }
 
                 // Create filter buttons
                 Logger.Debug("Creating filter buttons...");
-
-                float filterButtonX = 22.0f + buttonX + (buttonWidth);
-                float filterButtonY = 5.25f;
 
                 List<Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>> filterButtonSetup = new List<Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>>()
                 {
@@ -347,26 +345,22 @@ namespace SongBrowser.UI
                 _filterButtonGroup = new List<SongFilterButton>();                
                 for (int i = 0; i < filterButtonSetup.Count; i++)
                 {
-                    Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite> t = filterButtonSetup[i];
-                    Button b = UIBuilder.CreateIconButton(_levelPackLevelsViewController.rectTransform, otherButtonTemplate,
-                        t.Item3,
-                        new Vector2(filterButtonX + (iconButtonSize.x * i) + (buttonSpacing * i), -5.25f),
-                        new Vector2(iconButtonSize.x, iconButtonSize.y), 
-                        new Vector2(3.5f, 3.5f),
-                        new Vector2(1.0f, 1.0f),
-                        0);
-                    SongFilterButton filterButton = new SongFilterButton
-                    {
-                        Button = b,
-                        FilterMode = t.Item1
-                    };
-
-                    b.onClick.AddListener(t.Item2);
-                    b.onClick.AddListener(() =>
+                    Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite> t = filterButtonSetup[i];                    
+                    float curButtonX = buttonX + (buttonWidth * i) + (buttonSpacing * i);
+                    SongFilterButton filterButton = new SongFilterButton();
+                    filterButton.FilterMode = t.Item1;
+                    filterButton.Button = _levelPackLevelsViewController.CreateUIButton("CreditsButton",
+                        new Vector2(curButtonX, buttonY), new Vector2(buttonWidth, buttonHeight),
+                        t.Item2,
+                        t.Item1.ToString());
+                    filterButton.Button.SetButtonTextSize(sortButtonFontSize);
+                    filterButton.Button.ToggleWordWrapping(false);
+                    filterButton.Button.onClick.AddListener(() =>
                     {
                         UpdateOuterUIState(UIState.Main);
                     });
                     filterButton.Button.name = "Filter" + t.Item1.ToString() + "Button";
+
                     _filterButtonGroup.Add(filterButton);                    
                 }
 
