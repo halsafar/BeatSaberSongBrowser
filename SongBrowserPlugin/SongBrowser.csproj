@@ -124,6 +124,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataAccess\BeatSaberUIData.cs" />
     <Compile Include="DataAccess\BeatSaverApi\BeatSaverApiResults.cs" />
     <Compile Include="DataAccess\FileOperationApiWrapper.cs" />
     <Compile Include="DataAccess\LoadScripts.cs" />
