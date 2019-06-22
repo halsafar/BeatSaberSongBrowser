@@ -18,6 +18,7 @@ namespace SongBrowser.UI
         public static Sprite GraphIcon;
         public static Sprite DeleteIcon;
         public static Sprite XIcon;
+        public static Sprite RandomIcon;
 
         public static Sprite BeastSaberLogo;
         public static Sprite DoubleArrow;
@@ -52,7 +53,8 @@ namespace SongBrowser.UI
             DownloadIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.DownloadIcon.png");
             DeleteIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.DeleteIcon.png");
             DoubleArrow = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.DoubleArrow.png");
-            BeastSaberLogo = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.BeastSaberLogo.png");            
+            BeastSaberLogo = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.BeastSaberLogo.png");
+            RandomIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.RandomIcon.png");
         }
 
         public static string SpriteToBase64(Sprite input)

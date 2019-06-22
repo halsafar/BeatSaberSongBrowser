@@ -80,6 +80,7 @@ namespace SongBrowser.UI
             }
 
             newButton.SetButtonIcon(iconSprite);
+            newButton.onClick.RemoveAllListeners();
 
             return newButton;
         }
