@@ -36,6 +36,12 @@ namespace SongBrowser.DataAccess
         public Button TableViewPageUpButton;
         public Button TableViewPageDownButton;
 
+        public RectTransform PlayContainer;
+        public RectTransform PlayButtons;
+
+        public Button PlayButton;
+        public Button PracticeButton;
+
         public SimpleDialogPromptViewController SimpleDialogPromptViewControllerPrefab;
 
         // Plugin Compat checks
@@ -88,6 +94,12 @@ namespace SongBrowser.DataAccess
             TableViewPageUpButton = tableView.GetPrivateField<Button>("_pageUpButton");
             TableViewPageDownButton = tableView.GetPrivateField<Button>("_pageDownButton");
             Logger.Debug("Acquired Page Up and Down buttons...");
+
+            PlayContainer = StandardLevelDetailView.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayContainer");
+            PlayButtons = PlayContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayButtons");
+
+            PlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
+            PracticeButton = PlayButtons.GetComponentsInChildren<Button>().First(x => x.name == "PracticeButton");
 
             SimpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
         }
