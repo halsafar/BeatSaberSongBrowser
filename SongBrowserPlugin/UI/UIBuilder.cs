@@ -166,41 +166,6 @@ namespace SongBrowser.UI
         }
 
         /// <summary>
-        /// Create an icon button, advanced.
-        /// Currently has some weird logic in it just for the filter buttons.  Use simple method instead.
-        /// </summary>
-        /// <param name="parent"></param>
-        /// <param name="buttonTemplate"></param>
-        /// <param name="iconSprite"></param>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <param name="w"></param>
-        /// <param name="h"></param>
-        /// <param name="iconWidth"></param>
-        /// <param name="iconHeight"></param>
-        /// <param name="iconRotation"></param>
-        /// <returns></returns>
-        public static Button CreateIconButton(RectTransform parent, Button buttonTemplate, Sprite iconSprite, Vector2 pos, Vector2 size, Vector2 iconSize, Vector2 iconScale, float iconRotation)
-        {            
-            Button newButton = UIBuilder.CreateIconButton(parent, buttonTemplate, iconSprite);
-
-            (newButton.transform as RectTransform).anchoredPosition = new Vector2(pos.x, pos.y);
-            (newButton.transform as RectTransform).sizeDelta = new Vector2(size.x, size.y);
-
-            RectTransform iconTransform = newButton.GetComponentsInChildren<RectTransform>(true).First(c => c.name == "Icon");
-            iconTransform.gameObject.SetActive(true);
-            
-            HorizontalLayoutGroup hgroup = iconTransform.parent.GetComponent<HorizontalLayoutGroup>();
-            hgroup.padding = new RectOffset(1, 1, 0, 0);
-
-            iconTransform.sizeDelta = new Vector2(iconSize.x, iconSize.y);
-            iconTransform.localScale = new Vector2(iconScale.x, iconScale.y);
-            iconTransform.Rotate(0, 0, iconRotation);
-
-            return newButton;
-        }   
-
-        /// <summary>
         /// Adjust a Button text.
         /// </summary>
         /// <param name="button"></param>

@@ -173,7 +173,6 @@ namespace SongBrowser.UI
             {
                 // Gather some transforms and templates to use.
                 RectTransform sortButtonTransform = _beatUi.LevelSelectionNavigationController.transform as RectTransform;
-                RectTransform otherButtonTransform = _beatUi.LevelDetailViewController.transform as RectTransform;
                 Button otherButtonTemplate = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "HowToPlayButton"));
 
                 RectTransform playContainerRect = _beatUi.StandardLevelDetailView.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayContainer");
@@ -326,37 +325,7 @@ namespace SongBrowser.UI
                     HandleDeleteSelectedLevel();
                 });
 
-                // Create fast scroll buttons
-                int pageFastButtonX = 25;
-                Vector2 pageFastSize = new Vector2(12.5f, 7.75f);
-                Vector2 pageFastIconSize = new Vector2(0.1f, 0.1f);
-                Vector2 pageFastIconScale = new Vector2(0.4f, 0.4f);
-
-                Logger.Debug("Creating fast scroll button...");
-                _pageUpFastButton = UIBuilder.CreateIconButton(sortButtonTransform, otherButtonTemplate, arrowIcon,
-                    new Vector2(pageFastButtonX, -13f),
-                    pageFastSize,
-                    pageFastIconSize,
-                    pageFastIconScale,
-                    180);
-                UnityEngine.GameObject.Destroy(_pageUpFastButton.GetComponentsInChildren<UnityEngine.UI.Image>().First(btn => btn.name == "Stroke"));
-                _pageUpFastButton.onClick.AddListener(delegate ()
-                {
-                    this.JumpSongList(-1, SEGMENT_PERCENT);
-                });
-                
-                _pageDownFastButton = UIBuilder.CreateIconButton(sortButtonTransform, otherButtonTemplate, arrowIcon,
-                    new Vector2(pageFastButtonX, -80f),
-                    pageFastSize,
-                    pageFastIconSize,
-                    pageFastIconScale,
-                    0);
-                
-                UnityEngine.GameObject.Destroy(_pageDownFastButton.GetComponentsInChildren<UnityEngine.UI.Image>().First(btn => btn.name == "Stroke"));
-                _pageDownFastButton.onClick.AddListener(delegate ()
-                {
-                    this.JumpSongList(1, SEGMENT_PERCENT);
-                });
+                CreateFastPageButtons();
                                 
                 RefreshSortButtonUI();
 
@@ -366,6 +335,38 @@ namespace SongBrowser.UI
             {
                 Logger.Exception("Exception CreateUIElements:", e);
             }
+        }
+
+        /// <summary>
+        /// Create the fast page up and down buttons
+        /// </summary>
+        private void CreateFastPageButtons()
+        {
+            Logger.Debug("Creating fast scroll button...");
+
+            _pageUpFastButton = Instantiate(_beatUi.TableViewPageUpButton, _beatUi.LevelPackLevelsTableViewRectTransform, false);
+            (_pageUpFastButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 1f);
+            (_pageUpFastButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 1f);
+            (_pageUpFastButton.transform as RectTransform).anchoredPosition = new Vector2(-26f, 0.25f);
+            (_pageUpFastButton.transform as RectTransform).sizeDelta = new Vector2(8f, 6f);
+            _pageUpFastButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "BG").sizeDelta = new Vector2(8f, 6f);
+            _pageUpFastButton.GetComponentsInChildren<UnityEngine.UI.Image>().First(x => x.name == "Arrow").sprite = Base64Sprites.DoubleArrow;
+            _pageUpFastButton.onClick.AddListener(delegate ()
+            {
+                this.JumpSongList(-1, SEGMENT_PERCENT);
+            });
+
+            _pageDownFastButton = Instantiate(_beatUi.TableViewPageDownButton, _beatUi.LevelPackLevelsTableViewRectTransform, false);
+            (_pageDownFastButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0f);
+            (_pageDownFastButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0f);
+            (_pageDownFastButton.transform as RectTransform).anchoredPosition = new Vector2(-26f, -1f);
+            (_pageDownFastButton.transform as RectTransform).sizeDelta = new Vector2(8f, 6f);
+            _pageDownFastButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "BG").sizeDelta = new Vector2(8f, 6f);
+            _pageDownFastButton.GetComponentsInChildren<UnityEngine.UI.Image>().First(x => x.name == "Arrow").sprite = Base64Sprites.DoubleArrow;
+            _pageDownFastButton.onClick.AddListener(delegate ()
+            {
+                this.JumpSongList(1, SEGMENT_PERCENT);
+            });
         }
 
         /// <summary>
@@ -966,7 +967,6 @@ namespace SongBrowser.UI
         {
             _beatUi.LevelSelectionFlowCoordinator.InvokePrivateMethod("DismissViewController", new object[] { _searchViewController, null, false });
 
-            // force disable search filter.
             this._model.Settings.filterMode = SongFilterMode.None;
             this._model.Settings.Save();
 

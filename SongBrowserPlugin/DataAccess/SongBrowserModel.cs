@@ -273,7 +273,7 @@ namespace SongBrowser
                     playlistTitle = "Song Browser Favorites",
                     playlistAuthor = "SongBrowser",
                     fileLoc = this.Settings.currentEditingPlaylistFile,
-                    image = Base64Sprites.PlaylistIconB64,
+                    image = Base64Sprites.SpriteToBase64(Base64Sprites.BeastSaberLogo),
                     songs = new List<PlaylistSong>(),
                 };
             }
