@@ -333,13 +333,12 @@ namespace SongBrowser
             PlayerDataModelSO playerData = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().FirstOrDefault();            
             foreach (var levelData in playerData.currentLocalPlayer.levelsStatsData)
             {
-                int currentCount = 0;
                 if (!_levelIdToPlayCount.ContainsKey(levelData.levelID))
                 {
-                    _levelIdToPlayCount.Add(levelData.levelID, currentCount);
+                    _levelIdToPlayCount.Add(levelData.levelID, 0);
                 }
 
-                _levelIdToPlayCount[levelData.levelID] += (currentCount + levelData.playCount);
+                _levelIdToPlayCount[levelData.levelID] += levelData.playCount;
             }
         }
 
@@ -564,10 +563,13 @@ namespace SongBrowser
                 case SongSortMode.UpVotes:
                     sortedSongs = SortUpVotes(filteredSongs);
                     break;
+                case SongSortMode.PlayCount:
+                    sortedSongs = SortBeatSaverPlayCount(filteredSongs);
+                    break;
                 case SongSortMode.Rating:
                     sortedSongs = SortBeatSaverRating(filteredSongs);
                     break;
-                case SongSortMode.PlayCount:
+                case SongSortMode.YourPlayCount:
                     sortedSongs = SortPlayCount(filteredSongs);
                     break;
                 case SongSortMode.PP:
@@ -853,6 +855,37 @@ namespace SongBrowser
                     if (_levelHashToDownloaderData.ContainsKey(hash))
                     {
                         return _levelHashToDownloaderData[hash].Upvotes;
+                    }
+                    else
+                    {
+                        return int.MinValue;
+                    }
+                })
+                .ToList();
+        }
+
+
+        /// <summary>
+        /// Sorting by BeatSaver rating stat.
+        /// </summary>
+        /// <param name="levelIds"></param>
+        /// <returns></returns>
+        private List<IPreviewBeatmapLevel> SortBeatSaverPlayCount(List<IPreviewBeatmapLevel> levelIds)
+        {
+            Logger.Info("Sorting song list by BeatSaver PlayCount");
+
+            // Do not always have data when trying to sort by UpVotes
+            if (_levelHashToDownloaderData == null)
+            {
+                return levelIds;
+            }
+
+            return levelIds
+                .OrderByDescending(x => {
+                    var hash = x.levelID.Split('_')[2];
+                    if (_levelHashToDownloaderData.ContainsKey(hash))
+                    {
+                        return _levelHashToDownloaderData[hash].PlayedCount;
                     }
                     else
                     {

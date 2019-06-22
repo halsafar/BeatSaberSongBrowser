@@ -17,12 +17,13 @@ namespace SongBrowser.DataAccess
         Author,
         Original,
         Newest,        
-        PlayCount,
+        YourPlayCount,
         Difficulty,
         Random,
         PP,
         UpVotes,
         Rating,
+        PlayCount,
 
         // Deprecated
         Favorites,
