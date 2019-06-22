@@ -1085,57 +1085,36 @@ namespace SongBrowser.UI
         {
             Logger.Trace("RefreshScoreSaberData({0})", level.levelID);
 
-            // use controllers level...
-            if (level == null)
-            {
-                level = _beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level;
-            }
-
-            // abort!
-            if (level == null)
-            {
-                Logger.Debug("Aborting RefreshScoreSaberData()");
-                return;
-            }
-
             BeatmapDifficulty difficulty = _beatUi.LevelDifficultyViewController.selectedDifficulty;
             string difficultyString = difficulty.ToString();
             Logger.Debug(difficultyString);
 
-            // check if we have score saber data
-            if (this._model.LevelIdToScoreSaberData != null)
+            // Check for PP
+            Logger.Debug("Checking if have info for song {0}", level.songName);
+            if (this._model.LevelIdToScoreSaberData.ContainsKey(level.levelID))
             {
-                // Check for PP
-                Logger.Debug("Checking if have info for song {0}", level.songName);
-                if (this._model.LevelIdToScoreSaberData.ContainsKey(level.levelID))
+                Logger.Debug("Checking if have difficulty for song {0} difficulty {1}", level.songName, difficultyString);
+                ScoreSaberData ppData = this._model.LevelIdToScoreSaberData[level.levelID];
+                if (ppData.difficultyToSaberDifficulty.ContainsKey(difficultyString))
                 {
-                    Logger.Debug("Checking if have difficulty for song {0} difficulty {1}", level.songName, difficultyString);
-                    ScoreSaberData ppData = this._model.LevelIdToScoreSaberData[level.levelID];
-                    if (ppData.difficultyToSaberDifficulty.ContainsKey(difficultyString))
-                    {
-                        Logger.Debug("Display pp for song.");
-                        float pp = ppData.difficultyToSaberDifficulty[difficultyString].pp;
-                        float star = ppData.difficultyToSaberDifficulty[difficultyString].star;
+                    Logger.Debug("Display pp for song.");
+                    float pp = ppData.difficultyToSaberDifficulty[difficultyString].pp;
+                    float star = ppData.difficultyToSaberDifficulty[difficultyString].star;
 
-                        UIBuilder.SetStatButtonText(_ppStatButton, String.Format("{0:0.#}", pp));
-                        UIBuilder.SetStatButtonText(_starStatButton, String.Format("{0:0.#}", star));
-                    }
-                    else
-                    {
-                        UIBuilder.SetStatButtonText(_ppStatButton, "NA");
-                        UIBuilder.SetStatButtonText(_starStatButton, "NA");
-                    }
+                    UIBuilder.SetStatButtonText(_ppStatButton, String.Format("{0:0.#}", pp));
+                    UIBuilder.SetStatButtonText(_starStatButton, String.Format("{0:0.#}", star));
                 }
                 else
                 {
-                    UIBuilder.SetStatButtonText(_ppStatButton, "?");
-                    UIBuilder.SetStatButtonText(_starStatButton, "?");
-                }                
+                    UIBuilder.SetStatButtonText(_ppStatButton, "NA");
+                    UIBuilder.SetStatButtonText(_starStatButton, "NA");
+                }
             }
             else
             {
-                Logger.Debug("No ScoreSaberData available...  Cannot display pp/star stats...");
-            }
+                UIBuilder.SetStatButtonText(_ppStatButton, "?");
+                UIBuilder.SetStatButtonText(_starStatButton, "?");
+            }                
 
             Logger.Debug("Done refreshing score saber stats.");
         }
@@ -1242,21 +1221,16 @@ namespace SongBrowser.UI
             Logger.Info("Refreshing the song list view.");
             try
             {
-                var levels = _beatUi.GetCurrentLevelPackLevels();
-                if (levels == null)
+                if (!_uiCreated)
                 {
-                    Logger.Debug("Songs are not sorted yet, nothing to refresh.");
                     return;
                 }
+
+                var levels = _beatUi.GetCurrentLevelPackLevels();
 
                 Logger.Debug("Checking if TableView is initialized...");
                 TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_beatUi.LevelPackLevelsTableView, "_tableView");
                 bool tableViewInit = ReflectionUtil.GetPrivateField<bool>(tableView, "_isInitialized");
-                if (!tableViewInit)
-                {
-                    Logger.Debug("LevelPackLevelListTableView.TableView is not initialized... nothing to reload...");
-                    return;
-                }
 
                 Logger.Debug("Reloading SongList TableView");
                 tableView.ReloadData();
@@ -1266,7 +1240,6 @@ namespace SongBrowser.UI
                 if (_model.LastSelectedLevelId != null)
                 {
                     selectedLevelID = _model.LastSelectedLevelId;
-                    Logger.Debug("Scrolling to row for level ID: {0}", selectedLevelID);                    
                 }
                 else
                 {
@@ -1419,7 +1392,7 @@ namespace SongBrowser.UI
                 _model.UpdateLevelRecords();
 
                 bool didUpdateLevelPack = UpdateLevelPackSelection();
-                if (!didUpdateLevelPack)
+                if (didUpdateLevelPack)
                 {
                     ProcessSongList();
                 }
@@ -1435,7 +1408,7 @@ namespace SongBrowser.UI
         /// </summary>
         public bool UpdateLevelPackSelection()
         {
-            if (_beatUi.LevelPackViewController != null)
+            if (_uiCreated)
             {
                 IBeatmapLevelPack currentSelected = _beatUi.GetCurrentSelectedLevelPack();
                 Logger.Debug("Current selected level pack: {0}", currentSelected);
