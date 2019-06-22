@@ -174,7 +174,7 @@ namespace SongBrowser
         {
             Logger.Trace("HandleSoloModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.SoloFreePlay);
-            this._songBrowserUI.Show();
+            _songBrowserUI.Show();
         }
 
         /// <summary>
@@ -186,7 +186,7 @@ namespace SongBrowser
         {
             Logger.Trace("HandlePartyModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.Party);
-            this._songBrowserUI.Show();
+            _songBrowserUI.Show();
         }
 
         /// <summary>
@@ -198,7 +198,7 @@ namespace SongBrowser
         {
             Logger.Trace("HandleCampaignModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.SoloCampaign);
-            this._songBrowserUI.Hide();
+            _songBrowserUI.Hide();
         }
 
         /// <summary>
@@ -209,8 +209,8 @@ namespace SongBrowser
         private void HandleModeSelection(MainMenuViewController.MenuButton mode)
         {
             Logger.Trace("HandleModeSelection()");
-            this._songBrowserUI.CreateUI(mode);
-            StartCoroutine(this.UpdateBrowserUI());
+            _songBrowserUI.CreateUI(mode);
+            StartCoroutine(UpdateBrowserUI());
         }
 
         /// <summary>
@@ -221,8 +221,8 @@ namespace SongBrowser
         {
             yield return new WaitForEndOfFrame();
 
-            this._songBrowserUI.UpdateLevelDataModel();
-            this._songBrowserUI.RefreshSongList();
+            _songBrowserUI.UpdateLevelDataModel();
+            _songBrowserUI.RefreshSongList();
         }
 
         /// <summary>
