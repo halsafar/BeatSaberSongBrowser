@@ -192,34 +192,39 @@ namespace SongBrowser.UI
                 UnityEngine.Object.Destroy(textRect.gameObject);
             }
 
-            // create SortBy button
+            // create SortBy button and its display
             float curX = sortByButtonX;
             _sortByButton = _beatUi.LevelPackLevelsViewController.CreateUIButton("CreditsButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 UpdateOuterUIState(UIState.SortBy);
             }, "Sort By");
             _sortByButton.SetButtonTextSize(outerButtonFontSize);
+
             curX += outerButtonWidth;
 
             _sortByDisplay = _beatUi.LevelPackLevelsViewController.CreateUIButton("ApplyButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 this.Model.ToggleInverting();
+                ProcessSongList();
+                RefreshSongUI();
             }, "");
             _sortByDisplay.SetButtonTextSize(displayButtonFontSize);
             _sortByDisplay.ToggleWordWrapping(false);
             curX += outerButtonWidth;
 
-            // create FilterBy button
+            // create FilterBy button and its display
             _filterByButton = _beatUi.LevelPackLevelsViewController.CreateUIButton("CreditsButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 UpdateOuterUIState(UIState.FilterBy);
             }, "Filter By");
             _filterByButton.SetButtonTextSize(outerButtonFontSize);
+
             curX += outerButtonWidth;
 
             _filterByDisplay = _beatUi.LevelPackLevelsViewController.CreateUIButton("ApplyButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
-                this.Model.ToggleInverting();
+                CancelFilter();
+                RefreshSongUI();
             }, "");
             _filterByDisplay.SetButtonTextSize(displayButtonFontSize);
             _filterByDisplay.ToggleWordWrapping(false);
@@ -510,7 +515,9 @@ namespace SongBrowser.UI
             _filterButtonGroup.ForEach(x => x.Button.gameObject.SetActive(filterButtons));
 
             _sortByButton.gameObject.SetActive(outerButtons);
+            _sortByDisplay.gameObject.SetActive(outerButtons);
             _filterByButton.gameObject.SetActive(outerButtons);
+            _filterByDisplay.gameObject.SetActive(outerButtons);
             _clearSortFilterButton.gameObject.SetActive(outerButtons);
 
             _sortByDisplay.SetButtonText(_model.Settings.sortMode.ToString());
@@ -1202,6 +1209,15 @@ namespace SongBrowser.UI
             else
             {
                 UIBuilder.SetButtonBorder(_sortByDisplay, Color.green);
+            }
+
+            if (this._model.Settings.filterMode != SongFilterMode.None)
+            {
+                UIBuilder.SetButtonBorder(_filterByDisplay, Color.green);
+            }
+            else
+            {
+                UIBuilder.SetButtonBorder(_filterByDisplay, Color.white);
             }
         }
 
