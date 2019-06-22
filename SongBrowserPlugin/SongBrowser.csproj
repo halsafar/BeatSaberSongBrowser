@@ -124,7 +124,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataAccess\BeatSaberUIData.cs" />
+    <Compile Include="UI\Browser\BeatSaberUIController.cs" />
     <Compile Include="DataAccess\BeatSaverApi\BeatSaverApiResults.cs" />
     <Compile Include="DataAccess\FileOperationApiWrapper.cs" />
     <Compile Include="DataAccess\LoadScripts.cs" />
@@ -140,6 +140,7 @@
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="PluginConfig.cs" />
     <Compile Include="UI\BackButtonNavigationController.cs" />
+    <Compile Include="UI\Browser\SongBrowserView.cs" />
     <Compile Include="UI\DownloadQueue\DownloadQueueTableCell.cs" />
     <Compile Include="UI\DownloadQueue\DownloadQueueViewController.cs" />
     <Compile Include="UI\ProgressBar.cs" />

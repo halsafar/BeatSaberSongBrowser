@@ -36,7 +36,7 @@ namespace SongBrowser.UI
         private const int LIST_ITEMS_VISIBLE_AT_ONCE = 6;
 
         // BeatSaber Internal UI structures
-        BeatSaberUIData _beatUi;
+        DataAccess.BeatSaberUIController _beatUi;
 
         // New UI Elements
         private List<SongSortButton> _sortButtonGroup;
@@ -67,13 +67,6 @@ namespace SongBrowser.UI
         private Sprite _addFavoriteSprite;
         private Sprite _removeFavoriteSprite;
         private Sprite _currentAddFavoriteButtonSprite;
-
-        // Plugin Compat checks
-        private bool _detectedTwitchPluginQueue = false;
-        private bool _checkedForTwitchPlugin = false;
-
-        // Fast Jump uses this
-        private int _lastRow = 0;
 
         // Model
         private SongBrowserModel _model;
@@ -127,7 +120,7 @@ namespace SongBrowser.UI
                 flowCoordinator = Resources.FindObjectsOfTypeAll<CampaignFlowCoordinator>().First();
             }
 
-            _beatUi = new BeatSaberUIData(flowCoordinator);
+            _beatUi = new DataAccess.BeatSaberUIController(flowCoordinator);
 
             // returning to the menu and switching modes could trigger this.
             if (_uiCreated)
@@ -208,7 +201,7 @@ namespace SongBrowser.UI
                 
                 float sortByButtonX = -25.0f + buttonHeight;
                 
-                float clearButtonX = -32.0f;
+                float clearButtonX = -35.0f;
                 float clearButtonY = 32.0f;
 
                 Vector2 iconButtonSize = new Vector2(buttonHeight, buttonHeight);
@@ -228,17 +221,23 @@ namespace SongBrowser.UI
                 }
 
                 // create SortBy button
-                _sortByButton = _beatUi.LevelPackLevelsViewController.CreateUIButton("CreditsButton", new Vector2(sortByButtonX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
+                float curX = sortByButtonX;
+                _sortByButton = _beatUi.LevelPackLevelsViewController.CreateUIButton("CreditsButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
                 {
                     UpdateOuterUIState(UIState.SortBy);
                 }, "Sort By");
                 _sortByButton.SetButtonTextSize(outerButtonFontSize);
+                curX += outerButtonWidth;
 
-                _sortByText = _beatUi.LevelPackLevelsViewController.CreateText("FooBar", new Vector2(sortByButtonX+outerButtonWidth, buttonY-10));
-                _sortByText.fontSize = sortButtonFontSize;
+                var foobar = _beatUi.LevelPackLevelsViewController.CreateUIButton("ApplyButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
+                {
+                    UpdateOuterUIState(UIState.SortBy);
+                }, "Rating");
+                foobar.SetButtonTextSize(outerButtonFontSize);
+                curX += outerButtonWidth;
 
                 // create FilterBy button
-                _filterByButton = _beatUi.LevelPackLevelsViewController.CreateUIButton("CreditsButton", new Vector2(sortByButtonX+ outerButtonWidth, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
+                _filterByButton = _beatUi.LevelPackLevelsViewController.CreateUIButton("CreditsButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
                 {
                     UpdateOuterUIState(UIState.FilterBy);
                 }, "Filter By");
@@ -516,9 +515,6 @@ namespace SongBrowser.UI
             // level pack, level, difficulty handlers, characteristics
             TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_beatUi.LevelPackLevelsTableView, "_tableView");
 
-            tableView.didSelectCellWithIdxEvent -= HandleDidSelectTableViewRow;
-            tableView.didSelectCellWithIdxEvent += HandleDidSelectTableViewRow;
-
             _beatUi.LevelPackLevelsViewController.didSelectLevelEvent -= OnDidSelectLevelEvent;
             _beatUi.LevelPackLevelsViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
 
@@ -555,6 +551,10 @@ namespace SongBrowser.UI
         {
             RefreshSongList(scrollToLevel);
             RefreshSortButtonUI();
+            if (!scrollToLevel)
+            {
+                _beatUi.ScrollToLevelByRow(0);
+            }
             RefreshQuickScrollButtons();
         }
 
@@ -599,7 +599,8 @@ namespace SongBrowser.UI
                 {
                     _model.ProcessSongList(_beatUi.GetCurrentSelectedLevelPack());
                 }
-                SelectAndScrollToLevel(_beatUi.LevelPackLevelsTableView, _model.LastSelectedLevelId);
+                _beatUi.SelectAndScrollToLevel(_beatUi.LevelPackLevelsTableView, _model.LastSelectedLevelId);
+                RefreshQuickScrollButtons();
             }
             catch (Exception e)
             {
@@ -660,11 +661,6 @@ namespace SongBrowser.UI
                 }
 
                 RefreshSongUI(scrollToLevel);
-                
-                if (!scrollToLevel)
-                {
-                    ScrollToLevelByRow(0);
-                }
             }
             catch (Exception e)
             {
@@ -729,7 +725,7 @@ namespace SongBrowser.UI
             if (_model.Settings.filterMode != SongFilterMode.Favorites)
             {
                 _model.Settings.filterMode = SongFilterMode.Favorites;
-                SelectLevelPack(PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID);
+                _beatUi.SelectLevelPack(PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID);
             }
             else
             {
@@ -751,7 +747,7 @@ namespace SongBrowser.UI
             Logger.Debug("Filter button - {0} - pressed.", SongFilterMode.Search.ToString());
             if (_model.Settings.filterMode != SongFilterMode.Search)
             {
-                SelectLevelPack(PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID);
+                _beatUi.SelectLevelPack(PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID);
                 this.ShowSearchKeyboard();
             }
             else
@@ -775,7 +771,7 @@ namespace SongBrowser.UI
 
             if (_model.Settings.filterMode != SongFilterMode.Playlist)
             {
-                SelectLevelPack(PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID);
+                _beatUi.SelectLevelPack(PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID);
                 _playListFlowCoordinator.parentFlowCoordinator = _beatUi.LevelSelectionFlowCoordinator;
                 _beatUi.LevelSelectionFlowCoordinator.InvokePrivateMethod("PresentFlowCoordinator", new object[] { _playListFlowCoordinator, null, false, false });                                
             }
@@ -860,17 +856,6 @@ namespace SongBrowser.UI
             RefreshScoreSaberData(level);
             RefreshQuickScrollButtons();
             RefreshAddFavoriteButton(level.levelID);
-        }
-
-        /// <summary>
-        /// Track the current row.
-        /// </summary>
-        /// <param name="tableView"></param>
-        /// <param name="row"></param>
-        private void HandleDidSelectTableViewRow(TableView tableView, int row)
-        {
-            Logger.Trace("HandleDidSelectTableViewRow({0})", row);
-            _lastRow = row;
         }
 
         /// <summary>
@@ -1030,9 +1015,9 @@ namespace SongBrowser.UI
             }
 
             TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_beatUi.LevelPackLevelsTableView, "_tableView");
+            int currentRow = _beatUi.LevelPackLevelsTableView.GetPrivateField<int>("_selectedRow");
             int jumpDirection = Math.Sign(numJumps);
-            int newRow = _lastRow + (jumpDirection * segmentSize);
-            
+            int newRow = currentRow + (jumpDirection * segmentSize);
             if (newRow <= 0)
             {
                 newRow = 0;
@@ -1043,8 +1028,8 @@ namespace SongBrowser.UI
             }
             
             Logger.Debug("jumpDirection: {0}, newRow: {1}", jumpDirection, newRow);
-            _lastRow = newRow;
-            this.SelectAndScrollToLevel(_beatUi.LevelPackLevelsTableView, levels[newRow].levelID);
+            _beatUi.SelectAndScrollToLevel(_beatUi.LevelPackLevelsTableView, levels[newRow].levelID);
+            RefreshQuickScrollButtons();
         }
 
         /// <summary>
@@ -1133,26 +1118,15 @@ namespace SongBrowser.UI
         /// </summary>
         private void RefreshQuickScrollButtons()
         {         
-            // Refresh the fast scroll buttons
-            if (_beatUi.TableViewPageUpButton != null && _pageUpFastButton != null)
+            if (!_uiCreated)
             {
-                _pageUpFastButton.interactable = _beatUi.TableViewPageUpButton.interactable;
-                _pageUpFastButton.gameObject.SetActive(_beatUi.TableViewPageUpButton.IsActive());
-            }
-            else
-            {
-                _pageUpFastButton.gameObject.SetActive(false);
+                return;
             }
 
-            if (_beatUi.TableViewPageDownButton != null && _pageDownFastButton != null)
-            {
-                _pageDownFastButton.interactable = _beatUi.TableViewPageDownButton.interactable;
-                _pageDownFastButton.gameObject.SetActive(_beatUi.TableViewPageDownButton.IsActive());                
-            }
-            else
-            {
-                _pageDownFastButton.gameObject.SetActive(false);
-            }
+            _pageUpFastButton.interactable = _beatUi.TableViewPageUpButton.interactable;
+            _pageUpFastButton.gameObject.SetActive(_beatUi.TableViewPageUpButton.IsActive());
+            _pageDownFastButton.interactable = _beatUi.TableViewPageDownButton.interactable;
+            _pageDownFastButton.gameObject.SetActive(_beatUi.TableViewPageDownButton.IsActive());
         }
 
         /// <summary>
@@ -1214,164 +1188,16 @@ namespace SongBrowser.UI
         }
 
         /// <summary>
-        /// Try to refresh the song list.  Broken for now.
+        /// 
         /// </summary>
-        public void RefreshSongList(bool scrollToLevel=true)
+        public void RefreshSongList(bool scrollToLevel = true)
         {
-            Logger.Info("Refreshing the song list view.");
-            try
-            {
-                if (!_uiCreated)
-                {
-                    return;
-                }
-
-                var levels = _beatUi.GetCurrentLevelPackLevels();
-
-                Logger.Debug("Checking if TableView is initialized...");
-                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_beatUi.LevelPackLevelsTableView, "_tableView");
-                bool tableViewInit = ReflectionUtil.GetPrivateField<bool>(tableView, "_isInitialized");
-
-                Logger.Debug("Reloading SongList TableView");
-                tableView.ReloadData();
-
-                Logger.Debug("Attempting to scroll to level...");
-                String selectedLevelID = null;
-                if (_model.LastSelectedLevelId != null)
-                {
-                    selectedLevelID = _model.LastSelectedLevelId;
-                }
-                else
-                {
-                    if (levels.Length > 0)
-                    {
-                        selectedLevelID = levels.FirstOrDefault().levelID;
-                    }
-                }
-
-                if (scrollToLevel)
-                {
-                    SelectAndScrollToLevel(_beatUi.LevelPackLevelsTableView, selectedLevelID);
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.Exception("Exception refreshing song list:", e);
-            }
-        }
-
-
-        /// <summary>
-        /// Select a level pack.
-        /// </summary>
-        /// <param name="levelPackId"></param>
-        public void SelectLevelPack(String levelPackId)
-        {
-            Logger.Trace("SelectLevelPack({0})", levelPackId);
-
-            try
-            {
-                var levelPacks = _beatUi.GetLevelPackCollection();
-                var index = _beatUi.GetLevelPackIndexByPackId(levelPackId);
-                var pack = _beatUi.GetLevelPackByPackId(levelPackId);
-
-                if (index < 0)
-                {
-                    Logger.Debug("Cannot select level packs yet...");
-                    return;
-                }
-
-                Logger.Info("Selecting level pack index: {0}", pack.packName);
-                var tableView = _beatUi.LevelPacksTableView.GetPrivateField<TableView>("_tableView");
-
-                _beatUi.LevelPacksTableView.SelectCellWithIdx(index);
-                tableView.SelectCellWithIdx(index, true);
-                tableView.ScrollToCellWithIdx(0, TableView.ScrollPositionType.Beginning, false);
-                for (int i = 0; i < index; i++)
-                {
-                    tableView.PageScrollDown();
-                }
-
-                Logger.Debug("Done selecting level pack!");
-            }
-            catch (Exception e)
-            {
-                Logger.Exception(e);
-            }
-        }
-
-        /// <summary>
-        /// Scroll TableView to proper row, fire events.
-        /// </summary>
-        /// <param name="table"></param>
-        /// <param name="levelID"></param>
-        private void SelectAndScrollToLevel(LevelPackLevelsTableView table, string levelID)
-        {
-            Logger.Debug("Scrolling to LevelID: {0}", levelID);
-
-            // Check once per load
-            if (!_checkedForTwitchPlugin)
-            {
-                Logger.Info("Checking for BeatSaber Twitch Integration Plugin...");
-
-                // Try to detect BeatSaber Twitch Integration Plugin
-                _detectedTwitchPluginQueue = Resources.FindObjectsOfTypeAll<VRUIViewController>().Any(x => x.name == "RequestInfo");
-
-                Logger.Info("BeatSaber Twitch Integration plugin detected: " + _detectedTwitchPluginQueue);
-
-                _checkedForTwitchPlugin = true;
-            }
-
-            // Skip scrolling to level if twitch plugin has queue active.
-            if (_detectedTwitchPluginQueue)
-            {
-                Logger.Debug("Skipping SelectAndScrollToLevel() because we detected Twitch Integration Plugin has a Queue active...");
-                return;
-            }
-
-            // try to find the index and scroll to it
-            int selectedIndex = 0;
-            List<IPreviewBeatmapLevel> levels = table.GetPrivateField<IBeatmapLevelPack>("_pack").beatmapLevelCollection.beatmapLevels.ToList();
-            if (levels.Count <= 0)
+            if (!_uiCreated)
             {
                 return;
             }
 
-            // acquire the index or try the last row
-            selectedIndex = levels.FindIndex(x => x.levelID == levelID);
-            if (selectedIndex < 0)
-            {
-                // this might look like an off by one error but the _level list we keep is missing the header entry BeatSaber.
-                // so the last row is +1 the max index, the count.
-                int maxCount = _beatUi.GetLevelPackLevelCount();
-                Logger.Debug("Song is not in the level pack, cannot scroll to it...  Using last known row {0}/{1}", _lastRow, maxCount);
-                selectedIndex = Math.Min(maxCount, _lastRow);
-            }
-            else
-            {
-                // the header counts as an index, so if the index came from the level array we have to add 1.
-                selectedIndex += 1;
-            }
-
-            ScrollToLevelByRow(selectedIndex);
-        }
-
-        /// <summary>
-        /// Scroll to a level by Row
-        /// </summary>
-        /// <param name="selectedIndex"></param>
-        public void ScrollToLevelByRow(int selectedIndex)
-        {
-            Logger.Debug("Scrolling level list to idx: {0}", selectedIndex);
-
-            TableView tableView = _beatUi.LevelPackLevelsTableView.GetPrivateField<TableView>("_tableView");
-            _beatUi.LevelPackLevelsTableView.HandleDidSelectRowEvent(tableView, selectedIndex);
-            tableView.ScrollToCellWithIdx(selectedIndex, TableView.ScrollPositionType.Beginning, true);
-            tableView.SelectCellWithIdx(selectedIndex);
-
-            RefreshQuickScrollButtons();
-
-            _lastRow = selectedIndex;
+            _beatUi.RefreshSongList(_model.LastSelectedLevelId);
         }
 
         /// <summary>
@@ -1433,7 +1259,7 @@ namespace SongBrowser.UI
                     _beatUi.LevelPacksTableView.didSelectPackEvent -= _levelPacksTableView_didSelectPackEvent;
 
                     var levelPack = _beatUi.GetLevelPackByPackId(_model.Settings.currentLevelPackId);
-                    this.SelectLevelPack(_model.Settings.currentLevelPackId);
+                    _beatUi.SelectLevelPack(_model.Settings.currentLevelPackId);
 
                     ProcessSongList();
 
