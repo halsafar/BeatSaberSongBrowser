@@ -472,8 +472,11 @@ namespace SongBrowser.UI
             _beatUi.LevelPackLevelsViewController.didSelectLevelEvent -= OnDidSelectLevelEvent;
             _beatUi.LevelPackLevelsViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
 
-            _beatUi.LevelDifficultyViewController.didSelectDifficultyEvent -= OnDidSelectDifficultyEvent;
-            _beatUi.LevelDifficultyViewController.didSelectDifficultyEvent += OnDidSelectDifficultyEvent;
+            _beatUi.LevelDetailViewController.didPresentContentEvent -= OnDidPresentContentEvent;
+            _beatUi.LevelDetailViewController.didPresentContentEvent += OnDidPresentContentEvent;
+
+            _beatUi.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDidChangeDifficultyEvent;
+            _beatUi.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyEvent;
 
             _beatUi.LevelPacksTableView.didSelectPackEvent -= _levelPacksTableView_didSelectPackEvent;
             _beatUi.LevelPacksTableView.didSelectPackEvent += _levelPacksTableView_didSelectPackEvent;
@@ -797,13 +800,39 @@ namespace SongBrowser.UI
         /// <summary>
         /// Handle difficulty level selection.
         /// </summary>
-        private void OnDidSelectDifficultyEvent(BeatmapDifficultySegmentedControlController view, BeatmapDifficulty beatmap)
+        private void OnDidChangeDifficultyEvent(StandardLevelDetailViewController view, IDifficultyBeatmap beatmap)
         {
-            Logger.Trace("OnDidSelectDifficultyEvent({0})", beatmap);
+            Logger.Trace("OnDidChangeDifficultyEvent({0})", beatmap);
+
+            if (view.selectedDifficultyBeatmap == null)
+            {
+                return;
+            }
+
+            _deleteButton.interactable = (view.selectedDifficultyBeatmap.level.levelID.Length >= 32);
+
+            RefreshScoreSaberData(view.selectedDifficultyBeatmap.level, beatmap.difficulty);
+            RefreshNoteJumpSpeed(beatmap.difficulty);
+        }
+
+        /// <summary>
+        /// BeatSaber finished loading content.  This is when the difficulty is finally updated.
+        /// </summary>
+        /// <param name="view"></param>
+        /// <param name="type"></param>
+        private void OnDidPresentContentEvent(StandardLevelDetailViewController view, StandardLevelDetailViewController.ContentType type)
+        {
+            Logger.Trace("OnDidPresentContentEvent()");
+
+            if (view.selectedDifficultyBeatmap == null)
+            {
+                return;
+            }
 
             _deleteButton.interactable = (_beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID.Length >= 32);
-            this.RefreshScoreSaberData(_beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level);
-            this.RefreshNoteJumpSpeed(beatmap);
+
+            RefreshScoreSaberData(view.selectedDifficultyBeatmap.level, view.selectedDifficultyBeatmap.difficulty);
+            RefreshNoteJumpSpeed(view.selectedDifficultyBeatmap.difficulty);
         }
 
         /// <summary>
@@ -816,7 +845,6 @@ namespace SongBrowser.UI
 
             _deleteButton.interactable = (level.levelID.Length >= 32);
 
-            RefreshScoreSaberData(level);
             RefreshQuickScrollButtons();
             RefreshAddFavoriteButton(level.levelID);
         }
@@ -1028,7 +1056,7 @@ namespace SongBrowser.UI
         /// <summary>
         /// Update GUI elements that show score saber data.
         /// </summary>
-        public void RefreshScoreSaberData(IPreviewBeatmapLevel level)
+        public void RefreshScoreSaberData(IPreviewBeatmapLevel level, BeatmapDifficulty vdifficulty)
         {
             Logger.Trace("RefreshScoreSaberData({0})", level.levelID);
 
@@ -1045,7 +1073,7 @@ namespace SongBrowser.UI
             }
             Logger.Debug(difficultyString);
 
-            // Check for PP
+            // Check if we have data for this song
             Logger.Debug("Checking if have info for song {0}", level.songName);
             var hash = CustomHelpers.GetSongHash(level.levelID);
             if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData.ContainsKey(hash))
