@@ -114,7 +114,6 @@ namespace SongBrowser
             Logger.Trace("OnScoreSaberDataDownloaded");
             try
             {
-                _songBrowserUI.Model.UpdateScoreSaberDataMapping();
                 if (_songBrowserUI.Model.Settings.sortMode == SongSortMode.PP)
                 {
                     _songBrowserUI.ProcessSongList();
