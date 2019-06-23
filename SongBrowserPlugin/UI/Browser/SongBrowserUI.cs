@@ -518,6 +518,11 @@ namespace SongBrowser.UI
         /// </summary>
         public void ProcessSongList()
         {
+            if (!_uiCreated)
+            {
+                return;
+            }
+
             this._model.ProcessSongList(_beatUi.GetCurrentSelectedLevelPack());
         }
 
@@ -1027,21 +1032,32 @@ namespace SongBrowser.UI
         {
             Logger.Trace("RefreshScoreSaberData({0})", level.levelID);
 
+            if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile == null)
+            {
+                return;
+            }
+
             BeatmapDifficulty difficulty = _beatUi.LevelDifficultyViewController.selectedDifficulty;
             string difficultyString = difficulty.ToString();
+            if (difficultyString.Equals("ExpertPlus"))
+            {
+                difficultyString = "Expert+";
+            }
             Logger.Debug(difficultyString);
 
             // Check for PP
             Logger.Debug("Checking if have info for song {0}", level.songName);
-            if (this._model.LevelIdToScoreSaberData.ContainsKey(level.levelID))
+            var hash = CustomHelpers.GetSongHash(level.levelID);
+            if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData.ContainsKey(hash))
             {
                 Logger.Debug("Checking if have difficulty for song {0} difficulty {1}", level.songName, difficultyString);
-                ScoreSaberData ppData = this._model.LevelIdToScoreSaberData[level.levelID];
-                if (ppData.difficultyToSaberDifficulty.ContainsKey(difficultyString))
+                ScoreSaberSong scoreSaberSong = ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData[hash];
+                ScoreSaberSongDifficultyStats scoreSaberSongDifficulty = scoreSaberSong.diffs.FirstOrDefault(x => String.Equals(x.diff, difficultyString));
+                if (scoreSaberSongDifficulty != null)
                 {
                     Logger.Debug("Display pp for song.");
-                    float pp = ppData.difficultyToSaberDifficulty[difficultyString].pp;
-                    float star = ppData.difficultyToSaberDifficulty[difficultyString].star;
+                    double pp = scoreSaberSongDifficulty.pp;
+                    double star = scoreSaberSongDifficulty.stars;
 
                     UIBuilder.SetStatButtonText(_ppStatButton, String.Format("{0:0.#}", pp));
                     UIBuilder.SetStatButtonText(_starStatButton, String.Format("{0:0.#}", star));
@@ -1054,8 +1070,8 @@ namespace SongBrowser.UI
             }
             else
             {
-                UIBuilder.SetStatButtonText(_ppStatButton, "?");
-                UIBuilder.SetStatButtonText(_starStatButton, "?");
+                UIBuilder.SetStatButtonText(_ppStatButton, "NA");
+                UIBuilder.SetStatButtonText(_starStatButton, "NA");
             }                
 
             Logger.Debug("Done refreshing score saber stats.");

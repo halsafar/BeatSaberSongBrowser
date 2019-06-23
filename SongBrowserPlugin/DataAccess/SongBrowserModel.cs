@@ -1,4 +1,5 @@
 ﻿using SongBrowser.DataAccess;
+using SongBrowser.Internals;
 using SongBrowser.UI;
 using SongCore.OverrideClasses;
 using SongCore.Utilities;
@@ -30,7 +31,6 @@ namespace SongBrowser
         private Dictionary<string, int> _weights;
         private Dictionary<BeatmapDifficulty, int> _difficultyWeights;
         private Dictionary<string, ScrappedSong> _levelHashToDownloaderData = null;
-        private Dictionary<string, ScoreSaberData> _levelIdToScoreSaberData = null;
         private Dictionary<string, int> _levelIdToPlayCount;
         private Dictionary<string, string> _levelIdToSongVersion;
 
@@ -46,17 +46,6 @@ namespace SongBrowser
             get
             {
                 return _settings;
-            }
-        }
-
-        /// <summary>
-        /// Map LevelID to score saber data.
-        /// </summary>
-        public Dictionary<string, ScoreSaberData> LevelIdToScoreSaberData
-        {
-            get
-            {
-                return _levelIdToScoreSaberData;
             }
         }
 
@@ -118,7 +107,6 @@ namespace SongBrowser
         {
             _levelIdToCustomLevel = new Dictionary<string, CustomPreviewBeatmapLevel>();
             _cachedLastWriteTimes = new Dictionary<String, double>();
-            _levelIdToScoreSaberData = new Dictionary<string, ScoreSaberData>();
             _levelIdToPlayCount = new Dictionary<string, int>();
             _levelIdToSongVersion = new Dictionary<string, string>();
 
@@ -244,7 +232,6 @@ namespace SongBrowser
             Logger.Info("Determining song download time and determining mappings took {0}ms", lastWriteTimer.ElapsedMilliseconds);
 
             // Update song Infos, directory tree, and sort
-            this.UpdateScoreSaberDataMapping();
             this.UpdatePlayCounts();
 
             // Check if we need to upgrade settings file favorites
@@ -341,52 +328,7 @@ namespace SongBrowser
                 _levelIdToPlayCount[levelData.levelID] += levelData.playCount;
             }
         }
-
-        /// <summary>
-        /// Parse the current pp data file.
-        /// Public so controllers can decide when to update it.
-        /// </summary>
-        public void UpdateScoreSaberDataMapping()
-        {
-            Logger.Trace("UpdateScoreSaberDataMapping()");
-
-            ScoreSaberDataFile scoreSaberDataFile = ScoreSaberDatabaseDownloader.ScoreSaberDataFile;
-
-            // bail
-            if (scoreSaberDataFile == null)
-            {
-                Logger.Warning("Score saber data is not ready yet...");
-                return;
-            }
-
-            foreach (var level in SongCore.Loader.CustomLevels)
-            {
-                // Skip
-                if (_levelIdToScoreSaberData.ContainsKey(level.Value.levelID))
-                {
-                    continue;
-                }
-
-                ScoreSaberData scoreSaberData = null;
-
-                // try to version match first
-                if (_levelIdToSongVersion.ContainsKey(level.Value.levelID))
-                {
-                    String version = _levelIdToSongVersion[level.Value.levelID];
-                    if (scoreSaberDataFile.SongVersionToScoreSaberData.ContainsKey(version))
-                    {
-                        scoreSaberData = scoreSaberDataFile.SongVersionToScoreSaberData[version];
-                    }
-                }
-
-                if (scoreSaberData != null)
-                {
-                    //Logger.Debug("{0} = {1}pp", level.songName, pp);
-                    _levelIdToScoreSaberData.Add(level.Value.levelID, scoreSaberData);
-                }
-            }
-        }
-
+        
         /// <summary>
         /// Map the downloader data for quick lookup.
         /// </summary>
@@ -759,8 +701,24 @@ namespace SongBrowser
         {
             Logger.Info("Sorting song list by performance points...");
 
+            if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile == null)
+            {
+                return levels;
+            }
+
             return levels
-                .OrderByDescending(x => _levelIdToScoreSaberData.ContainsKey(x.levelID) ? _levelIdToScoreSaberData[x.levelID].maxPp : 0)
+                .OrderByDescending(x =>
+                {
+                    var hash = CustomHelpers.GetSongHash(x.levelID);
+                    if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData.ContainsKey(hash))
+                    {
+                        return ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData[hash].diffs.Max(y => y.pp);
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+                })
                 .ToList();
         }
 
@@ -851,7 +809,7 @@ namespace SongBrowser
 
             return levelIds
                 .OrderByDescending(x => {
-                    var hash = x.levelID.Split('_')[2];
+                    var hash = CustomHelpers.GetSongHash(x.levelID);
                     if (_levelHashToDownloaderData.ContainsKey(hash))
                     {
                         return _levelHashToDownloaderData[hash].Upvotes;
@@ -863,7 +821,6 @@ namespace SongBrowser
                 })
                 .ToList();
         }
-
 
         /// <summary>
         /// Sorting by BeatSaver rating stat.
@@ -882,7 +839,7 @@ namespace SongBrowser
 
             return levelIds
                 .OrderByDescending(x => {
-                    var hash = x.levelID.Split('_')[2];
+                    var hash = CustomHelpers.GetSongHash(x.levelID);
                     if (_levelHashToDownloaderData.ContainsKey(hash))
                     {
                         return _levelHashToDownloaderData[hash].PlayedCount;
@@ -912,7 +869,7 @@ namespace SongBrowser
 
             return levelIds
                 .OrderByDescending(x => {
-                    var hash = x.levelID.Split('_')[2];
+                    var hash = CustomHelpers.GetSongHash(x.levelID);
                     if (_levelHashToDownloaderData.ContainsKey(hash))
                     {
                         return _levelHashToDownloaderData[hash].Rating;

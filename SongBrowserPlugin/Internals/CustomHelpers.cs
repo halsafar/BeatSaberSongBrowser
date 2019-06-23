@@ -73,5 +73,10 @@ namespace SongBrowser.Internals
             }
             return false;
         }
+
+        public static string GetSongHash(string levelId)
+        {
+            return levelId.Split('_')[2];
+        }
     }
 }
