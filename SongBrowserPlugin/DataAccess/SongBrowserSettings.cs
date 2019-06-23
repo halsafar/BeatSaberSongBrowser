@@ -17,11 +17,13 @@ namespace SongBrowser.DataAccess
         Author,
         Original,
         Newest,        
-        PlayCount,
+        YourPlayCount,
         Difficulty,
         Random,
         PP,
         UpVotes,
+        Rating,
+        PlayCount,
 
         // Deprecated
         Favorites,
@@ -178,7 +180,7 @@ namespace SongBrowser.DataAccess
                     playlistTitle = "Song Browser Favorites",
                     playlistAuthor = "SongBrowser",
                     fileLoc = "",
-                    image = Base64Sprites.PlaylistIconB64,
+                    image = Base64Sprites.SpriteToBase64(Base64Sprites.BeastSaberLogo),
                     songs = new List<PlaylistSong>(),
                 };
                 p.CreateNew(playlistPath);
@@ -255,7 +257,7 @@ namespace SongBrowser.DataAccess
                     playlistTitle = "Song Browser Favorites",
                     playlistAuthor = "SongBrowser",
                     fileLoc = "",
-                    image = Base64Sprites.PlaylistIconB64,
+                    image = Base64Sprites.SpriteToBase64(Base64Sprites.BeastSaberLogo),
                     songs = new List<PlaylistSong>(),
                 };
             }
