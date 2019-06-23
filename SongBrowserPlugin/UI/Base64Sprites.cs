@@ -14,7 +14,6 @@ namespace SongBrowser.UI
         public static Sprite StarFullIcon;
         public static Sprite DownloadIcon;
         public static Sprite SpeedIcon;
-        public static Sprite StarIcon;
         public static Sprite GraphIcon;
         public static Sprite DeleteIcon;
         public static Sprite XIcon;
