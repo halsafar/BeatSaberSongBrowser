@@ -168,12 +168,8 @@
     <EmbeddedResource Include="Assets\BeastSaberLogo.png" />
     <EmbeddedResource Include="Assets\DownloadIcon.png" />
     <EmbeddedResource Include="Assets\RandomIcon.png" />
-    <EmbeddedResource Include="Assets\PlayIcon.png" />
     <EmbeddedResource Include="Assets\SongIcon.png" />
     <EmbeddedResource Include="Assets\PlaylistIcon.png" />
-    <EmbeddedResource Include="Assets\ThumbDown.png" />
-    <EmbeddedResource Include="Assets\ThumbUp.png" />
-    <EmbeddedResource Include="Assets\ReviewIcon.png" />
     <EmbeddedResource Include="Assets\StarEmpty.png" />
     <EmbeddedResource Include="Assets\StarFull.png" />
     <EmbeddedResource Include="Assets\RemoveFromFavorites.png" />
