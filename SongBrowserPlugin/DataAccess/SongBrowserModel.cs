@@ -200,11 +200,8 @@ namespace SongBrowser
                 // SongLoader should filter duplicates but in case of failure we don't want to crash
                 if (!_cachedLastWriteTimes.ContainsKey(level.Value.levelID) || customSongDirChanged)
                 {
-                    // Always use the newest date.
-                    var lastWriteTime = File.GetLastWriteTimeUtc(level.Value.customLevelPath);
-                    var lastCreateTime = File.GetCreationTimeUtc(level.Value.customLevelPath);
-                    var lastTime = lastWriteTime > lastCreateTime ? lastWriteTime : lastCreateTime;
-                    _cachedLastWriteTimes[level.Value.levelID] = (lastTime - EPOCH).TotalMilliseconds;
+                    double lastWriteTime = GetSongUserDate(level.Value);
+                    _cachedLastWriteTimes[level.Value.levelID] = lastWriteTime;
                 }
 
                 if (!_levelIdToCustomLevel.ContainsKey(level.Value.levelID))
@@ -281,6 +278,31 @@ namespace SongBrowser
             timer.Stop();
 
             Logger.Info("Updating songs infos took {0}ms", timer.ElapsedMilliseconds);
+        }
+
+        /// <summary>
+        /// Try to get the date from the cover file, likely the most reliable.
+        /// Fall back on the folders creation date.
+        /// </summary>
+        /// <param name="level"></param>
+        /// <returns></returns>
+        private double GetSongUserDate(CustomPreviewBeatmapLevel level)
+        {
+            var coverPath = Path.Combine(level.customLevelPath, level.standardLevelInfoSaveData.coverImageFilename);
+            var lastTime = EPOCH;
+            if (File.Exists(coverPath))
+            {
+                var lastWriteTime = File.GetLastWriteTimeUtc(coverPath);
+                var lastCreateTime = File.GetCreationTimeUtc(coverPath);
+                lastTime = lastWriteTime > lastCreateTime ? lastWriteTime : lastCreateTime;
+            }
+            else
+            {
+                var lastCreateTime = File.GetCreationTimeUtc(level.customLevelPath);
+                lastTime = lastCreateTime;
+            }
+
+            return (lastTime - EPOCH).TotalMilliseconds;
         }
 
         /// <summary>
