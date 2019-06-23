@@ -167,6 +167,11 @@ namespace SongBrowser.DataAccess
                             if (x.level == null && !string.IsNullOrEmpty(x.key))
                             {
                                 x.level = SongCore.Loader.CustomLevels.FirstOrDefault(y => y.Value.customLevelPath.Contains(x.key)).Value;
+
+                                if (x.level != null && !String.IsNullOrEmpty(x.level.levelID))
+                                {
+                                    x.hash = CustomHelpers.GetSongHash(x.level.levelID);
+                                }
                             }
                         }
                         catch (Exception e)
