@@ -430,7 +430,7 @@ namespace SongBrowser.UI
             UIBuilder.SetStatButtonIcon(_ppStatButton, Base64Sprites.GraphIcon);
 
             _starStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
-            UIBuilder.SetStatButtonIcon(_starStatButton, Base64Sprites.StarIcon);
+            UIBuilder.SetStatButtonIcon(_starStatButton, Base64Sprites.StarFullIcon);
 
             _njsStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
             UIBuilder.SetStatButtonIcon(_njsStatButton, Base64Sprites.SpeedIcon);
@@ -1057,7 +1057,7 @@ namespace SongBrowser.UI
                 {
                     Logger.Debug("Display pp for song.");
                     double pp = scoreSaberSongDifficulty.pp;
-                    double star = scoreSaberSongDifficulty.stars;
+                    double star = scoreSaberSongDifficulty.star;
 
                     UIBuilder.SetStatButtonText(_ppStatButton, String.Format("{0:0.#}", pp));
                     UIBuilder.SetStatButtonText(_starStatButton, String.Format("{0:0.#}", star));

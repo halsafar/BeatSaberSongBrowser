@@ -19,7 +19,7 @@ namespace SongBrowser.DataAccess
     {
         public string diff { get; set; }
         public long scores { get; set; }
-        public double stars { get; set; }
+        public double star { get; set; }
         public double pp { get; set; }
     }
 
