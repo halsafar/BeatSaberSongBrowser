@@ -1,6 +1,4 @@
 ﻿using Newtonsoft.Json;
-using SimpleJSON;
-using SongBrowser.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
