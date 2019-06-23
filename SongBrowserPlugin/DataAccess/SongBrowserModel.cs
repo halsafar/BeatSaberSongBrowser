@@ -32,7 +32,6 @@ namespace SongBrowser
         private Dictionary<BeatmapDifficulty, int> _difficultyWeights;
         private Dictionary<string, ScrappedSong> _levelHashToDownloaderData = null;
         private Dictionary<string, int> _levelIdToPlayCount;
-        private Dictionary<string, string> _levelIdToSongVersion;
 
         public BeatmapCharacteristicSO CurrentBeatmapCharacteristicSO;
 
@@ -108,7 +107,6 @@ namespace SongBrowser
             _levelIdToCustomLevel = new Dictionary<string, CustomPreviewBeatmapLevel>();
             _cachedLastWriteTimes = new Dictionary<String, double>();
             _levelIdToPlayCount = new Dictionary<string, int>();
-            _levelIdToSongVersion = new Dictionary<string, string>();
 
             CurrentEditingPlaylistLevelIds = new HashSet<string>();
 
@@ -213,19 +211,6 @@ namespace SongBrowser
                 {
                     _levelIdToCustomLevel.Add(level.Value.levelID, level.Value);
                 }
-
-                if (!_levelIdToSongVersion.ContainsKey(level.Value.levelID))
-                {
-                    DirectoryInfo info = new DirectoryInfo(level.Value.customLevelPath);
-                    string currentDirectoryName = info.Name;
-                    
-                    Match m = r.Match(level.Value.customLevelPath);
-                    if (m.Success)
-                    {
-                        String version = m.Groups[1].Value;
-                        _levelIdToSongVersion.Add(level.Value.levelID, version);
-                    }
-                }
             }
 
             lastWriteTimer.Stop();
@@ -237,7 +222,7 @@ namespace SongBrowser
             // Check if we need to upgrade settings file favorites
             try
             {
-                this.Settings.ConvertFavoritesToPlaylist(_levelIdToCustomLevel, _levelIdToSongVersion);
+                this.Settings.ConvertFavoritesToPlaylist(_levelIdToCustomLevel);
             }
             catch (Exception e)
             {
@@ -249,7 +234,7 @@ namespace SongBrowser
             {
                 Logger.Debug("Loading playlist for editing: {0}", this.Settings.currentEditingPlaylistFile);
                 CurrentEditingPlaylist = Playlist.LoadPlaylist(this.Settings.currentEditingPlaylistFile);
-                PlaylistsCollection.MatchSongsForPlaylist(CurrentEditingPlaylist);
+                PlaylistsCollection.MatchSongsForPlaylist(CurrentEditingPlaylist, true);
             }
 
             if (CurrentEditingPlaylist == null)
@@ -280,6 +265,7 @@ namespace SongBrowser
                 }
                 else
                 {
+                    //Logger.Debug("MISSING SONG {0}", ps.songName);
                     continue;
                 }
 
@@ -362,8 +348,7 @@ namespace SongBrowser
             {
                 songName = songInfo.songName,
                 levelId = songInfo.levelID,
-                hash = songInfo.levelID,
-                key = _levelIdToSongVersion.ContainsKey(songInfo.levelID) ? _levelIdToSongVersion[songInfo.levelID] : "",
+                hash = CustomHelpers.GetSongHash(songInfo.levelID),
             });
 
             this.CurrentEditingPlaylistLevelIds.Add(songInfo.levelID);

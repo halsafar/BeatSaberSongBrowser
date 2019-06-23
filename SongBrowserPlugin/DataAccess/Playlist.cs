@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using SimpleJSON;
 using SongBrowser.DataAccess.BeatSaverApi;
+using SongBrowser.Internals;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -140,12 +141,11 @@ namespace SongBrowser.DataAccess
 
         public static void MatchSongsForPlaylist(Playlist playlist, bool matchAll = false)
         {
+            //bananbread playlist id  
             if (!SongCore.Loader.AreSongsLoaded || SongCore.Loader.AreSongsLoading || playlist.playlistTitle == "All songs" || playlist.playlistTitle == "Your favorite songs") return;
-            Logger.Log("Started matching songs for playlist \"" + playlist.playlistTitle + "\"...");
+
             if (!playlist.songs.All(x => x.level != null) || matchAll)
             {
-                Stopwatch execTime = new Stopwatch();
-                execTime.Start();
                 playlist.songs.AsParallel().ForAll(x =>
                 {
                     if (x.level == null || matchAll)
@@ -154,34 +154,29 @@ namespace SongBrowser.DataAccess
                         {
                             if (!string.IsNullOrEmpty(x.levelId)) //check that we have levelId and if we do, try to match level
                             {
-                                x.level = SongCore.Loader.CustomLevels.FirstOrDefault(y => y.Value.levelID == x.levelId).Value;
+                                x.level = SongCore.Loader.CustomLevels.Values.FirstOrDefault(y => y.levelID == x.levelId);
                             }
                             if (x.level == null && !string.IsNullOrEmpty(x.hash)) //if level is still null, check that we have hash and if we do, try to match level
                             {
-                                x.level = SongCore.Loader.CustomLevels.FirstOrDefault(y => y.Value.levelID.StartsWith(x.hash.ToUpper())).Value;
+                                if (x.hash.Contains("custom_level"))
+                                {
+                                    x.hash = CustomHelpers.GetSongHash(x.hash);
+                                }
+                                x.level = SongCore.Loader.CustomLevels.Values.FirstOrDefault(y => string.Equals(CustomHelpers.GetSongHash(y.levelID), x.hash, StringComparison.OrdinalIgnoreCase));
                             }
-                            if (x.level == null && !string.IsNullOrEmpty(x.key)) //if level is still null, check that we have key and if we do, try to match level
+                            if (x.level == null && !string.IsNullOrEmpty(x.key))
                             {
-                                ScrappedSong song = ScrappedData.Songs.FirstOrDefault(z => z.Key == x.key);
-                                if (song != null)
-                                {
-                                    x.level = SongCore.Loader.CustomLevels.FirstOrDefault(y => y.Value.levelID.StartsWith(song.Hash)).Value;
-                                }
-                                else
-                                {
-                                    x.level = SongCore.Loader.CustomLevels.FirstOrDefault(y => y.Value.customLevelPath.Contains(x.key)).Value;
-                                }
+                                x.level = SongCore.Loader.CustomLevels.FirstOrDefault(y => y.Value.customLevelPath.Contains(x.key)).Value;
                             }
                         }
                         catch (Exception e)
                         {
-                            Logger.Warning($"Unable to match song with {(string.IsNullOrEmpty(x.key) ? " unknown key!" : ("key " + x.key + " !"))} Exception: {e}");
+                            Logger.Warning($"Unable to match song with {(string.IsNullOrEmpty(x.key) ? " unknown key!" : ("key " + x.key + " !"))}");
                         }
                     }
                 });
-                Logger.Log($"Matched all songs for playlist \"{playlist.playlistTitle}\"! Time: {execTime.Elapsed.TotalSeconds.ToString("0.00")}s");
-                execTime.Reset();
             }
+
         }
 
         public static void MatchSongsForAllPlaylists(bool matchAll = false)
@@ -214,7 +209,7 @@ namespace SongBrowser.DataAccess
 
         public IEnumerator MatchKey()
         {
-            if (!string.IsNullOrEmpty(key))
+            if (!string.IsNullOrEmpty(key) || level == null || !(level is CustomPreviewBeatmapLevel))
                 yield break;
 
             if (!string.IsNullOrEmpty(hash))
@@ -223,7 +218,7 @@ namespace SongBrowser.DataAccess
                 if (song != null)
                     key = song.Key;
                 else
-                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(hash, (Song bsSong) => { if (bsSong != null) key = bsSong._id; });
+                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(hash, (Song bsSong) => { if (bsSong != null) key = bsSong.key; });
             }
             else if (!string.IsNullOrEmpty(levelId))
             {
@@ -231,7 +226,7 @@ namespace SongBrowser.DataAccess
                 if (song != null)
                     key = song.Key;
                 else
-                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(levelId.Substring(0, Math.Min(32, levelId.Length)), (Song bsSong) => { if (bsSong != null) key = bsSong._id; });
+                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(level.levelID.Split('_')[2], (Song bsSong) => { if (bsSong != null) key = bsSong.key; });
             }
             else if (level != null)
             {
@@ -239,7 +234,7 @@ namespace SongBrowser.DataAccess
                 if (song != null)
                     key = song.Key;
                 else
-                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(level.levelID.Substring(0, Math.Min(32, level.levelID.Length)), (Song bsSong) => { if (bsSong != null) key = bsSong._id; });
+                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(level.levelID.Split('_')[2], (Song bsSong) => { if (bsSong != null) key = bsSong.key; });
             }
         }
     }
