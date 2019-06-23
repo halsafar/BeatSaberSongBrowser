@@ -686,7 +686,7 @@ namespace SongBrowser
         }
 
         /// <summary>
-        /// Sorting by song play count.
+        /// Sorting by song users play count.
         /// </summary>
         /// <param name="levels"></param>
         /// <returns></returns>
@@ -800,13 +800,13 @@ namespace SongBrowser
         }
 
         /// <summary>
-        /// Sorting by Downloader UpVotes.
+        /// Sorting by BeatSaver UpVotes.
         /// </summary>
         /// <param name="levelIds"></param>
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortUpVotes(List<IPreviewBeatmapLevel> levelIds)
         {
-            Logger.Info("Sorting song list by UpVotes");
+            Logger.Info("Sorting song list by BeatSaver UpVotes");
 
             // Do not always have data when trying to sort by UpVotes
             if (_levelHashToDownloaderData == null)
@@ -830,7 +830,7 @@ namespace SongBrowser
         }
 
         /// <summary>
-        /// Sorting by BeatSaver rating stat.
+        /// Sorting by BeatSaver playcount stat.
         /// </summary>
         /// <param name="levelIds"></param>
         /// <returns></returns>
