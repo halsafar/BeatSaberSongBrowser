@@ -12,7 +12,7 @@ namespace SongBrowser.UI
     public class ScoreSaberDatabaseDownloader : MonoBehaviour
     {
         //public const String SCRAPED_SCORE_SABER_JSON_URL = "https://wes.ams3.cdn.digitaloceanspaces.com/beatstar/bssb.json";
-        public const String SCRAPED_SCORE_SABER_JSON_URL = "file://C:\\Users\\shinh\\Workspace\\personal\\beat-saber-scripts\\data\\score_saber_data_v2.json";
+        public const String SCRAPED_SCORE_SABER_JSON_URL = "https://raw.githubusercontent.com/halsafar/beat-saber-scraped-data/master/scoresaber/score_saber_data_v2.json";
 
         public static ScoreSaberDatabaseDownloader Instance;
 
