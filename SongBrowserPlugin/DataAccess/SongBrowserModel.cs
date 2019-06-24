@@ -753,7 +753,7 @@ namespace SongBrowser
                     var stars = 0.0;
                     if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData.ContainsKey(hash))
                     {
-                        var diffs = ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData[hash].diffs;
+                        var diffs = ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData[hash].diffs;   
                         stars = diffs.Max(y => y.star);
                     }
 
