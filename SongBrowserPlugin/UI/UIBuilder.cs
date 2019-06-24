@@ -114,6 +114,20 @@ namespace SongBrowser.UI
         }
 
         /// <summary>
+        /// Adjust button border.
+        /// </summary>
+        /// <param name="button"></param>
+        /// <param name="color"></param>
+        static public void SetButtonBorderActive(Button button, bool active)
+        {
+            Image img = button.GetComponentsInChildren<Image>().FirstOrDefault(x => x.name == "Stroke");
+            if (img != null)
+            {
+                img.gameObject.SetActive(active);
+            }
+        }
+
+        /// <summary>
         /// Find and adjust a stat panel item text fields.
         /// </summary>
         /// <param name="rect"></param>

@@ -81,6 +81,7 @@ namespace SongBrowser.UI
 
         // UI Created
         private bool _uiCreated = false;
+        private UIState _currentUiState = UIState.Disabled;
 
         /// <summary>
         /// Constructor
@@ -180,27 +181,29 @@ namespace SongBrowser.UI
             float outerButtonFontSize = 3.0f;
             float displayButtonFontSize = 2.5f;
             float outerButtonWidth = 24.0f;
+            float randomButtonWidth = 8.0f;
 
             // clear button
-            _clearSortFilterButton = _beatUi.LevelPackLevelsViewController.CreateUIButton("HowToPlayButton", new Vector2(clearButtonX, clearButtonY), new Vector2(buttonHeight, buttonHeight), () =>
-            {
-                OnClearButtonClickEvent();
-            }, "",
-            Base64Sprites.XIcon);
-            _clearSortFilterButton.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(1, 1, 0, 0);
-            RectTransform textRect = _clearSortFilterButton.GetComponentsInChildren<RectTransform>(true).FirstOrDefault(c => c.name == "Text");
-            if (textRect != null)
-            {
-                UnityEngine.Object.Destroy(textRect.gameObject);
-            }
+            _clearSortFilterButton = CreateClearButton(clearButtonX, clearButtonY, buttonHeight, () =>
+            {                
+                if (_currentUiState == UIState.FilterBy || _currentUiState == UIState.SortBy)
+                {
+                    RefreshOuterUIState(UIState.Main);
+                }
+                else
+                {
+                    OnClearButtonClickEvent();
+                }
+            });
 
             // create SortBy button and its display
             float curX = sortByButtonX;
-            _sortByButton = _beatUi.LevelPackLevelsViewController.CreateUIButton("CreditsButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
+            _sortByButton = _beatUi.LevelPackLevelsViewController.CreateUIButton("ApplyButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 RefreshOuterUIState(UIState.SortBy);
             }, "Sort By");
             _sortByButton.SetButtonTextSize(outerButtonFontSize);
+            _sortByButton.ToggleWordWrapping(false);
 
             curX += outerButtonWidth;
 
@@ -215,11 +218,12 @@ namespace SongBrowser.UI
             curX += outerButtonWidth;
 
             // create FilterBy button and its display
-            _filterByButton = _beatUi.LevelPackLevelsViewController.CreateUIButton("CreditsButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
+            _filterByButton = _beatUi.LevelPackLevelsViewController.CreateUIButton("ApplyButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 RefreshOuterUIState(UIState.FilterBy);
             }, "Filter By");
             _filterByButton.SetButtonTextSize(outerButtonFontSize);
+            _filterByButton.ToggleWordWrapping(false);
 
             curX += outerButtonWidth;
 
@@ -232,17 +236,36 @@ namespace SongBrowser.UI
             _filterByDisplay.ToggleWordWrapping(false);
 
             // random button
-            _randomButton = _beatUi.LevelPackLevelsViewController.CreateUIButton("HowToPlayButton", new Vector2(curX + (outerButtonWidth / 2.0f) + (buttonHeight), clearButtonY), new Vector2(buttonHeight, buttonHeight), () =>
+            _randomButton = _beatUi.LevelPackLevelsViewController.CreateUIButton("HowToPlayButton", new Vector2(curX + (outerButtonWidth / 2.0f) + (randomButtonWidth / 2.0f), clearButtonY), new Vector2(randomButtonWidth, buttonHeight), () =>
             {
                 OnSortButtonClickEvent(SongSortMode.Random);
             }, "",
             Base64Sprites.RandomIcon);
             _randomButton.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(0, 0, 0, 0);
-            textRect = _randomButton.GetComponentsInChildren<RectTransform>(true).FirstOrDefault(c => c.name == "Text");
+            var textRect = _randomButton.GetComponentsInChildren<RectTransform>(true).FirstOrDefault(c => c.name == "Text");
             if (textRect != null)
             {
                 UnityEngine.Object.Destroy(textRect.gameObject);
             }
+            UIBuilder.SetButtonBorderActive(_randomButton, false);
+        }
+
+        /// <summary>
+        /// Create the back button
+        /// </summary>
+        /// <returns></returns>
+        private Button CreateClearButton(float x, float y, float h, UnityEngine.Events.UnityAction callback)
+        {
+            Button b = _beatUi.LevelPackLevelsViewController.CreateUIButton("HowToPlayButton", new Vector2(x, y), new Vector2(h, h), callback, "", Base64Sprites.XIcon);
+            b.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(1, 1, 0, 0);
+            RectTransform textRect = b.GetComponentsInChildren<RectTransform>(true).FirstOrDefault(c => c.name == "Text");
+            if (textRect != null)
+            {
+                UnityEngine.Object.Destroy(textRect.gameObject);
+            }
+            UIBuilder.SetButtonBorderActive(b, false);
+
+            return b;
         }
 
         /// <summary>
@@ -253,15 +276,15 @@ namespace SongBrowser.UI
             Logger.Debug("Create sort buttons...");
 
             float sortButtonFontSize = 2.25f;
-            float sortButtonX = -24.5f;
+            float sortButtonX = -23.0f;
             float sortButtonWidth = 12.25f;
-            float buttonSpacing = 0.5f;
+            float buttonSpacing = 0.65f;
             float buttonY = 37f;
             float buttonHeight = 5.0f;
 
             string[] sortButtonNames = new string[]
             {
-                    "Song", "Author", "Newest", "YourPlays", "PP", "Difficult", "UpVotes", "PlayCount", "Rating"
+                    "Title", "Author", "Newest", "YourPlays", "PP", "Difficult", "UpVotes", "PlayCount", "Rating"
             };
 
             SongSortMode[] sortModes = new SongSortMode[]
@@ -284,7 +307,7 @@ namespace SongBrowser.UI
                     },
                     sortButtonNames[i]);
                 sortButton.Button.SetButtonTextSize(sortButtonFontSize);
-                sortButton.Button.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(3, 3, 3, 3);
+                sortButton.Button.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(4, 4, 2, 2);
                 sortButton.Button.ToggleWordWrapping(false);
                 sortButton.Button.name = "Sort" + sortModes[i].ToString() + "Button";
 
@@ -299,9 +322,9 @@ namespace SongBrowser.UI
         {
             Logger.Debug("Creating filter buttons...");
 
-            float sortButtonFontSize = 2.25f;
-            float sortButtonX = -24.5f;
-            float sortButtonWidth = 12.25f;
+            float filterButtonFontSize = 2.25f;
+            float filterButtonX = -23.0f;
+            float filterButtonWidth = 12.25f;
             float buttonSpacing = 0.5f;
             float buttonY = 37f;
             float buttonHeight = 5.0f;
@@ -317,15 +340,15 @@ namespace SongBrowser.UI
             for (int i = 0; i < filterButtonSetup.Count; i++)
             {
                 Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite> t = filterButtonSetup[i];
-                float curButtonX = sortButtonX + (sortButtonWidth * i) + (buttonSpacing * i);
+                float curButtonX = filterButtonX + (filterButtonWidth * i) + (buttonSpacing * i);
                 SongFilterButton filterButton = new SongFilterButton();
                 filterButton.FilterMode = t.Item1;
                 filterButton.Button = _beatUi.LevelPackLevelsViewController.CreateUIButton("ApplyButton",
-                    new Vector2(curButtonX, buttonY), new Vector2(sortButtonWidth, buttonHeight),
+                    new Vector2(curButtonX, buttonY), new Vector2(filterButtonWidth, buttonHeight),
                     t.Item2,
                     t.Item1.ToString());
-                filterButton.Button.SetButtonTextSize(sortButtonFontSize);
-                filterButton.Button.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(3, 3, 3, 3);
+                filterButton.Button.SetButtonTextSize(filterButtonFontSize);
+                filterButton.Button.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(4, 4, 2, 2);
                 filterButton.Button.ToggleWordWrapping(false);
                 filterButton.Button.onClick.AddListener(() =>
                 {
@@ -1130,7 +1153,6 @@ namespace SongBrowser.UI
             _pageDownFastButton.gameObject.SetActive(_beatUi.TableViewPageDownButton.IsActive());
         }
 
-
         /// <summary>
         /// Show the UI.
         /// </summary>
@@ -1185,6 +1207,7 @@ namespace SongBrowser.UI
             bool sortButtons = false;
             bool filterButtons = false;
             bool outerButtons = false;
+            bool clearButton = true;
             if (state == UIState.SortBy)
             {
                 sortButtons = true;
@@ -1197,6 +1220,10 @@ namespace SongBrowser.UI
             {
                 outerButtons = true;
             }
+            else
+            {
+                clearButton = false;
+            }
 
             _sortButtonGroup.ForEach(x => x.Button.gameObject.SetActive(sortButtons));
             _filterButtonGroup.ForEach(x => x.Button.gameObject.SetActive(filterButtons));
@@ -1205,10 +1232,11 @@ namespace SongBrowser.UI
             _sortByDisplay.gameObject.SetActive(outerButtons);
             _filterByButton.gameObject.SetActive(outerButtons);
             _filterByDisplay.gameObject.SetActive(outerButtons);
-            _clearSortFilterButton.gameObject.SetActive(outerButtons);
+            _clearSortFilterButton.gameObject.SetActive(clearButton);
             _randomButton.gameObject.SetActive(outerButtons);
 
             RefreshCurrentSelectionDisplay();
+            _currentUiState = state;
         }
 
         /// <summary>
