@@ -524,6 +524,9 @@ namespace SongBrowser
                 case SongSortMode.PP:
                     sortedSongs = SortPerformancePoints(filteredSongs);
                     break;
+                case SongSortMode.Stars:
+                    sortedSongs = SortStars(filteredSongs);
+                    break;
                 case SongSortMode.Difficulty:
                     sortedSongs = SortDifficulty(filteredSongs);
                     break;
@@ -729,6 +732,54 @@ namespace SongBrowser
                 .ToList();
         }
 
+        /// <summary>
+        /// Sorting by star rating.
+        /// </summary>
+        /// <param name="levels"></param>
+        /// <returns></returns>
+        private List<IPreviewBeatmapLevel> SortStars(List<IPreviewBeatmapLevel> levels)
+        {
+            Logger.Info("Sorting song list by star points...");
+
+            if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile == null)
+            {
+                return levels;
+            }
+
+            return levels
+                .OrderByDescending(x =>
+                {
+                    var hash = CustomHelpers.GetSongHash(x.levelID);
+                    var stars = 0.0;
+                    if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData.ContainsKey(hash))
+                    {
+                        var diffs = ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData[hash].diffs;
+                        stars = diffs.Max(y => y.star);
+                    }
+
+                    //Logger.Debug("Stars={0}", stars);
+                    if (stars != 0)
+                    {
+                        return stars;
+                    }
+
+                    if (_settings.invertSortResults)
+                    {
+                        return double.MaxValue;
+                    }
+                    else
+                    {
+                        return double.MinValue;
+                    }
+                })
+                .ToList();
+        }
+
+        /// <summary>
+        /// Attempt to sort by songs containing easy first
+        /// </summary>
+        /// <param name="levels"></param>
+        /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortDifficulty(List<IPreviewBeatmapLevel> levels)
         {
             Logger.Info("Sorting song list by difficulty...");

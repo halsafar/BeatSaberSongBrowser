@@ -25,6 +25,7 @@ namespace SongBrowser.DataAccess
         UpVotes,
         Rating,
         PlayCount,
+        Stars,
 
         // Deprecated
         Favorites,
