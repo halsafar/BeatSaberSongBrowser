@@ -209,9 +209,7 @@ namespace SongBrowser.UI
 
             _sortByDisplay = _beatUi.LevelPackLevelsViewController.CreateUIButton("ApplyButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
-                this.Model.ToggleInverting();
-                ProcessSongList();
-                RefreshSongUI();
+                OnSortButtonClickEvent(_model.Settings.sortMode);
             }, "");
             _sortByDisplay.SetButtonTextSize(displayButtonFontSize);
             _sortByDisplay.ToggleWordWrapping(false);
@@ -676,6 +674,8 @@ namespace SongBrowser.UI
         private void OnSortButtonClickEvent(SongSortMode sortMode)
         {
             Logger.Debug("Sort button - {0} - pressed.", sortMode.ToString());
+
+            // Clear current selected level id so our song list jumps to the start
             _model.LastSelectedLevelId = null;
 
             if (_model.Settings.sortMode == sortMode)
@@ -695,10 +695,6 @@ namespace SongBrowser.UI
 
             ProcessSongList();
             RefreshSongUI();
-
-            //Scroll to start of the list
-            TableView listTableView = _beatUi.LevelPackLevelsTableView.GetPrivateField<TableView>("_tableView");
-            listTableView.ScrollToCellWithIdx(0, TableView.ScrollPositionType.Beginning, false);
 
             // update the display
             _sortByDisplay.SetButtonText(_model.Settings.sortMode.ToString());
