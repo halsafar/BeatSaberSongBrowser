@@ -10,34 +10,28 @@ A plugin for customizing the in-game song browser.
 ## Features
 - Playlist support:
   - BeatDrop playlists!
-- Filters:
-  - Playlist (with a playlist selector).
-  - Search (with keyboard support).
-  - Favorites (all songs you have marked as a favorite).
-- Optional folder support:
-  - Disabled by default.  See the settings file.
 - Sorting methods:
   - Song: By song name (default).
   - Author: By song author name then by song name.  
   - Original: Match the original sorting you would normally get after SongLoaderPlugin.
-  - Newest: Sort songs by their last write time.
-  - PP: Performance points!  Using DuoVR's scraped score saber data.  
-  - PlayCount: Sort by playcount (sum of play counts across all difficulties for a given song).
+  - Newest: Sort by the date you downloaded the custom song.
+  - YourPlays: Sort by your most played.
+  - PP: Performance points!  Using @WesVleuten score saber data.  
+  - Star: Sort by ScoreSaber's Stars difficulty rating.
+  - UpVotes: BeatSaver's upvote count.
+  - Rating: BeatSaver's rating statistic.
+  - PlayCount: BeatSaver's played count.
   - Random: Randomize the song list each time.
+- Filters:
+  - Playlist (with a playlist selector).
+  - Search (with keyboard support).
+  - Favorites (all songs you have marked as a favorite).  
 - UI Enhancements:
-  - Display PP and STAR difficulty per song / difficulty.
+  - Display PP, STARS, and NJS.
   - Fast scroll buttons (jumps 10% of your song list in each press).
 - Tips:
   - Sort buttons can be pressed a second time to invert the sorting.
   - Filters can be cancelled by selecting them again.
-
-## Keyboard Shortcuts
-- Adjust Filters:
-  - `F1-F3` correspond to the filter selection
-- Adjust sort:
-  - The `\`` key (~) will cycle the sort functions.
-- Delete song:
-  - `Delete` key.
  
 ## Playlist Format
 ```json
@@ -49,12 +43,14 @@ A plugin for customizing the in-game song browser.
   "customDetailUrl": "",
   "songs": [
     {
+      "key": "0000",
       "songName": "SomeCoolSong",
-      "key": "0000-0000"
+      "hash": "00000000000000000000000000000000"
     },
     {
+      "key": "0000",
       "songName": "AnotherCoolSong",
-      "key": "0000-0000"
+      "hash": "00000000000000000000000000000000"
     }    
   ]
 }
