@@ -510,11 +510,11 @@ namespace SongBrowser.UI
             // make sure the quick scroll buttons don't desync with regular scrolling
             _beatUi.TableViewPageDownButton.onClick.AddListener(delegate ()
             {
-                this.RefreshQuickScrollButtons();
+                StartCoroutine(RefreshQuickScrollButtonsAsync());
             });
             _beatUi.TableViewPageUpButton.onClick.AddListener(delegate ()
             {
-                this.RefreshQuickScrollButtons();
+                StartCoroutine(RefreshQuickScrollButtonsAsync());
             });
 
             // finished level
@@ -1147,6 +1147,17 @@ namespace SongBrowser.UI
             _pageUpFastButton.gameObject.SetActive(_beatUi.TableViewPageUpButton.IsActive());
             _pageDownFastButton.interactable = _beatUi.TableViewPageDownButton.interactable;
             _pageDownFastButton.gameObject.SetActive(_beatUi.TableViewPageDownButton.IsActive());
+        }
+
+        /// <summary>
+        /// TODO - evaluate this sillyness...
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator RefreshQuickScrollButtonsAsync()
+        {
+            yield return new WaitForEndOfFrame();
+
+            RefreshQuickScrollButtons();
         }
 
         /// <summary>
