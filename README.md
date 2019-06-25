@@ -8,8 +8,6 @@ A plugin for customizing the in-game song browser.
 ![Alt text](/Screenshot.png?raw=true "Screenshot")
 
 ## Features
-- Playlist support:
-  - BeatDrop playlists!
 - Sorting methods:
   - Song: By song name (default).
   - Author: By song author name then by song name.  
@@ -23,7 +21,7 @@ A plugin for customizing the in-game song browser.
   - PlayCount: BeatSaver's played count.
   - Random: Randomize the song list each time.
 - Filters:
-  - Playlist (with a playlist selector).
+  - Playlists.
   - Search (with keyboard support).
   - Favorites (all songs you have marked as a favorite).  
 - UI Enhancements:
