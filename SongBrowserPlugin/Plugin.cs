@@ -73,7 +73,7 @@ namespace SongBrowser
 
         private void SceneManager_activeSceneChanged(Scene from, Scene to)
         {
-            Logger.Info($"Active scene changed from \"{from.name}\" to \"{to.name}\"");
+            Logger.Debug($"Active scene changed from \"{from.name}\" to \"{to.name}\"");
         }
 
         private void SceneManager_sceneLoaded(Scene to, LoadSceneMode loadMode)
