@@ -7,6 +7,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using SongBrowser.Logging;
 using Logger = SongBrowser.Logging.Logger;
+using SongBrowser.Internals;
 
 namespace SongBrowser.DataAccess
 {
@@ -17,11 +18,14 @@ namespace SongBrowser.DataAccess
         Author,
         Original,
         Newest,        
-        PlayCount,
+        YourPlayCount,
         Difficulty,
         Random,
         PP,
         UpVotes,
+        Rating,
+        PlayCount,
+        Stars,
 
         // Deprecated
         Favorites,
@@ -178,7 +182,7 @@ namespace SongBrowser.DataAccess
                     playlistTitle = "Song Browser Favorites",
                     playlistAuthor = "SongBrowser",
                     fileLoc = "",
-                    image = Base64Sprites.PlaylistIconB64,
+                    image = Base64Sprites.SpriteToBase64(Base64Sprites.BeastSaberLogo),
                     songs = new List<PlaylistSong>(),
                 };
                 p.CreateNew(playlistPath);
@@ -216,8 +220,7 @@ namespace SongBrowser.DataAccess
         /// </summary>
         /// <param name="levelIdToCustomLevel"></param>
         /// <param name="levelIdToSongVersion"></param>
-        public void ConvertFavoritesToPlaylist(Dictionary<String, CustomPreviewBeatmapLevel> levelIdToCustomLevel,
-                                               Dictionary<string, string> levelIdToSongVersion)
+        public void ConvertFavoritesToPlaylist(Dictionary<String, CustomPreviewBeatmapLevel> levelIdToCustomLevel)
         {
             // Check if we have favorites to convert to the playlist
             if (this.Favorites.Count <= 0)
@@ -255,7 +258,7 @@ namespace SongBrowser.DataAccess
                     playlistTitle = "Song Browser Favorites",
                     playlistAuthor = "SongBrowser",
                     fileLoc = "",
-                    image = Base64Sprites.PlaylistIconB64,
+                    image = Base64Sprites.SpriteToBase64(Base64Sprites.BeastSaberLogo),
                     songs = new List<PlaylistSong>(),
                 };
             }
@@ -268,10 +271,11 @@ namespace SongBrowser.DataAccess
                     levelId = levelId
                 };
 
-                if (levelIdToCustomLevel.ContainsKey(levelId) && levelIdToSongVersion.ContainsKey(levelId))
+                if (levelIdToCustomLevel.ContainsKey(levelId))
                 {
                     playlistSong.songName = levelIdToCustomLevel[levelId].songName;
-                    playlistSong.key = levelIdToSongVersion[levelId];
+                    playlistSong.levelId = levelId;
+                    playlistSong.hash = CustomHelpers.GetSongHash(levelId);
                 }
                 else
                 {

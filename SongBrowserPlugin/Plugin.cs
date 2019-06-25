@@ -12,7 +12,7 @@ namespace SongBrowser
 {
     public class Plugin : IPlugin
     {
-        public const string VERSION_NUMBER = "5.1.0";
+        public const string VERSION_NUMBER = "5.2.0";
         public static Plugin Instance;
 
         public string Name
@@ -73,7 +73,7 @@ namespace SongBrowser
 
         private void SceneManager_activeSceneChanged(Scene from, Scene to)
         {
-            Logger.Info($"Active scene changed from \"{from.name}\" to \"{to.name}\"");
+            Logger.Debug($"Active scene changed from \"{from.name}\" to \"{to.name}\"");
         }
 
         private void SceneManager_sceneLoaded(Scene to, LoadSceneMode loadMode)

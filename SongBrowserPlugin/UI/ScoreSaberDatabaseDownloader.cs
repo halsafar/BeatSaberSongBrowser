@@ -11,7 +11,8 @@ namespace SongBrowser.UI
 {
     public class ScoreSaberDatabaseDownloader : MonoBehaviour
     {
-        public const String SCRAPED_SCORE_SABER_JSON_URL = "https://wes.ams3.cdn.digitaloceanspaces.com/beatstar/bssb.json";
+        public const String SCRAPED_SCORE_SABER_ALL_JSON_URL = "https://cdn.wes.cloud/beatstar/bssb/v2-all.json";
+        public const String SCRAPED_SCORE_SABER_RANKED_JSON_URL = "https://cdn.wes.cloud/beatstar/bssb/v2-ranked.json";
 
         public static ScoreSaberDatabaseDownloader Instance;
 
@@ -41,48 +42,79 @@ namespace SongBrowser.UI
         {
             Logger.Trace("Start()");
 
-            StartCoroutine(WaitForDownload());
+            StartCoroutine(DownloadScoreSaberDatabases());
+        }
+
+        /// <summary>
+        /// Helper to download both databases.
+        /// </summary>
+        /// <returns></returns>
+        private IEnumerator DownloadScoreSaberDatabases()
+        {
+            ScoreSaberDataFile = null;
+
+            yield return DownloadScoreSaberData(SCRAPED_SCORE_SABER_ALL_JSON_URL);
+            yield return DownloadScoreSaberData(SCRAPED_SCORE_SABER_RANKED_JSON_URL);
+
+            if (ScoreSaberDataFile != null)
+            {
+                SongBrowserApplication.MainProgressBar.ShowMessage("Success downloading BeatStar data...", 5.0f);
+                onScoreSaberDataDownloaded?.Invoke();
+            }
         }
 
         /// <summary>
         /// Wait for score saber related files to download.
         /// </summary>
         /// <returns></returns>
-        private IEnumerator WaitForDownload()
+        private IEnumerator DownloadScoreSaberData(String url)
         {
-            if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile != null)
-            {
-                Logger.Info("Using cached copy of ScoreSaberData...");
-            }
-            else
-            {
-                SongBrowserApplication.MainProgressBar.ShowMessage("Downloading BeatStar data...", 5.0f);
+            SongBrowserApplication.MainProgressBar.ShowMessage("Downloading BeatStar data...", 5.0f);
 
-                Logger.Info("Attempting to download: {0}", ScoreSaberDatabaseDownloader.SCRAPED_SCORE_SABER_JSON_URL);
-                using (UnityWebRequest www = UnityWebRequest.Get(ScoreSaberDatabaseDownloader.SCRAPED_SCORE_SABER_JSON_URL))
+            Logger.Info("Attempting to download: {0}", url);
+            using (UnityWebRequest www = UnityWebRequest.Get(url))
+            {
+                // Use 4MB cache, large enough for this file to grow for awhile.
+                www.SetCacheable(new CacheableDownloadHandlerScoreSaberData(www, _buffer));
+                yield return www.SendWebRequest();
+
+                Logger.Debug("Returned from web request!...");
+
+                try
                 {
-                    // Use 4MB cache, large enough for this file to grow for awhile.
-                    www.SetCacheable(new CacheableDownloadHandlerScoreSaberData(www, _buffer));
-                    yield return www.SendWebRequest();
-
-                    Logger.Debug("Returned from web request!...");
-
-                    try
+                    // First time 
+                    if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile == null)
                     {
-                        ScoreSaberDatabaseDownloader.ScoreSaberDataFile = (www.downloadHandler as CacheableDownloadHandlerScoreSaberData).ScoreSaberDataFile;
-                        Logger.Info("Success downloading ScoreSaber data!");
-
-                        SongBrowserApplication.MainProgressBar.ShowMessage("Success downloading BeatStar data...", 5.0f);
-                        onScoreSaberDataDownloaded?.Invoke();
+                        ScoreSaberDatabaseDownloader.ScoreSaberDataFile = (www.downloadHandler as CacheableDownloadHandlerScoreSaberData).ScoreSaberDataFile;                            
                     }
-                    catch (System.InvalidOperationException)
+                    else
                     {
-                        Logger.Error("Failed to download ScoreSaber data file...");
+                        // Second time, update.
+                        var newScoreSaberData = (www.downloadHandler as CacheableDownloadHandlerScoreSaberData).ScoreSaberDataFile;
+                        foreach (var pair in newScoreSaberData.SongHashToScoreSaberData)
+                        {
+                            if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData.ContainsKey(pair.Key))
+                            {
+                                foreach (var diff in pair.Value.diffs)
+                                {
+                                    var index = ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData[pair.Key].diffs.FindIndex(x => x.diff == diff.diff);
+                                    if (index < 0)
+                                    {
+                                        ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData[pair.Key].diffs.Add(diff);
+                                    }
+                                }
+                            }
+                        }
                     }
-                    catch (Exception e)
-                    {
-                        Logger.Exception("Exception trying to download ScoreSaber data file...", e);
-                    }
+                    Logger.Info("Success downloading ScoreSaber data!");
+                }
+                catch (System.InvalidOperationException)
+                {
+                    Logger.Error("Failed to download ScoreSaber data file...");
+                }
+                catch (Exception e)
+                {
+                    Logger.Exception("Exception trying to download ScoreSaber data file...", e);
                 }
             }
         }
