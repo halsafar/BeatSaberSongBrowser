@@ -525,7 +525,7 @@ namespace SongBrowser.UI
         /// <summary>
         /// Helper to reduce code duplication...
         /// </summary>
-        private void RefreshSongUI(bool scrollToLevel=true)
+        public void RefreshSongUI(bool scrollToLevel=true)
         {
             RefreshSongList(scrollToLevel);
             RefreshSortButtonUI();
