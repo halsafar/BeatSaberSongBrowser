@@ -525,7 +525,7 @@ namespace SongBrowser.UI
         /// <summary>
         /// Helper to reduce code duplication...
         /// </summary>
-        private void RefreshSongUI(bool scrollToLevel=true)
+        public void RefreshSongUI(bool scrollToLevel=true)
         {
             RefreshSongList(scrollToLevel);
             RefreshSortButtonUI();
@@ -1261,7 +1261,11 @@ namespace SongBrowser.UI
                 sortByDisplay = _model.Settings.sortMode.ToString();
             }
             _sortByDisplay.SetButtonText(sortByDisplay);
-            _filterByDisplay.SetButtonText(_model.Settings.filterMode.ToString());
+            if (_model.Settings.filterMode != SongFilterMode.Custom)
+            {
+                // Custom SongFilterMod implies that another mod has modified the text of this button (do not overwrite)
+                _filterByDisplay.SetButtonText(_model.Settings.filterMode.ToString());
+            }
         }
 
         /// <summary>
