@@ -35,6 +35,7 @@ namespace SongBrowser
 
         public BeatmapCharacteristicSO CurrentBeatmapCharacteristicSO;
 
+        public static Func<IBeatmapLevelPack, List<IPreviewBeatmapLevel>> CustomFilterHandler;
         public static Action<Dictionary<string, CustomPreviewBeatmapLevel>> didFinishProcessingSongs;
 
         /// <summary>
@@ -483,6 +484,10 @@ namespace SongBrowser
                     break;
                 case SongFilterMode.Playlist:
                     filteredSongs = FilterPlaylist(pack);
+                    break;
+                case SongFilterMode.Custom:
+                    Logger.Info("Song filter mode set to custom. Deferring filter behaviour to another mod.");
+                    filteredSongs = CustomFilterHandler != null ? CustomFilterHandler.Invoke(pack) : unsortedSongs;
                     break;
                 case SongFilterMode.None:
                 default:

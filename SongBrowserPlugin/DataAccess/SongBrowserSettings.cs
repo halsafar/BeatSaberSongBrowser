@@ -39,7 +39,10 @@ namespace SongBrowser.DataAccess
         None,
         Favorites,
         Playlist,
-        Search
+        Search,
+
+        // For other mods that extend SongBrowser
+        Custom
     }
 
     [Serializable]
