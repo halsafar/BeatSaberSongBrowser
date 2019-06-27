@@ -119,6 +119,7 @@ namespace SongBrowser.UI
             {
                 Logger.Debug("Entering SOLO CAMPAIGN mode...");
                 flowCoordinator = Resources.FindObjectsOfTypeAll<CampaignFlowCoordinator>().First();
+                return;
             }
 
             _beatUi = new DataAccess.BeatSaberUIController(flowCoordinator);
