@@ -15,7 +15,8 @@ namespace SongBrowser.DataAccess
         public string Hash { get; set; }
         public string SongName { get; set; }
         public string SongSubName { get; set; }
-        public string AuthorName { get; set; }
+        public string LevelAuthorName { get; set; }
+        public string SongAuthorName { get; set; }
         public List<DifficultyStats> Diffs { get; set; }
         public long Bpm { get; set; }
         public long PlayedCount { get; set; }
