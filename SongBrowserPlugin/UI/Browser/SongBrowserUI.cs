@@ -277,7 +277,7 @@ namespace SongBrowser.UI
             float sortButtonFontSize = 2.25f;
             float sortButtonX = -23.0f;
             float sortButtonWidth = 12.25f;
-            float buttonSpacing = 0.65f;
+            float buttonSpacing = 0.5f;
             float buttonY = 37f;
             float buttonHeight = 5.0f;
 
@@ -328,32 +328,34 @@ namespace SongBrowser.UI
             float buttonY = 37f;
             float buttonHeight = 5.0f;
 
-            List<Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>> filterButtonSetup = new List<Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>>()
-                {
-                    Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Favorites, OnFavoriteFilterButtonClickEvent, Base64Sprites.StarFullIcon),
-                    Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Playlist, OnPlaylistButtonClickEvent, Base64Sprites.PlaylistIcon),
-                    Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Search, OnSearchButtonClickEvent, Base64Sprites.SearchIcon),
-                };
+            string[] filterButtonNames = new string[]
+            {
+                    "Favorites", "Playlist", "Search", "Ranked", "Unranked"
+            };
+
+            SongFilterMode[] filterModes = new SongFilterMode[]
+            {
+                    SongFilterMode.Favorites, SongFilterMode.Playlist, SongFilterMode.Search, SongFilterMode.Ranked, SongFilterMode.Unranked
+            };
 
             _filterButtonGroup = new List<SongFilterButton>();
-            for (int i = 0; i < filterButtonSetup.Count; i++)
+            for (int i = 0; i < filterButtonNames.Length; i++)
             {
-                Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite> t = filterButtonSetup[i];
                 float curButtonX = filterButtonX + (filterButtonWidth * i) + (buttonSpacing * i);
                 SongFilterButton filterButton = new SongFilterButton();
-                filterButton.FilterMode = t.Item1;
+                filterButton.FilterMode = filterModes[i];
                 filterButton.Button = _beatUi.LevelPackLevelsViewController.CreateUIButton("ApplyButton",
                     new Vector2(curButtonX, buttonY), new Vector2(filterButtonWidth, buttonHeight),
-                    t.Item2,
-                    t.Item1.ToString());
+                    () =>
+                    {
+                        OnFilterButtonClickEvent(filterButton.FilterMode);
+                        RefreshOuterUIState(UIState.Main);
+                    },
+                    filterButtonNames[i]);
                 filterButton.Button.SetButtonTextSize(filterButtonFontSize);
                 filterButton.Button.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(4, 4, 2, 2);
                 filterButton.Button.ToggleWordWrapping(false);
-                filterButton.Button.onClick.AddListener(() =>
-                {
-                    RefreshOuterUIState(UIState.Main);
-                });
-                filterButton.Button.name = "Filter" + t.Item1.ToString() + "Button";
+                filterButton.Button.name = "Filter" + filterButtonNames[i] + "Button";
 
                 _filterButtonGroup.Add(filterButton);
             }
@@ -698,7 +700,40 @@ namespace SongBrowser.UI
             RefreshSongUI();
 
             // update the display
-            _sortByDisplay.SetButtonText(_model.Settings.sortMode.ToString());
+            //_sortByDisplay.SetButtonText(_model.Settings.sortMode.ToString());
+        }
+
+        /// <summary>
+        /// Handle filter button logic.  Some filters have sub menus that need special logic.
+        /// </summary>
+        /// <param name="mode"></param>
+        private void OnFilterButtonClickEvent(SongFilterMode mode)
+        {
+            switch (mode)
+            {
+                case SongFilterMode.Favorites:
+                    OnFavoriteFilterButtonClickEvent();
+                    break;
+                case SongFilterMode.Playlist:
+                    OnPlaylistButtonClickEvent();
+                    break;
+                case SongFilterMode.Search:
+                    OnSearchButtonClickEvent();
+                    break;
+                default:
+                    if (_model.Settings.filterMode == mode)
+                    {
+                        CancelFilter();
+                    }
+                    else
+                    {
+                        _model.Settings.filterMode = mode;
+                    }
+                    _model.Settings.Save();
+                    ProcessSongList();
+                    RefreshSongUI();
+                    break;
+            }
         }
 
         /// <summary>

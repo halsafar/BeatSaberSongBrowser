@@ -40,6 +40,8 @@ namespace SongBrowser.DataAccess
         Favorites,
         Playlist,
         Search,
+        Ranked,
+        Unranked,
 
         // For other mods that extend SongBrowser
         Custom

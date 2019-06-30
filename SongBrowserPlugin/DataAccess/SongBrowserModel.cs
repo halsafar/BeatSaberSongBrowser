@@ -485,6 +485,12 @@ namespace SongBrowser
                 case SongFilterMode.Playlist:
                     filteredSongs = FilterPlaylist(pack);
                     break;
+                case SongFilterMode.Ranked:
+                    filteredSongs = FilterRanked(unsortedSongs, true, false);
+                    break;
+                case SongFilterMode.Unranked:
+                    filteredSongs = FilterRanked(unsortedSongs, false, true);
+                    break;
                 case SongFilterMode.Custom:
                     Logger.Info("Song filter mode set to custom. Deferring filter behaviour to another mod.");
                     filteredSongs = CustomFilterHandler != null ? CustomFilterHandler.Invoke(pack) : unsortedSongs;
@@ -652,6 +658,35 @@ namespace SongBrowser
 
             Logger.Debug("Playlist filtered song count: {0}", songList.Count);
             return songList;
+        }
+
+        /// <summary>
+        /// Filter songs based on ranked or unranked status.
+        /// </summary>
+        /// <param name="levels"></param>
+        /// <param name="includeRanked"></param>
+        /// <param name="includeUnranked"></param>
+        /// <returns></returns>
+        private List<IPreviewBeatmapLevel> FilterRanked(List<IPreviewBeatmapLevel> levels, bool includeRanked, bool includeUnranked)
+        {
+            return levels.Where(x =>
+            {
+                var hash = CustomHelpers.GetSongHash(x.levelID);
+                double maxPP = 0.0;
+                if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData.ContainsKey(hash))
+                {
+                     maxPP = ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData[hash].diffs.Max(y => y.pp);
+                }
+
+                if (maxPP > 0f)
+                {
+                    return includeRanked;
+                }
+                else
+                {
+                    return includeUnranked;
+                }
+            }).ToList();
         }
 
         /// <summary>
