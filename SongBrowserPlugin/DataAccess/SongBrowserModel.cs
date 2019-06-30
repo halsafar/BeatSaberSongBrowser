@@ -30,7 +30,6 @@ namespace SongBrowser
         private Dictionary<String, double> _cachedLastWriteTimes;
         private Dictionary<string, int> _weights;
         private Dictionary<BeatmapDifficulty, int> _difficultyWeights;
-        private Dictionary<string, ScrappedSong> _levelHashToDownloaderData = null;
         private Dictionary<string, int> _levelIdToPlayCount;
 
         public BeatmapCharacteristicSO CurrentBeatmapCharacteristicSO;
@@ -338,24 +337,6 @@ namespace SongBrowser
             }
         }
         
-        /// <summary>
-        /// Map the downloader data for quick lookup.
-        /// </summary>
-        /// <param name="songs"></param>
-        public void UpdateDownloaderDataMapping(List<ScrappedSong> songs)
-        {
-            _levelHashToDownloaderData = new Dictionary<string, ScrappedSong>();
-            foreach (ScrappedSong song in songs)
-            {
-                if (_levelHashToDownloaderData.ContainsKey(song.Hash))
-                {
-                    continue;
-                }
-
-                _levelHashToDownloaderData.Add(song.Hash, song);
-            }
-        }
-
         /// <summary>
         /// Add Song to Editing Playlist
         /// </summary>
@@ -903,7 +884,7 @@ namespace SongBrowser
             Logger.Info("Sorting song list by BeatSaver UpVotes");
 
             // Do not always have data when trying to sort by UpVotes
-            if (_levelHashToDownloaderData == null)
+            if (SongDataCore.Plugin.BeatSaver.Data == null)
             {
                 return levelIds;
             }
@@ -911,9 +892,9 @@ namespace SongBrowser
             return levelIds
                 .OrderByDescending(x => {
                     var hash = CustomHelpers.GetSongHash(x.levelID);
-                    if (_levelHashToDownloaderData.ContainsKey(hash))
+                    if (SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
                     {
-                        return _levelHashToDownloaderData[hash].Upvotes;
+                        return SongDataCore.Plugin.BeatSaver.Data.Songs[hash].stats.upVotes;
                     }
                     else
                     {
@@ -933,7 +914,7 @@ namespace SongBrowser
             Logger.Info("Sorting song list by BeatSaver PlayCount");
 
             // Do not always have data when trying to sort by UpVotes
-            if (_levelHashToDownloaderData == null)
+            if (SongDataCore.Plugin.BeatSaver.Data == null)
             {
                 return levelIds;
             }
@@ -941,9 +922,9 @@ namespace SongBrowser
             return levelIds
                 .OrderByDescending(x => {
                     var hash = CustomHelpers.GetSongHash(x.levelID);
-                    if (_levelHashToDownloaderData.ContainsKey(hash))
+                    if (SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
                     {
-                        return _levelHashToDownloaderData[hash].PlayedCount;
+                        return SongDataCore.Plugin.BeatSaver.Data.Songs[hash].stats.plays;
                     }
                     else
                     {
@@ -963,7 +944,7 @@ namespace SongBrowser
             Logger.Info("Sorting song list by BeatSaver Rating!");
 
             // Do not always have data when trying to sort by rating
-            if (_levelHashToDownloaderData == null)
+            if (SongDataCore.Plugin.BeatSaver.Data == null)
             {
                 return levelIds;
             }
@@ -971,9 +952,9 @@ namespace SongBrowser
             return levelIds
                 .OrderByDescending(x => {
                     var hash = CustomHelpers.GetSongHash(x.levelID);
-                    if (_levelHashToDownloaderData.ContainsKey(hash))
+                    if (SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
                     {
-                        return _levelHashToDownloaderData[hash].Rating;
+                        return SongDataCore.Plugin.BeatSaver.Data.Songs[hash].stats.rating;
                     }
                     else
                     {
@@ -993,7 +974,7 @@ namespace SongBrowser
             Logger.Info("Sorting song list by BeatSaver Heat!");
 
             // Do not always have data when trying to sort by heat
-            if (_levelHashToDownloaderData == null)
+            if (SongDataCore.Plugin.BeatSaver.Data == null)
             {
                 return levelIds;
             }
@@ -1001,9 +982,9 @@ namespace SongBrowser
             return levelIds
                 .OrderByDescending(x => {
                     var hash = CustomHelpers.GetSongHash(x.levelID);
-                    if (_levelHashToDownloaderData.ContainsKey(hash))
+                    if (SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
                     {
-                        return _levelHashToDownloaderData[hash].Heat;
+                        return SongDataCore.Plugin.BeatSaver.Data.Songs[hash].stats.heat;
                     }
                     else
                     {

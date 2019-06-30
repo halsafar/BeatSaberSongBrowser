@@ -69,6 +69,9 @@
     <Reference Include="SongCore">
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Plugins\SongCore.dll</HintPath>
     </Reference>
+    <Reference Include="SongDataCore">
+      <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Plugins\SongDataCore.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.IO.Compression" />
