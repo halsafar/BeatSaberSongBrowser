@@ -24,6 +24,7 @@ namespace SongBrowser.DataAccess
         PP,
         UpVotes,
         Rating,
+        Heat,
         PlayCount,
         Stars,
 
