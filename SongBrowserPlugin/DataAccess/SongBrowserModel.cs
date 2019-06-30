@@ -523,6 +523,9 @@ namespace SongBrowser
                 case SongSortMode.Rating:
                     sortedSongs = SortBeatSaverRating(filteredSongs);
                     break;
+                case SongSortMode.Heat:
+                    sortedSongs = SortBeatSaverHeat(filteredSongs);
+                    break;
                 case SongSortMode.YourPlayCount:
                     sortedSongs = SortPlayCount(filteredSongs);
                     break;
@@ -922,9 +925,9 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortBeatSaverRating(List<IPreviewBeatmapLevel> levelIds)
         {
-            Logger.Info("Sorting song list by BeatSaver Rating");
+            Logger.Info("Sorting song list by BeatSaver Rating!");
 
-            // Do not always have data when trying to sort by UpVotes
+            // Do not always have data when trying to sort by rating
             if (_levelHashToDownloaderData == null)
             {
                 return levelIds;
@@ -936,6 +939,36 @@ namespace SongBrowser
                     if (_levelHashToDownloaderData.ContainsKey(hash))
                     {
                         return _levelHashToDownloaderData[hash].Rating;
+                    }
+                    else
+                    {
+                        return int.MinValue;
+                    }
+                })
+                .ToList();
+        }
+
+        /// <summary>
+        /// Sorting by BeatSaver heat stat.
+        /// </summary>
+        /// <param name="levelIds"></param>
+        /// <returns></returns>
+        private List<IPreviewBeatmapLevel> SortBeatSaverHeat(List<IPreviewBeatmapLevel> levelIds)
+        {
+            Logger.Info("Sorting song list by BeatSaver Heat!");
+
+            // Do not always have data when trying to sort by heat
+            if (_levelHashToDownloaderData == null)
+            {
+                return levelIds;
+            }
+
+            return levelIds
+                .OrderByDescending(x => {
+                    var hash = CustomHelpers.GetSongHash(x.levelID);
+                    if (_levelHashToDownloaderData.ContainsKey(hash))
+                    {
+                        return _levelHashToDownloaderData[hash].Heat;
                     }
                     else
                     {
