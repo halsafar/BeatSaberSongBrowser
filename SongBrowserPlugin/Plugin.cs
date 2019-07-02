@@ -6,31 +6,24 @@ using SongBrowser.DataAccess;
 using System.Collections.Generic;
 using SongBrowser.Internals;
 using System;
-
+using IPA;
 
 namespace SongBrowser
 {
-    public class Plugin : IPlugin
+    public class Plugin : IBeatSaberPlugin
     {
-        public const string VERSION_NUMBER = "5.2.2";
+        public const string VERSION_NUMBER = "5.2.3";
         public static Plugin Instance;
+        public static IPA.Logging.Logger Log;
 
-        public string Name
+        public void Init(object nullObject, IPA.Logging.Logger logger)
         {
-            get { return "Song Browser"; }
-        }
-
-        public string Version
-        {
-            get { return VERSION_NUMBER; }
+            Log = logger;
         }
 
         public void OnApplicationStart()
         {
             Instance = this;
-
-            SceneManager.sceneLoaded += SceneManager_sceneLoaded;
-            SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
 
             PluginConfig.LoadOrCreateConfig();
 
@@ -71,32 +64,27 @@ namespace SongBrowser
             }
         }
 
-        private void SceneManager_activeSceneChanged(Scene from, Scene to)
-        {
-            Logger.Debug($"Active scene changed from \"{from.name}\" to \"{to.name}\"");
-        }
-
-        private void SceneManager_sceneLoaded(Scene to, LoadSceneMode loadMode)
-        {
-            Logger.Debug($"Loaded scene \"{to.name}\"");
-        }
-
-        public void OnLevelWasLoaded(int level)
-        {
-
-        }
-
-        public void OnLevelWasInitialized(int level)
-        {
-
-        }
-
         public void OnUpdate()
         {
 
         }
 
         public void OnFixedUpdate()
+        {
+
+        }
+
+        public void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
+        {
+ 
+        }
+
+        public void OnSceneUnloaded(Scene scene)
+        {
+
+        }
+
+        public void OnActiveSceneChanged(Scene prevScene, Scene nextScene)
         {
 
         }
