@@ -141,8 +141,19 @@ namespace SongBrowser.DataAccess
 
         public static void MatchSongsForPlaylist(Playlist playlist, bool matchAll = false)
         {
-            //bananbread playlist id  
             if (!SongCore.Loader.AreSongsLoaded || SongCore.Loader.AreSongsLoading || playlist.playlistTitle == "All songs" || playlist.playlistTitle == "Your favorite songs") return;
+
+            Dictionary<string, CustomPreviewBeatmapLevel> songMap = new Dictionary<string, CustomPreviewBeatmapLevel>(StringComparer.OrdinalIgnoreCase);
+            foreach (var kp in SongCore.Loader.CustomLevels)
+            {
+                var songHash = CustomHelpers.GetSongHash(kp.Value.levelID);
+                if (songMap.ContainsKey(songHash))
+                {
+                    continue;
+                }
+
+                songMap.Add(songHash, kp.Value);
+            }
 
             if (!playlist.songs.All(x => x.level != null) || matchAll)
             {
@@ -152,22 +163,35 @@ namespace SongBrowser.DataAccess
                     {
                         try
                         {
-                            if (!string.IsNullOrEmpty(x.levelId)) //check that we have levelId and if we do, try to match level
+                            // try to use levelID
+                            if (!string.IsNullOrEmpty(x.levelId))
                             {
-                                x.level = SongCore.Loader.CustomLevels.Values.FirstOrDefault(y => y.levelID == x.levelId);
+                                string songHash = CustomHelpers.GetSongHash(x.levelId);
+                                if (songMap.ContainsKey(songHash))
+                                {
+                                    x.level = songMap[songHash];
+                                    x.hash = songHash;
+                                }
                             }
-                            if (x.level == null && !string.IsNullOrEmpty(x.hash)) //if level is still null, check that we have hash and if we do, try to match level
+
+                            // failed, try again using hash
+                            if (x.level == null && !string.IsNullOrEmpty(x.hash))
                             {
+                                // fix broken playlists from a bug in song browser
                                 if (x.hash.Contains("custom_level"))
                                 {
                                     x.hash = CustomHelpers.GetSongHash(x.hash);
                                 }
-                                x.level = SongCore.Loader.CustomLevels.Values.FirstOrDefault(y => string.Equals(CustomHelpers.GetSongHash(y.levelID), x.hash, StringComparison.OrdinalIgnoreCase));
+
+                                if (songMap.ContainsKey(x.hash))
+                                {
+                                    x.level = songMap[x.hash];
+                                }
                             }
+
                             if (x.level == null && !string.IsNullOrEmpty(x.key))
                             {
                                 x.level = SongCore.Loader.CustomLevels.FirstOrDefault(y => y.Value.customLevelPath.Contains(x.key)).Value;
-
                                 if (x.level != null && !String.IsNullOrEmpty(x.level.levelID))
                                 {
                                     x.hash = CustomHelpers.GetSongHash(x.level.levelID);
@@ -217,29 +241,25 @@ namespace SongBrowser.DataAccess
             if (!string.IsNullOrEmpty(key) || level == null || !(level is CustomPreviewBeatmapLevel))
                 yield break;
 
+            string songHash = null;
             if (!string.IsNullOrEmpty(hash))
             {
-                ScrappedSong song = ScrappedData.Songs.FirstOrDefault(x => hash.ToUpper() == x.Hash);
-                if (song != null)
-                    key = song.Key;
-                else
-                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(hash, (Song bsSong) => { if (bsSong != null) key = bsSong.key; });
+                songHash = hash;
             }
             else if (!string.IsNullOrEmpty(levelId))
             {
-                ScrappedSong song = ScrappedData.Songs.FirstOrDefault(x => levelId.StartsWith(x.Hash));
-                if (song != null)
-                    key = song.Key;
-                else
-                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(level.levelID.Split('_')[2], (Song bsSong) => { if (bsSong != null) key = bsSong.key; });
+                songHash = CustomHelpers.GetSongHash(level.levelID);
             }
-            else if (level != null)
+            
+            if (songHash != null && SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
             {
-                ScrappedSong song = ScrappedData.Songs.FirstOrDefault(x => level.levelID.StartsWith(x.Hash));
-                if (song != null)
-                    key = song.Key;
-                else
-                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(level.levelID.Split('_')[2], (Song bsSong) => { if (bsSong != null) key = bsSong.key; });
+                var song = SongDataCore.Plugin.BeatSaver.Data.Songs[hash];
+                key = song.key;
+            }
+            else
+            {
+                // no more hitting api just to match a key.  We know the song hash.
+                //yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(level.levelID.Split('_')[2], (Song bsSong) => { if (bsSong != null) key = bsSong.key; });
             }
         }
     }
@@ -329,9 +349,8 @@ namespace SongBrowser.DataAccess
         }
 
         public void SavePlaylist(string path = "")
-        {
-            if (ScrappedData.Songs.Count > 0)
-                SharedCoroutineStarter.instance.StartCoroutine(SavePlaylistCoroutine(path));
+        {            
+            SharedCoroutineStarter.instance.StartCoroutine(SavePlaylistCoroutine(path));
         }
 
         public IEnumerator SavePlaylistCoroutine(string path = "")
@@ -354,9 +373,14 @@ namespace SongBrowser.DataAccess
                 Logger.Exception("Unable to save playlist! Exception: " + e);
                 yield break;
             }
-            foreach (PlaylistSong song in songs)
+
+            // match key if we can, not really that important anymore
+            if (SongDataCore.Plugin.BeatSaver.Data.Songs.Count > 0)
             {
-                yield return song.MatchKey();
+                foreach (PlaylistSong song in songs)
+                {
+                    yield return song.MatchKey();
+                }
             }
 
             try

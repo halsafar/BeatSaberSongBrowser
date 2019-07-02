@@ -13,6 +13,7 @@ using System.Collections;
 using SongCore.Utilities;
 using SongBrowser.Internals;
 using CustomUI.BeatSaber;
+using SongDataCore.ScoreSaber;
 
 namespace SongBrowser.UI
 {
@@ -306,7 +307,7 @@ namespace SongBrowser.UI
                     },
                     sortButtonNames[i]);
                 sortButton.Button.SetButtonTextSize(sortButtonFontSize);
-                sortButton.Button.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(4, 4, 2, 2);
+                sortButton.Button.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(4, 4, 2, 2);                
                 sortButton.Button.ToggleWordWrapping(false);
                 sortButton.Button.name = "Sort" + sortModes[i].ToString() + "Button";
 
@@ -530,6 +531,11 @@ namespace SongBrowser.UI
         /// </summary>
         public void RefreshSongUI(bool scrollToLevel=true)
         {
+            if (!_uiCreated)
+            {
+                return;
+            }
+
             RefreshSongList(scrollToLevel);
             RefreshSortButtonUI();
             if (!scrollToLevel)
@@ -677,6 +683,13 @@ namespace SongBrowser.UI
         private void OnSortButtonClickEvent(SongSortMode sortMode)
         {
             Logger.Debug("Sort button - {0} - pressed.", sortMode.ToString());
+
+            if ((sortMode.NeedsScoreSaberData() && !SongDataCore.Plugin.ScoreSaber.IsDataAvailable()) ||
+                (sortMode.NeedsBeatSaverData() && !SongDataCore.Plugin.BeatSaver.IsDataAvailable()))
+            {
+                Logger.Info("Data for sort type is not available.");
+                return;
+            }
 
             // Clear current selected level id so our song list jumps to the start
             _model.LastSelectedLevelId = null;
@@ -1115,7 +1128,7 @@ namespace SongBrowser.UI
         {
             Logger.Trace("RefreshScoreSaberData({0})", level.levelID);
 
-            if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile == null)
+            if (!SongDataCore.Plugin.ScoreSaber.IsDataAvailable())
             {
                 return;
             }
@@ -1131,10 +1144,10 @@ namespace SongBrowser.UI
             // Check if we have data for this song
             Logger.Debug("Checking if have info for song {0}", level.songName);
             var hash = CustomHelpers.GetSongHash(level.levelID);
-            if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData.ContainsKey(hash))
+            if (SongDataCore.Plugin.ScoreSaber.Data.Songs.ContainsKey(hash))
             {
                 Logger.Debug("Checking if have difficulty for song {0} difficulty {1}", level.songName, difficultyString);
-                ScoreSaberSong scoreSaberSong = ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData[hash];
+                ScoreSaberSong scoreSaberSong = SongDataCore.Plugin.ScoreSaber.Data.Songs[hash];
                 ScoreSaberSongDifficultyStats scoreSaberSongDifficulty = scoreSaberSong.diffs.FirstOrDefault(x => String.Equals(x.diff, difficultyString));
                 if (scoreSaberSongDifficulty != null)
                 {
@@ -1334,10 +1347,27 @@ namespace SongBrowser.UI
         /// </summary>
         public void RefreshSortButtonUI()
         {
+            if (!_uiCreated)
+            {
+                return;
+            }
+
             // So far all we need to refresh is the sort buttons.
             foreach (SongSortButton sortButton in _sortButtonGroup)
             {
-                UIBuilder.SetButtonBorder(sortButton.Button, Color.white);
+                if (sortButton.SortMode.NeedsBeatSaverData() && !SongDataCore.Plugin.BeatSaver.IsDataAvailable())
+                {
+                    UIBuilder.SetButtonBorder(sortButton.Button, Color.gray);
+                }
+                else if (sortButton.SortMode.NeedsScoreSaberData() && !SongDataCore.Plugin.ScoreSaber.IsDataAvailable())
+                {
+                    UIBuilder.SetButtonBorder(sortButton.Button, Color.gray);
+                }
+                else
+                {
+                    UIBuilder.SetButtonBorder(sortButton.Button, Color.white);
+                }
+
                 if (sortButton.SortMode == _model.Settings.sortMode)
                 {
                     if (this._model.Settings.invertSortResults)
