@@ -143,6 +143,18 @@ namespace SongBrowser.DataAccess
         {
             if (!SongCore.Loader.AreSongsLoaded || SongCore.Loader.AreSongsLoading || playlist.playlistTitle == "All songs" || playlist.playlistTitle == "Your favorite songs") return;
 
+            Dictionary<string, CustomPreviewBeatmapLevel> songMap = new Dictionary<string, CustomPreviewBeatmapLevel>(StringComparer.OrdinalIgnoreCase);
+            foreach (var kp in SongCore.Loader.CustomLevels)
+            {
+                var songHash = CustomHelpers.GetSongHash(kp.Value.levelID);
+                if (songMap.ContainsKey(songHash))
+                {
+                    continue;
+                }
+
+                songMap.Add(songHash, kp.Value);
+            }
+
             if (!playlist.songs.All(x => x.level != null) || matchAll)
             {
                 playlist.songs.AsParallel().ForAll(x =>
@@ -151,22 +163,35 @@ namespace SongBrowser.DataAccess
                     {
                         try
                         {
-                            if (!string.IsNullOrEmpty(x.levelId)) //check that we have levelId and if we do, try to match level
+                            // try to use levelID
+                            if (!string.IsNullOrEmpty(x.levelId))
                             {
-                                x.level = SongCore.Loader.CustomLevels.Values.FirstOrDefault(y => y.levelID == x.levelId);
+                                string songHash = CustomHelpers.GetSongHash(x.levelId);
+                                if (songMap.ContainsKey(songHash))
+                                {
+                                    x.level = songMap[songHash];
+                                    x.hash = songHash;
+                                }
                             }
-                            if (x.level == null && !string.IsNullOrEmpty(x.hash)) //if level is still null, check that we have hash and if we do, try to match level
+
+                            // failed, try again using hash
+                            if (x.level == null && !string.IsNullOrEmpty(x.hash))
                             {
+                                // fix broken playlists from a bug in song browser
                                 if (x.hash.Contains("custom_level"))
                                 {
                                     x.hash = CustomHelpers.GetSongHash(x.hash);
                                 }
-                                x.level = SongCore.Loader.CustomLevels.Values.FirstOrDefault(y => string.Equals(CustomHelpers.GetSongHash(y.levelID), x.hash, StringComparison.OrdinalIgnoreCase));
+
+                                if (songMap.ContainsKey(x.hash))
+                                {
+                                    x.level = songMap[x.hash];
+                                }
                             }
+
                             if (x.level == null && !string.IsNullOrEmpty(x.key))
                             {
                                 x.level = SongCore.Loader.CustomLevels.FirstOrDefault(y => y.Value.customLevelPath.Contains(x.key)).Value;
-
                                 if (x.level != null && !String.IsNullOrEmpty(x.level.levelID))
                                 {
                                     x.hash = CustomHelpers.GetSongHash(x.level.levelID);
