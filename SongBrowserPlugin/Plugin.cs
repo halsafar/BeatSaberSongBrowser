@@ -12,7 +12,7 @@ namespace SongBrowser
 {
     public class Plugin : IBeatSaberPlugin
     {
-        public const string VERSION_NUMBER = "5.2.2";
+        public const string VERSION_NUMBER = "5.2.3";
         public static Plugin Instance;
         public static IPA.Logging.Logger Log;
 
