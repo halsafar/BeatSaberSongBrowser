@@ -217,29 +217,25 @@ namespace SongBrowser.DataAccess
             if (!string.IsNullOrEmpty(key) || level == null || !(level is CustomPreviewBeatmapLevel))
                 yield break;
 
+            string songHash = null;
             if (!string.IsNullOrEmpty(hash))
             {
-                ScrappedSong song = ScrappedData.Songs.FirstOrDefault(x => hash.ToUpper() == x.Hash);
-                if (song != null)
-                    key = song.Key;
-                else
-                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(hash, (Song bsSong) => { if (bsSong != null) key = bsSong.key; });
+                songHash = hash;
             }
             else if (!string.IsNullOrEmpty(levelId))
             {
-                ScrappedSong song = ScrappedData.Songs.FirstOrDefault(x => levelId.StartsWith(x.Hash));
-                if (song != null)
-                    key = song.Key;
-                else
-                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(level.levelID.Split('_')[2], (Song bsSong) => { if (bsSong != null) key = bsSong.key; });
+                songHash = CustomHelpers.GetSongHash(level.levelID);
             }
-            else if (level != null)
+            
+            if (songHash != null && SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
             {
-                ScrappedSong song = ScrappedData.Songs.FirstOrDefault(x => level.levelID.StartsWith(x.Hash));
-                if (song != null)
-                    key = song.Key;
-                else
-                    yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(level.levelID.Split('_')[2], (Song bsSong) => { if (bsSong != null) key = bsSong.key; });
+                var song = SongDataCore.Plugin.BeatSaver.Data.Songs[hash];
+                key = song.key;
+            }
+            else
+            {
+                // no more hitting api just to match a key.  We know the song hash.
+                //yield return SongDownloader.Instance.RequestSongByLevelIDCoroutine(level.levelID.Split('_')[2], (Song bsSong) => { if (bsSong != null) key = bsSong.key; });
             }
         }
     }
@@ -329,9 +325,8 @@ namespace SongBrowser.DataAccess
         }
 
         public void SavePlaylist(string path = "")
-        {
-            if (ScrappedData.Songs.Count > 0)
-                SharedCoroutineStarter.instance.StartCoroutine(SavePlaylistCoroutine(path));
+        {            
+            SharedCoroutineStarter.instance.StartCoroutine(SavePlaylistCoroutine(path));
         }
 
         public IEnumerator SavePlaylistCoroutine(string path = "")
@@ -354,9 +349,14 @@ namespace SongBrowser.DataAccess
                 Logger.Exception("Unable to save playlist! Exception: " + e);
                 yield break;
             }
-            foreach (PlaylistSong song in songs)
+
+            // match key if we can, not really that important anymore
+            if (SongDataCore.Plugin.BeatSaver.Data.Songs.Count > 0)
             {
-                yield return song.MatchKey();
+                foreach (PlaylistSong song in songs)
+                {
+                    yield return song.MatchKey();
+                }
             }
 
             try

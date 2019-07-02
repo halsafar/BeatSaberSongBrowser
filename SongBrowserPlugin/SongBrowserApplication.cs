@@ -16,7 +16,6 @@ namespace SongBrowser
 
         // Song Browser UI Elements
         private SongBrowserUI _songBrowserUI;
-        private ScoreSaberDatabaseDownloader _ppDownloader;
 
         public static SongBrowser.UI.ProgressBar MainProgressBar;
 
@@ -48,8 +47,6 @@ namespace SongBrowser
             Instance = this;
 
             _songBrowserUI = gameObject.AddComponent<SongBrowserUI>();
-            _ppDownloader = gameObject.AddComponent<ScoreSaberDatabaseDownloader>();
-            _ppDownloader.onScoreSaberDataDownloaded += OnScoreSaberDataDownloaded;
         }
 
         /// <summary>
@@ -61,8 +58,8 @@ namespace SongBrowser
 
             InstallHandlers();
 
-            // Initialize Downloader Scrapped Data
-            StartCoroutine(ScrappedData.Instance.DownloadScrappedData(OnDownloaderScrappedDataDownloaded));
+            SongDataCore.Plugin.ScoreSaber.OnDataFinishedProcessing += OnScoreSaberDataDownloaded;
+            SongDataCore.Plugin.BeatSaver.OnDataFinishedProcessing += OnBeatSaverDataDownloaded;
 
             if (SongCore.Loader.AreSongsLoaded)
             {
@@ -129,14 +126,15 @@ namespace SongBrowser
         /// <summary>
         /// Update mapping of scrapped song data.
         /// </summary>
-        private void OnDownloaderScrappedDataDownloaded(List<ScrappedSong> songs)
+        private void OnBeatSaverDataDownloaded()
         {
-            Logger.Trace("OnDownloaderScrappedDataDownloaded");
+            Logger.Trace("OnBeatSaverDataDownloaded");
             try
             {
                 PlaylistsCollection.MatchSongsForAllPlaylists(true);
-                _songBrowserUI.Model.UpdateDownloaderDataMapping(songs);
-                if (_songBrowserUI.Model.Settings.sortMode == SongSortMode.UpVotes)
+                if (_songBrowserUI.Model.Settings.sortMode == SongSortMode.UpVotes ||
+                    _songBrowserUI.Model.Settings.sortMode == SongSortMode.PlayCount ||
+                    _songBrowserUI.Model.Settings.sortMode == SongSortMode.Rating)
                 {
                     _songBrowserUI.ProcessSongList();
                     _songBrowserUI.RefreshSongList();

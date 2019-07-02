@@ -13,6 +13,7 @@ using System.Collections;
 using SongCore.Utilities;
 using SongBrowser.Internals;
 using CustomUI.BeatSaber;
+using SongDataCore.ScoreSaber;
 
 namespace SongBrowser.UI
 {
@@ -1114,10 +1115,15 @@ namespace SongBrowser.UI
         public void RefreshScoreSaberData(IPreviewBeatmapLevel level, BeatmapDifficulty vdifficulty)
         {
             Logger.Trace("RefreshScoreSaberData({0})", level.levelID);
-
-            if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile == null)
+            Logger.Debug("FOO");
+            if (!SongDataCore.Plugin.ScoreSaber.IsDataAvailable())
             {
                 return;
+            }
+
+            foreach (var kv in SongDataCore.Plugin.BeatSaver.Data.Songs)
+            {
+                Logger.Info($"{kv.Key}={kv.Value.hash}");
             }
 
             BeatmapDifficulty difficulty = _beatUi.LevelDifficultyViewController.selectedDifficulty;
@@ -1131,10 +1137,10 @@ namespace SongBrowser.UI
             // Check if we have data for this song
             Logger.Debug("Checking if have info for song {0}", level.songName);
             var hash = CustomHelpers.GetSongHash(level.levelID);
-            if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData.ContainsKey(hash))
+            if (SongDataCore.Plugin.ScoreSaber.Data.Songs.ContainsKey(hash))
             {
                 Logger.Debug("Checking if have difficulty for song {0} difficulty {1}", level.songName, difficultyString);
-                ScoreSaberSong scoreSaberSong = ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData[hash];
+                ScoreSaberSong scoreSaberSong = SongDataCore.Plugin.ScoreSaber.Data.Songs[hash];
                 ScoreSaberSongDifficultyStats scoreSaberSongDifficulty = scoreSaberSong.diffs.FirstOrDefault(x => String.Equals(x.diff, difficultyString));
                 if (scoreSaberSongDifficulty != null)
                 {

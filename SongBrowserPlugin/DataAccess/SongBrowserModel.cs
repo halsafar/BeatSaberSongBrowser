@@ -657,9 +657,9 @@ namespace SongBrowser
             {
                 var hash = CustomHelpers.GetSongHash(x.levelID);
                 double maxPP = 0.0;
-                if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData.ContainsKey(hash))
+                if (SongDataCore.Plugin.ScoreSaber.Data.Songs.ContainsKey(hash))
                 {
-                     maxPP = ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData[hash].diffs.Max(y => y.pp);
+                     maxPP = SongDataCore.Plugin.ScoreSaber.Data.Songs[hash].diffs.Max(y => y.pp);
                 }
 
                 if (maxPP > 0f)
@@ -735,7 +735,7 @@ namespace SongBrowser
         {
             Logger.Info("Sorting song list by performance points...");
 
-            if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile == null)
+            if (!SongDataCore.Plugin.ScoreSaber.IsDataAvailable())
             {
                 return levels;
             }
@@ -744,9 +744,9 @@ namespace SongBrowser
                 .OrderByDescending(x =>
                 {
                     var hash = CustomHelpers.GetSongHash(x.levelID);
-                    if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData.ContainsKey(hash))
+                    if (SongDataCore.Plugin.ScoreSaber.Data.Songs.ContainsKey(hash))
                     {
-                        return ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData[hash].diffs.Max(y => y.pp);
+                        return SongDataCore.Plugin.ScoreSaber.Data.Songs[hash].diffs.Max(y => y.pp);
                     }
                     else
                     {
@@ -765,7 +765,7 @@ namespace SongBrowser
         {
             Logger.Info("Sorting song list by star points...");
 
-            if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile == null)
+            if (!SongDataCore.Plugin.ScoreSaber.IsDataAvailable())
             {
                 return levels;
             }
@@ -775,9 +775,9 @@ namespace SongBrowser
                 {
                     var hash = CustomHelpers.GetSongHash(x.levelID);
                     var stars = 0.0;
-                    if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData.ContainsKey(hash))
+                    if (SongDataCore.Plugin.ScoreSaber.Data.Songs.ContainsKey(hash))
                     {
-                        var diffs = ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData[hash].diffs;   
+                        var diffs = SongDataCore.Plugin.ScoreSaber.Data.Songs[hash].diffs;   
                         stars = diffs.Max(y => y.star);
                     }
 
@@ -884,7 +884,7 @@ namespace SongBrowser
             Logger.Info("Sorting song list by BeatSaver UpVotes");
 
             // Do not always have data when trying to sort by UpVotes
-            if (SongDataCore.Plugin.BeatSaver.Data == null)
+            if (!SongDataCore.Plugin.BeatSaver.IsDataAvailable())
             {
                 return levelIds;
             }
@@ -914,7 +914,7 @@ namespace SongBrowser
             Logger.Info("Sorting song list by BeatSaver PlayCount");
 
             // Do not always have data when trying to sort by UpVotes
-            if (SongDataCore.Plugin.BeatSaver.Data == null)
+            if (!SongDataCore.Plugin.BeatSaver.IsDataAvailable())
             {
                 return levelIds;
             }
@@ -944,7 +944,7 @@ namespace SongBrowser
             Logger.Info("Sorting song list by BeatSaver Rating!");
 
             // Do not always have data when trying to sort by rating
-            if (SongDataCore.Plugin.BeatSaver.Data == null)
+            if (!SongDataCore.Plugin.BeatSaver.IsDataAvailable())
             {
                 return levelIds;
             }
@@ -974,7 +974,7 @@ namespace SongBrowser
             Logger.Info("Sorting song list by BeatSaver Heat!");
 
             // Do not always have data when trying to sort by heat
-            if (SongDataCore.Plugin.BeatSaver.Data == null)
+            if (!SongDataCore.Plugin.BeatSaver.IsDataAvailable())
             {
                 return levelIds;
             }
