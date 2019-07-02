@@ -531,6 +531,11 @@ namespace SongBrowser.UI
         /// </summary>
         public void RefreshSongUI(bool scrollToLevel=true)
         {
+            if (!_uiCreated)
+            {
+                return;
+            }
+
             RefreshSongList(scrollToLevel);
             RefreshSortButtonUI();
             if (!scrollToLevel)
@@ -1342,6 +1347,11 @@ namespace SongBrowser.UI
         /// </summary>
         public void RefreshSortButtonUI()
         {
+            if (!_uiCreated)
+            {
+                return;
+            }
+
             // So far all we need to refresh is the sort buttons.
             foreach (SongSortButton sortButton in _sortButtonGroup)
             {
