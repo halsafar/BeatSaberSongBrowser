@@ -34,6 +34,35 @@ namespace SongBrowser.DataAccess
         Search
     }
 
+    static class SongSortModeMethods
+    {
+        public static bool NeedsBeatSaverData(this SongSortMode s)
+        {
+            switch (s)
+            {
+                case SongSortMode.UpVotes:
+                case SongSortMode.Rating:
+                case SongSortMode.PlayCount:
+                case SongSortMode.Heat:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static bool NeedsScoreSaberData(this SongSortMode s)
+        {
+            switch (s)
+            {
+                case SongSortMode.PP:
+                case SongSortMode.Stars:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+    }
+
     [Serializable]
     public enum SongFilterMode
     {

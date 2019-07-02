@@ -307,7 +307,7 @@ namespace SongBrowser.UI
                     },
                     sortButtonNames[i]);
                 sortButton.Button.SetButtonTextSize(sortButtonFontSize);
-                sortButton.Button.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(4, 4, 2, 2);
+                sortButton.Button.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(4, 4, 2, 2);                
                 sortButton.Button.ToggleWordWrapping(false);
                 sortButton.Button.name = "Sort" + sortModes[i].ToString() + "Button";
 
@@ -678,6 +678,13 @@ namespace SongBrowser.UI
         private void OnSortButtonClickEvent(SongSortMode sortMode)
         {
             Logger.Debug("Sort button - {0} - pressed.", sortMode.ToString());
+
+            if ((sortMode.NeedsScoreSaberData() && !SongDataCore.Plugin.ScoreSaber.IsDataAvailable()) ||
+                (sortMode.NeedsBeatSaverData() && !SongDataCore.Plugin.BeatSaver.IsDataAvailable()))
+            {
+                Logger.Info("Data for sort type is not available.");
+                return;
+            }
 
             // Clear current selected level id so our song list jumps to the start
             _model.LastSelectedLevelId = null;
@@ -1115,15 +1122,10 @@ namespace SongBrowser.UI
         public void RefreshScoreSaberData(IPreviewBeatmapLevel level, BeatmapDifficulty vdifficulty)
         {
             Logger.Trace("RefreshScoreSaberData({0})", level.levelID);
-            Logger.Debug("FOO");
+
             if (!SongDataCore.Plugin.ScoreSaber.IsDataAvailable())
             {
                 return;
-            }
-
-            foreach (var kv in SongDataCore.Plugin.BeatSaver.Data.Songs)
-            {
-                Logger.Info($"{kv.Key}={kv.Value.hash}");
             }
 
             BeatmapDifficulty difficulty = _beatUi.LevelDifficultyViewController.selectedDifficulty;
@@ -1343,7 +1345,19 @@ namespace SongBrowser.UI
             // So far all we need to refresh is the sort buttons.
             foreach (SongSortButton sortButton in _sortButtonGroup)
             {
-                UIBuilder.SetButtonBorder(sortButton.Button, Color.white);
+                if (sortButton.SortMode.NeedsBeatSaverData() && !SongDataCore.Plugin.BeatSaver.IsDataAvailable())
+                {
+                    UIBuilder.SetButtonBorder(sortButton.Button, Color.gray);
+                }
+                else if (sortButton.SortMode.NeedsScoreSaberData() && !SongDataCore.Plugin.ScoreSaber.IsDataAvailable())
+                {
+                    UIBuilder.SetButtonBorder(sortButton.Button, Color.gray);
+                }
+                else
+                {
+                    UIBuilder.SetButtonBorder(sortButton.Button, Color.white);
+                }
+
                 if (sortButton.SortMode == _model.Settings.sortMode)
                 {
                     if (this._model.Settings.invertSortResults)

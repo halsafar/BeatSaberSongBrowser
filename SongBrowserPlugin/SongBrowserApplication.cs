@@ -111,10 +111,14 @@ namespace SongBrowser
             Logger.Trace("OnScoreSaberDataDownloaded");
             try
             {
-                if (_songBrowserUI.Model.Settings.sortMode == SongSortMode.PP)
+                if (_songBrowserUI.Model.Settings.sortMode.NeedsScoreSaberData())
                 {
                     _songBrowserUI.ProcessSongList();
-                    _songBrowserUI.RefreshSongList();
+                    _songBrowserUI.RefreshSongUI();
+                }
+                else
+                {
+                    _songBrowserUI.RefreshSortButtonUI();
                 }
             }
             catch (Exception e)
@@ -131,13 +135,14 @@ namespace SongBrowser
             Logger.Trace("OnBeatSaverDataDownloaded");
             try
             {
-                PlaylistsCollection.MatchSongsForAllPlaylists(true);
-                if (_songBrowserUI.Model.Settings.sortMode == SongSortMode.UpVotes ||
-                    _songBrowserUI.Model.Settings.sortMode == SongSortMode.PlayCount ||
-                    _songBrowserUI.Model.Settings.sortMode == SongSortMode.Rating)
+                if (_songBrowserUI.Model.Settings.sortMode.NeedsBeatSaverData())
                 {
                     _songBrowserUI.ProcessSongList();
-                    _songBrowserUI.RefreshSongList();
+                    _songBrowserUI.RefreshSongUI();
+                }
+                else
+                {
+                    _songBrowserUI.RefreshSortButtonUI();
                 }
             }
             catch (Exception e)

@@ -141,7 +141,6 @@ namespace SongBrowser.DataAccess
 
         public static void MatchSongsForPlaylist(Playlist playlist, bool matchAll = false)
         {
-            //bananbread playlist id  
             if (!SongCore.Loader.AreSongsLoaded || SongCore.Loader.AreSongsLoading || playlist.playlistTitle == "All songs" || playlist.playlistTitle == "Your favorite songs") return;
 
             if (!playlist.songs.All(x => x.level != null) || matchAll)
