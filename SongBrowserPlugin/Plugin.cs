@@ -16,16 +16,6 @@ namespace SongBrowser
         public static Plugin Instance;
         public static IPA.Logging.Logger Log;
 
-        public string Name
-        {
-            get { return "Song Browser"; }
-        }
-
-        public string Version
-        {
-            get { return VERSION_NUMBER; }
-        }
-
         public void Init(object nullObject, IPA.Logging.Logger logger)
         {
             Log = logger;
