@@ -25,10 +25,8 @@ namespace SongBrowser
         private SongBrowserSettings _settings;
 
         // song list management
-        private double _customSongDirLastWriteTime = 0;
-        private Dictionary<String, CustomPreviewBeatmapLevel> _levelIdToCustomLevel;
+        private double _customSongDirLastWriteTime = 0;        
         private Dictionary<String, double> _cachedLastWriteTimes;
-        private Dictionary<string, int> _weights;
         private Dictionary<BeatmapDifficulty, int> _difficultyWeights;
         private Dictionary<string, int> _levelIdToPlayCount;
 
@@ -104,37 +102,10 @@ namespace SongBrowser
         /// </summary>
         public SongBrowserModel()
         {
-            _levelIdToCustomLevel = new Dictionary<string, CustomPreviewBeatmapLevel>();
             _cachedLastWriteTimes = new Dictionary<String, double>();
             _levelIdToPlayCount = new Dictionary<string, int>();
 
             CurrentEditingPlaylistLevelIds = new HashSet<string>();
-
-            // Weights used for keeping the original songs in order
-            // Invert the weights from the game so we can order by descending and make LINQ work with us...
-            /*  Level4, Level2, Level9, Level5, Level10, Level6, Level7, Level1, Level3, Level8, Level11 */
-            _weights = new Dictionary<string, int>
-            {
-                ["OneHopeLevel"] = 12,
-                ["100Bills"] = 11,
-                ["Escape"] = 10,
-                ["Legend"] = 9,
-                ["BeatSaber"] = 8,
-                ["AngelVoices"] = 7,
-                ["CountryRounds"] = 6,
-                ["BalearicPumping"] = 5,
-                ["Breezer"] = 4,
-                ["CommercialPumping"] = 3,
-                ["TurnMeOn"] = 2,
-                ["LvlInsane"] = 1,
-
-                ["100BillsOneSaber"] = 12,
-                ["EscapeOneSaber"] = 11,
-                ["LegendOneSaber"] = 10,
-                ["BeatSaberOneSaber"] = 9,
-                ["CommercialPumpingOneSaber"] = 8,
-                ["TurnMeOnOneSaber"] = 8,
-            };
 
             _difficultyWeights = new Dictionary<BeatmapDifficulty, int>
             {
@@ -203,11 +174,6 @@ namespace SongBrowser
                     double lastWriteTime = GetSongUserDate(level.Value);
                     _cachedLastWriteTimes[level.Value.levelID] = lastWriteTime;
                 }
-
-                if (!_levelIdToCustomLevel.ContainsKey(level.Value.levelID))
-                {
-                    _levelIdToCustomLevel.Add(level.Value.levelID, level.Value);
-                }
             }
 
             lastWriteTimer.Stop();
@@ -219,7 +185,7 @@ namespace SongBrowser
             // Check if we need to upgrade settings file favorites
             try
             {
-                this.Settings.ConvertFavoritesToPlaylist(_levelIdToCustomLevel);
+                this.Settings.ConvertFavoritesToPlaylist(SongCore.Loader.CustomLevels);
             }
             catch (Exception e)
             {
@@ -693,8 +659,7 @@ namespace SongBrowser
         {
             Logger.Info("Sorting song list as newest.");
             return levels
-                .OrderBy(x => _weights.ContainsKey(x.levelID) ? _weights[x.levelID] : 0)
-                .ThenByDescending(x => !_levelIdToCustomLevel.ContainsKey(x.levelID) ? (_weights.ContainsKey(x.levelID) ? _weights[x.levelID] : 0) : _cachedLastWriteTimes[x.levelID])
+                .OrderByDescending(x => _cachedLastWriteTimes.ContainsKey(x.levelID) ? _cachedLastWriteTimes[x.levelID] : int.MinValue)
                 .ToList();
         }
 
@@ -806,8 +771,8 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortDifficulty(List<IPreviewBeatmapLevel> levels)
         {
-            Logger.Info("Sorting song list by difficulty...");
-
+            Logger.Info("Sorting song list by difficulty (DISABLED!!!)...");
+            /*
             IEnumerable<BeatmapDifficulty> difficultyIterator = Enum.GetValues(typeof(BeatmapDifficulty)).Cast<BeatmapDifficulty>();
             Dictionary<string, int> levelIdToDifficultyValue = new Dictionary<string, int>();
             foreach (IPreviewBeatmapLevel level in levels)
@@ -841,7 +806,8 @@ namespace SongBrowser
             return levels
                 .OrderBy(x => levelIdToDifficultyValue[x.levelID])
                 .ThenBy(x => x.songName)
-                .ToList();
+                .ToList();*/
+            return levels;
         }
 
         /// <summary>

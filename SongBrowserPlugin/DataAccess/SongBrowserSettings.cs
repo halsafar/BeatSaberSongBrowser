@@ -255,8 +255,19 @@ namespace SongBrowser.DataAccess
         /// </summary>
         /// <param name="levelIdToCustomLevel"></param>
         /// <param name="levelIdToSongVersion"></param>
-        public void ConvertFavoritesToPlaylist(Dictionary<String, CustomPreviewBeatmapLevel> levelIdToCustomLevel)
+        public void ConvertFavoritesToPlaylist(Dictionary<String, CustomPreviewBeatmapLevel> customSongsMap)
         {
+            // map songs in case we are converting a huge list
+            Dictionary<String, CustomPreviewBeatmapLevel> levelIdToCustomLevel = new Dictionary<string, CustomPreviewBeatmapLevel>(StringComparer.OrdinalIgnoreCase);
+            foreach (var kp in customSongsMap)
+            {
+                if (levelIdToCustomLevel.ContainsKey(kp.Value.levelID))
+                {
+                    continue;
+                }
+                levelIdToCustomLevel.Add(kp.Value.levelID, kp.Value);
+            }
+
             // Check if we have favorites to convert to the playlist
             if (this.Favorites.Count <= 0)
             {
@@ -315,7 +326,8 @@ namespace SongBrowser.DataAccess
                 else
                 {
                     // No easy way to look up original songs... They will still work but have wrong song name in playlist.  
-                    playlistSong.songName = levelId;
+                    playlistSong.levelId = levelId;
+                    playlistSong.hash = CustomHelpers.GetSongHash(levelId);
                     playlistSong.key = "";
                 }
 
