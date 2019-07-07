@@ -275,10 +275,10 @@ namespace SongBrowser.UI
         {
             Logger.Debug("Create sort buttons...");
 
-            float sortButtonFontSize = 2.25f;
+            float sortButtonFontSize = 2.15f;
             float sortButtonX = -23.0f;
-            float sortButtonWidth = 12.25f;
-            float buttonSpacing = 0.5f;
+            float sortButtonWidth = 12.0f;
+            float buttonSpacing = 0.25f;
             float buttonY = 37f;
             float buttonHeight = 5.0f;
 
