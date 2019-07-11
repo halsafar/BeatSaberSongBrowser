@@ -152,12 +152,12 @@ namespace SongBrowser.UI
                 CreateDeleteButton();
                 CreateFastPageButtons();
 
-                RefreshSortButtonUI();
-
                 this.InstallHandlers();
 
                 this.ModifySongStatsPanel();
                 this.ResizeSongUI();
+
+                RefreshSortButtonUI();
 
                 _uiCreated = true;
                 Logger.Debug("Done Creating UI...");
@@ -229,7 +229,8 @@ namespace SongBrowser.UI
 
             _filterByDisplay = _beatUi.LevelPackLevelsViewController.CreateUIButton("ApplyButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
-                CancelFilter();
+                _model.Settings.filterMode = SongFilterMode.None;
+                SongCore.Loader.Instance.RefreshLevelPacks();
                 RefreshSongUI();
             }, "");
             _filterByDisplay.SetButtonTextSize(displayButtonFontSize);
@@ -564,8 +565,9 @@ namespace SongBrowser.UI
         /// </summary>
         public void CancelFilter()
         {
+            Logger.Debug("Cancelling filter.");
             _model.Settings.filterMode = SongFilterMode.None;
-            SongCore.Loader.Instance.RefreshLevelPacks();            
+            SongCore.Loader.Instance.RefreshLevelPacks();
         }
 
         /// <summary>
@@ -670,9 +672,10 @@ namespace SongBrowser.UI
 
             _model.Settings.sortMode = SongSortMode.Original;
             _model.Settings.invertSortResults = false;
-            CancelFilter();
+            _model.Settings.filterMode = SongFilterMode.None;
             _model.Settings.Save();
 
+            SongCore.Loader.Instance.RefreshLevelPacks();
             ProcessSongList();
             RefreshSongUI();
         }
@@ -711,9 +714,6 @@ namespace SongBrowser.UI
 
             ProcessSongList();
             RefreshSongUI();
-
-            // update the display
-            //_sortByDisplay.SetButtonText(_model.Settings.sortMode.ToString());
         }
 
         /// <summary>
@@ -722,11 +722,32 @@ namespace SongBrowser.UI
         /// <param name="mode"></param>
         private void OnFilterButtonClickEvent(SongFilterMode mode)
         {
+            Logger.Debug($"FilterButton {mode} clicked.");
+
+            // TODO - Downloader level pack support - need a way to refresh downloader level packs.
+
+            // Every filter will lead to needing a refresh.
+            SongCore.Loader.Instance.RefreshLevelPacks();
+
+            // Always select the custom level pack - TODO - Downloader level pack support - Don't always do this
+            var pack = _beatUi.GetCurrentSelectedLevelPack();
+            if (pack != null && !pack.packID.Equals(PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID))
+            {
+                _beatUi.SelectLevelPack(PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID);
+            }
+
+            // If selecting the same filter, cancel
+            if (_model.Settings.filterMode == mode)
+            {
+                _model.Settings.filterMode = SongFilterMode.None;
+            }
+            else
+            {
+                _model.Settings.filterMode = mode;
+            }
+
             switch (mode)
             {
-                case SongFilterMode.Favorites:
-                    OnFavoriteFilterButtonClickEvent();
-                    break;
                 case SongFilterMode.Playlist:
                     OnPlaylistButtonClickEvent();
                     break;
@@ -734,14 +755,6 @@ namespace SongBrowser.UI
                     OnSearchButtonClickEvent();
                     break;
                 default:
-                    if (_model.Settings.filterMode == mode)
-                    {
-                        CancelFilter();
-                    }
-                    else
-                    {
-                        _model.Settings.filterMode = mode;
-                    }
                     _model.Settings.Save();
                     ProcessSongList();
                     RefreshSongUI();
@@ -750,48 +763,14 @@ namespace SongBrowser.UI
         }
 
         /// <summary>
-        /// Filter by favorites.
-        /// </summary>
-        private void OnFavoriteFilterButtonClickEvent()
-        {
-            Logger.Debug("Filter button - {0} - pressed.", SongFilterMode.Favorites.ToString());
-
-            if (_model.Settings.filterMode != SongFilterMode.Favorites)
-            {
-                _model.Settings.filterMode = SongFilterMode.Favorites;
-                _beatUi.SelectLevelPack(PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID);
-            }
-            else
-            {
-                CancelFilter();
-            }
-
-            _model.Settings.Save();
-
-            ProcessSongList();
-            RefreshSongUI();
-        }
-
-        /// <summary>
-        /// Filter button clicked.  
+        /// Display the keyboard.
         /// </summary>
         /// <param name="sortMode"></param>
         private void OnSearchButtonClickEvent()
         {
             Logger.Debug("Filter button - {0} - pressed.", SongFilterMode.Search.ToString());
-            if (_model.Settings.filterMode != SongFilterMode.Search)
-            {
-                _beatUi.SelectLevelPack(PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID);
-                this.ShowSearchKeyboard();
-            }
-            else
-            {
-                CancelFilter();
-                ProcessSongList();
-                RefreshSongUI();
 
-                _model.Settings.Save();
-            }                        
+            this.ShowSearchKeyboard();
         }
 
         /// <summary>
@@ -802,22 +781,8 @@ namespace SongBrowser.UI
         {
             Logger.Debug("Filter button - {0} - pressed.", SongFilterMode.Playlist.ToString());
             _model.LastSelectedLevelId = null;
-
-            if (_model.Settings.filterMode != SongFilterMode.Playlist)
-            {
-                _beatUi.SelectLevelPack(PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID);
-                _playListFlowCoordinator.parentFlowCoordinator = _beatUi.LevelSelectionFlowCoordinator;
-                _beatUi.LevelSelectionFlowCoordinator.InvokePrivateMethod("PresentFlowCoordinator", new object[] { _playListFlowCoordinator, null, false, false });                                
-            }
-            else
-            {
-                CancelFilter();
-                
-                ProcessSongList();
-                RefreshSongUI();
-
-                _model.Settings.Save();
-            }
+            _playListFlowCoordinator.parentFlowCoordinator = _beatUi.LevelSelectionFlowCoordinator;
+            _beatUi.LevelSelectionFlowCoordinator.InvokePrivateMethod("PresentFlowCoordinator", new object[] { _playListFlowCoordinator, null, false, false });
         }
 
         /// <summary>
