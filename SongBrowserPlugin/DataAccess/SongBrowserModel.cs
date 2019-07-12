@@ -25,12 +25,9 @@ namespace SongBrowser
         private SongBrowserSettings _settings;
 
         // song list management
-        private double _customSongDirLastWriteTime = 0;
-        private Dictionary<String, CustomPreviewBeatmapLevel> _levelIdToCustomLevel;
+        private double _customSongDirLastWriteTime = 0;        
         private Dictionary<String, double> _cachedLastWriteTimes;
-        private Dictionary<string, int> _weights;
         private Dictionary<BeatmapDifficulty, int> _difficultyWeights;
-        private Dictionary<string, ScrappedSong> _levelHashToDownloaderData = null;
         private Dictionary<string, int> _levelIdToPlayCount;
 
         public BeatmapCharacteristicSO CurrentBeatmapCharacteristicSO;
@@ -105,37 +102,10 @@ namespace SongBrowser
         /// </summary>
         public SongBrowserModel()
         {
-            _levelIdToCustomLevel = new Dictionary<string, CustomPreviewBeatmapLevel>();
             _cachedLastWriteTimes = new Dictionary<String, double>();
             _levelIdToPlayCount = new Dictionary<string, int>();
 
             CurrentEditingPlaylistLevelIds = new HashSet<string>();
-
-            // Weights used for keeping the original songs in order
-            // Invert the weights from the game so we can order by descending and make LINQ work with us...
-            /*  Level4, Level2, Level9, Level5, Level10, Level6, Level7, Level1, Level3, Level8, Level11 */
-            _weights = new Dictionary<string, int>
-            {
-                ["OneHopeLevel"] = 12,
-                ["100Bills"] = 11,
-                ["Escape"] = 10,
-                ["Legend"] = 9,
-                ["BeatSaber"] = 8,
-                ["AngelVoices"] = 7,
-                ["CountryRounds"] = 6,
-                ["BalearicPumping"] = 5,
-                ["Breezer"] = 4,
-                ["CommercialPumping"] = 3,
-                ["TurnMeOn"] = 2,
-                ["LvlInsane"] = 1,
-
-                ["100BillsOneSaber"] = 12,
-                ["EscapeOneSaber"] = 11,
-                ["LegendOneSaber"] = 10,
-                ["BeatSaberOneSaber"] = 9,
-                ["CommercialPumpingOneSaber"] = 8,
-                ["TurnMeOnOneSaber"] = 8,
-            };
 
             _difficultyWeights = new Dictionary<BeatmapDifficulty, int>
             {
@@ -204,11 +174,6 @@ namespace SongBrowser
                     double lastWriteTime = GetSongUserDate(level.Value);
                     _cachedLastWriteTimes[level.Value.levelID] = lastWriteTime;
                 }
-
-                if (!_levelIdToCustomLevel.ContainsKey(level.Value.levelID))
-                {
-                    _levelIdToCustomLevel.Add(level.Value.levelID, level.Value);
-                }
             }
 
             lastWriteTimer.Stop();
@@ -220,7 +185,7 @@ namespace SongBrowser
             // Check if we need to upgrade settings file favorites
             try
             {
-                this.Settings.ConvertFavoritesToPlaylist(_levelIdToCustomLevel);
+                this.Settings.ConvertFavoritesToPlaylist(SongCore.Loader.CustomLevels);
             }
             catch (Exception e)
             {
@@ -338,24 +303,6 @@ namespace SongBrowser
             }
         }
         
-        /// <summary>
-        /// Map the downloader data for quick lookup.
-        /// </summary>
-        /// <param name="songs"></param>
-        public void UpdateDownloaderDataMapping(List<ScrappedSong> songs)
-        {
-            _levelHashToDownloaderData = new Dictionary<string, ScrappedSong>();
-            foreach (ScrappedSong song in songs)
-            {
-                if (_levelHashToDownloaderData.ContainsKey(song.Hash))
-                {
-                    continue;
-                }
-
-                _levelHashToDownloaderData.Add(song.Hash, song);
-            }
-        }
-
         /// <summary>
         /// Add Song to Editing Playlist
         /// </summary>
@@ -485,6 +432,12 @@ namespace SongBrowser
                 case SongFilterMode.Playlist:
                     filteredSongs = FilterPlaylist(pack);
                     break;
+                case SongFilterMode.Ranked:
+                    filteredSongs = FilterRanked(unsortedSongs, true, false);
+                    break;
+                case SongFilterMode.Unranked:
+                    filteredSongs = FilterRanked(unsortedSongs, false, true);
+                    break;
                 case SongFilterMode.Custom:
                     Logger.Info("Song filter mode set to custom. Deferring filter behaviour to another mod.");
                     filteredSongs = CustomFilterHandler != null ? CustomFilterHandler.Invoke(pack) : unsortedSongs;
@@ -522,6 +475,9 @@ namespace SongBrowser
                     break;
                 case SongSortMode.Rating:
                     sortedSongs = SortBeatSaverRating(filteredSongs);
+                    break;
+                case SongSortMode.Heat:
+                    sortedSongs = SortBeatSaverHeat(filteredSongs);
                     break;
                 case SongSortMode.YourPlayCount:
                     sortedSongs = SortPlayCount(filteredSongs);
@@ -655,6 +611,35 @@ namespace SongBrowser
         }
 
         /// <summary>
+        /// Filter songs based on ranked or unranked status.
+        /// </summary>
+        /// <param name="levels"></param>
+        /// <param name="includeRanked"></param>
+        /// <param name="includeUnranked"></param>
+        /// <returns></returns>
+        private List<IPreviewBeatmapLevel> FilterRanked(List<IPreviewBeatmapLevel> levels, bool includeRanked, bool includeUnranked)
+        {
+            return levels.Where(x =>
+            {
+                var hash = CustomHelpers.GetSongHash(x.levelID);
+                double maxPP = 0.0;
+                if (SongDataCore.Plugin.ScoreSaber.Data.Songs.ContainsKey(hash))
+                {
+                     maxPP = SongDataCore.Plugin.ScoreSaber.Data.Songs[hash].diffs.Max(y => y.pp);
+                }
+
+                if (maxPP > 0f)
+                {
+                    return includeRanked;
+                }
+                else
+                {
+                    return includeUnranked;
+                }
+            }).ToList();
+        }
+
+        /// <summary>
         /// Sorting returns original list.
         /// </summary>
         /// <param name="levels"></param>
@@ -674,8 +659,7 @@ namespace SongBrowser
         {
             Logger.Info("Sorting song list as newest.");
             return levels
-                .OrderBy(x => _weights.ContainsKey(x.levelID) ? _weights[x.levelID] : 0)
-                .ThenByDescending(x => !_levelIdToCustomLevel.ContainsKey(x.levelID) ? (_weights.ContainsKey(x.levelID) ? _weights[x.levelID] : 0) : _cachedLastWriteTimes[x.levelID])
+                .OrderByDescending(x => _cachedLastWriteTimes.ContainsKey(x.levelID) ? _cachedLastWriteTimes[x.levelID] : int.MinValue)
                 .ToList();
         }
 
@@ -716,7 +700,7 @@ namespace SongBrowser
         {
             Logger.Info("Sorting song list by performance points...");
 
-            if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile == null)
+            if (!SongDataCore.Plugin.ScoreSaber.IsDataAvailable())
             {
                 return levels;
             }
@@ -725,9 +709,9 @@ namespace SongBrowser
                 .OrderByDescending(x =>
                 {
                     var hash = CustomHelpers.GetSongHash(x.levelID);
-                    if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData.ContainsKey(hash))
+                    if (SongDataCore.Plugin.ScoreSaber.Data.Songs.ContainsKey(hash))
                     {
-                        return ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData[hash].diffs.Max(y => y.pp);
+                        return SongDataCore.Plugin.ScoreSaber.Data.Songs[hash].diffs.Max(y => y.pp);
                     }
                     else
                     {
@@ -746,7 +730,7 @@ namespace SongBrowser
         {
             Logger.Info("Sorting song list by star points...");
 
-            if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile == null)
+            if (!SongDataCore.Plugin.ScoreSaber.IsDataAvailable())
             {
                 return levels;
             }
@@ -756,9 +740,9 @@ namespace SongBrowser
                 {
                     var hash = CustomHelpers.GetSongHash(x.levelID);
                     var stars = 0.0;
-                    if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData.ContainsKey(hash))
+                    if (SongDataCore.Plugin.ScoreSaber.Data.Songs.ContainsKey(hash))
                     {
-                        var diffs = ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData[hash].diffs;   
+                        var diffs = SongDataCore.Plugin.ScoreSaber.Data.Songs[hash].diffs;   
                         stars = diffs.Max(y => y.star);
                     }
 
@@ -787,8 +771,8 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortDifficulty(List<IPreviewBeatmapLevel> levels)
         {
-            Logger.Info("Sorting song list by difficulty...");
-
+            Logger.Info("Sorting song list by difficulty (DISABLED!!!)...");
+            /*
             IEnumerable<BeatmapDifficulty> difficultyIterator = Enum.GetValues(typeof(BeatmapDifficulty)).Cast<BeatmapDifficulty>();
             Dictionary<string, int> levelIdToDifficultyValue = new Dictionary<string, int>();
             foreach (IPreviewBeatmapLevel level in levels)
@@ -822,7 +806,8 @@ namespace SongBrowser
             return levels
                 .OrderBy(x => levelIdToDifficultyValue[x.levelID])
                 .ThenBy(x => x.songName)
-                .ToList();
+                .ToList();*/
+            return levels;
         }
 
         /// <summary>
@@ -865,7 +850,7 @@ namespace SongBrowser
             Logger.Info("Sorting song list by BeatSaver UpVotes");
 
             // Do not always have data when trying to sort by UpVotes
-            if (_levelHashToDownloaderData == null)
+            if (!SongDataCore.Plugin.BeatSaver.IsDataAvailable())
             {
                 return levelIds;
             }
@@ -873,9 +858,9 @@ namespace SongBrowser
             return levelIds
                 .OrderByDescending(x => {
                     var hash = CustomHelpers.GetSongHash(x.levelID);
-                    if (_levelHashToDownloaderData.ContainsKey(hash))
+                    if (SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
                     {
-                        return _levelHashToDownloaderData[hash].Upvotes;
+                        return SongDataCore.Plugin.BeatSaver.Data.Songs[hash].stats.upVotes;
                     }
                     else
                     {
@@ -895,7 +880,7 @@ namespace SongBrowser
             Logger.Info("Sorting song list by BeatSaver PlayCount");
 
             // Do not always have data when trying to sort by UpVotes
-            if (_levelHashToDownloaderData == null)
+            if (!SongDataCore.Plugin.BeatSaver.IsDataAvailable())
             {
                 return levelIds;
             }
@@ -903,9 +888,9 @@ namespace SongBrowser
             return levelIds
                 .OrderByDescending(x => {
                     var hash = CustomHelpers.GetSongHash(x.levelID);
-                    if (_levelHashToDownloaderData.ContainsKey(hash))
+                    if (SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
                     {
-                        return _levelHashToDownloaderData[hash].PlayedCount;
+                        return SongDataCore.Plugin.BeatSaver.Data.Songs[hash].stats.plays;
                     }
                     else
                     {
@@ -922,10 +907,10 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortBeatSaverRating(List<IPreviewBeatmapLevel> levelIds)
         {
-            Logger.Info("Sorting song list by BeatSaver Rating");
+            Logger.Info("Sorting song list by BeatSaver Rating!");
 
-            // Do not always have data when trying to sort by UpVotes
-            if (_levelHashToDownloaderData == null)
+            // Do not always have data when trying to sort by rating
+            if (!SongDataCore.Plugin.BeatSaver.IsDataAvailable())
             {
                 return levelIds;
             }
@@ -933,9 +918,39 @@ namespace SongBrowser
             return levelIds
                 .OrderByDescending(x => {
                     var hash = CustomHelpers.GetSongHash(x.levelID);
-                    if (_levelHashToDownloaderData.ContainsKey(hash))
+                    if (SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
                     {
-                        return _levelHashToDownloaderData[hash].Rating;
+                        return SongDataCore.Plugin.BeatSaver.Data.Songs[hash].stats.rating;
+                    }
+                    else
+                    {
+                        return int.MinValue;
+                    }
+                })
+                .ToList();
+        }
+
+        /// <summary>
+        /// Sorting by BeatSaver heat stat.
+        /// </summary>
+        /// <param name="levelIds"></param>
+        /// <returns></returns>
+        private List<IPreviewBeatmapLevel> SortBeatSaverHeat(List<IPreviewBeatmapLevel> levelIds)
+        {
+            Logger.Info("Sorting song list by BeatSaver Heat!");
+
+            // Do not always have data when trying to sort by heat
+            if (!SongDataCore.Plugin.BeatSaver.IsDataAvailable())
+            {
+                return levelIds;
+            }
+
+            return levelIds
+                .OrderByDescending(x => {
+                    var hash = CustomHelpers.GetSongHash(x.levelID);
+                    if (SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
+                    {
+                        return SongDataCore.Plugin.BeatSaver.Data.Songs[hash].stats.heat;
                     }
                     else
                     {

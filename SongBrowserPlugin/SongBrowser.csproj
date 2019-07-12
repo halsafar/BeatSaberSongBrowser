@@ -69,6 +69,9 @@
     <Reference Include="SongCore">
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Plugins\SongCore.dll</HintPath>
     </Reference>
+    <Reference Include="SongDataCore">
+      <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Plugins\SongDataCore.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.IO.Compression" />
@@ -128,12 +131,8 @@
     <Compile Include="DataAccess\BeatSaverApi\BeatSaverApiResults.cs" />
     <Compile Include="DataAccess\FileOperationApiWrapper.cs" />
     <Compile Include="DataAccess\LoadScripts.cs" />
-    <Compile Include="DataAccess\Network\CacheableDownloadHandler.cs" />
-    <Compile Include="DataAccess\Network\CacheableDownloadHandlerScoreSaberData.cs" />
     <Compile Include="DataAccess\Playlist.cs" />
-    <Compile Include="DataAccess\ScoreSaberDatabase.cs" />
     <Compile Include="DataAccess\Network\Downloader.cs" />
-    <Compile Include="DataAccess\ScrappedData.cs" />
     <Compile Include="Internals\BSEvents.cs" />
     <Compile Include="Internals\CustomHelpers.cs" />
     <Compile Include="Internals\SimpleJSON.cs" />
@@ -143,7 +142,6 @@
     <Compile Include="UI\DownloadQueue\DownloadQueueTableCell.cs" />
     <Compile Include="UI\DownloadQueue\DownloadQueueViewController.cs" />
     <Compile Include="UI\ProgressBar.cs" />
-    <Compile Include="UI\ScoreSaberDatabaseDownloader.cs" />
     <Compile Include="SongBrowserApplication.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -177,6 +175,9 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="manifest.json" />
+  </ItemGroup>  
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

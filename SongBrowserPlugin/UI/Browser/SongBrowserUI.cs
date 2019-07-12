@@ -13,6 +13,7 @@ using System.Collections;
 using SongCore.Utilities;
 using SongBrowser.Internals;
 using CustomUI.BeatSaber;
+using SongDataCore.ScoreSaber;
 
 namespace SongBrowser.UI
 {
@@ -151,12 +152,12 @@ namespace SongBrowser.UI
                 CreateDeleteButton();
                 CreateFastPageButtons();
 
-                RefreshSortButtonUI();
-
                 this.InstallHandlers();
 
                 this.ModifySongStatsPanel();
                 this.ResizeSongUI();
+
+                RefreshSortButtonUI();
 
                 _uiCreated = true;
                 Logger.Debug("Done Creating UI...");
@@ -228,7 +229,8 @@ namespace SongBrowser.UI
 
             _filterByDisplay = _beatUi.LevelPackLevelsViewController.CreateUIButton("ApplyButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
-                CancelFilter();
+                _model.Settings.filterMode = SongFilterMode.None;
+                SongCore.Loader.Instance.RefreshLevelPacks();
                 RefreshSongUI();
             }, "");
             _filterByDisplay.SetButtonTextSize(displayButtonFontSize);
@@ -274,21 +276,21 @@ namespace SongBrowser.UI
         {
             Logger.Debug("Create sort buttons...");
 
-            float sortButtonFontSize = 2.25f;
+            float sortButtonFontSize = 2.15f;
             float sortButtonX = -23.0f;
-            float sortButtonWidth = 12.25f;
-            float buttonSpacing = 0.65f;
+            float sortButtonWidth = 12.0f;
+            float buttonSpacing = 0.25f;
             float buttonY = 37f;
             float buttonHeight = 5.0f;
 
             string[] sortButtonNames = new string[]
             {
-                    "Title", "Author", "Newest", "YourPlays", "PP", "Stars", "UpVotes", "PlayCount", "Rating"
+                    "Title", "Author", "Newest", "YourPlays", "PP", "Stars", "UpVotes", "PlayCount", "Rating", "Heat"
             };
 
             SongSortMode[] sortModes = new SongSortMode[]
             {
-                    SongSortMode.Default, SongSortMode.Author, SongSortMode.Newest, SongSortMode.YourPlayCount, SongSortMode.PP, SongSortMode.Stars,  SongSortMode.UpVotes, SongSortMode.PlayCount, SongSortMode.Rating
+                    SongSortMode.Default, SongSortMode.Author, SongSortMode.Newest, SongSortMode.YourPlayCount, SongSortMode.PP, SongSortMode.Stars,  SongSortMode.UpVotes, SongSortMode.PlayCount, SongSortMode.Rating, SongSortMode.Heat
             };
 
             _sortButtonGroup = new List<SongSortButton>();
@@ -306,7 +308,7 @@ namespace SongBrowser.UI
                     },
                     sortButtonNames[i]);
                 sortButton.Button.SetButtonTextSize(sortButtonFontSize);
-                sortButton.Button.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(4, 4, 2, 2);
+                sortButton.Button.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(4, 4, 2, 2);                
                 sortButton.Button.ToggleWordWrapping(false);
                 sortButton.Button.name = "Sort" + sortModes[i].ToString() + "Button";
 
@@ -328,32 +330,34 @@ namespace SongBrowser.UI
             float buttonY = 37f;
             float buttonHeight = 5.0f;
 
-            List<Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>> filterButtonSetup = new List<Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>>()
-                {
-                    Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Favorites, OnFavoriteFilterButtonClickEvent, Base64Sprites.StarFullIcon),
-                    Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Playlist, OnPlaylistButtonClickEvent, Base64Sprites.PlaylistIcon),
-                    Tuple.Create<SongFilterMode, UnityEngine.Events.UnityAction, Sprite>(SongFilterMode.Search, OnSearchButtonClickEvent, Base64Sprites.SearchIcon),
-                };
+            string[] filterButtonNames = new string[]
+            {
+                    "Favorites", "Playlist", "Search", "Ranked", "Unranked"
+            };
+
+            SongFilterMode[] filterModes = new SongFilterMode[]
+            {
+                    SongFilterMode.Favorites, SongFilterMode.Playlist, SongFilterMode.Search, SongFilterMode.Ranked, SongFilterMode.Unranked
+            };
 
             _filterButtonGroup = new List<SongFilterButton>();
-            for (int i = 0; i < filterButtonSetup.Count; i++)
+            for (int i = 0; i < filterButtonNames.Length; i++)
             {
-                Tuple<SongFilterMode, UnityEngine.Events.UnityAction, Sprite> t = filterButtonSetup[i];
                 float curButtonX = filterButtonX + (filterButtonWidth * i) + (buttonSpacing * i);
                 SongFilterButton filterButton = new SongFilterButton();
-                filterButton.FilterMode = t.Item1;
+                filterButton.FilterMode = filterModes[i];
                 filterButton.Button = _beatUi.LevelPackLevelsViewController.CreateUIButton("ApplyButton",
                     new Vector2(curButtonX, buttonY), new Vector2(filterButtonWidth, buttonHeight),
-                    t.Item2,
-                    t.Item1.ToString());
+                    () =>
+                    {
+                        OnFilterButtonClickEvent(filterButton.FilterMode);
+                        RefreshOuterUIState(UIState.Main);
+                    },
+                    filterButtonNames[i]);
                 filterButton.Button.SetButtonTextSize(filterButtonFontSize);
                 filterButton.Button.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(4, 4, 2, 2);
                 filterButton.Button.ToggleWordWrapping(false);
-                filterButton.Button.onClick.AddListener(() =>
-                {
-                    RefreshOuterUIState(UIState.Main);
-                });
-                filterButton.Button.name = "Filter" + t.Item1.ToString() + "Button";
+                filterButton.Button.name = "Filter" + filterButtonNames[i] + "Button";
 
                 _filterButtonGroup.Add(filterButton);
             }
@@ -528,6 +532,11 @@ namespace SongBrowser.UI
         /// </summary>
         public void RefreshSongUI(bool scrollToLevel=true)
         {
+            if (!_uiCreated)
+            {
+                return;
+            }
+
             RefreshSongList(scrollToLevel);
             RefreshSortButtonUI();
             if (!scrollToLevel)
@@ -556,8 +565,9 @@ namespace SongBrowser.UI
         /// </summary>
         public void CancelFilter()
         {
+            Logger.Debug("Cancelling filter.");
             _model.Settings.filterMode = SongFilterMode.None;
-            SongCore.Loader.Instance.RefreshLevelPacks();            
+            SongCore.Loader.Instance.RefreshLevelPacks();
         }
 
         /// <summary>
@@ -662,9 +672,10 @@ namespace SongBrowser.UI
 
             _model.Settings.sortMode = SongSortMode.Original;
             _model.Settings.invertSortResults = false;
-            CancelFilter();
+            _model.Settings.filterMode = SongFilterMode.None;
             _model.Settings.Save();
 
+            SongCore.Loader.Instance.RefreshLevelPacks();
             ProcessSongList();
             RefreshSongUI();
         }
@@ -675,6 +686,13 @@ namespace SongBrowser.UI
         private void OnSortButtonClickEvent(SongSortMode sortMode)
         {
             Logger.Debug("Sort button - {0} - pressed.", sortMode.ToString());
+
+            if ((sortMode.NeedsScoreSaberData() && !SongDataCore.Plugin.ScoreSaber.IsDataAvailable()) ||
+                (sortMode.NeedsBeatSaverData() && !SongDataCore.Plugin.BeatSaver.IsDataAvailable()))
+            {
+                Logger.Info("Data for sort type is not available.");
+                return;
+            }
 
             // Clear current selected level id so our song list jumps to the start
             _model.LastSelectedLevelId = null;
@@ -696,54 +714,63 @@ namespace SongBrowser.UI
 
             ProcessSongList();
             RefreshSongUI();
-
-            // update the display
-            _sortByDisplay.SetButtonText(_model.Settings.sortMode.ToString());
         }
 
         /// <summary>
-        /// Filter by favorites.
+        /// Handle filter button logic.  Some filters have sub menus that need special logic.
         /// </summary>
-        private void OnFavoriteFilterButtonClickEvent()
+        /// <param name="mode"></param>
+        private void OnFilterButtonClickEvent(SongFilterMode mode)
         {
-            Logger.Debug("Filter button - {0} - pressed.", SongFilterMode.Favorites.ToString());
+            Logger.Debug($"FilterButton {mode} clicked.");
 
-            if (_model.Settings.filterMode != SongFilterMode.Favorites)
+            // TODO - Downloader level pack support - need a way to refresh downloader level packs.
+
+            // Every filter will lead to needing a refresh.
+            SongCore.Loader.Instance.RefreshLevelPacks();
+
+            // Always select the custom level pack - TODO - Downloader level pack support - Don't always do this
+            var pack = _beatUi.GetCurrentSelectedLevelPack();
+            if (pack != null && !pack.packID.Equals(PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID))
             {
-                _model.Settings.filterMode = SongFilterMode.Favorites;
                 _beatUi.SelectLevelPack(PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID);
+            }
+
+            // If selecting the same filter, cancel
+            if (_model.Settings.filterMode == mode)
+            {
+                _model.Settings.filterMode = SongFilterMode.None;
             }
             else
             {
-                CancelFilter();
+                _model.Settings.filterMode = mode;
             }
 
-            _model.Settings.Save();
-
-            ProcessSongList();
-            RefreshSongUI();
+            switch (mode)
+            {
+                case SongFilterMode.Playlist:
+                    OnPlaylistButtonClickEvent();
+                    break;
+                case SongFilterMode.Search:
+                    OnSearchButtonClickEvent();
+                    break;
+                default:
+                    _model.Settings.Save();
+                    ProcessSongList();
+                    RefreshSongUI();
+                    break;
+            }
         }
 
         /// <summary>
-        /// Filter button clicked.  
+        /// Display the keyboard.
         /// </summary>
         /// <param name="sortMode"></param>
         private void OnSearchButtonClickEvent()
         {
             Logger.Debug("Filter button - {0} - pressed.", SongFilterMode.Search.ToString());
-            if (_model.Settings.filterMode != SongFilterMode.Search)
-            {
-                _beatUi.SelectLevelPack(PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID);
-                this.ShowSearchKeyboard();
-            }
-            else
-            {
-                CancelFilter();
-                ProcessSongList();
-                RefreshSongUI();
 
-                _model.Settings.Save();
-            }                        
+            this.ShowSearchKeyboard();
         }
 
         /// <summary>
@@ -754,22 +781,8 @@ namespace SongBrowser.UI
         {
             Logger.Debug("Filter button - {0} - pressed.", SongFilterMode.Playlist.ToString());
             _model.LastSelectedLevelId = null;
-
-            if (_model.Settings.filterMode != SongFilterMode.Playlist)
-            {
-                _beatUi.SelectLevelPack(PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID);
-                _playListFlowCoordinator.parentFlowCoordinator = _beatUi.LevelSelectionFlowCoordinator;
-                _beatUi.LevelSelectionFlowCoordinator.InvokePrivateMethod("PresentFlowCoordinator", new object[] { _playListFlowCoordinator, null, false, false });                                
-            }
-            else
-            {
-                CancelFilter();
-                
-                ProcessSongList();
-                RefreshSongUI();
-
-                _model.Settings.Save();
-            }
+            _playListFlowCoordinator.parentFlowCoordinator = _beatUi.LevelSelectionFlowCoordinator;
+            _beatUi.LevelSelectionFlowCoordinator.InvokePrivateMethod("PresentFlowCoordinator", new object[] { _playListFlowCoordinator, null, false, false });
         }
 
         /// <summary>
@@ -1080,7 +1093,7 @@ namespace SongBrowser.UI
         {
             Logger.Trace("RefreshScoreSaberData({0})", level.levelID);
 
-            if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile == null)
+            if (!SongDataCore.Plugin.ScoreSaber.IsDataAvailable())
             {
                 return;
             }
@@ -1096,10 +1109,10 @@ namespace SongBrowser.UI
             // Check if we have data for this song
             Logger.Debug("Checking if have info for song {0}", level.songName);
             var hash = CustomHelpers.GetSongHash(level.levelID);
-            if (ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData.ContainsKey(hash))
+            if (SongDataCore.Plugin.ScoreSaber.Data.Songs.ContainsKey(hash))
             {
                 Logger.Debug("Checking if have difficulty for song {0} difficulty {1}", level.songName, difficultyString);
-                ScoreSaberSong scoreSaberSong = ScoreSaberDatabaseDownloader.ScoreSaberDataFile.SongHashToScoreSaberData[hash];
+                ScoreSaberSong scoreSaberSong = SongDataCore.Plugin.ScoreSaber.Data.Songs[hash];
                 ScoreSaberSongDifficultyStats scoreSaberSongDifficulty = scoreSaberSong.diffs.FirstOrDefault(x => String.Equals(x.diff, difficultyString));
                 if (scoreSaberSongDifficulty != null)
                 {
@@ -1299,10 +1312,27 @@ namespace SongBrowser.UI
         /// </summary>
         public void RefreshSortButtonUI()
         {
+            if (!_uiCreated)
+            {
+                return;
+            }
+
             // So far all we need to refresh is the sort buttons.
             foreach (SongSortButton sortButton in _sortButtonGroup)
             {
-                UIBuilder.SetButtonBorder(sortButton.Button, Color.white);
+                if (sortButton.SortMode.NeedsBeatSaverData() && !SongDataCore.Plugin.BeatSaver.IsDataAvailable())
+                {
+                    UIBuilder.SetButtonBorder(sortButton.Button, Color.gray);
+                }
+                else if (sortButton.SortMode.NeedsScoreSaberData() && !SongDataCore.Plugin.ScoreSaber.IsDataAvailable())
+                {
+                    UIBuilder.SetButtonBorder(sortButton.Button, Color.gray);
+                }
+                else
+                {
+                    UIBuilder.SetButtonBorder(sortButton.Button, Color.white);
+                }
+
                 if (sortButton.SortMode == _model.Settings.sortMode)
                 {
                     if (this._model.Settings.invertSortResults)
