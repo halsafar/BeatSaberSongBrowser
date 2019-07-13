@@ -1,5 +1,4 @@
 ﻿using UnityEngine.SceneManagement;
-using IllusionPlugin;
 using SongBrowser.UI;
 using Logger = SongBrowser.Logging.Logger;
 using SongBrowser.DataAccess;
@@ -12,7 +11,7 @@ namespace SongBrowser
 {
     public class Plugin : IBeatSaberPlugin
     {
-        public const string VERSION_NUMBER = "5.3.0";
+        public const string VERSION_NUMBER = "5.3.1";
         public static Plugin Instance;
         public static IPA.Logging.Logger Log;
 

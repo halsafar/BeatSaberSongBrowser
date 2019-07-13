@@ -1,5 +1,4 @@
-﻿using IllusionPlugin;
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +9,7 @@ using SongBrowser;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Logger = SongBrowser.Logging.Logger;
+using IPA.Config;
 
 namespace SongBrowser
 {
