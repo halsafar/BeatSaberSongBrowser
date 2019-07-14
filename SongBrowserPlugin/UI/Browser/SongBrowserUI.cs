@@ -69,6 +69,8 @@ namespace SongBrowser.UI
         
         private Sprite _currentAddFavoriteButtonSprite;
 
+        private IBeatmapLevelPack _lastLevelPack;
+
         // Model
         private SongBrowserModel _model;
 
@@ -230,7 +232,7 @@ namespace SongBrowser.UI
             _filterByDisplay = _beatUi.LevelPackLevelsViewController.CreateUIButton("ApplyButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 _model.Settings.filterMode = SongFilterMode.None;
-                SongCore.Loader.Instance.RefreshLevelPacks();
+                CancelFilter();
                 RefreshSongUI();
             }, "");
             _filterByDisplay.SetButtonTextSize(displayButtonFontSize);
@@ -504,8 +506,8 @@ namespace SongBrowser.UI
             _beatUi.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDidChangeDifficultyEvent;
             _beatUi.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyEvent;
 
-            _beatUi.LevelPacksTableView.didSelectPackEvent -= _levelPacksTableView_didSelectPackEvent;
-            _beatUi.LevelPacksTableView.didSelectPackEvent += _levelPacksTableView_didSelectPackEvent;
+            //_beatUi.LevelPacksTableView.didSelectPackEvent -= _levelPacksTableView_didSelectPackEvent;
+            //_beatUi.LevelPacksTableView.didSelectPackEvent += _levelPacksTableView_didSelectPackEvent;
             _beatUi.LevelPackViewController.didSelectPackEvent -= _levelPackViewController_didSelectPackEvent;
             _beatUi.LevelPackViewController.didSelectPackEvent += _levelPackViewController_didSelectPackEvent;
 
@@ -557,7 +559,7 @@ namespace SongBrowser.UI
                 return;
             }
 
-            this._model.ProcessSongList(_beatUi.GetCurrentSelectedLevelPack());
+            this._model.ProcessSongList(_beatUi.LevelPackLevelsViewController);
         }
 
         /// <summary>
@@ -567,7 +569,7 @@ namespace SongBrowser.UI
         {
             Logger.Debug("Cancelling filter.");
             _model.Settings.filterMode = SongFilterMode.None;
-            SongCore.Loader.Instance.RefreshLevelPacks();
+            _beatUi.LevelPackLevelsViewController.SetData(_lastLevelPack);
         }
 
         /// <summary>
@@ -592,7 +594,7 @@ namespace SongBrowser.UI
                 bool didUpdateLevelPack = this.UpdateLevelPackSelection();
                 if (!didUpdateLevelPack)
                 {
-                    _model.ProcessSongList(_beatUi.GetCurrentSelectedLevelPack());
+                    ProcessSongList();
                 }
                 _beatUi.SelectAndScrollToLevel(_beatUi.LevelPackLevelsTableView, _model.LastSelectedLevelId);
                 RefreshQuickScrollButtons();
@@ -629,28 +631,33 @@ namespace SongBrowser.UI
         /// </summary>
         /// <param name="arg1"></param>
         /// <param name="arg2"></param>
-        private void _levelPackViewController_didSelectPackEvent(LevelPacksViewController arg1, IBeatmapLevelPack arg2)
+        private void _levelPackViewController_didSelectPackEvent(LevelPacksViewController arg1, IBeatmapLevelPack levelPack)
         {
-            Logger.Trace("_levelPackViewController_didSelectPackEvent(arg2={0})", arg2);
+            Logger.Trace("_levelPackViewController_didSelectPackEvent(levelPack={0})", levelPack);
 
             try
             {
-                // reset filter mode always here
-                if (this._model.Settings.currentLevelPackId != arg2.packID)
+                if (levelPack.packID != SongBrowserModel.FilteredSongsPackId)
                 {
-                    this._model.Settings.filterMode = SongFilterMode.None;
+                    _lastLevelPack = levelPack;
                 }
 
+                // reset filter mode always here
+                /*if (this._model.Settings.currentLevelPackId != levelPack.packID)
+                {
+                    this._model.Settings.filterMode = SongFilterMode.None;
+                }*/
+
                 // save level pack
-                this._model.Settings.currentLevelPackId = arg2.packID;
+                this._model.Settings.currentLevelPackId = levelPack.packID;
                 this._model.Settings.Save();
 
-                this._model.ProcessSongList(arg2);
+                ProcessSongList();
 
                 // trickery to handle Downloader playlist level packs
                 // We need to avoid scrolling to a level and then select the header
                 bool scrollToLevel = true;
-                if (arg2.packID.Contains("Playlist_"))
+                if (levelPack.packID.Contains("Playlist_"))
                 {
                     scrollToLevel = false;
                 }
@@ -675,7 +682,7 @@ namespace SongBrowser.UI
             _model.Settings.filterMode = SongFilterMode.None;
             _model.Settings.Save();
 
-            SongCore.Loader.Instance.RefreshLevelPacks();
+            CancelFilter();
             ProcessSongList();
             RefreshSongUI();
         }
@@ -724,18 +731,6 @@ namespace SongBrowser.UI
         {
             Logger.Debug($"FilterButton {mode} clicked.");
 
-            // TODO - Downloader level pack support - need a way to refresh downloader level packs.
-
-            // Every filter will lead to needing a refresh.
-            SongCore.Loader.Instance.RefreshLevelPacks();
-
-            // Always select the custom level pack - TODO - Downloader level pack support - Don't always do this
-            var pack = _beatUi.GetCurrentSelectedLevelPack();
-            if (pack != null && !pack.packID.Equals(PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID))
-            {
-                _beatUi.SelectLevelPack(PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID);
-            }
-
             // If selecting the same filter, cancel
             if (_model.Settings.filterMode == mode)
             {
@@ -745,6 +740,13 @@ namespace SongBrowser.UI
             {
                 _model.Settings.filterMode = mode;
             }
+
+            if (_lastLevelPack == null || _beatUi.LevelPackLevelsViewController.levelPack.packID != SongBrowserModel.FilteredSongsPackId)
+            {
+                _lastLevelPack = _beatUi.LevelPackLevelsViewController.levelPack;
+            }
+
+            _beatUi.LevelPackLevelsViewController.SetData(_lastLevelPack);
 
             switch (mode)
             {
@@ -1070,7 +1072,7 @@ namespace SongBrowser.UI
 
                     if (_model.Settings.filterMode == SongFilterMode.Favorites)
                     {
-                        this._model.ProcessSongList(_beatUi.GetCurrentSelectedLevelPack());
+                        ProcessSongList();
                         this.RefreshSongList();
                     }
                 }
