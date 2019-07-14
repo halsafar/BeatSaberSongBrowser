@@ -731,6 +731,20 @@ namespace SongBrowser.UI
         {
             Logger.Debug($"FilterButton {mode} clicked.");
 
+            if (_lastLevelPack == null || _beatUi.LevelPackLevelsViewController.levelPack.packID != SongBrowserModel.FilteredSongsPackId)
+            {
+                _lastLevelPack = _beatUi.LevelPackLevelsViewController.levelPack;
+            }
+
+            if (mode == SongFilterMode.Favorites || mode == SongFilterMode.Playlist)
+            {
+                _beatUi.SelectLevelPack(PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID);
+            }
+            else
+            {
+                _beatUi.LevelPackLevelsViewController.SetData(_lastLevelPack);
+            }
+
             // If selecting the same filter, cancel
             if (_model.Settings.filterMode == mode)
             {
@@ -740,13 +754,6 @@ namespace SongBrowser.UI
             {
                 _model.Settings.filterMode = mode;
             }
-
-            if (_lastLevelPack == null || _beatUi.LevelPackLevelsViewController.levelPack.packID != SongBrowserModel.FilteredSongsPackId)
-            {
-                _lastLevelPack = _beatUi.LevelPackLevelsViewController.levelPack;
-            }
-
-            _beatUi.LevelPackLevelsViewController.SetData(_lastLevelPack);
 
             switch (mode)
             {

@@ -355,19 +355,6 @@ namespace SongBrowser
             List<IPreviewBeatmapLevel> filteredSongs = null;
             List<IPreviewBeatmapLevel> sortedSongs = null;
 
-            // This has come in handy many times for debugging issues with Newest.
-            /*foreach (BeatmapLevelSO level in _originalSongs)
-            {
-                if (_levelIdToCustomLevel.ContainsKey(level.levelID))
-                {
-                    Logger.Debug("HAS KEY {0}: {1}", _levelIdToCustomLevel[level.levelID].customSongInfo.path, level.levelID);
-                }
-                else
-                {
-                    Logger.Debug("Missing KEY: {0}", level.levelID);
-                }
-            }*/
-
             // Abort
             if (levelsViewController.levelPack == null)
             {
@@ -376,6 +363,7 @@ namespace SongBrowser
             }
             
             // fetch unsorted songs.
+            // playlists always use customsongs
             if (this._settings.filterMode == SongFilterMode.Playlist && this.CurrentPlaylist != null)
             {
                 unsortedSongs = null;
@@ -393,13 +381,13 @@ namespace SongBrowser
             switch (_settings.filterMode)
             {
                 case SongFilterMode.Favorites:
-                    filteredSongs = FilterFavorites(levelsViewController.levelPack);
+                    filteredSongs = FilterFavorites();
                     break;
                 case SongFilterMode.Search:
                     filteredSongs = FilterSearch(unsortedSongs);
                     break;
                 case SongFilterMode.Playlist:
-                    filteredSongs = FilterPlaylist(levelsViewController.levelPack);
+                    filteredSongs = FilterPlaylist();
                     break;
                 case SongFilterMode.Ranked:
                     filteredSongs = FilterRanked(unsortedSongs, true, false);
@@ -479,7 +467,7 @@ namespace SongBrowser
 
             // Asterisk the pack name so it is identifable as filtered.
             var packName = levelsViewController.levelPack.packName;
-            if (!packName.EndsWith("*"))
+            if (!packName.EndsWith("*") && _settings.filterMode != SongFilterMode.None)
             {
                 packName += "*";
             }
@@ -493,14 +481,14 @@ namespace SongBrowser
         /// For now the editing playlist will be considered the favorites playlist.
         /// Users can edit the settings file themselves.
         /// </summary>
-        private List<IPreviewBeatmapLevel> FilterFavorites(IBeatmapLevelPack pack)
+        private List<IPreviewBeatmapLevel> FilterFavorites()
         {
             Logger.Info("Filtering song list as favorites playlist...");
             if (this.CurrentEditingPlaylist != null)
             {
                 this.CurrentPlaylist = this.CurrentEditingPlaylist;
             }
-            return this.FilterPlaylist(pack);
+            return this.FilterPlaylist();
         }
 
         /// <summary>
@@ -546,7 +534,7 @@ namespace SongBrowser
         /// </summary>
         /// <param name="pack"></param>
         /// <returns></returns>
-        private List<IPreviewBeatmapLevel> FilterPlaylist(IBeatmapLevelPack pack)
+        private List<IPreviewBeatmapLevel> FilterPlaylist()
         {
             // bail if no playlist, usually means the settings stored one the user then moved.
             if (this.CurrentPlaylist == null)
@@ -561,12 +549,12 @@ namespace SongBrowser
 
             Logger.Debug("Filtering songs for playlist: {0}", this.CurrentPlaylist.playlistTitle);
 
-            Dictionary<String, IPreviewBeatmapLevel> levelDict = new Dictionary<string, IPreviewBeatmapLevel>();
-            foreach (var level in pack.beatmapLevelCollection.beatmapLevels)
+            Dictionary<String, CustomPreviewBeatmapLevel> levelDict = new Dictionary<string, CustomPreviewBeatmapLevel>();
+            foreach (var level in SongCore.Loader.CustomLevels)
             {
-                if (!levelDict.ContainsKey(level.levelID))
+                if (!levelDict.ContainsKey(level.Value.levelID))
                 {
-                    levelDict.Add(level.levelID, level);
+                    levelDict.Add(level.Value.levelID, level.Value);
                 }               
             }
 
