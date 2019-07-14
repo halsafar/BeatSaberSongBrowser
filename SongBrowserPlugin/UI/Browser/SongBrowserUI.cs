@@ -159,9 +159,10 @@ namespace SongBrowser.UI
                 this.ModifySongStatsPanel();
                 this.ResizeSongUI();
 
+                _uiCreated = true;
+
                 RefreshSortButtonUI();
 
-                _uiCreated = true;
                 Logger.Debug("Done Creating UI...");
             }
             catch (Exception e)
