@@ -62,6 +62,6 @@ A plugin for customizing the in-game song browser.
 - `customDetailUrl` (optional): Expects a response equivalent to BeatSaver.com API.
 
 ## Status
-- Working with BeatSaber 1.1.0
+- Working with BeatSaber 1.1.0p1
 
 
