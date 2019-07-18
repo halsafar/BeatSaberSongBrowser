@@ -782,11 +782,12 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortRandom(List<IPreviewBeatmapLevel> levelIds)
         {
-            Logger.Info("Sorting song list by random (seed={0})...", this.Settings.randomSongSeed);
+            Logger.Info("Sorting song list by random (seed={0})...", Settings.randomSongSeed);
 
-            System.Random rnd = new System.Random(this.Settings.randomSongSeed);
+            System.Random rnd = new System.Random(Settings.randomSongSeed);
 
             return levelIds
+                .OrderBy(x => x.songName)
                 .OrderBy(x => rnd.Next())
                 .ToList();
         }
