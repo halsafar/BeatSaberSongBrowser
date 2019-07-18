@@ -568,7 +568,7 @@ namespace SongBrowser.UI
         /// </summary>
         public void CancelFilter()
         {
-            Logger.Debug("Cancelling filter.");
+            Logger.Debug($"Cancelling filter, levelPack {_lastLevelPack}");
             _model.Settings.filterMode = SongFilterMode.None;
             _beatUi.LevelPackLevelsViewController.SetData(_lastLevelPack);
         }
@@ -592,11 +592,7 @@ namespace SongBrowser.UI
 
             try
             {
-                bool didUpdateLevelPack = this.UpdateLevelPackSelection();
-                if (!didUpdateLevelPack)
-                {
-                    ProcessSongList();
-                }
+                UpdateLevelPackSelection();
                 _beatUi.SelectAndScrollToLevel(_beatUi.LevelPackLevelsTableView, _model.LastSelectedLevelId);
                 RefreshQuickScrollButtons();
             }
@@ -638,18 +634,16 @@ namespace SongBrowser.UI
 
             try
             {
+                // store the real level pack
                 if (levelPack.packID != SongBrowserModel.FilteredSongsPackId)
                 {
                     _lastLevelPack = levelPack;
                 }
 
-                // reset filter mode always here
-                /*if (this._model.Settings.currentLevelPackId != levelPack.packID)
-                {
-                    this._model.Settings.filterMode = SongFilterMode.None;
-                }*/
+                // reset level selection
+                _model.LastSelectedLevelId = null;
 
-                // save level pack
+                // save level packs
                 this._model.Settings.currentLevelPackId = levelPack.packID;
                 this._model.Settings.Save();
 
@@ -1414,12 +1408,6 @@ namespace SongBrowser.UI
                 }
 
                 _model.UpdateLevelRecords();
-
-                bool didUpdateLevelPack = UpdateLevelPackSelection();
-                if (didUpdateLevelPack)
-                {
-                    ProcessSongList();
-                }
             }
             catch (Exception e)
             {
@@ -1450,20 +1438,15 @@ namespace SongBrowser.UI
                 {
                     Logger.Debug("Automatically selecting level pack: {0}", _model.Settings.currentLevelPackId);
 
-                    // HACK - BeatSaber seems to always go back to OST1 internally.
-                    //      - Lets force it to the last pack id but not have SongBrowser functions fire.
-                    // Turn off our event processing
                     _beatUi.LevelPackViewController.didSelectPackEvent -= _levelPackViewController_didSelectPackEvent;
-                    _beatUi.LevelPacksTableView.didSelectPackEvent -= _levelPacksTableView_didSelectPackEvent;
 
-                    var levelPack = _beatUi.GetLevelPackByPackId(_model.Settings.currentLevelPackId);
+                    _lastLevelPack = _beatUi.GetLevelPackByPackId(_model.Settings.currentLevelPackId);
                     _beatUi.SelectLevelPack(_model.Settings.currentLevelPackId);
+
+                    _beatUi.LevelPackViewController.didSelectPackEvent += _levelPackViewController_didSelectPackEvent;
 
                     ProcessSongList();
 
-                    _beatUi.LevelPackViewController.didSelectPackEvent += _levelPackViewController_didSelectPackEvent;
-                    _beatUi.LevelPacksTableView.didSelectPackEvent += _levelPacksTableView_didSelectPackEvent;
-                    
                     return true;
                 }
             }

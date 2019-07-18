@@ -375,7 +375,7 @@ namespace SongBrowser
             }
 
             // filter
-            Logger.Debug("Starting filtering songs...");
+            Logger.Debug($"Starting filtering songs by {_settings.filterMode}");
             Stopwatch stopwatch = Stopwatch.StartNew();
 
             switch (_settings.filterMode)
