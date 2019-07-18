@@ -23,7 +23,9 @@ A plugin for customizing the in-game song browser.
 - Filters:
   - Playlists.
   - Search (with keyboard support).
-  - Favorites (all songs you have marked as a favorite).  
+  - Favorites (all songs you have marked as a favorite).
+  - Ranked.
+  - Unranked.
 - UI Enhancements:
   - Display PP, STARS, and NJS.
   - Fast scroll buttons (jumps 10% of your song list in each press).
