@@ -1,13 +1,7 @@
 ﻿using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Xml.Serialization;
-using SongBrowser;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Logger = SongBrowser.Logging.Logger;
 using IPA.Config;
 

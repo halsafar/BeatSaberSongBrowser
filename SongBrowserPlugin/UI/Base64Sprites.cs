@@ -11,6 +11,7 @@ namespace SongBrowser.UI
         public static Sprite AddToFavoritesIcon;
         public static Sprite RemoveFromFavoritesIcon;
         public static Sprite StarFullIcon;
+        public static Sprite StarEmptyIcon;
         public static Sprite DownloadIcon;
         public static Sprite SpeedIcon;
         public static Sprite GraphIcon;
@@ -26,11 +27,11 @@ namespace SongBrowser.UI
             SpeedIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.Speed.png");
             GraphIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.Graph.png");
             XIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.X.png");
-
             AddToFavoritesIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.AddToFavorites.png");
             PlaylistIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.PlaylistIcon.png");
             RemoveFromFavoritesIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.RemoveFromFavorites.png");
             StarFullIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.StarFull.png");
+            StarEmptyIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.StarEmpty.png");
             DownloadIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.DownloadIcon.png");
             DeleteIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.DeleteIcon.png");
             DoubleArrow = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.DoubleArrow.png");

@@ -73,31 +73,17 @@ namespace SongBrowser.UI
 
         // Model
         private SongBrowserModel _model;
-
         public SongBrowserModel Model
         {
-            get
+            set
             {
-                return _model;
+                _model = value;
             }
         }
 
         // UI Created
         private bool _uiCreated = false;
         private UIState _currentUiState = UIState.Disabled;
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public SongBrowserUI() : base()
-        {
-            if (_model == null)
-            {
-                _model = new SongBrowserModel();
-            }
-
-            _model.Init();
-        }
 
         /// <summary>
         /// Builds the UI for this plugin.
