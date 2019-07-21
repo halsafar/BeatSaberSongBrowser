@@ -227,15 +227,5 @@ namespace SongBrowser
             _songBrowserUI.UpdateLevelPackSelection();
             _songBrowserUI.RefreshSongList();
         }
-
-        /// <summary>
-        /// Helper for invoking buttons.
-        /// </summary>
-        /// <param name="buttonName"></param>
-        public static void InvokeBeatSaberButton(String buttonName)
-        {
-            Button buttonInstance = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == buttonName));
-            buttonInstance.onClick.Invoke();
-        }
     }
 }
