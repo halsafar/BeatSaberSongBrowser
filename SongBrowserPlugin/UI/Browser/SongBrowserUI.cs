@@ -79,6 +79,11 @@ namespace SongBrowser.UI
             {
                 _model = value;
             }
+
+            get
+            {
+                return _model;
+            }
         }
 
         // UI Created
