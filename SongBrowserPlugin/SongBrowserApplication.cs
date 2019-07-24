@@ -16,9 +16,17 @@ namespace SongBrowser
 
         // Song Browser UI Elements
         private SongBrowserUI _songBrowserUI;
+        private SongBrowserModel _songBrowserModel;
 
         public static SongBrowser.UI.ProgressBar MainProgressBar;
 
+        public SongBrowserModel Model
+        {
+            get
+            {
+                return _songBrowserModel;
+            }
+        }
 
         /// <summary>
         /// Load the main song browser app.
@@ -46,7 +54,13 @@ namespace SongBrowser
 
             Instance = this;
 
+            // Init Model, load settings
+            _songBrowserModel = new SongBrowserModel();
+            _songBrowserModel.Init();
+
+            // Init browser UI
             _songBrowserUI = gameObject.AddComponent<SongBrowserUI>();
+            _songBrowserUI.Model = _songBrowserModel;
         }
 
         /// <summary>
@@ -111,7 +125,7 @@ namespace SongBrowser
             Logger.Trace("OnScoreSaberDataDownloaded");
             try
             {
-                if (_songBrowserUI.Model.Settings.sortMode.NeedsScoreSaberData())
+                if (_songBrowserModel.Settings.sortMode.NeedsScoreSaberData())
                 {
                     _songBrowserUI.ProcessSongList();
                     _songBrowserUI.RefreshSongUI();
@@ -135,7 +149,7 @@ namespace SongBrowser
             Logger.Trace("OnBeatSaverDataDownloaded");
             try
             {
-                if (_songBrowserUI.Model.Settings.sortMode.NeedsBeatSaverData())
+                if (_songBrowserModel.Settings.sortMode.NeedsBeatSaverData())
                 {
                     _songBrowserUI.ProcessSongList();
                     _songBrowserUI.RefreshSongUI();
@@ -224,17 +238,8 @@ namespace SongBrowser
             yield return new WaitForEndOfFrame();
 
             _songBrowserUI.UpdateLevelDataModel();
+            _songBrowserUI.UpdateLevelPackSelection();
             _songBrowserUI.RefreshSongList();
-        }
-
-        /// <summary>
-        /// Helper for invoking buttons.
-        /// </summary>
-        /// <param name="buttonName"></param>
-        public static void InvokeBeatSaberButton(String buttonName)
-        {
-            Button buttonInstance = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == buttonName));
-            buttonInstance.onClick.Invoke();
         }
     }
 }
