@@ -225,10 +225,10 @@ namespace SongBrowser.DataAccess
 
                 LevelPacksTableView.SelectCellWithIdx(index);
                 tableView.SelectCellWithIdx(index, true);
-                tableView.ScrollToCellWithIdx(0, TableView.ScrollPositionType.Beginning, false);
+                tableView.ScrollToCellWithIdx(0, TableViewScroller.ScrollPositionType.Beginning, false);
                 for (int i = 0; i < index; i++)
                 {
-                    tableView.PageScrollDown();
+                    tableView.GetPrivateField<TableViewScroller>("_scroller").PageScrollDown();
                 }
 
                 Logger.Debug("Done selecting level pack!");
@@ -305,7 +305,7 @@ namespace SongBrowser.DataAccess
 
             TableView tableView = LevelPackLevelsTableView.GetPrivateField<TableView>("_tableView");
             LevelPackLevelsTableView.HandleDidSelectRowEvent(tableView, selectedIndex);
-            tableView.ScrollToCellWithIdx(selectedIndex, TableView.ScrollPositionType.Beginning, true);
+            tableView.ScrollToCellWithIdx(selectedIndex, TableViewScroller.ScrollPositionType.Beginning, true);
             tableView.SelectCellWithIdx(selectedIndex);            
         }
 

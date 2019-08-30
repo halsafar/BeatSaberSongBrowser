@@ -925,7 +925,7 @@ namespace SongBrowser.UI
                                 Logger.Info("Removed " + removedLevels + " level(s) from song list!");
 
                                 TableView listTableView = levelsTableView.GetPrivateField<TableView>("_tableView");
-                                listTableView.ScrollToCellWithIdx(selectedIndex, TableView.ScrollPositionType.Beginning, false);
+                                listTableView.ScrollToCellWithIdx(selectedIndex, TableViewScroller.ScrollPositionType.Beginning, false);
                                 levelsTableView.SetPrivateField("_selectedRow", selectedIndex);
                                 listTableView.SelectCellWithIdx(selectedIndex, true);
                             }

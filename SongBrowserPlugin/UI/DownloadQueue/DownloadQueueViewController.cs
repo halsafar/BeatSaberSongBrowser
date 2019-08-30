@@ -50,7 +50,7 @@ namespace SongBrowser.UI.DownloadQueue
                 _pageUpButton.interactable = true;
                 _pageUpButton.onClick.AddListener(delegate ()
                 {
-                    _queuedSongsTableView.PageScrollUp();
+                    _queuedSongsTableView.GetPrivateField<TableViewScroller>("_scroller").PageScrollUp();
                 });
 
                 _pageDownButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().Last(x => (x.name == "PageDownButton")), rectTransform, false);
@@ -61,7 +61,7 @@ namespace SongBrowser.UI.DownloadQueue
                 _pageDownButton.interactable = true;
                 _pageDownButton.onClick.AddListener(delegate ()
                 {
-                    _queuedSongsTableView.PageScrollDown();
+                    _queuedSongsTableView.GetPrivateField<TableViewScroller>("_scroller").PageScrollDown();
                 });
 
                 var gameObject = new GameObject();
@@ -150,7 +150,7 @@ namespace SongBrowser.UI.DownloadQueue
             Logger.Log($"Removed {removed} songs from queue");
 
             _queuedSongsTableView.ReloadData();
-            _queuedSongsTableView.ScrollToCellWithIdx(0, TableView.ScrollPositionType.Beginning, true);
+            _queuedSongsTableView.ScrollToCellWithIdx(0, TableViewScroller.ScrollPositionType.Beginning, true);
 
             if (queuedSongs.Count(x => x.songQueueState == SongQueueState.Downloading || x.songQueueState == SongQueueState.Queued) == 0)
             {
@@ -172,7 +172,7 @@ namespace SongBrowser.UI.DownloadQueue
             return queuedSongs.Count;
         }
 
-        public TableCell CellForIdx(int row)
+        public TableCell CellForIdx(TableView view, int row)
         {
             LevelListTableCell _tableCell = Instantiate(_songListTableCellInstance);
 

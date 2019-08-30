@@ -294,7 +294,7 @@ namespace SongBrowser
 
             // Build a map of levelId to sum of all playcounts and sort.
             PlayerDataModelSO playerData = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().FirstOrDefault();            
-            foreach (var levelData in playerData.currentLocalPlayer.levelsStatsData)
+            foreach (var levelData in playerData.playerData.levelsStatsData)
             {
                 if (!_levelIdToPlayCount.ContainsKey(levelData.levelID))
                 {
