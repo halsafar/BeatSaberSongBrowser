@@ -13,11 +13,6 @@ namespace SongBrowser.UI.DownloadQueue
     {
         Song song;
 
-        protected override void Awake()
-        {
-            base.Awake();
-        }
-
         public void Init(Song _song)
         {
             Destroy(GetComponent<LevelListTableCell>());

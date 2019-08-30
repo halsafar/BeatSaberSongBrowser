@@ -45,8 +45,8 @@ namespace SongBrowser.UI
                 (_pageUpButton.transform as RectTransform).sizeDelta = new Vector2(40f, 10f);
                 _pageUpButton.interactable = true;
                 _pageUpButton.onClick.AddListener(delegate ()
-                {
-                    _songsTableView.PageScrollUp();
+                {                    
+                    _songsTableView.GetPrivateField<TableViewScroller>("_scroller").PageScrollUp();
                 });
 
                 _pageDownButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageDownButton")), rectTransform, false);
@@ -57,7 +57,7 @@ namespace SongBrowser.UI
                 _pageDownButton.interactable = true;
                 _pageDownButton.onClick.AddListener(delegate ()
                 {
-                    _songsTableView.PageScrollDown();
+                    _songsTableView.GetPrivateField<TableViewScroller>("_scroller").PageScrollDown();
                 });
 
                 _songListTableCellInstance = Resources.FindObjectsOfTypeAll<LevelListTableCell>().First(x => (x.name == "LevelListTableCell"));
@@ -85,14 +85,14 @@ namespace SongBrowser.UI
                 (_songsTableView.transform as RectTransform).anchoredPosition = new Vector2(0f, 0f);
 
                 _songsTableView.dataSource = this;
-                _songsTableView.ScrollToCellWithIdx(0, TableView.ScrollPositionType.Beginning, false);
+                _songsTableView.ScrollToCellWithIdx(0, TableViewScroller.ScrollPositionType.Beginning, false);
                 _lastSelectedRow = -1;
                 _songsTableView.didSelectCellWithIdxEvent += _songsTableView_DidSelectRowEvent;
             }
             else
             {
                 _songsTableView.ReloadData();
-                _songsTableView.ScrollToCellWithIdx(0, TableView.ScrollPositionType.Beginning, false);
+                _songsTableView.ScrollToCellWithIdx(0, TableViewScroller.ScrollPositionType.Beginning, false);
                 _lastSelectedRow = -1;
             }
         }
@@ -117,7 +117,7 @@ namespace SongBrowser.UI
             if (_songsTableView != null)
             {
                 _songsTableView.ReloadData();
-                _songsTableView.ScrollToCellWithIdx(0, TableView.ScrollPositionType.Center, false);
+                _songsTableView.ScrollToCellWithIdx(0, TableViewScroller.ScrollPositionType.Center, false);
             }
         }
 
@@ -137,7 +137,7 @@ namespace SongBrowser.UI
             return playlistList.Count;
         }
 
-        public TableCell CellForIdx(int row)
+        public TableCell CellForIdx(TableView view, int row)
         {
             LevelListTableCell _tableCell = Instantiate(_songListTableCellInstance);
 
