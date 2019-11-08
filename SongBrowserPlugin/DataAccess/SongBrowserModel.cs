@@ -471,7 +471,7 @@ namespace SongBrowser
             {
                 packName += "*";
             }
-            BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsPackId, packName, levelsViewController.levelPack.coverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
+            BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsPackId, packName, levelsViewController.levelPack.shortPackName, levelsViewController.levelPack.coverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
             levelsViewController.SetData(levelPack);
 
             //_sortedSongs.ForEach(x => Logger.Debug(x.levelID));
