@@ -37,22 +37,24 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
-    </Reference>
-    <Reference Include="BeatSaberCustomUI">
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\BeatSaberCustomUI.dll</HintPath>
-    </Reference>
     <Reference Include="BeatSaverDownloader">
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Plugins\BeatSaverDownloader.dll</HintPath>
+    </Reference>
+    <Reference Include="BS_Utils">
+      <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Plugins\BS_Utils.dll</HintPath>
+    </Reference>
+    <Reference Include="HMLib">
+      <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\HMLib.dll</HintPath>
+    </Reference>
+    <Reference Include="HMUI">
+      <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\HMUI.dll</HintPath>
     </Reference>
     <Reference Include="IPA.Loader, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\IPA.Loader.dll</HintPath>
+    </Reference>
+    <Reference Include="MainAssembly">
+      <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\MainAssembly.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Newtonsoft.Json.dll</HintPath>
@@ -124,13 +126,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Internals\BeatSaberUI.cs" />
+    <Compile Include="Internals\BeatSaberExtensions.cs" />
     <Compile Include="UI\Browser\BeatSaberUIController.cs" />
     <Compile Include="DataAccess\BeatSaverApi\BeatSaverApiResults.cs" />
     <Compile Include="DataAccess\FileOperationApiWrapper.cs" />
     <Compile Include="DataAccess\LoadScripts.cs" />
     <Compile Include="DataAccess\Playlist.cs" />
     <Compile Include="DataAccess\Network\Downloader.cs" />
-    <Compile Include="Internals\BSEvents.cs" />
     <Compile Include="Internals\CustomHelpers.cs" />
     <Compile Include="Internals\SimpleJSON.cs" />
     <Compile Include="Logging\Logger.cs" />

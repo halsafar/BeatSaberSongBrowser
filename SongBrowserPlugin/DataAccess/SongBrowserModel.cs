@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using TMPro;
 using UnityEngine;
 using static StandardLevelInfoSaveData;
 using Logger = SongBrowser.Logging.Logger;
@@ -347,7 +348,7 @@ namespace SongBrowser
         /// <summary>
         /// Sort the song list based on the settings.
         /// </summary>
-        public void ProcessSongList(LevelPackLevelsViewController levelsViewController)
+        public void ProcessSongList(IBeatmapLevelPack selectedLevelPack, LevelCollectionViewController levelCollectionViewController, LevelCollectionTableView tableView)
         {
             Logger.Trace("ProcessSongList()");
 
@@ -356,7 +357,7 @@ namespace SongBrowser
             List<IPreviewBeatmapLevel> sortedSongs = null;
 
             // Abort
-            if (levelsViewController.levelPack == null)
+            if (selectedLevelPack == null)
             {
                 Logger.Debug("Cannot process songs yet, no level pack selected...");
                 return;
@@ -370,8 +371,8 @@ namespace SongBrowser
             }
             else
             {
-                Logger.Debug("Using songs from level pack: {0}", levelsViewController.levelPack.packID);
-                unsortedSongs = levelsViewController.levelPack.beatmapLevelCollection.beatmapLevels.ToList();
+                Logger.Debug("Using songs from level pack: {0}", selectedLevelPack.packID);
+                unsortedSongs = selectedLevelPack.beatmapLevelCollection.beatmapLevels.ToList();
             }
 
             // filter
@@ -397,7 +398,7 @@ namespace SongBrowser
                     break;
                 case SongFilterMode.Custom:
                     Logger.Info("Song filter mode set to custom. Deferring filter behaviour to another mod.");
-                    filteredSongs = CustomFilterHandler != null ? CustomFilterHandler.Invoke(levelsViewController.levelPack) : unsortedSongs;
+                    filteredSongs = CustomFilterHandler != null ? CustomFilterHandler.Invoke(selectedLevelPack) : unsortedSongs;
                     break;
                 case SongFilterMode.None:
                 default:
@@ -466,13 +467,18 @@ namespace SongBrowser
             Logger.Info("Sorting songs took {0}ms", stopwatch.ElapsedMilliseconds);
 
             // Asterisk the pack name so it is identifable as filtered.
-            var packName = levelsViewController.levelPack.packName;
+            var packName = selectedLevelPack.packName;
             if (!packName.EndsWith("*") && _settings.filterMode != SongFilterMode.None)
             {
                 packName += "*";
             }
-            BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsPackId, packName, levelsViewController.levelPack.shortPackName, levelsViewController.levelPack.coverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
-            levelsViewController.SetData(levelPack);
+            BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsPackId, packName, selectedLevelPack.shortPackName, selectedLevelPack.coverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
+
+            TextMeshProUGUI _noDataText = levelCollectionViewController.GetPrivateField<TextMeshProUGUI>("_noDataText");
+            string _headerText = tableView.GetPrivateField<string>("_headerText");
+            Sprite _headerSprite = tableView.GetPrivateField<Sprite>("_headerSprite");
+
+            levelCollectionViewController.SetData(levelPack.beatmapLevelCollection, _headerText, _headerSprite, false, _noDataText.text);
 
             //_sortedSongs.ForEach(x => Logger.Debug(x.levelID));
         }

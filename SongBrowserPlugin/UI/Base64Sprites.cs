@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SongBrowser.Internals;
+using System;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
@@ -24,19 +25,19 @@ namespace SongBrowser.UI
 
         public static void Init()
         {
-            SpeedIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.Speed.png");
-            GraphIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.Graph.png");
-            XIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.X.png");
-            AddToFavoritesIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.AddToFavorites.png");
-            PlaylistIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.PlaylistIcon.png");
-            RemoveFromFavoritesIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.RemoveFromFavorites.png");
-            StarFullIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.StarFull.png");
-            StarEmptyIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.StarEmpty.png");
-            DownloadIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.DownloadIcon.png");
-            DeleteIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.DeleteIcon.png");
-            DoubleArrow = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.DoubleArrow.png");
-            BeastSaberLogo = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.BeastSaberLogo.png");
-            RandomIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.RandomIcon.png");
+            SpeedIcon = BeatSaberUI.LoadSpriteFromResources("SongBrowser.Assets.Speed.png");
+            GraphIcon = BeatSaberUI.LoadSpriteFromResources("SongBrowser.Assets.Graph.png");
+            XIcon = BeatSaberUI.LoadSpriteFromResources("SongBrowser.Assets.X.png");
+            AddToFavoritesIcon = BeatSaberUI.LoadSpriteFromResources("SongBrowser.Assets.AddToFavorites.png");
+            PlaylistIcon = BeatSaberUI.LoadSpriteFromResources("SongBrowser.Assets.PlaylistIcon.png");
+            RemoveFromFavoritesIcon = BeatSaberUI.LoadSpriteFromResources("SongBrowser.Assets.RemoveFromFavorites.png");
+            StarFullIcon = BeatSaberUI.LoadSpriteFromResources("SongBrowser.Assets.StarFull.png");
+            StarEmptyIcon = BeatSaberUI.LoadSpriteFromResources("SongBrowser.Assets.StarEmpty.png");
+            DownloadIcon = BeatSaberUI.LoadSpriteFromResources("SongBrowser.Assets.DownloadIcon.png");
+            DeleteIcon = BeatSaberUI.LoadSpriteFromResources("SongBrowser.Assets.DeleteIcon.png");
+            DoubleArrow = BeatSaberUI.LoadSpriteFromResources("SongBrowser.Assets.DoubleArrow.png");
+            BeastSaberLogo = BeatSaberUI.LoadSpriteFromResources("SongBrowser.Assets.BeastSaberLogo.png");
+            RandomIcon = BeatSaberUI.LoadSpriteFromResources("SongBrowser.Assets.RandomIcon.png");
         }
 
         public static string SpriteToBase64(Sprite input)

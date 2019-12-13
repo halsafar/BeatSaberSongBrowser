@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Linq;
 using SongCore.Utilities;
+using SongBrowser.Internals;
 
 namespace SongBrowser.UI
 {
@@ -123,7 +124,7 @@ namespace SongBrowser.UI
             var rectTransform = _canvas.transform as RectTransform;
             rectTransform.sizeDelta = CanvasSize;
 
-            _authorNameText = CustomUI.BeatSaber.BeatSaberUI.CreateText(_canvas.transform as RectTransform, AuthorNameText, AuthorNamePosition);
+            _authorNameText = BeatSaberUI.CreateText(_canvas.transform as RectTransform, AuthorNameText, AuthorNamePosition);
             rectTransform = _authorNameText.transform as RectTransform;
             rectTransform.SetParent(_canvas.transform, false);
             rectTransform.anchoredPosition = AuthorNamePosition;
@@ -131,7 +132,7 @@ namespace SongBrowser.UI
             _authorNameText.text = AuthorNameText;
             _authorNameText.fontSize = AuthorNameFontSize;
 
-            _pluginNameText = CustomUI.BeatSaber.BeatSaberUI.CreateText(_canvas.transform as RectTransform, PluginNameText, PluginNamePosition);
+            _pluginNameText = BeatSaberUI.CreateText(_canvas.transform as RectTransform, PluginNameText, PluginNamePosition);
             rectTransform = _pluginNameText.transform as RectTransform;
             rectTransform.SetParent(_canvas.transform, false);
             rectTransform.sizeDelta = HeaderSize;
@@ -139,7 +140,7 @@ namespace SongBrowser.UI
             _pluginNameText.text = PluginNameText;
             _pluginNameText.fontSize = PluginNameFontSize;
 
-            _headerText = CustomUI.BeatSaber.BeatSaberUI.CreateText(_canvas.transform as RectTransform, HeaderText, HeaderPosition);
+            _headerText = BeatSaberUI.CreateText(_canvas.transform as RectTransform, HeaderText, HeaderPosition);
             rectTransform = _headerText.transform as RectTransform;
             rectTransform.SetParent(_canvas.transform, false);
             rectTransform.anchoredPosition = HeaderPosition;

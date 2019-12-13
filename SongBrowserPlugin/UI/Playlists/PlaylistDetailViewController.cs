@@ -1,4 +1,4 @@
-﻿using CustomUI.BeatSaber;
+﻿using SongBrowser.Internals;
 using SongBrowser.DataAccess;
 using SongCore.Utilities;
 using System;
@@ -6,13 +6,12 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using VRUI;
 using Logger = SongBrowser.Logging.Logger;
 using Sprites = SongBrowser.UI.Base64Sprites;
 
 namespace SongBrowser.UI
 {
-    class PlaylistDetailViewController : VRUIViewController
+    class PlaylistDetailViewController : HMUI.ViewController
     {
 
         public event Action<Playlist> downloadButtonPressed;

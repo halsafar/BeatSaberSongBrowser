@@ -1,11 +1,10 @@
-﻿using CustomUI.BeatSaber;
+﻿using SongBrowser.Internals;
 using SongBrowser.DataAccess;
 using System;
 using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using VRUI;
 using Image = UnityEngine.UI.Image;
 using Logger = SongBrowser.Logging.Logger;
 
@@ -20,7 +19,7 @@ namespace SongBrowser.UI
         /// <typeparam name="T"></typeparam>
         /// <param name="name"></param>
         /// <returns></returns>
-        public static T CreateViewController<T>(string name) where T : VRUIViewController
+        public static T CreateViewController<T>(string name) where T : HMUI.ViewController
         {
             T vc = new GameObject(name).AddComponent<T>();
 
@@ -38,7 +37,7 @@ namespace SongBrowser.UI
         /// <typeparam name="T"></typeparam>
         /// <param name="name"></param>
         /// <returns></returns>
-        public static T CreateFlowCoordinator<T>(string name) where T : FlowCoordinator
+        public static T CreateFlowCoordinator<T>(string name) where T : HMUI.FlowCoordinator
         {
             T vc = new GameObject(name).AddComponent<T>();
             return vc;

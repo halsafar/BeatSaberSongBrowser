@@ -26,7 +26,7 @@ namespace SongBrowser.UI.DownloadQueue
             _coverRawImage = GetComponentsInChildren<UnityEngine.UI.RawImage>().First(x => x.name == "CoverImage");
             _bgImage = GetComponentsInChildren<UnityEngine.UI.Image>().First(x => x.name == "BG");
             _highlightImage = GetComponentsInChildren<UnityEngine.UI.Image>().First(x => x.name == "Highlight");
-            _beatmapCharacteristicAlphas = new float[0];
+            //_beatmapCharacteristicAlphas = new float[0];
             _beatmapCharacteristicImages = new UnityEngine.UI.Image[0];
             _bought = true;
 

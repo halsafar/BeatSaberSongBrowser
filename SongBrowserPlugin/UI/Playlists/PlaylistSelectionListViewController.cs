@@ -8,12 +8,11 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using VRUI;
 using Logger = SongBrowser.Logging.Logger;
 
 namespace SongBrowser.UI
 {
-    class PlaylistListViewController : VRUIViewController, TableView.IDataSource
+    class PlaylistListViewController : HMUI.ViewController, TableView.IDataSource
     {
         public event Action<Playlist> didSelectRow;
 
@@ -76,7 +75,7 @@ namespace SongBrowser.UI
                 _songsTableView.transform.SetParent(container, false);
                 _songsTableView.SetPrivateField("_isInitialized", false);
                 _songsTableView.SetPrivateField("_preallocatedCells", new TableView.CellsGroup[0]);
-                _songsTableView.Init();
+                _songsTableView.InvokeMethod("Init", null);
                 gameObject.SetActive(true);
 
                 (_songsTableView.transform as RectTransform).anchorMin = new Vector2(0f, 0f);

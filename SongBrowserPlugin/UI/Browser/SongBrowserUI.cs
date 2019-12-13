@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using HMUI;
-using VRUI;
 using SongBrowser.DataAccess;
 using TMPro;
 using Logger = SongBrowser.Logging.Logger;
@@ -12,7 +11,6 @@ using SongBrowser.DataAccess.BeatSaverApi;
 using System.Collections;
 using SongCore.Utilities;
 using SongBrowser.Internals;
-using CustomUI.BeatSaber;
 using SongDataCore.ScoreSaber;
 
 namespace SongBrowser.UI
@@ -116,6 +114,8 @@ namespace SongBrowser.UI
                 return;
             }
 
+            Logger.Debug("Done fetching Flow Coordinator for the appropriate mode...");
+
             _beatUi = new DataAccess.BeatSaberUIController(flowCoordinator);
 
             // returning to the menu and switching modes could trigger this.
@@ -194,7 +194,7 @@ namespace SongBrowser.UI
 
             // create SortBy button and its display
             float curX = sortByButtonX;
-            _sortByButton = _beatUi.LevelPackLevelsViewController.CreateUIButton("ApplyButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
+            _sortByButton = _beatUi.LevelCollectionViewController.CreateUIButton("ApplyButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 RefreshOuterUIState(UIState.SortBy);
             }, "Sort By");
@@ -203,7 +203,7 @@ namespace SongBrowser.UI
 
             curX += outerButtonWidth;
 
-            _sortByDisplay = _beatUi.LevelPackLevelsViewController.CreateUIButton("ApplyButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
+            _sortByDisplay = _beatUi.LevelCollectionViewController.CreateUIButton("ApplyButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 OnSortButtonClickEvent(_model.Settings.sortMode);
             }, "");
@@ -212,7 +212,7 @@ namespace SongBrowser.UI
             curX += outerButtonWidth;
 
             // create FilterBy button and its display
-            _filterByButton = _beatUi.LevelPackLevelsViewController.CreateUIButton("ApplyButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
+            _filterByButton = _beatUi.LevelCollectionViewController.CreateUIButton("ApplyButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 RefreshOuterUIState(UIState.FilterBy);
             }, "Filter By");
@@ -221,7 +221,7 @@ namespace SongBrowser.UI
 
             curX += outerButtonWidth;
 
-            _filterByDisplay = _beatUi.LevelPackLevelsViewController.CreateUIButton("ApplyButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
+            _filterByDisplay = _beatUi.LevelCollectionViewController.CreateUIButton("ApplyButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 _model.Settings.filterMode = SongFilterMode.None;
                 CancelFilter();
@@ -231,7 +231,7 @@ namespace SongBrowser.UI
             _filterByDisplay.ToggleWordWrapping(false);
 
             // random button
-            _randomButton = _beatUi.LevelPackLevelsViewController.CreateUIButton("HowToPlayButton", new Vector2(curX + (outerButtonWidth / 2.0f) + (randomButtonWidth / 2.0f), clearButtonY), new Vector2(randomButtonWidth, buttonHeight), () =>
+            _randomButton = _beatUi.LevelCollectionViewController.CreateUIButton("HowToPlayButton", new Vector2(curX + (outerButtonWidth / 2.0f) + (randomButtonWidth / 2.0f), clearButtonY), new Vector2(randomButtonWidth, buttonHeight), () =>
             {
                 OnSortButtonClickEvent(SongSortMode.Random);
             }, "",
@@ -251,7 +251,7 @@ namespace SongBrowser.UI
         /// <returns></returns>
         private Button CreateClearButton(float x, float y, float h, UnityEngine.Events.UnityAction callback)
         {
-            Button b = _beatUi.LevelPackLevelsViewController.CreateUIButton("HowToPlayButton", new Vector2(x, y), new Vector2(h, h), callback, "", Base64Sprites.XIcon);
+            Button b = _beatUi.LevelCollectionViewController.CreateUIButton("HowToPlayButton", new Vector2(x, y), new Vector2(h, h), callback, "", Base64Sprites.XIcon);
             b.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(1, 1, 0, 0);
             RectTransform textRect = b.GetComponentsInChildren<RectTransform>(true).FirstOrDefault(c => c.name == "Text");
             if (textRect != null)
@@ -293,7 +293,7 @@ namespace SongBrowser.UI
                 float curButtonX = sortButtonX + (sortButtonWidth * i) + (buttonSpacing * i);
                 SongSortButton sortButton = new SongSortButton();
                 sortButton.SortMode = sortModes[i];
-                sortButton.Button = _beatUi.LevelPackLevelsViewController.CreateUIButton("ApplyButton",
+                sortButton.Button = _beatUi.LevelCollectionViewController.CreateUIButton("ApplyButton",
                     new Vector2(curButtonX, buttonY), new Vector2(sortButtonWidth, buttonHeight),
                     () =>
                     {
@@ -340,7 +340,7 @@ namespace SongBrowser.UI
                 float curButtonX = filterButtonX + (filterButtonWidth * i) + (buttonSpacing * i);
                 SongFilterButton filterButton = new SongFilterButton();
                 filterButton.FilterMode = filterModes[i];
-                filterButton.Button = _beatUi.LevelPackLevelsViewController.CreateUIButton("ApplyButton",
+                filterButton.Button = _beatUi.LevelCollectionViewController.CreateUIButton("ApplyButton",
                     new Vector2(curButtonX, buttonY), new Vector2(filterButtonWidth, buttonHeight),
                     () =>
                     {
@@ -469,7 +469,7 @@ namespace SongBrowser.UI
             _beatUi.LevelPackLevelsTableViewRectTransform.anchoredPosition = new Vector2(0f, -2.5f);
 
             // Move the page up/down buttons a bit
-            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_beatUi.LevelPackLevelsTableView, "_tableView");
+            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_beatUi.LevelCollectionTableView, "_tableView");
             RectTransform pageUpButton = _beatUi.TableViewPageUpButton.transform as RectTransform;
             RectTransform pageDownButton = _beatUi.TableViewPageDownButton.transform as RectTransform;
             pageUpButton.anchoredPosition = new Vector2(pageUpButton.anchoredPosition.x, pageUpButton.anchoredPosition.y - 1f);
@@ -487,10 +487,10 @@ namespace SongBrowser.UI
         private void InstallHandlers()
         {
             // level pack, level, difficulty handlers, characteristics
-            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_beatUi.LevelPackLevelsTableView, "_tableView");
+            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_beatUi.LevelCollectionTableView, "_tableView");
 
-            _beatUi.LevelPackLevelsViewController.didSelectLevelEvent -= OnDidSelectLevelEvent;
-            _beatUi.LevelPackLevelsViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
+            _beatUi.LevelCollectionViewController.didSelectLevelEvent -= OnDidSelectLevelEvent;
+            _beatUi.LevelCollectionViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
 
             _beatUi.LevelDetailViewController.didPresentContentEvent -= OnDidPresentContentEvent;
             _beatUi.LevelDetailViewController.didPresentContentEvent += OnDidPresentContentEvent;
@@ -498,10 +498,9 @@ namespace SongBrowser.UI
             _beatUi.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDidChangeDifficultyEvent;
             _beatUi.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyEvent;
 
-            //_beatUi.LevelPacksTableView.didSelectPackEvent -= _levelPacksTableView_didSelectPackEvent;
-            //_beatUi.LevelPacksTableView.didSelectPackEvent += _levelPacksTableView_didSelectPackEvent;
-            _beatUi.LevelPackViewController.didSelectPackEvent -= _levelPackViewController_didSelectPackEvent;
-            _beatUi.LevelPackViewController.didSelectPackEvent += _levelPackViewController_didSelectPackEvent;
+            _beatUi.LevelCollectionViewController.didSelectHeaderEvent -= _levelPackViewController_didSelectPackEvent;
+            //_beatUi.LevelPackViewController.didSelectPackEvent -= _levelPackViewController_didSelectPackEvent;
+            //_beatUi.LevelPackViewController.didSelectPackEvent += _levelPackViewController_didSelectPackEvent;
 
             _beatUi.BeatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent -= OnDidSelectBeatmapCharacteristic;
             _beatUi.BeatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent += OnDidSelectBeatmapCharacteristic;
@@ -551,7 +550,8 @@ namespace SongBrowser.UI
                 return;
             }
 
-            this._model.ProcessSongList(_beatUi.LevelPackLevelsViewController);
+            var levelPack = _beatUi.LevelSelectionNavigationController.GetPrivateField<IBeatmapLevelPack>("_levelPack");
+            this._model.ProcessSongList(levelPack, _beatUi.LevelCollectionViewController, _beatUi.LevelCollectionTableView);
         }
 
         /// <summary>
@@ -561,7 +561,12 @@ namespace SongBrowser.UI
         {
             Logger.Debug($"Cancelling filter, levelPack {_lastLevelPack}");
             _model.Settings.filterMode = SongFilterMode.None;
-            _beatUi.LevelPackLevelsViewController.SetData(_lastLevelPack);
+
+            TextMeshProUGUI _noDataText = _beatUi.LevelCollectionViewController.GetPrivateField<TextMeshProUGUI>("_noDataText");
+            string _headerText = _beatUi.LevelCollectionTableView.GetPrivateField<string>("_headerText");
+            Sprite _headerSprite = _beatUi.LevelCollectionTableView.GetPrivateField<Sprite>("_headerSprite");
+
+            _beatUi.LevelCollectionViewController.SetData(_lastLevelPack.beatmapLevelCollection, _headerText, _headerSprite, false, _noDataText.text);
         }
 
         /// <summary>
@@ -584,7 +589,7 @@ namespace SongBrowser.UI
             try
             {
                 UpdateLevelPackSelection();
-                _beatUi.SelectAndScrollToLevel(_beatUi.LevelPackLevelsTableView, _model.LastSelectedLevelId);
+                _beatUi.SelectAndScrollToLevel(_beatUi.LevelCollectionTableView, _model.LastSelectedLevelId);
                 RefreshQuickScrollButtons();
             }
             catch (Exception e)
@@ -619,8 +624,10 @@ namespace SongBrowser.UI
         /// </summary>
         /// <param name="arg1"></param>
         /// <param name="arg2"></param>
-        private void _levelPackViewController_didSelectPackEvent(LevelPacksViewController arg1, IBeatmapLevelPack levelPack)
+        private void _levelPackViewController_didSelectPackEvent(LevelCollectionViewController arg1)
         {
+            // TODO 1.0.6 - BROKEN
+            var levelPack = arg1.GetPrivateField<IBeatmapLevelPack>("_levelPack");
             Logger.Trace("_levelPackViewController_didSelectPackEvent(levelPack={0})", levelPack);
 
             try
@@ -717,9 +724,9 @@ namespace SongBrowser.UI
         {
             Logger.Debug($"FilterButton {mode} clicked.");
 
-            if (_lastLevelPack == null || _beatUi.LevelPackLevelsViewController.levelPack.packID != SongBrowserModel.FilteredSongsPackId)
+            if (_lastLevelPack == null || _beatUi.LevelPackViewController.selectedLevelPack.packID != SongBrowserModel.FilteredSongsPackId)
             {
-                _lastLevelPack = _beatUi.LevelPackLevelsViewController.levelPack;
+                _lastLevelPack = _beatUi.LevelPackViewController.selectedLevelPack;
             }
 
             if (mode == SongFilterMode.Favorites || mode == SongFilterMode.Playlist)
@@ -728,7 +735,11 @@ namespace SongBrowser.UI
             }
             else
             {
-                _beatUi.LevelPackLevelsViewController.SetData(_lastLevelPack);
+                TextMeshProUGUI _noDataText = _beatUi.LevelCollectionViewController.GetPrivateField<TextMeshProUGUI>("_noDataText");
+                string _headerText = _beatUi.LevelCollectionTableView.GetPrivateField<string>("_headerText");
+                Sprite _headerSprite = _beatUi.LevelCollectionTableView.GetPrivateField<Sprite>("_headerSprite");
+
+                _beatUi.LevelCollectionViewController.SetData(_lastLevelPack.beatmapLevelCollection, _headerText, _headerSprite, false, _noDataText.text);
             }
 
             // If selecting the same filter, cancel
@@ -784,7 +795,7 @@ namespace SongBrowser.UI
         /// Adjust UI based on level selected.
         /// Various ways of detecting if a level is not properly selected.  Seems most hit the first one.
         /// </summary>
-        private void OnDidSelectLevelEvent(LevelPackLevelsViewController view, IPreviewBeatmapLevel level)
+        private void OnDidSelectLevelEvent(LevelCollectionViewController view, IPreviewBeatmapLevel level)
         {
             try
             {
@@ -908,7 +919,7 @@ namespace SongBrowser.UI
                         {
                             // determine the index we are deleting so we can keep the cursor near the same spot after
                             // the header counts as an index, so if the index came from the level array we have to add 1.
-                            var levelsTableView = _beatUi.LevelPackLevelsViewController.GetPrivateField<LevelPackLevelsTableView>("_levelPackLevelsTableView");
+                            var levelsTableView = _beatUi.LevelCollectionViewController.GetPrivateField<LevelCollectionTableView>("_levelPackLevelsTableView");
                             List<IPreviewBeatmapLevel> levels = levelsTableView.GetPrivateField<IBeatmapLevelPack>("_pack").beatmapLevelCollection.beatmapLevels.ToList();
                             int selectedIndex = levels.FindIndex(x => x.levelID == _beatUi.StandardLevelDetailView.selectedDifficultyBeatmap.level.levelID);
 
@@ -1032,8 +1043,8 @@ namespace SongBrowser.UI
                 segmentSize = LIST_ITEMS_VISIBLE_AT_ONCE;
             }
 
-            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_beatUi.LevelPackLevelsTableView, "_tableView");
-            int currentRow = _beatUi.LevelPackLevelsTableView.GetPrivateField<int>("_selectedRow");
+            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_beatUi.LevelCollectionTableView, "_tableView");
+            int currentRow = _beatUi.LevelCollectionTableView.GetPrivateField<int>("_selectedRow");
             int jumpDirection = Math.Sign(numJumps);
             int newRow = currentRow + (jumpDirection * segmentSize);
             if (newRow <= 0)
@@ -1046,7 +1057,7 @@ namespace SongBrowser.UI
             }
             
             Logger.Debug("jumpDirection: {0}, newRow: {1}", jumpDirection, newRow);
-            _beatUi.SelectAndScrollToLevel(_beatUi.LevelPackLevelsTableView, levels[newRow].levelID);
+            _beatUi.SelectAndScrollToLevel(_beatUi.LevelCollectionTableView, levels[newRow].levelID);
             RefreshQuickScrollButtons();
         }
 
@@ -1429,12 +1440,12 @@ namespace SongBrowser.UI
                 {
                     Logger.Debug("Automatically selecting level pack: {0}", _model.Settings.currentLevelPackId);
 
-                    _beatUi.LevelPackViewController.didSelectPackEvent -= _levelPackViewController_didSelectPackEvent;
+                    //_beatUi.LevelPackViewController.didSelectPackEvent -= _levelPackViewController_didSelectPackEvent;
 
-                    _lastLevelPack = _beatUi.GetLevelPackByPackId(_model.Settings.currentLevelPackId);
-                    _beatUi.SelectLevelPack(_model.Settings.currentLevelPackId);
+                    //_lastLevelPack = _beatUi.GetLevelPackByPackId(_model.Settings.currentLevelPackId);
+                    //_beatUi.SelectLevelPack(_model.Settings.currentLevelPackId);
 
-                    _beatUi.LevelPackViewController.didSelectPackEvent += _levelPackViewController_didSelectPackEvent;
+                    //_beatUi.LevelPackViewController.didSelectPackEvent += _levelPackViewController_didSelectPackEvent;
 
                     ProcessSongList();
 

@@ -1,15 +1,15 @@
-﻿using CustomUI.BeatSaber;
+﻿using SongBrowser.Internals;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine.UI;
-using VRUI;
+
 
 namespace SongBrowser.UI
 {
-    class BackButtonNavigationController : VRUINavigationController
+    class BackButtonNavigationController : HMUI.NavigationController
     {
         public event Action didFinishEvent;
 

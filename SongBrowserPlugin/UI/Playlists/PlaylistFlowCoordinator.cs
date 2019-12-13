@@ -1,4 +1,4 @@
-﻿using CustomUI.BeatSaber;
+﻿using SongBrowser.Internals;
 using Newtonsoft.Json.Linq;
 using SongBrowser.DataAccess;
 using SongBrowser.DataAccess.BeatSaverApi;
@@ -11,18 +11,17 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
-using VRUI;
 using Logger = SongBrowser.Logging.Logger;
 
 namespace SongBrowser.UI
 {
     // https://github.com/andruzzzhka/BeatSaverDownloader/blob/master/BeatSaverDownloader/UI/FlowCoordinators/PlaylistsFlowCoordinator.cs
     // +Keyboard Input
-    public class PlaylistFlowCoordinator : FlowCoordinator
+    public class PlaylistFlowCoordinator : HMUI.FlowCoordinator
     {
         public event Action<Playlist> didFinishEvent;
 
-        public FlowCoordinator parentFlowCoordinator;
+        public HMUI.FlowCoordinator parentFlowCoordinator;
 
         private BackButtonNavigationController _playlistsNavigationController;
         private PlaylistListViewController _playlistListViewController;
@@ -63,7 +62,7 @@ namespace SongBrowser.UI
 
                 _downloadQueueViewController = BeatSaberUI.CreateViewController<DownloadQueueViewController>();
 
-                SetViewControllersToNavigationConctroller(_playlistsNavigationController, new VRUIViewController[]
+                SetViewControllersToNavigationConctroller(_playlistsNavigationController, new HMUI.ViewController[]
                 {
                 _playlistListViewController
                 });

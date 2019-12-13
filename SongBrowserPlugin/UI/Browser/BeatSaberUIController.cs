@@ -1,5 +1,5 @@
-﻿using CustomUI.Utilities;
-using HMUI;
+﻿using HMUI;
+using IPA.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +7,6 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
-using VRUI;
 using Logger = SongBrowser.Logging.Logger;
 
 namespace SongBrowser.DataAccess
@@ -16,20 +15,21 @@ namespace SongBrowser.DataAccess
     {
         // Beat Saber UI Elements
         public FlowCoordinator LevelSelectionFlowCoordinator;
+        public NavigationController LevelSelectionNavigationController;
 
         public LevelPacksViewController LevelPackViewController;
         public LevelPacksTableView LevelPacksTableView;
         public LevelPackDetailViewController LevelPackDetailViewController;
 
-        public LevelPackLevelsViewController LevelPackLevelsViewController;
-        public LevelPackLevelsTableView LevelPackLevelsTableView;
+        public LevelCollectionViewController LevelCollectionViewController;
+        public LevelCollectionTableView LevelCollectionTableView;
         public StandardLevelDetailViewController LevelDetailViewController;
         public StandardLevelDetailView StandardLevelDetailView;
 
         public BeatmapDifficultySegmentedControlController LevelDifficultyViewController;
         public BeatmapCharacteristicSegmentedControlController BeatmapCharacteristicSelectionViewController;
 
-        public DismissableNavigationController LevelSelectionNavigationController;
+        //public DismissableNavigationController LevelSelectionNavigationController;
 
         public RectTransform LevelPackLevelsTableViewRectTransform;
 
@@ -54,43 +54,42 @@ namespace SongBrowser.DataAccess
         /// <param name="flowCoordinator"></param>
         public BeatSaberUIController(FlowCoordinator flowCoordinator)
         {
+            Logger.Debug("Collecting all BeatSaberUI Elements...");
+
             LevelSelectionFlowCoordinator = flowCoordinator;
 
-            // gather controllers and ui elements.
-            LevelPackViewController = LevelSelectionFlowCoordinator.GetPrivateField<LevelPacksViewController>("_levelPacksViewController");
-            Logger.Debug("Acquired LevelPacksViewController [{0}]", LevelPackViewController.GetInstanceID());
+            // gather current nav controller
+            LevelSelectionNavigationController = LevelSelectionFlowCoordinator.GetPrivateField<LevelSelectionNavigationController>("_levelSelectionNavigationController");
+            Logger.Debug("Acquired LevelSelectionNavigationController [{0}]", LevelSelectionNavigationController.GetInstanceID());
 
-            LevelPackDetailViewController = LevelSelectionFlowCoordinator.GetPrivateField<LevelPackDetailViewController>("_levelPackDetailViewController");
+            // grab nav controller elements
+            LevelCollectionViewController = LevelSelectionNavigationController.GetPrivateField<LevelCollectionViewController>("_levelCollectionViewController");
+            Logger.Debug("Acquired LevelPackLevelsViewController [{0}]", LevelCollectionViewController.GetInstanceID());
+
+            LevelPackDetailViewController = LevelSelectionNavigationController.GetPrivateField<LevelPackDetailViewController>("_levelPackDetailViewController");
             Logger.Debug("Acquired LevelPackDetailViewController [{0}]", LevelPackDetailViewController.GetInstanceID());
 
-            LevelPacksTableView = LevelPackViewController.GetPrivateField<LevelPacksTableView>("_levelPacksTableView");
-            Logger.Debug("Acquired LevelPacksTableView [{0}]", LevelPacksTableView.GetInstanceID());
-
-            LevelPackLevelsViewController = LevelSelectionFlowCoordinator.GetPrivateField<LevelPackLevelsViewController>("_levelPackLevelsViewController");
-            Logger.Debug("Acquired LevelPackLevelsViewController [{0}]", LevelPackLevelsViewController.GetInstanceID());
-
-            LevelPackLevelsTableView = this.LevelPackLevelsViewController.GetPrivateField<LevelPackLevelsTableView>("_levelPackLevelsTableView");
-            Logger.Debug("Acquired LevelPackLevelsTableView [{0}]", LevelPackLevelsTableView.GetInstanceID());
-
-            LevelDetailViewController = LevelSelectionFlowCoordinator.GetPrivateField<StandardLevelDetailViewController>("_levelDetailViewController");
+            LevelDetailViewController = LevelSelectionNavigationController.GetPrivateField<StandardLevelDetailViewController>("_levelDetailViewController");
             Logger.Debug("Acquired StandardLevelDetailViewController [{0}]", LevelDetailViewController.GetInstanceID());
 
+            // grab level collection view controller elements
+            LevelCollectionTableView = this.LevelCollectionViewController.GetPrivateField<LevelCollectionTableView>("_levelCollectionTableView");
+            Logger.Debug("Acquired LevelPackLevelsTableView [{0}]", LevelCollectionTableView.GetInstanceID());
+
+            // grab letel detail view
             StandardLevelDetailView = LevelDetailViewController.GetPrivateField<StandardLevelDetailView>("_standardLevelDetailView");
             Logger.Debug("Acquired StandardLevelDetailView [{0}]", StandardLevelDetailView.GetInstanceID());
 
             BeatmapCharacteristicSelectionViewController = Resources.FindObjectsOfTypeAll<BeatmapCharacteristicSegmentedControlController>().First();
             Logger.Debug("Acquired BeatmapCharacteristicSegmentedControlController [{0}]", BeatmapCharacteristicSelectionViewController.GetInstanceID());
 
-            LevelSelectionNavigationController = LevelSelectionFlowCoordinator.GetPrivateField<DismissableNavigationController>("_navigationController");
-            Logger.Debug("Acquired DismissableNavigationController [{0}]", LevelSelectionNavigationController.GetInstanceID());
-
             LevelDifficultyViewController = StandardLevelDetailView.GetPrivateField<BeatmapDifficultySegmentedControlController>("_beatmapDifficultySegmentedControlController");
             Logger.Debug("Acquired BeatmapDifficultySegmentedControlController [{0}]", LevelDifficultyViewController.GetInstanceID());
 
-            LevelPackLevelsTableViewRectTransform = LevelPackLevelsTableView.transform as RectTransform;
+            LevelPackLevelsTableViewRectTransform = LevelCollectionTableView.transform as RectTransform;
             Logger.Debug("Acquired TableViewRectTransform from LevelPackLevelsTableView [{0}]", LevelPackLevelsTableViewRectTransform.GetInstanceID());
 
-            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(LevelPackLevelsTableView, "_tableView");
+            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(LevelCollectionTableView, "_tableView");
             TableViewPageUpButton = tableView.GetPrivateField<Button>("_pageUpButton");
             TableViewPageDownButton = tableView.GetPrivateField<Button>("_pageDownButton");
             Logger.Debug("Acquired Page Up and Down buttons...");
@@ -102,6 +101,13 @@ namespace SongBrowser.DataAccess
             PracticeButton = PlayButtons.GetComponentsInChildren<Button>().First(x => x.name == "PracticeButton");
 
             SimpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
+
+
+            //LevelPackViewController = LevelSelectionFlowCoordinator.GetPrivateField<LevelPacksViewController>("_levelPacksViewController");
+            //Logger.Debug("Acquired LevelPacksViewController [{0}]", LevelPackViewController.GetInstanceID());
+
+            //LevelPacksTableView = LevelPackViewController.GetPrivateField<LevelPacksTableView>("_levelPacksTableView");
+            //Logger.Debug("Acquired LevelPacksTableView [{0}]", LevelPacksTableView.GetInstanceID());
         }
 
 
@@ -126,12 +132,12 @@ namespace SongBrowser.DataAccess
         /// <returns></returns>
         public IBeatmapLevelPack GetCurrentSelectedLevelPack()
         {
-            if (LevelPackLevelsTableView == null)
+            if (LevelSelectionNavigationController == null)
             {
                 return null;
             }
 
-            var pack = LevelPackLevelsTableView.GetPrivateField<IBeatmapLevelPack>("_pack");
+            var pack = LevelSelectionNavigationController.GetPrivateField<IBeatmapLevelPack>("_levelPack");
             return pack;
         }
 
@@ -179,6 +185,7 @@ namespace SongBrowser.DataAccess
             var levelPack = GetCurrentSelectedLevelPack();
             if (levelPack == null)
             {
+                Logger.Debug("Current selected level pack is null for some reason...");
                 return null;
             }
 
@@ -223,7 +230,8 @@ namespace SongBrowser.DataAccess
                 Logger.Info("Selecting level pack index: {0}", pack.packName);
                 var tableView = LevelPacksTableView.GetPrivateField<TableView>("_tableView");
 
-                LevelPacksTableView.SelectCellWithIdx(index);
+                // TODO 1.6.0 - REVIEW
+                //LevelPacksTableView.SelectCellWithIdx(index);
                 tableView.SelectCellWithIdx(index, true);
                 tableView.ScrollToCellWithIdx(0, TableViewScroller.ScrollPositionType.Beginning, false);
                 for (int i = 0; i < index; i++)
@@ -244,7 +252,7 @@ namespace SongBrowser.DataAccess
         /// </summary>
         /// <param name="table"></param>
         /// <param name="levelID"></param>
-        public void SelectAndScrollToLevel(LevelPackLevelsTableView table, string levelID)
+        public void SelectAndScrollToLevel(LevelCollectionTableView table, string levelID)
         {
             Logger.Debug("Scrolling to LevelID: {0}", levelID);
 
@@ -252,7 +260,7 @@ namespace SongBrowser.DataAccess
             if (!_checkedForTwitchPlugin)
             {
                 Logger.Info("Checking for BeatSaber Twitch Integration Plugin...");
-                _detectedTwitchPluginQueue = Resources.FindObjectsOfTypeAll<VRUIViewController>().Any(x => x.name == "RequestInfo");
+                _detectedTwitchPluginQueue = Resources.FindObjectsOfTypeAll<HMUI.ViewController>().Any(x => x.name == "RequestInfo");
                 Logger.Info("BeatSaber Twitch Integration plugin detected: " + _detectedTwitchPluginQueue);
 
                 _checkedForTwitchPlugin = true;
@@ -267,7 +275,7 @@ namespace SongBrowser.DataAccess
 
             // try to find the index and scroll to it
             int selectedIndex = 0;
-            List<IPreviewBeatmapLevel> levels = table.GetPrivateField<IBeatmapLevelPack>("_pack").beatmapLevelCollection.beatmapLevels.ToList();
+            List<IPreviewBeatmapLevel> levels = GetCurrentLevelPackLevels().ToList();
             if (levels.Count <= 0)
             {
                 return;
@@ -303,8 +311,8 @@ namespace SongBrowser.DataAccess
         {
             Logger.Debug("Scrolling level list to idx: {0}", selectedIndex);
 
-            TableView tableView = LevelPackLevelsTableView.GetPrivateField<TableView>("_tableView");
-            LevelPackLevelsTableView.HandleDidSelectRowEvent(tableView, selectedIndex);
+            TableView tableView = LevelCollectionTableView.GetPrivateField<TableView>("_tableView");
+            LevelCollectionTableView.HandleDidSelectRowEvent(tableView, selectedIndex);
             tableView.ScrollToCellWithIdx(selectedIndex, TableViewScroller.ScrollPositionType.Beginning, true);
             tableView.SelectCellWithIdx(selectedIndex);            
         }
@@ -320,7 +328,7 @@ namespace SongBrowser.DataAccess
                 var levels = GetCurrentLevelPackLevels();
 
                 Logger.Debug("Checking if TableView is initialized...");
-                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(LevelPackLevelsTableView, "_tableView");
+                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(LevelCollectionTableView, "_tableView");
                 bool tableViewInit = ReflectionUtil.GetPrivateField<bool>(tableView, "_isInitialized");
 
                 Logger.Debug("Reloading SongList TableView");
@@ -336,13 +344,14 @@ namespace SongBrowser.DataAccess
                 {
                     if (levels.Length > 0)
                     {
+                        Logger.Debug("Currently selected level ID does not exist, picking the first...");
                         selectedLevelID = levels.FirstOrDefault().levelID;
                     }
                 }
 
                 if (scrollToLevel)
                 {
-                    SelectAndScrollToLevel(LevelPackLevelsTableView, selectedLevelID);
+                    SelectAndScrollToLevel(LevelCollectionTableView, selectedLevelID);
                 }
             }
             catch (Exception e)

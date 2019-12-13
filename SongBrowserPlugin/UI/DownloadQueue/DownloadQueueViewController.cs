@@ -1,5 +1,5 @@
-﻿using CustomUI.BeatSaber;
-using CustomUI.Utilities;
+﻿using BS_Utils.Utilities;
+using SongBrowser.Internals;
 using HMUI;
 using SongBrowser.DataAccess.BeatSaverApi;
 using System;
@@ -9,14 +9,13 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using VRUI;
 using Logger = SongBrowser.Logging.Logger;
 
 // Modified From: https://github.com/andruzzzhka/BeatSaverDownloader
 // - Adding queue count
 namespace SongBrowser.UI.DownloadQueue
 {
-    class DownloadQueueViewController : VRUIViewController, TableView.IDataSource
+    class DownloadQueueViewController : HMUI.ViewController, TableView.IDataSource
     {
         public event Action allSongsDownloaded;
 
@@ -70,7 +69,7 @@ namespace SongBrowser.UI.DownloadQueue
                 _queuedSongsTableView.transform.SetParent(rectTransform, false);
                 _queuedSongsTableView.SetPrivateField("_isInitialized", false);
                 _queuedSongsTableView.SetPrivateField("_preallocatedCells", new TableView.CellsGroup[0]);
-                _queuedSongsTableView.Init();
+                _queuedSongsTableView.InvokeMethod("Init", null);
                 gameObject.SetActive(true);
 
                 RectMask2D viewportMask = Instantiate(Resources.FindObjectsOfTypeAll<RectMask2D>().First(), _queuedSongsTableView.transform, false);
