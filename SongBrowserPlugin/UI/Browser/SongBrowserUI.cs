@@ -49,8 +49,6 @@ namespace SongBrowser.UI
 
         private Button _clearSortFilterButton;
 
-        private Button _addFavoriteButton;
-
         private SimpleDialogPromptViewController _deleteDialog;
         private Button _deleteButton;        
 
@@ -141,7 +139,6 @@ namespace SongBrowser.UI
                 CreateOuterUi();
                 CreateSortButtons();
                 CreateFilterButtons();
-                CreateAddFavoritesButton();
                 CreateDeleteButton();
                 CreateFastPageButtons();
 
@@ -390,19 +387,6 @@ namespace SongBrowser.UI
         }
 
         /// <summary>
-        /// Create the +/- favorite button in the play button container.
-        /// </summary>
-        private void CreateAddFavoritesButton()
-        {
-            // Create add favorite button
-            Logger.Debug("Creating Add to favorites button...");
-            _addFavoriteButton = UIBuilder.CreateIconButton(_beatUi.PlayButtons, _beatUi.PracticeButton, Base64Sprites.AddToFavoritesIcon);
-            _addFavoriteButton.onClick.AddListener(delegate () {
-                ToggleSongInPlaylist();
-            });
-        }
-
-        /// <summary>
         /// Create the delete button in the play button container
         /// </summary>
         private void CreateDeleteButton()
@@ -489,6 +473,7 @@ namespace SongBrowser.UI
             // level pack, level, difficulty handlers, characteristics
             TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_beatUi.LevelCollectionTableView, "_tableView");
 
+            // update stats
             _beatUi.LevelCollectionViewController.didSelectLevelEvent -= OnDidSelectLevelEvent;
             _beatUi.LevelCollectionViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
 
@@ -498,15 +483,14 @@ namespace SongBrowser.UI
             _beatUi.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDidChangeDifficultyEvent;
             _beatUi.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyEvent;
 
+            // update our view of the game state
             _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent -= _levelFilteringNavController_didSelectPackEvent;
             _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += _levelFilteringNavController_didSelectPackEvent;
 
             _beatUi.LevelSelectionNavigationController.didSelectLevelPackEvent -= _levelSelectionNavigationController_didSelectPackEvent;
             _beatUi.LevelSelectionNavigationController.didSelectLevelPackEvent += _levelSelectionNavigationController_didSelectPackEvent;
 
-            //_beatUi.LevelPackViewController.didSelectPackEvent -= _levelPackViewController_didSelectPackEvent;
-            //_beatUi.LevelPackViewController.didSelectPackEvent += _levelPackViewController_didSelectPackEvent;
-
+            // unknown
             _beatUi.BeatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent -= OnDidSelectBeatmapCharacteristic;
             _beatUi.BeatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent += OnDidSelectBeatmapCharacteristic;
 
@@ -924,7 +908,6 @@ namespace SongBrowser.UI
             _deleteButton.interactable = (level.levelID.Length >= 32);
 
             RefreshQuickScrollButtons();
-            RefreshAddFavoriteButton(level.levelID);
         }
 
         /// <summary>
@@ -1099,38 +1082,7 @@ namespace SongBrowser.UI
             _beatUi.SelectAndScrollToLevel(levels[newRow].levelID);
             RefreshQuickScrollButtons();
         }
-
-        /// <summary>
-        /// Add/Remove song from favorites depending on if it already exists.
-        /// </summary>
-        private void ToggleSongInPlaylist()
-        {
-            IBeatmapLevel songInfo = _beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level;
-            if (_model.CurrentEditingPlaylist != null)
-            {
-                if (_model.CurrentEditingPlaylistLevelIds.Contains(songInfo.levelID))
-                {
-                    Logger.Info("Remove {0} from editing playlist", songInfo.songName);
-                    _model.RemoveSongFromEditingPlaylist(songInfo);
-
-                    if (_model.Settings.filterMode == SongFilterMode.Favorites)
-                    {
-                        ProcessSongList();
-                        this.RefreshSongList();
-                    }
-                }
-                else
-                {
-                    Logger.Info("Add {0} to editing playlist", songInfo.songName);
-                    _model.AddSongToEditingPlaylist(songInfo);
-                }
-            }
-
-            RefreshAddFavoriteButton(songInfo.levelID);
-
-            _model.Settings.Save();
-        }
-
+        
         /// <summary>
         /// Update GUI elements that show score saber data.
         /// </summary>
@@ -1257,7 +1209,6 @@ namespace SongBrowser.UI
 
             RefreshOuterUIState(visible == true ? UIState.Main : UIState.Disabled);
 
-            _addFavoriteButton.gameObject.SetActive(visible);
             _deleteButton.gameObject.SetActive(visible);
 
             _pageUpFastButton.gameObject.SetActive(visible);
@@ -1325,31 +1276,6 @@ namespace SongBrowser.UI
                 // Custom SongFilterMod implies that another mod has modified the text of this button (do not overwrite)
                 _filterByDisplay.SetButtonText(_model.Settings.filterMode.ToString());
             }
-        }
-
-        /// <summary>
-        /// Helper to quickly refresh add to favorites button
-        /// </summary>
-        /// <param name="levelId"></param>
-        private void RefreshAddFavoriteButton(String levelId)
-        {
-            if (levelId == null)
-            {
-                _currentAddFavoriteButtonSprite = null;
-            }
-            else
-            {
-                if (_model.CurrentEditingPlaylistLevelIds.Contains(levelId))
-                {
-                    _currentAddFavoriteButtonSprite = Base64Sprites.RemoveFromFavoritesIcon;
-                }
-                else
-                {
-                    _currentAddFavoriteButtonSprite = Base64Sprites.AddToFavoritesIcon;
-                }
-            }
-
-            _addFavoriteButton.SetButtonIcon(_currentAddFavoriteButtonSprite);
         }
 
         /// <summary>

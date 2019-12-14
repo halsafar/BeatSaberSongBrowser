@@ -91,24 +91,12 @@ namespace SongBrowser
         }    
 
         /// <summary>
-        /// Current editing playlist
-        /// </summary>
-        public Playlist CurrentEditingPlaylist;
-
-        /// <summary>
-        /// HashSet of LevelIds for quick lookup
-        /// </summary>
-        public HashSet<String> CurrentEditingPlaylistLevelIds;
-
-        /// <summary>
         /// Constructor.
         /// </summary>
         public SongBrowserModel()
         {
             _cachedLastWriteTimes = new Dictionary<String, double>();
             _levelIdToPlayCount = new Dictionary<string, int>();
-
-            CurrentEditingPlaylistLevelIds = new HashSet<string>();
 
             _difficultyWeights = new Dictionary<BeatmapDifficulty, int>
             {
@@ -185,59 +173,6 @@ namespace SongBrowser
             // Update song Infos, directory tree, and sort
             this.UpdatePlayCounts();
 
-            // Check if we need to upgrade settings file favorites
-            try
-            {
-                this.Settings.ConvertFavoritesToPlaylist(SongCore.Loader.CustomLevels);
-            }
-            catch (Exception e)
-            {
-                Logger.Exception("FAILED TO CONVERT FAVORITES TO PLAYLIST!", e);
-            }
-
-            // load the current editing playlist or make one
-            if (CurrentEditingPlaylist == null && !String.IsNullOrEmpty(this.Settings.currentEditingPlaylistFile))
-            {
-                Logger.Debug("Loading playlist for editing: {0}", this.Settings.currentEditingPlaylistFile);
-                CurrentEditingPlaylist = Playlist.LoadPlaylist(this.Settings.currentEditingPlaylistFile);
-                PlaylistsCollection.MatchSongsForPlaylist(CurrentEditingPlaylist, true);
-            }
-
-            if (CurrentEditingPlaylist == null)
-            {
-                Logger.Debug("Current editing playlist does not exit, create...");
-                CurrentEditingPlaylist = new Playlist
-                {
-                    playlistTitle = "Song Browser Favorites",
-                    playlistAuthor = "SongBrowser",
-                    fileLoc = this.Settings.currentEditingPlaylistFile,
-                    image = Base64Sprites.SpriteToBase64(Base64Sprites.BeastSaberLogo),
-                    songs = new List<PlaylistSong>(),
-                };
-            }
-
-            CurrentEditingPlaylistLevelIds = new HashSet<string>();
-            foreach (PlaylistSong ps in CurrentEditingPlaylist.songs)
-            {
-                // Sometimes we cannot match a song
-                string levelId = null;
-                if (ps.level != null)
-                {
-                    levelId = ps.level.levelID;
-                }
-                else if (!String.IsNullOrEmpty(ps.levelId))
-                {
-                    levelId = ps.levelId;
-                }
-                else
-                {
-                    //Logger.Debug("MISSING SONG {0}", ps.songName);
-                    continue;
-                }
-
-                CurrentEditingPlaylistLevelIds.Add(levelId);
-            }
-
             // Signal complete
             if (SongCore.Loader.CustomLevels.Count > 0)
             {
@@ -305,45 +240,6 @@ namespace SongBrowser
                 _levelIdToPlayCount[levelData.levelID] += levelData.playCount;
             }
         }
-        
-        /// <summary>
-        /// Add Song to Editing Playlist
-        /// </summary>
-        /// <param name="songInfo"></param>
-        public void AddSongToEditingPlaylist(IBeatmapLevel songInfo)
-        {
-            if (this.CurrentEditingPlaylist == null)
-            {
-                return;
-            }
-
-            this.CurrentEditingPlaylist.songs.Add(new PlaylistSong()
-            {
-                songName = songInfo.songName,
-                levelId = songInfo.levelID,
-                hash = CustomHelpers.GetSongHash(songInfo.levelID),
-            });
-
-            this.CurrentEditingPlaylistLevelIds.Add(songInfo.levelID);
-            this.CurrentEditingPlaylist.SavePlaylist();
-        }
-
-        /// <summary>
-        /// Remove Song from editing playlist
-        /// </summary>
-        /// <param name="levelId"></param>
-        public void RemoveSongFromEditingPlaylist(IBeatmapLevel songInfo)
-        {
-            if (this.CurrentEditingPlaylist == null)
-            {
-                return;
-            }
-
-            this.CurrentEditingPlaylist.songs.RemoveAll(x => x.level != null && x.level.levelID == songInfo.levelID);
-            this.CurrentEditingPlaylistLevelIds.RemoveWhere(x => x == songInfo.levelID);
-
-            this.CurrentEditingPlaylist.SavePlaylist();
-        }
 
         /// <summary>
         /// Sort the song list based on the settings.
@@ -382,7 +278,7 @@ namespace SongBrowser
             switch (_settings.filterMode)
             {
                 case SongFilterMode.Favorites:
-                    filteredSongs = FilterFavorites();
+                    filteredSongs = FilterFavorites(unsortedSongs);
                     break;
                 case SongFilterMode.Search:
                     filteredSongs = FilterSearch(unsortedSongs);
@@ -488,17 +384,14 @@ namespace SongBrowser
         }
 
         /// <summary>
-        /// For now the editing playlist will be considered the favorites playlist.
-        /// Users can edit the settings file themselves.
+        /// Filter songs based on playerdata favorites.
         /// </summary>
-        private List<IPreviewBeatmapLevel> FilterFavorites()
+        private List<IPreviewBeatmapLevel> FilterFavorites(List<IPreviewBeatmapLevel> levels)
         {
             Logger.Info("Filtering song list as favorites playlist...");
-            if (this.CurrentEditingPlaylist != null)
-            {
-                this.CurrentPlaylist = this.CurrentEditingPlaylist;
-            }
-            return this.FilterPlaylist();
+
+            PlayerDataModelSO playerData = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().FirstOrDefault();
+            return levels.Where(x => playerData.playerData.favoritesLevelIds.Contains(x.levelID)).ToList();
         }
 
         /// <summary>

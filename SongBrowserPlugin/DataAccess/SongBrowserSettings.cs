@@ -2,12 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using SongBrowser.Logging;
+using UnityEngine;
 using Logger = SongBrowser.Logging.Logger;
-using SongBrowser.Internals;
 
 namespace SongBrowser.DataAccess
 {
@@ -83,6 +83,7 @@ namespace SongBrowser.DataAccess
         public static readonly Encoding Utf8Encoding = Encoding.UTF8;
         public static readonly XmlSerializer SettingsSerializer = new XmlSerializer(typeof(SongBrowserSettings));
         public static readonly String DefaultConvertedFavoritesPlaylistName = "SongBrowserPluginFavorites.json";
+        public static readonly String MigratedFavoritesPlaylistName = "SongBrowserPluginFavorites_Migrated.json";
 
         public SongSortMode sortMode = default(SongSortMode);
         public SongFilterMode filterMode = default(SongFilterMode);
@@ -202,38 +203,16 @@ namespace SongBrowser.DataAccess
                 Directory.CreateDirectory(playlistDirPath);
             }
 
-            // Load Downloader favorites but only once, we'll convert them once, empty the song_browser_setting.xml favorites and never load it again.
-            String playlistPath = Path.Combine(Environment.CurrentDirectory, "Playlists", DefaultConvertedFavoritesPlaylistName);
-            if (!File.Exists(playlistPath))
-            {
-                if (File.Exists(SongBrowserSettings.DownloaderFavoritesFilePath()))
-                {
-                    String[] downloaderFavorites = File.ReadAllLines(SongBrowserSettings.DownloaderFavoritesFilePath());
-                    retVal.Favorites.UnionWith(downloaderFavorites);
-                }
-
-                Playlist p = new Playlist
-                {
-                    playlistTitle = "Song Browser Favorites",
-                    playlistAuthor = "SongBrowser",
-                    fileLoc = "",
-                    image = Base64Sprites.SpriteToBase64(Base64Sprites.BeastSaberLogo),
-                    songs = new List<PlaylistSong>(),
-                };
-                p.CreateNew(playlistPath);
-            }
-
-            // If we do not have an editing playlist or the current one is missing, reset to default.
-            if (String.IsNullOrEmpty(retVal.currentEditingPlaylistFile) || !File.Exists(retVal.currentEditingPlaylistFile))
-            {
-                retVal.currentEditingPlaylistFile = playlistPath;
-            }
-
+            MigrateFavorites(retVal);
             ApplyFixes(retVal);
-            
+
             return retVal;
         }
 
+        /// <summary>
+        /// Fix potential breakages in settings.
+        /// </summary>
+        /// <param name="settings"></param>
         private static void ApplyFixes(SongBrowserSettings settings)
         {
             if (String.Equals(settings.currentLevelPackId, "CustomMaps"))
@@ -249,101 +228,37 @@ namespace SongBrowser.DataAccess
         }
 
         /// <summary>
-        /// Favorites used to exist as part of the song_browser_settings.xml
-        /// This makes little sense now.  This is the upgrade path.
-        /// Convert all existing favorites to the best of our effort into a playlist.
+        /// Migrate old favorites into new system.
         /// </summary>
-        /// <param name="levelIdToCustomLevel"></param>
-        /// <param name="levelIdToSongVersion"></param>
-        public void ConvertFavoritesToPlaylist(Dictionary<String, CustomPreviewBeatmapLevel> customSongsMap)
+        /// <param name="settings"></param>
+        public static void MigrateFavorites(SongBrowserSettings settings)
         {
-            // map songs in case we are converting a huge list
-            Dictionary<String, CustomPreviewBeatmapLevel> levelIdToCustomLevel = new Dictionary<string, CustomPreviewBeatmapLevel>(StringComparer.OrdinalIgnoreCase);
-            foreach (var kp in customSongsMap)
-            {
-                if (levelIdToCustomLevel.ContainsKey(kp.Value.levelID))
-                {
-                    continue;
-                }
-                levelIdToCustomLevel.Add(kp.Value.levelID, kp.Value);
-            }
-
-            // Check if we have favorites to convert to the playlist
-            if (this.Favorites.Count <= 0)
+            // Always the favorites, never used this feature    
+            String oldFavoritesPath = Path.Combine(Environment.CurrentDirectory, "Playlists", DefaultConvertedFavoritesPlaylistName);
+            if (!File.Exists(oldFavoritesPath))
             {
                 return;
             }
 
-            // check if the playlist exists
-            String playlistPath = Path.Combine(Environment.CurrentDirectory, "Playlists", DefaultConvertedFavoritesPlaylistName);
-            bool playlistExists = false;
-            if (File.Exists(playlistPath))
+            Logger.Info("Migrating [{0}] into the In-Game favorites.");
+
+            Playlist oldFavorites = Playlist.LoadPlaylist(oldFavoritesPath);
+            PlaylistsCollection.MatchSongsForPlaylist(oldFavorites);
+            PlayerDataModelSO playerData = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().FirstOrDefault();
+            foreach (PlaylistSong song in oldFavorites.songs)
             {
-                playlistExists = true;
+                string levelID = CustomLevelLoader.kCustomLevelPrefixId + song.hash;
+                Logger.Info("Migrating song into ingame favorites: {0}", levelID);
+                playerData.playerData.favoritesLevelIds.Add(levelID);
             }
 
-            // abort here if playlist already exits.
-            if (playlistExists)
-            {
-                Logger.Info("Not converting song_browser_setting.xml favorites because {0} already exists...", playlistPath);
-                return;
-            }
+            String migratedPlaylistPath = Path.Combine(Environment.CurrentDirectory, "Playlists", MigratedFavoritesPlaylistName);
+            Logger.Info("Moving [{0}->{1}] into the In-Game favorites.", oldFavoritesPath, migratedPlaylistPath);
+            File.Move(oldFavoritesPath, migratedPlaylistPath);
 
-            Logger.Info("Converting {0} Favorites in song_browser_settings.xml to {1}...", this.Favorites.Count, playlistPath);
+            settings.currentEditingPlaylistFile = migratedPlaylistPath;
 
-            // written like this in case we ever want to support adding to this playlist
-            Playlist p = null;
-            if (playlistExists)
-            {
-                p = Playlist.LoadPlaylist(playlistPath);
-            }
-            else
-            {
-                p = new Playlist
-                {
-                    playlistTitle = "Song Browser Favorites",
-                    playlistAuthor = "SongBrowser",
-                    fileLoc = "",
-                    image = Base64Sprites.SpriteToBase64(Base64Sprites.BeastSaberLogo),
-                    songs = new List<PlaylistSong>(),
-                };
-            }
-
-            List<String> successfullyRemoved = new List<string>();
-            this.Favorites.RemoveWhere(levelId =>
-            {
-                PlaylistSong playlistSong = new PlaylistSong
-                {
-                    levelId = levelId
-                };
-
-                if (levelIdToCustomLevel.ContainsKey(levelId))
-                {
-                    playlistSong.songName = levelIdToCustomLevel[levelId].songName;
-                    playlistSong.levelId = levelId;
-                    playlistSong.hash = CustomHelpers.GetSongHash(levelId);
-                }
-                else
-                {
-                    // No easy way to look up original songs... They will still work but have wrong song name in playlist.  
-                    playlistSong.levelId = levelId;
-                    playlistSong.hash = CustomHelpers.GetSongHash(levelId);
-                    playlistSong.key = "";
-                }
-
-                p.songs.Add(playlistSong);
-
-                return true;
-            });
-
-            p.SavePlaylist(playlistPath);
-
-            if (String.IsNullOrEmpty(this.currentEditingPlaylistFile))
-            {
-                this.currentEditingPlaylistFile = playlistPath;
-            }
-
-            this.Save();
+            playerData.Save();
         }
 
         /// <summary>
