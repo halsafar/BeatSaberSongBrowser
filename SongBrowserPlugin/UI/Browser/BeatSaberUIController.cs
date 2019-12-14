@@ -114,28 +114,6 @@ namespace SongBrowser.DataAccess
             BeatmapLevelsModel = Resources.FindObjectsOfTypeAll<BeatmapLevelsModel>().First();
         }
 
-
-        /// <summary>
-        /// Acquire the level pack collection.
-        /// </summary>
-        /// <returns></returns>
-        public IAnnotatedBeatmapLevelCollection[] GetCurrentLevelPackCollection()
-        {
-            if (LevelFilteringNavigationController == null)
-            {
-                return null;
-            }
-
-            TabBarViewController tabBarViewController = LevelFilteringNavigationController.GetPrivateField<TabBarViewController>("_tabBarViewController");
-            object[] tabBarDatas = LevelFilteringNavigationController.GetPrivateField<object[]>("_tabBarDatas");
-
-            object tabData = tabBarDatas[tabBarViewController.selectedCellNumber];
-
-            IAnnotatedBeatmapLevelCollection[] levelPackCollection = tabData.GetPrivateField< IAnnotatedBeatmapLevelCollection[]>("annotatedBeatmapLevelCollections");
-
-            return levelPackCollection;
-        }
-
         /// <summary>
         /// Get the currently selected level pack within the LevelPackLevelViewController hierarchy.
         /// </summary>
@@ -170,7 +148,6 @@ namespace SongBrowser.DataAccess
             return pack;
         }
 
-
         /// <summary>
         /// Get Current levels from current level pack.
         /// </summary>
@@ -185,21 +162,6 @@ namespace SongBrowser.DataAccess
             }
             
             return levelPack.beatmapLevelCollection.beatmapLevels;
-        }
-
-        /// <summary>
-        /// Get level count helper.
-        /// </summary>
-        /// <returns></returns>
-        public int GetLevelPackLevelCount()
-        {
-            var levels = GetCurrentLevelPackLevels();
-            if (levels == null)
-            {
-                return 0;
-            }
-
-            return levels.Length;
         }
 
         /// <summary>
@@ -274,7 +236,7 @@ namespace SongBrowser.DataAccess
             {
                 // this might look like an off by one error but the _level list we keep is missing the header entry BeatSaber.
                 // so the last row is +1 the max index, the count.
-                int maxCount = GetLevelPackLevelCount();
+                int maxCount = levels.Count;
 
                 int selectedRow = LevelCollectionTableView.GetPrivateField<int>("_selectedRow");
 

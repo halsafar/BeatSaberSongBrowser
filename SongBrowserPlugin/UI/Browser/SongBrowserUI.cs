@@ -1056,7 +1056,7 @@ namespace SongBrowser.UI
                 return;
             }
 
-            int totalSize = _beatUi.GetLevelPackLevelCount();
+            int totalSize = levels.Count();
             int segmentSize = (int)(totalSize * segmentPercent);
 
             // Jump at least one scree size.
@@ -1397,8 +1397,7 @@ namespace SongBrowser.UI
                     if (currentSelected == null)
                     {
                         Logger.Debug("No level pack selected, acquiring the first available...");
-                        var levelPackCollection = _beatUi.GetCurrentLevelPackCollection();
-                        currentSelected = levelPackCollection[0] as IBeatmapLevelPack;
+                        currentSelected = _beatUi.BeatmapLevelsModel.allLoadedBeatmapLevelPackCollection.beatmapLevelPacks[0];
                     }
                 }
                 else if (currentSelected == null || (currentSelected.packID != _model.Settings.currentLevelPackId))
