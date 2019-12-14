@@ -498,11 +498,11 @@ namespace SongBrowser.UI
             _beatUi.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDidChangeDifficultyEvent;
             _beatUi.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyEvent;
 
-            //_beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent -= _levelPackViewController_didSelectPackEvent;
-            //_beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += _levelPackViewController_didSelectPackEvent;
+            _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent -= _levelFilteringNavController_didSelectPackEvent;
+            _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += _levelFilteringNavController_didSelectPackEvent;
 
-            _beatUi.LevelSelectionNavigationController.didSelectLevelPackEvent -= _levelPackViewController_didSelectPackEvent;
-            _beatUi.LevelSelectionNavigationController.didSelectLevelPackEvent += _levelPackViewController_didSelectPackEvent;
+            _beatUi.LevelSelectionNavigationController.didSelectLevelPackEvent -= _levelSelectionNavigationController_didSelectPackEvent;
+            _beatUi.LevelSelectionNavigationController.didSelectLevelPackEvent += _levelSelectionNavigationController_didSelectPackEvent;
 
             //_beatUi.LevelPackViewController.didSelectPackEvent -= _levelPackViewController_didSelectPackEvent;
             //_beatUi.LevelPackViewController.didSelectPackEvent += _levelPackViewController_didSelectPackEvent;
@@ -629,16 +629,49 @@ namespace SongBrowser.UI
         /// </summary>
         /// <param name="arg1"></param>
         /// <param name="arg2"></param>
-        private void _levelPackViewController_didSelectPackEvent(LevelSelectionNavigationController controller, IBeatmapLevelPack levelPack)
-        //private void _levelPackViewController_didSelectPackEvent(LevelFilteringNavigationController controller, IAnnotatedBeatmapLevelCollection levelCollection, string arg1, BeatmapCharacteristicSO beatmapCharacteristicSO)
+        /// <param name="arg3"></param>
+        /// <param name="arg4"></param>
+        private void _levelFilteringNavController_didSelectPackEvent(LevelFilteringNavigationController arg1, IAnnotatedBeatmapLevelCollection arg2, string arg3, BeatmapCharacteristicSO arg4)
         {
-            // TODO 1.0.6 - BROKEN
-            Logger.Trace("_levelPackViewController_didSelectPackEvent(levelPack={0})", levelPack);
+            Logger.Trace("_levelFilteringNavController_didSelectPackEvent(levelPack={0})", arg2);
 
+            // Skip the first time - Effectively ignores BeatSaber forcing OST1 on us on first load.
+            if (_lastLevelPack == null)
+            {
+                return;
+            }
+
+            IBeatmapLevelPack levelPack = arg2 as IBeatmapLevelPack;
+            SelectPack(levelPack);
+        }
+
+        /// <summary>
+        /// Dummy method for now.
+        /// </summary>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
+        private void _levelSelectionNavigationController_didSelectPackEvent(LevelSelectionNavigationController controller, IBeatmapLevelPack levelPack)
+        {
+            Logger.Trace("_levelSelectionNavigationController_didSelectPackEvent(levelPack={0})", levelPack);
+            //SelectPack(levelPack);
+        }
+
+        /// <summary>
+        /// Logic for selecting a level pack.
+        /// </summary>
+        /// <param name="levelPack"></param>
+        public void SelectPack(IBeatmapLevelPack levelPack)
+        {
             try
             {
+                if (levelPack == null)
+                {
+                    Logger.Debug("Invalid level pack, seems to be playlists mode...");
+                    return;
+                }
+
                 // store the real level pack
-                if (levelPack.packID != SongBrowserModel.FilteredSongsPackId)
+                if (levelPack.packID != SongBrowserModel.FilteredSongsPackId && _lastLevelPack != null)
                 {
                     Logger.Debug("Recording levelPack: {0}", levelPack);
                     _lastLevelPack = levelPack;
@@ -1446,12 +1479,14 @@ namespace SongBrowser.UI
                 {
                     Logger.Debug("Automatically selecting level pack: {0}", _model.Settings.currentLevelPackId);
 
-                    _beatUi.LevelSelectionNavigationController.didSelectLevelPackEvent -= _levelPackViewController_didSelectPackEvent;
+                    _beatUi.LevelSelectionNavigationController.didSelectLevelPackEvent -= _levelSelectionNavigationController_didSelectPackEvent;
+                    _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent -= _levelFilteringNavController_didSelectPackEvent;
 
                     _lastLevelPack = _beatUi.GetLevelPackByPackId(_model.Settings.currentLevelPackId);
                     _beatUi.SelectLevelPack(_model.Settings.currentLevelPackId);
 
-                    _beatUi.LevelSelectionNavigationController.didSelectLevelPackEvent += _levelPackViewController_didSelectPackEvent;
+                    _beatUi.LevelSelectionNavigationController.didSelectLevelPackEvent += _levelSelectionNavigationController_didSelectPackEvent;
+                    _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += _levelFilteringNavController_didSelectPackEvent;
 
                     //ProcessSongList();
 

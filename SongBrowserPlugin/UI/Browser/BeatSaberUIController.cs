@@ -43,6 +43,11 @@ namespace SongBrowser.DataAccess
 
         public SimpleDialogPromptViewController SimpleDialogPromptViewControllerPrefab;
 
+        /// <summary>
+        /// Internal BeatSaber song model
+        /// </summary>
+        public BeatmapLevelsModel BeatmapLevelsModel;
+
         // Plugin Compat checks
         private bool _detectedTwitchPluginQueue = false;
         private bool _checkedForTwitchPlugin = false;
@@ -105,6 +110,8 @@ namespace SongBrowser.DataAccess
             PracticeButton = PlayButtons.GetComponentsInChildren<Button>().First(x => x.name == "PracticeButton");
 
             SimpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
+
+            BeatmapLevelsModel = Resources.FindObjectsOfTypeAll<BeatmapLevelsModel>().First();
         }
 
 
@@ -152,52 +159,16 @@ namespace SongBrowser.DataAccess
         public IBeatmapLevelPack GetLevelPackByPackId(String levelPackId)
         {
             IBeatmapLevelPack pack = null;
-            TabBarViewController tabBarViewController = LevelFilteringNavigationController.GetPrivateField<TabBarViewController>("_tabBarViewController");
-            object[] tabBarDatas = LevelFilteringNavigationController.GetPrivateField<object[]>("_tabBarDatas");
-            foreach (object o in tabBarDatas)
+            foreach (IBeatmapLevelPack o in BeatmapLevelsModel.allLoadedBeatmapLevelPackCollection.beatmapLevelPacks)
             {
-                IAnnotatedBeatmapLevelCollection[] levelPackCollection = CustomHelpers.GetField(o, "annotatedBeatmapLevelCollections") as IAnnotatedBeatmapLevelCollection[];
-                //o.GetPrivateField<IAnnotatedBeatmapLevelCollection[]>("annotatedBeatmapLevelCollections");
-                if (levelPackCollection == null)
+                if (String.Equals(o.packID, levelPackId))
                 {
-                    continue;
-                }
-
-                foreach (IAnnotatedBeatmapLevelCollection tmp in levelPackCollection)
-                {
-                    IBeatmapLevelPack tmpPack = tmp as IBeatmapLevelPack;
-                    if (tmpPack.packID == levelPackId)
-                    {
-                        pack = tmpPack;
-                        break;
-                    }
-                }
-
-                if (pack != null)
-                {
-                    break;
+                    pack = o;
                 }
             }
 
             return pack;
         }
-
-        /// <summary>
-        /// Get level pack index by level pack id.
-        /// </summary>
-        /// <param name="levelPackId"></param>
-        /// <returns></returns>
-        /*public int GetLevelPackIndexByPackId(String levelPackId)
-        {
-            IBeatmapLevelPackCollection levelPackCollection = null;//GetLevelPackCollection();
-            if (levelPackCollection == null)
-            {
-                return -1;
-            }
-
-            int index = levelPackCollection.beatmapLevelPacks.ToList().FindIndex(x => x.packID == levelPackId);
-            return index;
-        }*/
 
 
         /// <summary>
@@ -250,20 +221,11 @@ namespace SongBrowser.DataAccess
                     return;
                 }
 
-                Logger.Info("Selecting level pack index: {0}", pack.packName);
+                Logger.Info("Selecting level pack: {0}", pack.packID);
+
                 LevelFilteringNavigationController.SelectBeatmapLevelPackOrPlayList(pack, null);
                 LevelFilteringNavigationController.TabBarDidSwitch();
-                /*var tableView = LevelPacksTableView.GetPrivateField<TableView>("_tableView");
-
-                // TODO 1.6.0 - REVIEW
-                //LevelPacksTableView.SelectCellWithIdx(index);
-                tableView.SelectCellWithIdx(index, true);
-                tableView.ScrollToCellWithIdx(0, TableViewScroller.ScrollPositionType.Beginning, false);
-                for (int i = 0; i < index; i++)
-                {
-                    tableView.GetPrivateField<TableViewScroller>("_scroller").PageScrollDown();
-                }*/
-
+               
                 Logger.Debug("Done selecting level pack!");
             }
             catch (Exception e)
