@@ -18,7 +18,7 @@ namespace SongBrowser
 {
     public class SongBrowserModel
     {
-        public const string FilteredSongsPackId = "SongBrowser_FilteredSongPack";
+        public static readonly string FilteredSongsPackId = CustomLevelLoader.kCustomLevelPackPrefixId + "SongBrowser_FilteredSongPack";
 
         private readonly String CUSTOM_SONGS_DIR = Path.Combine("Beat Saber_Data", "CustomLevels");
 
