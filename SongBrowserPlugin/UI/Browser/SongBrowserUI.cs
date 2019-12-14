@@ -423,15 +423,18 @@ namespace SongBrowser.UI
             // inject our components
             _ppStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
             UIBuilder.SetStatButtonIcon(_ppStatButton, Base64Sprites.GraphIcon);
-            BeatSaberUI.SetHoverHint(_ppStatButton, "songBrowser_ppValue", "PP Value");
+            BeatSaberUI.DestroyHoverHint(_ppStatButton);
+            //BeatSaberUI.SetHoverHint(_ppStatButton, "songBrowser_ppValue", "PP Value");
 
             _starStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
             UIBuilder.SetStatButtonIcon(_starStatButton, Base64Sprites.StarFullIcon);
-            BeatSaberUI.SetHoverHint(_starStatButton, "songBrowser_starValue", "Star Difficulty Rating");
+            BeatSaberUI.DestroyHoverHint(_starStatButton);
+            //BeatSaberUI.SetHoverHint(_starStatButton, "songBrowser_starValue", "Star Difficulty Rating");
 
             _njsStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
             UIBuilder.SetStatButtonIcon(_njsStatButton, Base64Sprites.SpeedIcon);
-            BeatSaberUI.SetHoverHint(_njsStatButton, "songBrowser_njsValue", "Note Jump Speed");
+            BeatSaberUI.DestroyHoverHint(_njsStatButton);
+            //BeatSaberUI.SetHoverHint(_njsStatButton, "songBrowser_njsValue", "Note Jump Speed");
 
             // shrink title
             var titleText = _beatUi.LevelDetailViewController.GetComponentsInChildren<TextMeshProUGUI>(true).First(x => x.name == "SongNameText");            
@@ -622,6 +625,7 @@ namespace SongBrowser.UI
             IBeatmapLevelPack levelPack = arg2 as IBeatmapLevelPack;
             if (levelPack == null)
             {
+                Logger.Info("Hiding SongBrowser, Playlist mode currently unsupported...");
                 Hide();
                 return;
             }
