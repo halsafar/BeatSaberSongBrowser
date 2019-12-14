@@ -66,30 +66,6 @@ namespace SongBrowser
             }
         }
 
-        private Playlist _currentPlaylist;
-
-        /// <summary>
-        /// Manage the current playlist if one exists.
-        /// </summary>
-        public Playlist CurrentPlaylist
-        {
-            get
-            {
-                if (_currentPlaylist == null)
-                {
-                    _currentPlaylist = Playlist.LoadPlaylist(this._settings.currentPlaylistFile);
-                }
-
-                return _currentPlaylist;
-            }
-
-            set
-            {
-                _settings.currentPlaylistFile = value.fileLoc;
-                _currentPlaylist = value;
-            }
-        }    
-
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -259,17 +235,8 @@ namespace SongBrowser
                 return;
             }
             
-            // fetch unsorted songs.
-            // playlists always use customsongs
-            if (this._settings.filterMode == SongFilterMode.Playlist && this.CurrentPlaylist != null)
-            {
-                unsortedSongs = null;
-            }
-            else
-            {
-                Logger.Debug("Using songs from level pack: {0}", selectedLevelPack.packID);
-                unsortedSongs = selectedLevelPack.beatmapLevelCollection.beatmapLevels.ToList();
-            }
+            Logger.Debug("Using songs from level pack: {0}", selectedLevelPack.packID);
+            unsortedSongs = selectedLevelPack.beatmapLevelCollection.beatmapLevels.ToList();            
 
             // filter
             Logger.Debug($"Starting filtering songs by {_settings.filterMode}");
@@ -282,9 +249,6 @@ namespace SongBrowser
                     break;
                 case SongFilterMode.Search:
                     filteredSongs = FilterSearch(unsortedSongs);
-                    break;
-                case SongFilterMode.Playlist:
-                    filteredSongs = FilterPlaylist();
                     break;
                 case SongFilterMode.Ranked:
                     filteredSongs = FilterRanked(unsortedSongs, true, false);
@@ -430,52 +394,6 @@ namespace SongBrowser
             }
 
             return levels;
-        }
-
-        /// <summary>
-        /// Filter for a playlist (favorites uses this).
-        /// </summary>
-        /// <param name="pack"></param>
-        /// <returns></returns>
-        private List<IPreviewBeatmapLevel> FilterPlaylist()
-        {
-            // bail if no playlist, usually means the settings stored one the user then moved.
-            if (this.CurrentPlaylist == null)
-            {
-                Logger.Error("Trying to load a null playlist...");
-                this.Settings.filterMode = SongFilterMode.None;
-                return null;
-            }
-
-            // Get song keys
-            PlaylistsCollection.MatchSongsForPlaylist(this.CurrentPlaylist, true);
-
-            Logger.Debug("Filtering songs for playlist: {0}", this.CurrentPlaylist.playlistTitle);
-
-            Dictionary<String, CustomPreviewBeatmapLevel> levelDict = new Dictionary<string, CustomPreviewBeatmapLevel>();
-            foreach (var level in SongCore.Loader.CustomLevels)
-            {
-                if (!levelDict.ContainsKey(level.Value.levelID))
-                {
-                    levelDict.Add(level.Value.levelID, level.Value);
-                }               
-            }
-
-            List<IPreviewBeatmapLevel> songList = new List<IPreviewBeatmapLevel>();
-            foreach (PlaylistSong ps in this.CurrentPlaylist.songs)
-            {
-                if (ps.level != null && levelDict.ContainsKey(ps.level.levelID))
-                {
-                    songList.Add(levelDict[ps.level.levelID]);
-                }
-                else
-                {
-                    Logger.Debug("Could not find song in playlist: {0}", ps.songName);
-                }
-            }
-
-            Logger.Debug("Playlist filtered song count: {0}", songList.Count);
-            return songList;
         }
 
         /// <summary>

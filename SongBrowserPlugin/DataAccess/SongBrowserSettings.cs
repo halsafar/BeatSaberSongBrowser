@@ -94,8 +94,8 @@ namespace SongBrowser.DataAccess
 
         public String currentLevelId = default(String);
         public String currentDirectory = default(String);
-        public String currentPlaylistFile = default(String);
-        public String currentEditingPlaylistFile = default(String);
+        //public String currentPlaylistFile = default(String);
+        //public String currentEditingPlaylistFile = default(String);
         public String currentLevelPackId = default(String);
 
         public bool randomInstantQueue = false;
@@ -240,10 +240,9 @@ namespace SongBrowser.DataAccess
                 return;
             }
 
-            Logger.Info("Migrating [{0}] into the In-Game favorites.");
+            Logger.Info("Migrating [{0}] into the In-Game favorites.", oldFavoritesPath);
 
             Playlist oldFavorites = Playlist.LoadPlaylist(oldFavoritesPath);
-            PlaylistsCollection.MatchSongsForPlaylist(oldFavorites);
             PlayerDataModelSO playerData = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().FirstOrDefault();
             foreach (PlaylistSong song in oldFavorites.songs)
             {
@@ -255,8 +254,6 @@ namespace SongBrowser.DataAccess
             String migratedPlaylistPath = Path.Combine(Environment.CurrentDirectory, "Playlists", MigratedFavoritesPlaylistName);
             Logger.Info("Moving [{0}->{1}] into the In-Game favorites.", oldFavoritesPath, migratedPlaylistPath);
             File.Move(oldFavoritesPath, migratedPlaylistPath);
-
-            settings.currentEditingPlaylistFile = migratedPlaylistPath;
 
             playerData.Save();
         }

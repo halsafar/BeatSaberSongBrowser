@@ -57,13 +57,9 @@ namespace SongBrowser.UI
 
         private SearchKeyboardViewController _searchViewController;
 
-        private PlaylistFlowCoordinator _playListFlowCoordinator;
-
         private RectTransform _ppStatButton;
         private RectTransform _starStatButton;
         private RectTransform _njsStatButton;
-        
-        private Sprite _currentAddFavoriteButtonSprite;
 
         private IBeatmapLevelPack _lastLevelPack;
 
@@ -124,12 +120,6 @@ namespace SongBrowser.UI
 
             try
             {                
-                if (_playListFlowCoordinator == null)
-                {
-                    _playListFlowCoordinator = UIBuilder.CreateFlowCoordinator<PlaylistFlowCoordinator>("PlaylistFlowCoordinator");
-                    _playListFlowCoordinator.didFinishEvent += HandleDidSelectPlaylist;
-                }
-
                 // delete dialog
                 this._deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(_beatUi.SimpleDialogPromptViewControllerPrefab);
                 this._deleteDialog.name = "DeleteDialogPromptViewController";
@@ -777,9 +767,6 @@ namespace SongBrowser.UI
 
             switch (mode)
             {
-                case SongFilterMode.Playlist:
-                    OnPlaylistButtonClickEvent();
-                    break;
                 case SongFilterMode.Search:
                     OnSearchButtonClickEvent();
                     break;
@@ -800,18 +787,6 @@ namespace SongBrowser.UI
             Logger.Debug("Filter button - {0} - pressed.", SongFilterMode.Search.ToString());
 
             this.ShowSearchKeyboard();
-        }
-
-        /// <summary>
-        /// Display the playlist selector.
-        /// </summary>
-        /// <param name="sortMode"></param>
-        private void OnPlaylistButtonClickEvent()
-        {
-            Logger.Debug("Filter button - {0} - pressed.", SongFilterMode.Playlist.ToString());
-            _model.LastSelectedLevelId = null;
-            _playListFlowCoordinator.parentFlowCoordinator = _beatUi.LevelSelectionFlowCoordinator;
-            _beatUi.LevelSelectionFlowCoordinator.InvokePrivateMethod("PresentFlowCoordinator", new object[] { _playListFlowCoordinator, null, false, false });
         }
 
         /// <summary>
@@ -971,29 +946,6 @@ namespace SongBrowser.UI
                 });
             _beatUi.LevelSelectionFlowCoordinator.InvokePrivateMethod("PresentViewController", new object[] { _deleteDialog, null, false });
         }        
-
-        /// <summary>
-        /// Handle selection of a playlist.  Show just the songs in the playlist.
-        /// </summary>
-        /// <param name="p"></param>
-        private void HandleDidSelectPlaylist(Playlist p)
-        {
-            if (p != null)
-            {
-                Logger.Debug("Showing songs for playlist: {0}", p.playlistTitle);
-                _model.Settings.filterMode = SongFilterMode.Playlist;
-                _model.CurrentPlaylist = p;
-                _model.Settings.Save();
-
-                ProcessSongList();
-
-                RefreshSongUI();
-            }
-            else
-            {
-                Logger.Debug("No playlist selected");
-            }
-        }
 
         /// <summary>
         /// Display the search keyboard

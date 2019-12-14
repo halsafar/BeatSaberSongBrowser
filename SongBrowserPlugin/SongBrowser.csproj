@@ -147,9 +147,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DataAccess\SongBrowserModel.cs" />
     <Compile Include="DataAccess\SongBrowserSettings.cs" />
-    <Compile Include="UI\Playlists\PlaylistDetailViewController.cs" />
-    <Compile Include="UI\Playlists\PlaylistFlowCoordinator.cs" />
-    <Compile Include="UI\Playlists\PlaylistSelectionListViewController.cs" />
     <Compile Include="UI\Base64Sprites.cs" />
     <Compile Include="UI\Keyboard\CustomUIKeyboard.cs" />
     <Compile Include="UI\Keyboard\SearchKeyboardViewController.cs" />
