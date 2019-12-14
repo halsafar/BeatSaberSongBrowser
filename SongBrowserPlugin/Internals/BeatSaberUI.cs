@@ -1,4 +1,5 @@
-﻿using HMUI;
+﻿using BS_Utils.Utilities;
+using HMUI;
 using System.Linq;
 using System.Reflection;
 using TMPro;
@@ -18,9 +19,9 @@ namespace SongBrowser.Internals
         /// </summary>
         /// <typeparam name="T">The variation of ViewController you want to create.</typeparam>
         /// <returns>The newly created ViewController of type T.</returns>
-        public static T CreateViewController<T>() where T : ViewController
+        public static T CreateViewController<T>(string name="CustomViewController") where T : ViewController
         {
-            T vc = new GameObject("CustomViewController").AddComponent<T>();
+            T vc = new GameObject(name).AddComponent<T>();
             UnityEngine.GameObject.DontDestroyOnLoad(vc.gameObject);
 
             vc.rectTransform.anchorMin = new Vector2(0f, 0f);
@@ -185,6 +186,22 @@ namespace SongBrowser.Internals
 
             gameObj.SetActive(true);
             return textMesh;
+        }
+
+        /// <summary>
+        /// Replace existing HoverHint on stat panel icons.
+        /// </summary>
+        /// <param name="button"></param>
+        /// <param name="name"></param>
+        /// <param name="text"></param>
+        public static void SetHoverHint(RectTransform button, string name, string text)
+        {
+            HoverHintController hoverHintController = Resources.FindObjectsOfTypeAll<HoverHintController>().First();
+            UnityEngine.GameObject.DestroyImmediate(button.GetComponentsInChildren<HMUI.HoverHint>().FirstOrDefault());
+            HoverHint hoverHint = button.gameObject.AddComponent<HoverHint>();
+            hoverHint.SetPrivateField("_hoverHintController", hoverHintController);
+            hoverHint.text = text;
+            hoverHint.name = name;
         }
 
         public static Texture2D LoadTextureRaw(byte[] file)

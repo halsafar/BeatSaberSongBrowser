@@ -422,12 +422,15 @@ namespace SongBrowser.UI
             // inject our components
             _ppStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
             UIBuilder.SetStatButtonIcon(_ppStatButton, Base64Sprites.GraphIcon);
+            BeatSaberUI.SetHoverHint(_ppStatButton, "songBrowser_ppValue", "PP Value");
 
             _starStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
             UIBuilder.SetStatButtonIcon(_starStatButton, Base64Sprites.StarFullIcon);
+            BeatSaberUI.SetHoverHint(_starStatButton, "songBrowser_starValue", "Star Difficulty Rating");
 
             _njsStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
             UIBuilder.SetStatButtonIcon(_njsStatButton, Base64Sprites.SpeedIcon);
+            BeatSaberUI.SetHoverHint(_njsStatButton, "songBrowser_njsValue", "Note Jump Speed");
 
             // shrink title
             var titleText = _beatUi.LevelDetailViewController.GetComponentsInChildren<TextMeshProUGUI>(true).First(x => x.name == "SongNameText");            
