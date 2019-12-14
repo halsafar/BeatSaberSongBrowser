@@ -594,7 +594,7 @@ namespace SongBrowser.UI
             try
             {
                 UpdateLevelPackSelection();
-                _beatUi.SelectAndScrollToLevel(_beatUi.LevelCollectionTableView, _model.LastSelectedLevelId);
+                _beatUi.SelectAndScrollToLevel(_model.LastSelectedLevelId);
                 RefreshQuickScrollButtons();
             }
             catch (Exception e)
@@ -1063,7 +1063,7 @@ namespace SongBrowser.UI
             }
             
             Logger.Debug("jumpDirection: {0}, newRow: {1}", jumpDirection, newRow);
-            _beatUi.SelectAndScrollToLevel(_beatUi.LevelCollectionTableView, levels[newRow].levelID);
+            _beatUi.SelectAndScrollToLevel(levels[newRow].levelID);
             RefreshQuickScrollButtons();
         }
 

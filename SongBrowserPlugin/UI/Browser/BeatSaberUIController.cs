@@ -277,7 +277,7 @@ namespace SongBrowser.DataAccess
         /// </summary>
         /// <param name="table"></param>
         /// <param name="levelID"></param>
-        public void SelectAndScrollToLevel(LevelCollectionTableView table, string levelID)
+        public void SelectAndScrollToLevel(string levelID)
         {
             Logger.Debug("Scrolling to LevelID: {0}", levelID);
 
@@ -314,7 +314,7 @@ namespace SongBrowser.DataAccess
                 // so the last row is +1 the max index, the count.
                 int maxCount = GetLevelPackLevelCount();
 
-                int selectedRow = table.GetPrivateField<int>("_selectedRow");
+                int selectedRow = LevelCollectionTableView.GetPrivateField<int>("_selectedRow");
 
                 Logger.Debug("Song is not in the level pack, cannot scroll to it...  Using last known row {0}/{1}", selectedRow, maxCount);
                 selectedIndex = Math.Min(maxCount, selectedRow);
@@ -381,7 +381,7 @@ namespace SongBrowser.DataAccess
 
                 if (scrollToLevel)
                 {
-                    SelectAndScrollToLevel(LevelCollectionTableView, selectedLevelID);
+                    SelectAndScrollToLevel(selectedLevelID);
                 }
             }
             catch (Exception e)
