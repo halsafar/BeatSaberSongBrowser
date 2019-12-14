@@ -620,6 +620,16 @@ namespace SongBrowser.UI
             }
 
             IBeatmapLevelPack levelPack = arg2 as IBeatmapLevelPack;
+            if (levelPack == null)
+            {
+                Hide();
+                return;
+            }
+            else
+            {
+                Show();
+            }
+
             SelectPack(levelPack);
         }
 
