@@ -155,7 +155,6 @@
     <Compile Include="UI\Browser\SongSortButton.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Assets\AddToFavorites.png" />
     <EmbeddedResource Include="Assets\DeleteIcon.png" />
     <EmbeddedResource Include="Assets\DoubleArrow.png" />
     <EmbeddedResource Include="Assets\BeastSaberLogo.png" />
@@ -164,9 +163,7 @@
     <EmbeddedResource Include="Assets\RandomIcon.png" />
     <EmbeddedResource Include="Assets\SongIcon.png" />
     <EmbeddedResource Include="Assets\PlaylistIcon.png" />
-    <EmbeddedResource Include="Assets\StarEmpty.png" />
     <EmbeddedResource Include="Assets\StarFull.png" />
-    <EmbeddedResource Include="Assets\RemoveFromFavorites.png" />
     <EmbeddedResource Include="Assets\Search.png" />
     <EmbeddedResource Include="Assets\Speed.png" />
     <EmbeddedResource Include="Assets\X.png" />
