@@ -348,7 +348,7 @@ namespace SongBrowser
         /// <summary>
         /// Sort the song list based on the settings.
         /// </summary>
-        public void ProcessSongList(IBeatmapLevelPack selectedLevelPack, LevelCollectionViewController levelCollectionViewController, LevelCollectionTableView tableView)
+        public void ProcessSongList(IBeatmapLevelPack selectedLevelPack, LevelCollectionViewController levelCollectionViewController, LevelCollectionTableView tableView, LevelSelectionNavigationController navController)
         {
             Logger.Trace("ProcessSongList()");
 
@@ -475,10 +475,14 @@ namespace SongBrowser
             BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsPackId, packName, selectedLevelPack.shortPackName, selectedLevelPack.coverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
 
             TextMeshProUGUI _noDataText = levelCollectionViewController.GetPrivateField<TextMeshProUGUI>("_noDataText");
-            string _headerText = tableView.GetPrivateField<string>("_headerText");
-            Sprite _headerSprite = tableView.GetPrivateField<Sprite>("_headerSprite");
+            //string _headerText = tableView.GetPrivateField<string>("_headerText");
+            //Sprite _headerSprite = tableView.GetPrivateField<Sprite>("_headerSprite");
 
-            levelCollectionViewController.SetData(levelPack.beatmapLevelCollection, _headerText, _headerSprite, false, _noDataText.text);
+            bool _showPlayerStatsInDetailView = navController.GetPrivateField<bool>("_showPlayerStatsInDetailView");
+            bool _showPracticeButtonInDetailView = navController.GetPrivateField<bool>("_showPracticeButtonInDetailView");
+
+            //levelCollectionViewController.SetData(levelPack.beatmapLevelCollection, _headerText, _headerSprite, false, _noDataText.text);
+            navController.SetData(levelPack, true, _showPlayerStatsInDetailView, _showPracticeButtonInDetailView, _noDataText.text);
 
             //_sortedSongs.ForEach(x => Logger.Debug(x.levelID));
         }

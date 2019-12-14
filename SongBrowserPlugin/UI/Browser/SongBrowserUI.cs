@@ -364,7 +364,7 @@ namespace SongBrowser.UI
         {
             Logger.Debug("Creating fast scroll button...");
 
-            _pageUpFastButton = Instantiate(_beatUi.TableViewPageUpButton, _beatUi.LevelPackLevelsTableViewRectTransform, false);
+            _pageUpFastButton = Instantiate(_beatUi.TableViewPageUpButton, _beatUi.LevelCollectionTableViewTransform, false);
             (_pageUpFastButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 1f);
             (_pageUpFastButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 1f);
             (_pageUpFastButton.transform as RectTransform).anchoredPosition = new Vector2(-26f, 0.25f);
@@ -376,7 +376,7 @@ namespace SongBrowser.UI
                 this.JumpSongList(-1, SEGMENT_PERCENT);
             });
 
-            _pageDownFastButton = Instantiate(_beatUi.TableViewPageDownButton, _beatUi.LevelPackLevelsTableViewRectTransform, false);
+            _pageDownFastButton = Instantiate(_beatUi.TableViewPageDownButton, _beatUi.LevelCollectionTableViewTransform, false);
             (_pageDownFastButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0f);
             (_pageDownFastButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0f);
             (_pageDownFastButton.transform as RectTransform).anchoredPosition = new Vector2(-26f, -1f);
@@ -466,7 +466,7 @@ namespace SongBrowser.UI
         public void ResizeSongUI()
         {
             // Reposition the table view a bit
-            _beatUi.LevelPackLevelsTableViewRectTransform.anchoredPosition = new Vector2(0f, -2.5f);
+            _beatUi.LevelCollectionTableViewTransform.anchoredPosition = new Vector2(0f, -2.5f);
 
             // Move the page up/down buttons a bit
             TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_beatUi.LevelCollectionTableView, "_tableView");
@@ -498,7 +498,12 @@ namespace SongBrowser.UI
             _beatUi.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDidChangeDifficultyEvent;
             _beatUi.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyEvent;
 
-            _beatUi.LevelCollectionViewController.didSelectHeaderEvent -= _levelPackViewController_didSelectPackEvent;
+            //_beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent -= _levelPackViewController_didSelectPackEvent;
+            //_beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += _levelPackViewController_didSelectPackEvent;
+
+            _beatUi.LevelSelectionNavigationController.didSelectLevelPackEvent -= _levelPackViewController_didSelectPackEvent;
+            _beatUi.LevelSelectionNavigationController.didSelectLevelPackEvent += _levelPackViewController_didSelectPackEvent;
+
             //_beatUi.LevelPackViewController.didSelectPackEvent -= _levelPackViewController_didSelectPackEvent;
             //_beatUi.LevelPackViewController.didSelectPackEvent += _levelPackViewController_didSelectPackEvent;
 
@@ -551,7 +556,7 @@ namespace SongBrowser.UI
             }
 
             var levelPack = _beatUi.LevelSelectionNavigationController.GetPrivateField<IBeatmapLevelPack>("_levelPack");
-            this._model.ProcessSongList(levelPack, _beatUi.LevelCollectionViewController, _beatUi.LevelCollectionTableView);
+            this._model.ProcessSongList(levelPack, _beatUi.LevelCollectionViewController, _beatUi.LevelCollectionTableView, _beatUi.LevelSelectionNavigationController);
         }
 
         /// <summary>
@@ -624,10 +629,10 @@ namespace SongBrowser.UI
         /// </summary>
         /// <param name="arg1"></param>
         /// <param name="arg2"></param>
-        private void _levelPackViewController_didSelectPackEvent(LevelCollectionViewController arg1)
+        private void _levelPackViewController_didSelectPackEvent(LevelSelectionNavigationController controller, IBeatmapLevelPack levelPack)
+        //private void _levelPackViewController_didSelectPackEvent(LevelFilteringNavigationController controller, IAnnotatedBeatmapLevelCollection levelCollection, string arg1, BeatmapCharacteristicSO beatmapCharacteristicSO)
         {
             // TODO 1.0.6 - BROKEN
-            var levelPack = arg1.GetPrivateField<IBeatmapLevelPack>("_levelPack");
             Logger.Trace("_levelPackViewController_didSelectPackEvent(levelPack={0})", levelPack);
 
             try
@@ -635,6 +640,7 @@ namespace SongBrowser.UI
                 // store the real level pack
                 if (levelPack.packID != SongBrowserModel.FilteredSongsPackId)
                 {
+                    Logger.Debug("Recording levelPack: {0}", levelPack);
                     _lastLevelPack = levelPack;
                 }
 
@@ -724,9 +730,9 @@ namespace SongBrowser.UI
         {
             Logger.Debug($"FilterButton {mode} clicked.");
 
-            if (_lastLevelPack == null || _beatUi.LevelPackViewController.selectedLevelPack.packID != SongBrowserModel.FilteredSongsPackId)
+            if (_lastLevelPack == null || _beatUi.GetCurrentSelectedLevelPack().packID != SongBrowserModel.FilteredSongsPackId)
             {
-                _lastLevelPack = _beatUi.LevelPackViewController.selectedLevelPack;
+                _lastLevelPack = _beatUi.GetCurrentSelectedLevelPack();
             }
 
             if (mode == SongFilterMode.Favorites || mode == SongFilterMode.Playlist)
@@ -1432,25 +1438,36 @@ namespace SongBrowser.UI
                     if (currentSelected == null)
                     {
                         Logger.Debug("No level pack selected, acquiring the first available...");
-                        var levelPackCollection = _beatUi.LevelPackViewController.GetPrivateField<IBeatmapLevelPackCollection>("_levelPackCollection");
-                        currentSelected = levelPackCollection.beatmapLevelPacks[0];
+                        var levelPackCollection = _beatUi.GetCurrentLevelPackCollection();
+                        currentSelected = levelPackCollection[0] as IBeatmapLevelPack;
                     }
                 }
                 else if (currentSelected == null || (currentSelected.packID != _model.Settings.currentLevelPackId))
                 {
                     Logger.Debug("Automatically selecting level pack: {0}", _model.Settings.currentLevelPackId);
 
-                    //_beatUi.LevelPackViewController.didSelectPackEvent -= _levelPackViewController_didSelectPackEvent;
+                    _beatUi.LevelSelectionNavigationController.didSelectLevelPackEvent -= _levelPackViewController_didSelectPackEvent;
 
-                    //_lastLevelPack = _beatUi.GetLevelPackByPackId(_model.Settings.currentLevelPackId);
-                    //_beatUi.SelectLevelPack(_model.Settings.currentLevelPackId);
+                    _lastLevelPack = _beatUi.GetLevelPackByPackId(_model.Settings.currentLevelPackId);
+                    _beatUi.SelectLevelPack(_model.Settings.currentLevelPackId);
 
-                    //_beatUi.LevelPackViewController.didSelectPackEvent += _levelPackViewController_didSelectPackEvent;
+                    _beatUi.LevelSelectionNavigationController.didSelectLevelPackEvent += _levelPackViewController_didSelectPackEvent;
 
-                    ProcessSongList();
+                    //ProcessSongList();
 
                     return true;
                 }
+
+                if (_lastLevelPack == null)
+                {
+                    if (currentSelected.packID != SongBrowserModel.FilteredSongsPackId)
+                    {                        
+                        _lastLevelPack = currentSelected;
+                    }
+                }
+
+                Logger.Debug("Last levelPack is: {0}", _lastLevelPack);
+                ProcessSongList();
             }
 
             return false;

@@ -6,6 +6,8 @@ using UnityEngine.UI;
 using SongCore.OverrideClasses;
 using Sprites = SongBrowser.UI.Base64Sprites;
 using SongCore.Utilities;
+using System;
+using System.Reflection;
 
 namespace SongBrowser.Internals
 {
@@ -79,5 +81,13 @@ namespace SongBrowser.Internals
             var split = levelId.Split('_');
             return split.Length > 2 ? split[2] : levelId;
         }
+
+        private const BindingFlags _allBindingFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+        public static object GetField(this object obj, string fieldName)
+        {
+            return (obj is Type ? (Type)obj : obj.GetType())
+                .GetField(fieldName, _allBindingFlags)
+                .GetValue(obj);
+        }   
     }
 }
