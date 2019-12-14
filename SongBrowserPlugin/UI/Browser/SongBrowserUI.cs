@@ -111,6 +111,7 @@ namespace SongBrowser.UI
             Logger.Debug("Done fetching Flow Coordinator for the appropriate mode...");
 
             _beatUi = new DataAccess.BeatSaberUIController(flowCoordinator);
+            _lastLevelPack = null;
 
             // returning to the menu and switching modes could trigger this.
             if (_uiCreated)
@@ -1367,10 +1368,6 @@ namespace SongBrowser.UI
 
                     _beatUi.LevelSelectionNavigationController.didSelectLevelPackEvent += _levelSelectionNavigationController_didSelectPackEvent;
                     _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += _levelFilteringNavController_didSelectPackEvent;
-
-                    //ProcessSongList();
-
-                    return true;
                 }
 
                 if (_lastLevelPack == null)
