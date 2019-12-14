@@ -7,7 +7,6 @@ using HMUI;
 using SongBrowser.DataAccess;
 using TMPro;
 using Logger = SongBrowser.Logging.Logger;
-using SongBrowser.DataAccess.BeatSaverApi;
 using System.Collections;
 using SongCore.Utilities;
 using SongBrowser.Internals;
@@ -940,8 +939,8 @@ namespace SongBrowser.UI
 
                             if (selectedIndex > -1)
                             {
-                                var song = new Song(SongCore.Loader.CustomLevels.First(x => x.Value.levelID == _beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID).Value);
-                                SongCore.Loader.Instance.DeleteSong(song.path);
+                                var song = SongCore.Loader.CustomLevels.First(x => x.Value.levelID == _beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID).Value;
+                                SongCore.Loader.Instance.DeleteSong(song.customLevelPath);
                                 this._model.RemoveSongFromLevelPack(_beatUi.GetCurrentSelectedLevelPack(), _beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID);
 
                                 this.UpdateLevelDataModel();

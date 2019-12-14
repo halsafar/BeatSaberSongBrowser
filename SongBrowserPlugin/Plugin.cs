@@ -28,9 +28,6 @@ namespace SongBrowser
 
             Base64Sprites.Init();
 
-            PlaylistsCollection.ReloadPlaylists();
-            SongCore.Loader.SongsLoadedEvent += SongCore_SongsLoadedEvent;
-
             BSEvents.OnLoad();
             BSEvents.menuSceneLoadedFresh += OnMenuSceneLoadedFresh;
         }
@@ -48,18 +45,6 @@ namespace SongBrowser
             catch (Exception e)
             {
                 Logger.Exception("Exception on fresh menu scene change: " + e);
-            }
-        }
-
-        public void SongCore_SongsLoadedEvent(SongCore.Loader sender, Dictionary<string, CustomPreviewBeatmapLevel> levels)
-        {
-            try
-            {
-                PlaylistsCollection.MatchSongsForAllPlaylists(true);
-            }
-            catch (Exception e)
-            {
-                Logger.Exception("Unable to match songs for all playlists! Exception: " + e);
             }
         }
 
