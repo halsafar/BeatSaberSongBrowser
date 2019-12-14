@@ -230,7 +230,7 @@ namespace SongBrowser.UI
             {
                 UnityEngine.Object.Destroy(textRect.gameObject);
             }
-            UIBuilder.SetButtonBorderActive(_randomButton, false);
+            BeatSaberUI.SetButtonBorderActive(_randomButton, false);
         }
 
         /// <summary>
@@ -246,7 +246,7 @@ namespace SongBrowser.UI
             {
                 UnityEngine.Object.Destroy(textRect.gameObject);
             }
-            UIBuilder.SetButtonBorderActive(b, false);
+            BeatSaberUI.SetButtonBorderActive(b, false);
 
             return b;
         }
@@ -384,7 +384,7 @@ namespace SongBrowser.UI
         {
             // Create delete button
             Logger.Debug("Creating delete button...");
-            _deleteButton = UIBuilder.CreateIconButton(_beatUi.PlayButtons, _beatUi.PracticeButton, Base64Sprites.DeleteIcon);
+            _deleteButton = BeatSaberUI.CreateIconButton(_beatUi.PlayButtons, _beatUi.PracticeButton, Base64Sprites.DeleteIcon);
             _deleteButton.onClick.AddListener(delegate () {
                 HandleDeleteSelectedLevel();
             });
@@ -422,17 +422,17 @@ namespace SongBrowser.UI
 
             // inject our components
             _ppStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
-            UIBuilder.SetStatButtonIcon(_ppStatButton, Base64Sprites.GraphIcon);
+            BeatSaberUI.SetStatButtonIcon(_ppStatButton, Base64Sprites.GraphIcon);
             BeatSaberUI.DestroyHoverHint(_ppStatButton);
             //BeatSaberUI.SetHoverHint(_ppStatButton, "songBrowser_ppValue", "PP Value");
 
             _starStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
-            UIBuilder.SetStatButtonIcon(_starStatButton, Base64Sprites.StarFullIcon);
+            BeatSaberUI.SetStatButtonIcon(_starStatButton, Base64Sprites.StarFullIcon);
             BeatSaberUI.DestroyHoverHint(_starStatButton);
             //BeatSaberUI.SetHoverHint(_starStatButton, "songBrowser_starValue", "Star Difficulty Rating");
 
             _njsStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
-            UIBuilder.SetStatButtonIcon(_njsStatButton, Base64Sprites.SpeedIcon);
+            BeatSaberUI.SetStatButtonIcon(_njsStatButton, Base64Sprites.SpeedIcon);
             BeatSaberUI.DestroyHoverHint(_njsStatButton);
             //BeatSaberUI.SetHoverHint(_njsStatButton, "songBrowser_njsValue", "Note Jump Speed");
 
@@ -972,7 +972,7 @@ namespace SongBrowser.UI
         {
             if (_searchViewController == null)
             {
-                _searchViewController = UIBuilder.CreateViewController<SearchKeyboardViewController>("SearchKeyboardViewController");
+                _searchViewController = BeatSaberUI.CreateViewController<SearchKeyboardViewController>("SearchKeyboardViewController");
                 _searchViewController.searchButtonPressed += SearchViewControllerSearchButtonPressed;
                 _searchViewController.backButtonPressed += SearchViewControllerbackButtonPressed;
             }
@@ -1087,19 +1087,19 @@ namespace SongBrowser.UI
                     double pp = scoreSaberSongDifficulty.pp;
                     double star = scoreSaberSongDifficulty.star;
 
-                    UIBuilder.SetStatButtonText(_ppStatButton, String.Format("{0:0.#}", pp));
-                    UIBuilder.SetStatButtonText(_starStatButton, String.Format("{0:0.#}", star));
+                    BeatSaberUI.SetStatButtonText(_ppStatButton, String.Format("{0:0.#}", pp));
+                    BeatSaberUI.SetStatButtonText(_starStatButton, String.Format("{0:0.#}", star));
                 }
                 else
                 {
-                    UIBuilder.SetStatButtonText(_ppStatButton, "NA");
-                    UIBuilder.SetStatButtonText(_starStatButton, "NA");
+                    BeatSaberUI.SetStatButtonText(_ppStatButton, "NA");
+                    BeatSaberUI.SetStatButtonText(_starStatButton, "NA");
                 }
             }
             else
             {
-                UIBuilder.SetStatButtonText(_ppStatButton, "NA");
-                UIBuilder.SetStatButtonText(_starStatButton, "NA");
+                BeatSaberUI.SetStatButtonText(_ppStatButton, "NA");
+                BeatSaberUI.SetStatButtonText(_starStatButton, "NA");
             }                
 
             Logger.Debug("Done refreshing score saber stats.");
@@ -1111,7 +1111,7 @@ namespace SongBrowser.UI
         /// <param name="beatmap"></param>
         private void RefreshNoteJumpSpeed(BeatmapDifficulty beatmap)
         {
-            UIBuilder.SetStatButtonText(_njsStatButton, String.Format("{0}", beatmap.NoteJumpMovementSpeed()));
+            BeatSaberUI.SetStatButtonText(_njsStatButton, String.Format("{0}", beatmap.NoteJumpMovementSpeed()));
         }
 
         /// <summary>
@@ -1263,26 +1263,26 @@ namespace SongBrowser.UI
             {
                 if (sortButton.SortMode.NeedsBeatSaverData() && !SongDataCore.Plugin.BeatSaver.IsDataAvailable())
                 {
-                    UIBuilder.SetButtonBorder(sortButton.Button, Color.gray);
+                    BeatSaberUI.SetButtonBorder(sortButton.Button, Color.gray);
                 }
                 else if (sortButton.SortMode.NeedsScoreSaberData() && !SongDataCore.Plugin.ScoreSaber.IsDataAvailable())
                 {
-                    UIBuilder.SetButtonBorder(sortButton.Button, Color.gray);
+                    BeatSaberUI.SetButtonBorder(sortButton.Button, Color.gray);
                 }
                 else
                 {
-                    UIBuilder.SetButtonBorder(sortButton.Button, Color.white);
+                    BeatSaberUI.SetButtonBorder(sortButton.Button, Color.white);
                 }
 
                 if (sortButton.SortMode == _model.Settings.sortMode)
                 {
                     if (this._model.Settings.invertSortResults)
                     {
-                        UIBuilder.SetButtonBorder(sortButton.Button, Color.red);
+                        BeatSaberUI.SetButtonBorder(sortButton.Button, Color.red);
                     }
                     else
                     {
-                        UIBuilder.SetButtonBorder(sortButton.Button, Color.green);
+                        BeatSaberUI.SetButtonBorder(sortButton.Button, Color.green);
                     }
                 }
             }
@@ -1290,29 +1290,29 @@ namespace SongBrowser.UI
             // refresh filter buttons
             foreach (SongFilterButton filterButton in _filterButtonGroup)
             {
-                UIBuilder.SetButtonBorder(filterButton.Button, Color.white);
+                BeatSaberUI.SetButtonBorder(filterButton.Button, Color.white);
                 if (filterButton.FilterMode == _model.Settings.filterMode)
                 {
-                    UIBuilder.SetButtonBorder(filterButton.Button, Color.green);
+                    BeatSaberUI.SetButtonBorder(filterButton.Button, Color.green);
                 }
             }
 
             if (this._model.Settings.invertSortResults)
             {
-                UIBuilder.SetButtonBorder(_sortByDisplay, Color.red);
+                BeatSaberUI.SetButtonBorder(_sortByDisplay, Color.red);
             }
             else
             {
-                UIBuilder.SetButtonBorder(_sortByDisplay, Color.green);
+                BeatSaberUI.SetButtonBorder(_sortByDisplay, Color.green);
             }
 
             if (this._model.Settings.filterMode != SongFilterMode.None)
             {
-                UIBuilder.SetButtonBorder(_filterByDisplay, Color.green);
+                BeatSaberUI.SetButtonBorder(_filterByDisplay, Color.green);
             }
             else
             {
-                UIBuilder.SetButtonBorder(_filterByDisplay, Color.white);
+                BeatSaberUI.SetButtonBorder(_filterByDisplay, Color.white);
             }
         }
 
