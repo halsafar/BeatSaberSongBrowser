@@ -9,7 +9,6 @@ namespace SongBrowser.UI
     class Base64Sprites
     {
         public static Sprite StarFullIcon;
-        public static Sprite DownloadIcon;
         public static Sprite SpeedIcon;
         public static Sprite GraphIcon;
         public static Sprite DeleteIcon;
@@ -25,7 +24,6 @@ namespace SongBrowser.UI
             GraphIcon = BeatSaberUI.LoadSpriteFromResources("SongBrowser.Assets.Graph.png");
             XIcon = BeatSaberUI.LoadSpriteFromResources("SongBrowser.Assets.X.png");
             StarFullIcon = BeatSaberUI.LoadSpriteFromResources("SongBrowser.Assets.StarFull.png");
-            DownloadIcon = BeatSaberUI.LoadSpriteFromResources("SongBrowser.Assets.DownloadIcon.png");
             DeleteIcon = BeatSaberUI.LoadSpriteFromResources("SongBrowser.Assets.DeleteIcon.png");
             DoubleArrow = BeatSaberUI.LoadSpriteFromResources("SongBrowser.Assets.DoubleArrow.png");
             BeastSaberLogo = BeatSaberUI.LoadSpriteFromResources("SongBrowser.Assets.BeastSaberLogo.png");

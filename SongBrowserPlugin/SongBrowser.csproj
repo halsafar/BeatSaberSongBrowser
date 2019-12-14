@@ -158,7 +158,6 @@
     <EmbeddedResource Include="Assets\DeleteIcon.png" />
     <EmbeddedResource Include="Assets\DoubleArrow.png" />
     <EmbeddedResource Include="Assets\BeastSaberLogo.png" />
-    <EmbeddedResource Include="Assets\DownloadIcon.png" />
     <EmbeddedResource Include="Assets\Graph.png" />
     <EmbeddedResource Include="Assets\RandomIcon.png" />
     <EmbeddedResource Include="Assets\SongIcon.png" />
