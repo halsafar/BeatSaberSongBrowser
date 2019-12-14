@@ -420,13 +420,13 @@ namespace SongBrowser.UI
                 {
                     continue;
                 }
-                r.sizeDelta = new Vector2(r.sizeDelta.x * 0.75f, r.sizeDelta.y * 0.75f);
+                r.sizeDelta = new Vector2(r.sizeDelta.x * 0.9f, r.sizeDelta.y * 0.9f);
             }
 
             for (int i = 0; i < valueTexts.Count; i++)
             {
                 var text = valueTexts[i];
-                text.fontSize = 3.25f;
+                text.fontSize -= 0.75f;
             }
 
             // inject our components
