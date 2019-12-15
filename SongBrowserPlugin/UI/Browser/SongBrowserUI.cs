@@ -486,7 +486,7 @@ namespace SongBrowser.UI
             _beatUi.LevelSelectionNavigationController.didSelectLevelPackEvent -= _levelSelectionNavigationController_didSelectPackEvent;
             _beatUi.LevelSelectionNavigationController.didSelectLevelPackEvent += _levelSelectionNavigationController_didSelectPackEvent;
 
-            // unknown
+            // Respond to characteristics changes
             _beatUi.BeatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent -= OnDidSelectBeatmapCharacteristic;
             _beatUi.BeatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent += OnDidSelectBeatmapCharacteristic;
 
@@ -515,7 +515,7 @@ namespace SongBrowser.UI
                 return;
             }
 
-            RefreshSongList(scrollToLevel);
+            RefreshSongList();
             RefreshSortButtonUI();
             if (!scrollToLevel)
             {
@@ -536,7 +536,7 @@ namespace SongBrowser.UI
             }
 
             var levelPack = _beatUi.LevelSelectionNavigationController.GetPrivateField<IBeatmapLevelPack>("_levelPack");
-            this._model.ProcessSongList(levelPack, _beatUi.LevelCollectionViewController, _beatUi.LevelCollectionTableView, _beatUi.LevelSelectionNavigationController);
+            this._model.ProcessSongList(levelPack, _beatUi.LevelCollectionViewController, _beatUi.LevelSelectionNavigationController);
         }
 
         /// <summary>
@@ -865,7 +865,7 @@ namespace SongBrowser.UI
 
             _deleteButton.interactable = (view.selectedDifficultyBeatmap.level.levelID.Length >= 32);
 
-            RefreshScoreSaberData(view.selectedDifficultyBeatmap.level, beatmap.difficulty);
+            RefreshScoreSaberData(view.selectedDifficultyBeatmap.level);
             RefreshNoteJumpSpeed(beatmap.difficulty);
         }
 
@@ -885,7 +885,7 @@ namespace SongBrowser.UI
 
             _deleteButton.interactable = (_beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID.Length >= 32);
 
-            RefreshScoreSaberData(view.selectedDifficultyBeatmap.level, view.selectedDifficultyBeatmap.difficulty);
+            RefreshScoreSaberData(view.selectedDifficultyBeatmap.level);
             RefreshNoteJumpSpeed(view.selectedDifficultyBeatmap.difficulty);
         }
 
@@ -1040,7 +1040,7 @@ namespace SongBrowser.UI
         /// <summary>
         /// Update GUI elements that show score saber data.
         /// </summary>
-        public void RefreshScoreSaberData(IPreviewBeatmapLevel level, BeatmapDifficulty vdifficulty)
+        public void RefreshScoreSaberData(IPreviewBeatmapLevel level)
         {
             Logger.Trace("RefreshScoreSaberData({0})", level.levelID);
 
@@ -1303,7 +1303,7 @@ namespace SongBrowser.UI
         /// <summary>
         /// 
         /// </summary>
-        public void RefreshSongList(bool scrollToLevel = true)
+        public void RefreshSongList()
         {
             if (!_uiCreated)
             {

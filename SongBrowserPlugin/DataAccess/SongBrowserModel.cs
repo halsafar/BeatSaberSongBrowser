@@ -30,7 +30,6 @@ namespace SongBrowser
         // song list management
         private double _customSongDirLastWriteTime = 0;        
         private Dictionary<String, double> _cachedLastWriteTimes;
-        private Dictionary<BeatmapDifficulty, int> _difficultyWeights;
         private Dictionary<string, int> _levelIdToPlayCount;
 
         public BeatmapCharacteristicSO CurrentBeatmapCharacteristicSO;
@@ -73,15 +72,6 @@ namespace SongBrowser
         {
             _cachedLastWriteTimes = new Dictionary<String, double>();
             _levelIdToPlayCount = new Dictionary<string, int>();
-
-            _difficultyWeights = new Dictionary<BeatmapDifficulty, int>
-            {
-                [BeatmapDifficulty.Easy] = 1,
-                [BeatmapDifficulty.Normal] = 2,
-                [BeatmapDifficulty.Hard] = 4,
-                [BeatmapDifficulty.Expert] = 8,
-                [BeatmapDifficulty.ExpertPlus] = 16,
-            };
         }
 
         /// <summary>
@@ -220,7 +210,7 @@ namespace SongBrowser
         /// <summary>
         /// Sort the song list based on the settings.
         /// </summary>
-        public void ProcessSongList(IBeatmapLevelPack selectedLevelPack, LevelCollectionViewController levelCollectionViewController, LevelCollectionTableView tableView, LevelSelectionNavigationController navController)
+        public void ProcessSongList(IBeatmapLevelPack selectedLevelPack, LevelCollectionViewController levelCollectionViewController, LevelSelectionNavigationController navController)
         {
             Logger.Trace("ProcessSongList()");
 
@@ -305,9 +295,6 @@ namespace SongBrowser
                     break;
                 case SongSortMode.Stars:
                     sortedSongs = SortStars(filteredSongs);
-                    break;
-                case SongSortMode.Difficulty:
-                    sortedSongs = SortDifficulty(filteredSongs);
                     break;
                 case SongSortMode.Random:
                     sortedSongs = SortRandom(filteredSongs);
@@ -548,52 +535,6 @@ namespace SongBrowser
                     }
                 })
                 .ToList();
-        }
-
-        /// <summary>
-        /// Attempt to sort by songs containing easy first
-        /// </summary>
-        /// <param name="levels"></param>
-        /// <returns></returns>
-        private List<IPreviewBeatmapLevel> SortDifficulty(List<IPreviewBeatmapLevel> levels)
-        {
-            Logger.Info("Sorting song list by difficulty (DISABLED!!!)...");
-            /*
-            IEnumerable<BeatmapDifficulty> difficultyIterator = Enum.GetValues(typeof(BeatmapDifficulty)).Cast<BeatmapDifficulty>();
-            Dictionary<string, int> levelIdToDifficultyValue = new Dictionary<string, int>();
-            foreach (IPreviewBeatmapLevel level in levels)
-            {
-                // only need to process a level once
-                if (levelIdToDifficultyValue.ContainsKey(level.levelID))
-                {
-                    continue;
-                }
-
-                // TODO - fix, not honoring beatmap characteristic. 
-                int difficultyValue = 0;
-                if (level as BeatmapLevelSO != null)
-                {
-                    var beatmapSet = (level as BeatmapLevelSO).difficultyBeatmapSets;
-                    difficultyValue = beatmapSet                        
-                        .SelectMany(x => x.difficultyBeatmaps)
-                        .Sum(x => _difficultyWeights[x.difficulty]);
-                }
-                else if (_levelIdToCustomLevel.ContainsKey(level.levelID))
-                {                   
-                    var beatmapSet = (_levelIdToCustomLevel[level.levelID] as CustomPreviewBeatmapLevel).standardLevelInfoSaveData.difficultyBeatmapSets;
-                    difficultyValue = beatmapSet
-                        .SelectMany(x => x.difficultyBeatmaps)
-                        .Sum(x => _difficultyWeights[(BeatmapDifficulty)Enum.Parse(typeof(BeatmapDifficulty), x.difficulty)]);
-                }
-
-                levelIdToDifficultyValue.Add(level.levelID, difficultyValue);                
-            }
-
-            return levels
-                .OrderBy(x => levelIdToDifficultyValue[x.levelID])
-                .ThenBy(x => x.songName)
-                .ToList();*/
-            return levels;
         }
 
         /// <summary>

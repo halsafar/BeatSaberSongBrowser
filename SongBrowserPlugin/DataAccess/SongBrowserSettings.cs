@@ -190,7 +190,7 @@ namespace SongBrowser.DataAccess
                 Directory.CreateDirectory(playlistDirPath);
             }
 
-            MigrateFavorites(retVal);
+            MigrateFavorites();
             ApplyFixes(retVal);
 
             return retVal;
@@ -217,8 +217,7 @@ namespace SongBrowser.DataAccess
         /// <summary>
         /// Migrate old favorites into new system.
         /// </summary>
-        /// <param name="settings"></param>
-        public static void MigrateFavorites(SongBrowserSettings settings)
+        public static void MigrateFavorites()
         {
             // Always the favorites, never used this feature    
             String oldFavoritesPath = Path.Combine(Environment.CurrentDirectory, "Playlists", DefaultConvertedFavoritesPlaylistName);
