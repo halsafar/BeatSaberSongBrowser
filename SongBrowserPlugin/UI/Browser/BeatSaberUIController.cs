@@ -280,7 +280,7 @@ namespace SongBrowser.DataAccess
                 Logger.Debug("Reloading SongList TableView");
                 tableView.ReloadData();
 
-                Logger.Debug("Attempting to scroll to level...");
+                Logger.Debug("Attempting to scroll to level [{0}]", currentSelectedLevelId);
                 String selectedLevelID = currentSelectedLevelId;
                 if (!String.IsNullOrEmpty(currentSelectedLevelId))
                 {

@@ -212,6 +212,7 @@ namespace SongBrowser.UI
             {
                 _model.Settings.filterMode = SongFilterMode.None;
                 CancelFilter();
+                ProcessSongList();
                 RefreshSongUI();
             }, "");
             _filterByDisplay.SetButtonTextSize(displayButtonFontSize);
@@ -535,7 +536,7 @@ namespace SongBrowser.UI
                 return;
             }
 
-            var levelPack = _beatUi.GetCurrentSelectedLevelPack();
+            var levelPack = _lastLevelPack;
             this._model.ProcessSongList(levelPack, _beatUi.LevelCollectionViewController, _beatUi.LevelSelectionNavigationController);
         }
 
@@ -551,7 +552,7 @@ namespace SongBrowser.UI
             string _headerText = _beatUi.LevelCollectionTableView.GetPrivateField<string>("_headerText");
             Sprite _headerSprite = _beatUi.LevelCollectionTableView.GetPrivateField<Sprite>("_headerSprite");
 
-            _beatUi.LevelCollectionViewController.SetData(_beatUi.GetCurrentSelectedLevelPack().beatmapLevelCollection, _headerText, _headerSprite, false, _noDataText.text);
+            _beatUi.LevelCollectionViewController.SetData(_lastLevelPack.beatmapLevelCollection, _headerText, _headerSprite, false, _noDataText.text);
         }
 
         /// <summary>
@@ -675,22 +676,25 @@ namespace SongBrowser.UI
                 this._model.Settings.currentLevelPackId = levelPack.packID;
                 this._model.Settings.Save();
 
-                ProcessSongList();
-
-                // trickery to handle Downloader playlist level packs
-                // We need to avoid scrolling to a level and then select the header
-                bool scrollToLevel = true;
-                if (levelPack.packID.Contains("Playlist_"))
-                {
-                    scrollToLevel = false;
-                }
-
-                RefreshSongUI(scrollToLevel);
+                StartCoroutine(ProcessSongListEndOfFrame());
             }
             catch (Exception e)
             {
                 Logger.Exception("Exception handling didSelectPackEvent...", e);
             }
+        }
+
+        /// <summary>
+        /// End of frame update the song list, the game seems to stomp on us sometimes otherwise
+        /// TODO - Might not be nice to other plugins
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator ProcessSongListEndOfFrame()
+        {
+            yield return new WaitForEndOfFrame();
+
+            ProcessSongList();
+            RefreshSongUI();
         }
 
         /// <summary>
@@ -759,16 +763,16 @@ namespace SongBrowser.UI
                 _lastLevelPack = _beatUi.GetCurrentSelectedLevelPack();
             }
 
-            if (mode == SongFilterMode.Favorites || mode == SongFilterMode.Playlist)
+            if (mode == SongFilterMode.Favorites)
             {
                 _beatUi.SelectLevelPack(SongBrowserSettings.CUSTOM_SONG_LEVEL_PACK_ID);
             }
             else
-            {
+            {              
                 TextMeshProUGUI _noDataText = _beatUi.LevelCollectionViewController.GetPrivateField<TextMeshProUGUI>("_noDataText");
                 string _headerText = _beatUi.LevelCollectionTableView.GetPrivateField<string>("_headerText");
                 Sprite _headerSprite = _beatUi.LevelCollectionTableView.GetPrivateField<Sprite>("_headerSprite");
-
+                
                 _beatUi.LevelCollectionViewController.SetData(_lastLevelPack.beatmapLevelCollection, _headerText, _headerSprite, false, _noDataText.text);
             }
 
