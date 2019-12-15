@@ -903,25 +903,10 @@ namespace SongBrowser.UI
         }
 
         /// <summary>
-        /// Call Downloader delete.
-        /// </summary>
-        private void CallDownloaderDelete()
-        {
-            BeatSaverDownloader.UI.SongListTweaks.Instance.DeletePressed();
-        }
-
-        /// <summary>
         /// Pop up a delete dialog.
         /// </summary>
         private void HandleDeleteSelectedLevel()
         {
-            bool DownloaderInstalled = CustomHelpers.IsModInstalled("BeatSaverDownloader");
-            if (DownloaderInstalled)
-            {
-                CallDownloaderDelete();
-                return;
-            }
-
             IBeatmapLevel level = _beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level;
             _deleteDialog.Init("Delete song", $"Do you really want to delete \"{ level.songName} {level.songSubName}\"?", "Delete", "Cancel",
                 (selectedButton) =>

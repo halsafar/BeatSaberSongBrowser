@@ -13,21 +13,6 @@ namespace SongBrowser.Internals
 {
     public static class CustomHelpers
     {
-        public static bool IsModInstalled(string ModName)
-        {
-            foreach (var mod in IPA.Loader.PluginManager.Plugins)
-            {
-                if (mod.Name == ModName)
-                    return true;
-            }
-            foreach (var mod in IPA.Loader.PluginManager.AllPlugins)
-            {
-                if (mod.Metadata.Id == ModName)
-                    return true;
-            }
-            return false;
-        }
-
         public static string GetSongHash(string levelId)
         {
             var split = levelId.Split('_');
