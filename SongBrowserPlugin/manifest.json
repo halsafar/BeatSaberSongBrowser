@@ -7,7 +7,7 @@
   "name": "Song Browser",
   "version": "5.6.0",
   "dependsOn": {
-    "SongCore": "^2.6.0",
+    "SongCore": "^2.7.2",
     "SongDataCore": "^1.1.5"
   },
   "features": [
