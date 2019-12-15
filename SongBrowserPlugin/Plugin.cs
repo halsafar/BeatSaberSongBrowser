@@ -1,8 +1,6 @@
 ﻿using UnityEngine.SceneManagement;
 using SongBrowser.UI;
 using Logger = SongBrowser.Logging.Logger;
-using SongBrowser.DataAccess;
-using System.Collections.Generic;
 using System;
 using IPA;
 using BS_Utils.Utilities;

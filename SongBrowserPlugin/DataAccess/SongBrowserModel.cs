@@ -1,7 +1,4 @@
 ﻿using SongBrowser.DataAccess;
-using SongBrowser.Internals;
-using SongBrowser.UI;
-using SongCore.OverrideClasses;
 using SongCore.Utilities;
 using System;
 using System.Collections.Generic;
@@ -11,7 +8,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
-using static StandardLevelInfoSaveData;
 using Logger = SongBrowser.Logging.Logger;
 
 namespace SongBrowser
