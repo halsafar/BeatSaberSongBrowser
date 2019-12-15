@@ -551,7 +551,7 @@ namespace SongBrowser.UI
             string _headerText = _beatUi.LevelCollectionTableView.GetPrivateField<string>("_headerText");
             Sprite _headerSprite = _beatUi.LevelCollectionTableView.GetPrivateField<Sprite>("_headerSprite");
 
-            _beatUi.LevelCollectionViewController.SetData(_lastLevelPack.beatmapLevelCollection, _headerText, _headerSprite, false, _noDataText.text);
+            _beatUi.LevelCollectionViewController.SetData(_beatUi.GetCurrentSelectedLevelPack().beatmapLevelCollection, _headerText, _headerSprite, false, _noDataText.text);
         }
 
         /// <summary>
