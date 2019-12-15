@@ -556,7 +556,7 @@ namespace SongBrowser.UI
 
         /// <summary>
         /// Handle updating the level pack selection after returning from a song.
-        /// </summary>
+        /// </summary>SongBrowserPlugin/UI/Browser/SongBrowserUI.cs 
         /// <param name="obj"></param>
         private void ResultsViewController_continueButtonPressedEvent(ResultsViewController obj)
         {
@@ -761,7 +761,7 @@ namespace SongBrowser.UI
 
             if (mode == SongFilterMode.Favorites || mode == SongFilterMode.Playlist)
             {
-                _beatUi.SelectLevelPack(PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID);
+                _beatUi.SelectLevelPack(SongBrowserSettings.CUSTOM_SONG_LEVEL_PACK_ID);
             }
             else
             {

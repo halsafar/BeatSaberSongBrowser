@@ -24,8 +24,6 @@ namespace SongBrowser
         {
             Instance = this;
 
-            PluginConfig.LoadOrCreateConfig();
-
             Base64Sprites.Init();
 
             BSEvents.OnLoad();

@@ -84,6 +84,7 @@ namespace SongBrowser.DataAccess
         public static readonly XmlSerializer SettingsSerializer = new XmlSerializer(typeof(SongBrowserSettings));
         public static readonly String DefaultConvertedFavoritesPlaylistName = "SongBrowserPluginFavorites.json";
         public static readonly String MigratedFavoritesPlaylistName = "SongBrowserPluginFavorites_Migrated.json";
+        public static readonly String CUSTOM_SONG_LEVEL_PACK_ID = "custom_levelpack_CustomLevels";
 
         public SongSortMode sortMode = default(SongSortMode);
         public SongFilterMode filterMode = default(SongFilterMode);
@@ -221,7 +222,7 @@ namespace SongBrowser.DataAccess
             }
             else if (String.Equals(settings.currentLevelPackId, "ModdedCustomMaps"))
             {
-                settings.currentLevelPackId = PluginConfig.CUSTOM_SONG_LEVEL_PACK_ID;
+                settings.currentLevelPackId = SongBrowserSettings.CUSTOM_SONG_LEVEL_PACK_ID;
             }
 
             settings.Save();

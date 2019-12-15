@@ -37,9 +37,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="BeatSaverDownloader">
-      <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Plugins\BeatSaverDownloader.dll</HintPath>
-    </Reference>
     <Reference Include="BS_Utils">
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Plugins\BS_Utils.dll</HintPath>
     </Reference>
@@ -133,7 +130,6 @@
     <Compile Include="Internals\CustomHelpers.cs" />
     <Compile Include="Internals\SimpleJSON.cs" />
     <Compile Include="Logging\Logger.cs" />
-    <Compile Include="PluginConfig.cs" />
     <Compile Include="UI\ProgressBar.cs" />
     <Compile Include="SongBrowserApplication.cs" />
     <Compile Include="Plugin.cs" />
