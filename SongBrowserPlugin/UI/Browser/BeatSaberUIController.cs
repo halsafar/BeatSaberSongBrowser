@@ -20,7 +20,6 @@ namespace SongBrowser.DataAccess
         public LevelSelectionNavigationController LevelSelectionNavigationController;
 
         public LevelFilteringNavigationController LevelFilteringNavigationController;
-        public LevelPackDetailViewController LevelPackDetailViewController;
 
         public LevelCollectionViewController LevelCollectionViewController;
         public LevelCollectionTableView LevelCollectionTableView;
@@ -74,9 +73,6 @@ namespace SongBrowser.DataAccess
             // grab nav controller elements
             LevelCollectionViewController = LevelSelectionNavigationController.GetPrivateField<LevelCollectionViewController>("_levelCollectionViewController");
             Logger.Debug("Acquired LevelPackLevelsViewController [{0}]", LevelCollectionViewController.GetInstanceID());
-
-            LevelPackDetailViewController = LevelSelectionNavigationController.GetPrivateField<LevelPackDetailViewController>("_levelPackDetailViewController");
-            Logger.Debug("Acquired LevelPackDetailViewController [{0}]", LevelPackDetailViewController.GetInstanceID());
 
             LevelDetailViewController = LevelSelectionNavigationController.GetPrivateField<StandardLevelDetailViewController>("_levelDetailViewController");
             Logger.Debug("Acquired StandardLevelDetailViewController [{0}]", LevelDetailViewController.GetInstanceID());
