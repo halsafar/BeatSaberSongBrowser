@@ -11,11 +11,6 @@ namespace SongBrowser.Internals
             return split.Length > 2 ? split[2] : levelId;
         }
 
-        public static object GetField(this object obj, string fieldName)
-        {
-            return (obj is Type ? (Type)obj : obj.GetType())
-                .GetField(fieldName, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
-                .GetValue(obj);
-        }   
+  
     }
 }

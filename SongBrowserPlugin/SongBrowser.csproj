@@ -125,6 +125,7 @@
   <ItemGroup>
     <Compile Include="Internals\BeatSaberUI.cs" />
     <Compile Include="Internals\BeatSaberExtensions.cs" />
+    <Compile Include="Internals\ReflectionUtils.cs" />
     <Compile Include="UI\Browser\BeatSaberUIController.cs" />
     <Compile Include="DataAccess\Playlist.cs" />
     <Compile Include="Internals\CustomHelpers.cs" />
@@ -146,11 +147,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Assets\DeleteIcon.png" />
     <EmbeddedResource Include="Assets\DoubleArrow.png" />
-    <EmbeddedResource Include="Assets\BeastSaberLogo.png" />
     <EmbeddedResource Include="Assets\Graph.png" />
     <EmbeddedResource Include="Assets\RandomIcon.png" />
     <EmbeddedResource Include="Assets\SongIcon.png" />
-    <EmbeddedResource Include="Assets\PlaylistIcon.png" />
     <EmbeddedResource Include="Assets\StarFull.png" />
     <EmbeddedResource Include="Assets\Search.png" />
     <EmbeddedResource Include="Assets\Speed.png" />

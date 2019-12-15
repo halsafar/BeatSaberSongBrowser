@@ -80,6 +80,8 @@ namespace SongBrowser.DataAccess
         public Playlist(JSONNode playlistNode)
         {
             string image = playlistNode["image"].Value;
+            // If we cannot find an image or parse the provided one correctly, fall back to anything.
+            // It will never be displayed by SongBrowser.
             if (!string.IsNullOrEmpty(image))
             {
                 try
@@ -89,12 +91,12 @@ namespace SongBrowser.DataAccess
                 catch
                 {
                     Logger.Exception("Unable to convert playlist image to sprite!");
-                    icon = Sprites.BeastSaberLogo;
+                    icon = Sprites.StarFullIcon;
                 }
             }
             else
             {
-                icon = Sprites.BeastSaberLogo;
+                icon = Sprites.StarFullIcon;
             }
             playlistTitle = playlistNode["playlistTitle"];
             playlistAuthor = playlistNode["playlistAuthor"];
