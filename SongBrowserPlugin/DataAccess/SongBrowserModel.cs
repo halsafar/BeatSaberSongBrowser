@@ -1,7 +1,4 @@
 ﻿using SongBrowser.DataAccess;
-using SongBrowser.Internals;
-using SongBrowser.UI;
-using SongCore.OverrideClasses;
 using SongCore.Utilities;
 using System;
 using System.Collections.Generic;
@@ -9,15 +6,15 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using TMPro;
 using UnityEngine;
-using static StandardLevelInfoSaveData;
 using Logger = SongBrowser.Logging.Logger;
 
 namespace SongBrowser
 {
     public class SongBrowserModel
     {
-        public const string FilteredSongsPackId = "SongBrowser_FilteredSongPack";
+        public static readonly string FilteredSongsPackId = CustomLevelLoader.kCustomLevelPackPrefixId + "SongBrowser_FilteredSongPack";
 
         private readonly String CUSTOM_SONGS_DIR = Path.Combine("Beat Saber_Data", "CustomLevels");
 
@@ -29,7 +26,6 @@ namespace SongBrowser
         // song list management
         private double _customSongDirLastWriteTime = 0;        
         private Dictionary<String, double> _cachedLastWriteTimes;
-        private Dictionary<BeatmapDifficulty, int> _difficultyWeights;
         private Dictionary<string, int> _levelIdToPlayCount;
 
         public BeatmapCharacteristicSO CurrentBeatmapCharacteristicSO;
@@ -65,40 +61,6 @@ namespace SongBrowser
             }
         }
 
-        private Playlist _currentPlaylist;
-
-        /// <summary>
-        /// Manage the current playlist if one exists.
-        /// </summary>
-        public Playlist CurrentPlaylist
-        {
-            get
-            {
-                if (_currentPlaylist == null)
-                {
-                    _currentPlaylist = Playlist.LoadPlaylist(this._settings.currentPlaylistFile);
-                }
-
-                return _currentPlaylist;
-            }
-
-            set
-            {
-                _settings.currentPlaylistFile = value.fileLoc;
-                _currentPlaylist = value;
-            }
-        }    
-
-        /// <summary>
-        /// Current editing playlist
-        /// </summary>
-        public Playlist CurrentEditingPlaylist;
-
-        /// <summary>
-        /// HashSet of LevelIds for quick lookup
-        /// </summary>
-        public HashSet<String> CurrentEditingPlaylistLevelIds;
-
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -106,17 +68,6 @@ namespace SongBrowser
         {
             _cachedLastWriteTimes = new Dictionary<String, double>();
             _levelIdToPlayCount = new Dictionary<string, int>();
-
-            CurrentEditingPlaylistLevelIds = new HashSet<string>();
-
-            _difficultyWeights = new Dictionary<BeatmapDifficulty, int>
-            {
-                [BeatmapDifficulty.Easy] = 1,
-                [BeatmapDifficulty.Normal] = 2,
-                [BeatmapDifficulty.Hard] = 4,
-                [BeatmapDifficulty.Expert] = 8,
-                [BeatmapDifficulty.ExpertPlus] = 16,
-            };
         }
 
         /// <summary>
@@ -183,59 +134,6 @@ namespace SongBrowser
 
             // Update song Infos, directory tree, and sort
             this.UpdatePlayCounts();
-
-            // Check if we need to upgrade settings file favorites
-            try
-            {
-                this.Settings.ConvertFavoritesToPlaylist(SongCore.Loader.CustomLevels);
-            }
-            catch (Exception e)
-            {
-                Logger.Exception("FAILED TO CONVERT FAVORITES TO PLAYLIST!", e);
-            }
-
-            // load the current editing playlist or make one
-            if (CurrentEditingPlaylist == null && !String.IsNullOrEmpty(this.Settings.currentEditingPlaylistFile))
-            {
-                Logger.Debug("Loading playlist for editing: {0}", this.Settings.currentEditingPlaylistFile);
-                CurrentEditingPlaylist = Playlist.LoadPlaylist(this.Settings.currentEditingPlaylistFile);
-                PlaylistsCollection.MatchSongsForPlaylist(CurrentEditingPlaylist, true);
-            }
-
-            if (CurrentEditingPlaylist == null)
-            {
-                Logger.Debug("Current editing playlist does not exit, create...");
-                CurrentEditingPlaylist = new Playlist
-                {
-                    playlistTitle = "Song Browser Favorites",
-                    playlistAuthor = "SongBrowser",
-                    fileLoc = this.Settings.currentEditingPlaylistFile,
-                    image = Base64Sprites.SpriteToBase64(Base64Sprites.BeastSaberLogo),
-                    songs = new List<PlaylistSong>(),
-                };
-            }
-
-            CurrentEditingPlaylistLevelIds = new HashSet<string>();
-            foreach (PlaylistSong ps in CurrentEditingPlaylist.songs)
-            {
-                // Sometimes we cannot match a song
-                string levelId = null;
-                if (ps.level != null)
-                {
-                    levelId = ps.level.levelID;
-                }
-                else if (!String.IsNullOrEmpty(ps.levelId))
-                {
-                    levelId = ps.levelId;
-                }
-                else
-                {
-                    //Logger.Debug("MISSING SONG {0}", ps.songName);
-                    continue;
-                }
-
-                CurrentEditingPlaylistLevelIds.Add(levelId);
-            }
 
             // Signal complete
             if (SongCore.Loader.CustomLevels.Count > 0)
@@ -304,50 +202,11 @@ namespace SongBrowser
                 _levelIdToPlayCount[levelData.levelID] += levelData.playCount;
             }
         }
-        
-        /// <summary>
-        /// Add Song to Editing Playlist
-        /// </summary>
-        /// <param name="songInfo"></param>
-        public void AddSongToEditingPlaylist(IBeatmapLevel songInfo)
-        {
-            if (this.CurrentEditingPlaylist == null)
-            {
-                return;
-            }
-
-            this.CurrentEditingPlaylist.songs.Add(new PlaylistSong()
-            {
-                songName = songInfo.songName,
-                levelId = songInfo.levelID,
-                hash = CustomHelpers.GetSongHash(songInfo.levelID),
-            });
-
-            this.CurrentEditingPlaylistLevelIds.Add(songInfo.levelID);
-            this.CurrentEditingPlaylist.SavePlaylist();
-        }
-
-        /// <summary>
-        /// Remove Song from editing playlist
-        /// </summary>
-        /// <param name="levelId"></param>
-        public void RemoveSongFromEditingPlaylist(IBeatmapLevel songInfo)
-        {
-            if (this.CurrentEditingPlaylist == null)
-            {
-                return;
-            }
-
-            this.CurrentEditingPlaylist.songs.RemoveAll(x => x.level != null && x.level.levelID == songInfo.levelID);
-            this.CurrentEditingPlaylistLevelIds.RemoveWhere(x => x == songInfo.levelID);
-
-            this.CurrentEditingPlaylist.SavePlaylist();
-        }
 
         /// <summary>
         /// Sort the song list based on the settings.
         /// </summary>
-        public void ProcessSongList(LevelPackLevelsViewController levelsViewController)
+        public void ProcessSongList(IBeatmapLevelPack selectedLevelPack, LevelCollectionViewController levelCollectionViewController, LevelSelectionNavigationController navController)
         {
             Logger.Trace("ProcessSongList()");
 
@@ -356,23 +215,14 @@ namespace SongBrowser
             List<IPreviewBeatmapLevel> sortedSongs = null;
 
             // Abort
-            if (levelsViewController.levelPack == null)
+            if (selectedLevelPack == null)
             {
                 Logger.Debug("Cannot process songs yet, no level pack selected...");
                 return;
             }
             
-            // fetch unsorted songs.
-            // playlists always use customsongs
-            if (this._settings.filterMode == SongFilterMode.Playlist && this.CurrentPlaylist != null)
-            {
-                unsortedSongs = null;
-            }
-            else
-            {
-                Logger.Debug("Using songs from level pack: {0}", levelsViewController.levelPack.packID);
-                unsortedSongs = levelsViewController.levelPack.beatmapLevelCollection.beatmapLevels.ToList();
-            }
+            Logger.Debug("Using songs from level pack: {0}", selectedLevelPack.packID);
+            unsortedSongs = selectedLevelPack.beatmapLevelCollection.beatmapLevels.ToList();            
 
             // filter
             Logger.Debug($"Starting filtering songs by {_settings.filterMode}");
@@ -381,13 +231,10 @@ namespace SongBrowser
             switch (_settings.filterMode)
             {
                 case SongFilterMode.Favorites:
-                    filteredSongs = FilterFavorites();
+                    filteredSongs = FilterFavorites(unsortedSongs);
                     break;
                 case SongFilterMode.Search:
                     filteredSongs = FilterSearch(unsortedSongs);
-                    break;
-                case SongFilterMode.Playlist:
-                    filteredSongs = FilterPlaylist();
                     break;
                 case SongFilterMode.Ranked:
                     filteredSongs = FilterRanked(unsortedSongs, true, false);
@@ -397,7 +244,7 @@ namespace SongBrowser
                     break;
                 case SongFilterMode.Custom:
                     Logger.Info("Song filter mode set to custom. Deferring filter behaviour to another mod.");
-                    filteredSongs = CustomFilterHandler != null ? CustomFilterHandler.Invoke(levelsViewController.levelPack) : unsortedSongs;
+                    filteredSongs = CustomFilterHandler != null ? CustomFilterHandler.Invoke(selectedLevelPack) : unsortedSongs;
                     break;
                 case SongFilterMode.None:
                 default:
@@ -445,9 +292,6 @@ namespace SongBrowser
                 case SongSortMode.Stars:
                     sortedSongs = SortStars(filteredSongs);
                     break;
-                case SongSortMode.Difficulty:
-                    sortedSongs = SortDifficulty(filteredSongs);
-                    break;
                 case SongSortMode.Random:
                     sortedSongs = SortRandom(filteredSongs);
                     break;
@@ -466,29 +310,35 @@ namespace SongBrowser
             Logger.Info("Sorting songs took {0}ms", stopwatch.ElapsedMilliseconds);
 
             // Asterisk the pack name so it is identifable as filtered.
-            var packName = levelsViewController.levelPack.packName;
+            var packName = selectedLevelPack.packName;
             if (!packName.EndsWith("*") && _settings.filterMode != SongFilterMode.None)
             {
                 packName += "*";
             }
-            BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsPackId, packName, levelsViewController.levelPack.shortPackName, levelsViewController.levelPack.coverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
-            levelsViewController.SetData(levelPack);
+            BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsPackId, packName, selectedLevelPack.shortPackName, selectedLevelPack.coverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
+
+            TextMeshProUGUI _noDataText = levelCollectionViewController.GetPrivateField<TextMeshProUGUI>("_noDataText");
+            //string _headerText = tableView.GetPrivateField<string>("_headerText");
+            //Sprite _headerSprite = tableView.GetPrivateField<Sprite>("_headerSprite");
+
+            bool _showPlayerStatsInDetailView = navController.GetPrivateField<bool>("_showPlayerStatsInDetailView");
+            bool _showPracticeButtonInDetailView = navController.GetPrivateField<bool>("_showPracticeButtonInDetailView");
+
+            //levelCollectionViewController.SetData(levelPack.beatmapLevelCollection, _headerText, _headerSprite, false, _noDataText.text);
+            navController.SetData(levelPack, true, _showPlayerStatsInDetailView, _showPracticeButtonInDetailView, _noDataText.text);
 
             //_sortedSongs.ForEach(x => Logger.Debug(x.levelID));
         }
 
         /// <summary>
-        /// For now the editing playlist will be considered the favorites playlist.
-        /// Users can edit the settings file themselves.
+        /// Filter songs based on playerdata favorites.
         /// </summary>
-        private List<IPreviewBeatmapLevel> FilterFavorites()
+        private List<IPreviewBeatmapLevel> FilterFavorites(List<IPreviewBeatmapLevel> levels)
         {
             Logger.Info("Filtering song list as favorites playlist...");
-            if (this.CurrentEditingPlaylist != null)
-            {
-                this.CurrentPlaylist = this.CurrentEditingPlaylist;
-            }
-            return this.FilterPlaylist();
+
+            PlayerDataModelSO playerData = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().FirstOrDefault();
+            return levels.Where(x => playerData.playerData.favoritesLevelIds.Contains(x.levelID)).ToList();
         }
 
         /// <summary>
@@ -530,52 +380,6 @@ namespace SongBrowser
         }
 
         /// <summary>
-        /// Filter for a playlist (favorites uses this).
-        /// </summary>
-        /// <param name="pack"></param>
-        /// <returns></returns>
-        private List<IPreviewBeatmapLevel> FilterPlaylist()
-        {
-            // bail if no playlist, usually means the settings stored one the user then moved.
-            if (this.CurrentPlaylist == null)
-            {
-                Logger.Error("Trying to load a null playlist...");
-                this.Settings.filterMode = SongFilterMode.None;
-                return null;
-            }
-
-            // Get song keys
-            PlaylistsCollection.MatchSongsForPlaylist(this.CurrentPlaylist, true);
-
-            Logger.Debug("Filtering songs for playlist: {0}", this.CurrentPlaylist.playlistTitle);
-
-            Dictionary<String, CustomPreviewBeatmapLevel> levelDict = new Dictionary<string, CustomPreviewBeatmapLevel>();
-            foreach (var level in SongCore.Loader.CustomLevels)
-            {
-                if (!levelDict.ContainsKey(level.Value.levelID))
-                {
-                    levelDict.Add(level.Value.levelID, level.Value);
-                }               
-            }
-
-            List<IPreviewBeatmapLevel> songList = new List<IPreviewBeatmapLevel>();
-            foreach (PlaylistSong ps in this.CurrentPlaylist.songs)
-            {
-                if (ps.level != null && levelDict.ContainsKey(ps.level.levelID))
-                {
-                    songList.Add(levelDict[ps.level.levelID]);
-                }
-                else
-                {
-                    Logger.Debug("Could not find song in playlist: {0}", ps.songName);
-                }
-            }
-
-            Logger.Debug("Playlist filtered song count: {0}", songList.Count);
-            return songList;
-        }
-
-        /// <summary>
         /// Filter songs based on ranked or unranked status.
         /// </summary>
         /// <param name="levels"></param>
@@ -586,7 +390,7 @@ namespace SongBrowser
         {
             return levels.Where(x =>
             {
-                var hash = CustomHelpers.GetSongHash(x.levelID);
+                var hash = SongBrowserModel.GetSongHash(x.levelID);
                 double maxPP = 0.0;
                 if (SongDataCore.Plugin.ScoreSaber.Data.Songs.ContainsKey(hash))
                 {
@@ -673,7 +477,7 @@ namespace SongBrowser
             return levels
                 .OrderByDescending(x =>
                 {
-                    var hash = CustomHelpers.GetSongHash(x.levelID);
+                    var hash = SongBrowserModel.GetSongHash(x.levelID);
                     if (SongDataCore.Plugin.ScoreSaber.Data.Songs.ContainsKey(hash))
                     {
                         return SongDataCore.Plugin.ScoreSaber.Data.Songs[hash].diffs.Max(y => y.pp);
@@ -703,7 +507,7 @@ namespace SongBrowser
             return levels
                 .OrderByDescending(x =>
                 {
-                    var hash = CustomHelpers.GetSongHash(x.levelID);
+                    var hash = SongBrowserModel.GetSongHash(x.levelID);
                     var stars = 0.0;
                     if (SongDataCore.Plugin.ScoreSaber.Data.Songs.ContainsKey(hash))
                     {
@@ -727,52 +531,6 @@ namespace SongBrowser
                     }
                 })
                 .ToList();
-        }
-
-        /// <summary>
-        /// Attempt to sort by songs containing easy first
-        /// </summary>
-        /// <param name="levels"></param>
-        /// <returns></returns>
-        private List<IPreviewBeatmapLevel> SortDifficulty(List<IPreviewBeatmapLevel> levels)
-        {
-            Logger.Info("Sorting song list by difficulty (DISABLED!!!)...");
-            /*
-            IEnumerable<BeatmapDifficulty> difficultyIterator = Enum.GetValues(typeof(BeatmapDifficulty)).Cast<BeatmapDifficulty>();
-            Dictionary<string, int> levelIdToDifficultyValue = new Dictionary<string, int>();
-            foreach (IPreviewBeatmapLevel level in levels)
-            {
-                // only need to process a level once
-                if (levelIdToDifficultyValue.ContainsKey(level.levelID))
-                {
-                    continue;
-                }
-
-                // TODO - fix, not honoring beatmap characteristic. 
-                int difficultyValue = 0;
-                if (level as BeatmapLevelSO != null)
-                {
-                    var beatmapSet = (level as BeatmapLevelSO).difficultyBeatmapSets;
-                    difficultyValue = beatmapSet                        
-                        .SelectMany(x => x.difficultyBeatmaps)
-                        .Sum(x => _difficultyWeights[x.difficulty]);
-                }
-                else if (_levelIdToCustomLevel.ContainsKey(level.levelID))
-                {                   
-                    var beatmapSet = (_levelIdToCustomLevel[level.levelID] as CustomPreviewBeatmapLevel).standardLevelInfoSaveData.difficultyBeatmapSets;
-                    difficultyValue = beatmapSet
-                        .SelectMany(x => x.difficultyBeatmaps)
-                        .Sum(x => _difficultyWeights[(BeatmapDifficulty)Enum.Parse(typeof(BeatmapDifficulty), x.difficulty)]);
-                }
-
-                levelIdToDifficultyValue.Add(level.levelID, difficultyValue);                
-            }
-
-            return levels
-                .OrderBy(x => levelIdToDifficultyValue[x.levelID])
-                .ThenBy(x => x.songName)
-                .ToList();*/
-            return levels;
         }
 
         /// <summary>
@@ -823,7 +581,7 @@ namespace SongBrowser
 
             return levelIds
                 .OrderByDescending(x => {
-                    var hash = CustomHelpers.GetSongHash(x.levelID);
+                    var hash = SongBrowserModel.GetSongHash(x.levelID);
                     if (SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
                     {
                         return SongDataCore.Plugin.BeatSaver.Data.Songs[hash].stats.upVotes;
@@ -853,7 +611,7 @@ namespace SongBrowser
 
             return levelIds
                 .OrderByDescending(x => {
-                    var hash = CustomHelpers.GetSongHash(x.levelID);
+                    var hash = SongBrowserModel.GetSongHash(x.levelID);
                     if (SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
                     {
                         return SongDataCore.Plugin.BeatSaver.Data.Songs[hash].stats.plays;
@@ -883,7 +641,7 @@ namespace SongBrowser
 
             return levelIds
                 .OrderByDescending(x => {
-                    var hash = CustomHelpers.GetSongHash(x.levelID);
+                    var hash = SongBrowserModel.GetSongHash(x.levelID);
                     if (SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
                     {
                         return SongDataCore.Plugin.BeatSaver.Data.Songs[hash].stats.rating;
@@ -913,7 +671,7 @@ namespace SongBrowser
 
             return levelIds
                 .OrderByDescending(x => {
-                    var hash = CustomHelpers.GetSongHash(x.levelID);
+                    var hash = SongBrowserModel.GetSongHash(x.levelID);
                     if (SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
                     {
                         return SongDataCore.Plugin.BeatSaver.Data.Songs[hash].stats.heat;
@@ -925,5 +683,18 @@ namespace SongBrowser
                 })
                 .ToList();
         }
+
+        #region Song helpers
+        /// <summary>
+        /// Get the song hash from a levelID
+        /// </summary>
+        /// <param name="levelId"></param>
+        /// <returns></returns>
+        public static string GetSongHash(string levelId)
+        {
+            var split = levelId.Split('_');
+            return split.Length > 2 ? split[2] : levelId;
+        }
+        #endregion
     }
 }

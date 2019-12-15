@@ -2,19 +2,17 @@
   "$schema": "https://raw.githubusercontent.com/beat-saber-modding-group/BSIPA-MetadataFileSchema/master/Schema.json",
   "author": "Halsafar",
   "description": "Adds sort and filter features to the level selection UI.",
-  "gameVersion": "1.5.0",
+  "gameVersion": "1.6.0",
   "id": "SongBrowser",
   "name": "Song Browser",
-  "version": "5.5.2",
+  "version": "6.0.0",
   "dependsOn": {
-    "CustomUI": "^1.7.1",
-    "SongCore": "^2.4.1",
-    "SongDataCore":  "^1.1.4"
+    "SongCore": "^2.7.2",
+    "SongDataCore": "^1.1.5"
   },
   "features": [
     "print",
     "debug",
-    "warn",
-    "config-provider"
+    "warn"
   ]
 }

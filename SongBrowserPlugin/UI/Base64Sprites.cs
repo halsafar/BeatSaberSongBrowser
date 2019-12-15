@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
@@ -7,36 +9,23 @@ namespace SongBrowser.UI
 {
     class Base64Sprites
     {
-        public static Sprite PlaylistIcon;
-        public static Sprite AddToFavoritesIcon;
-        public static Sprite RemoveFromFavoritesIcon;
         public static Sprite StarFullIcon;
-        public static Sprite StarEmptyIcon;
-        public static Sprite DownloadIcon;
         public static Sprite SpeedIcon;
         public static Sprite GraphIcon;
         public static Sprite DeleteIcon;
         public static Sprite XIcon;
         public static Sprite RandomIcon;
-
-        public static Sprite BeastSaberLogo;
         public static Sprite DoubleArrow;
 
         public static void Init()
         {
-            SpeedIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.Speed.png");
-            GraphIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.Graph.png");
-            XIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.X.png");
-            AddToFavoritesIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.AddToFavorites.png");
-            PlaylistIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.PlaylistIcon.png");
-            RemoveFromFavoritesIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.RemoveFromFavorites.png");
-            StarFullIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.StarFull.png");
-            StarEmptyIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.StarEmpty.png");
-            DownloadIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.DownloadIcon.png");
-            DeleteIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.DeleteIcon.png");
-            DoubleArrow = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.DoubleArrow.png");
-            BeastSaberLogo = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.BeastSaberLogo.png");
-            RandomIcon = CustomUI.Utilities.UIUtilities.LoadSpriteFromResources("SongBrowser.Assets.RandomIcon.png");
+            SpeedIcon = Base64Sprites.LoadSpriteFromResources("SongBrowser.Assets.Speed.png");
+            GraphIcon = Base64Sprites.LoadSpriteFromResources("SongBrowser.Assets.Graph.png");
+            XIcon = Base64Sprites.LoadSpriteFromResources("SongBrowser.Assets.X.png");
+            StarFullIcon = Base64Sprites.LoadSpriteFromResources("SongBrowser.Assets.StarFull.png");
+            DeleteIcon = Base64Sprites.LoadSpriteFromResources("SongBrowser.Assets.DeleteIcon.png");
+            DoubleArrow = Base64Sprites.LoadSpriteFromResources("SongBrowser.Assets.DoubleArrow.png");
+            RandomIcon = Base64Sprites.LoadSpriteFromResources("SongBrowser.Assets.RandomIcon.png");
         }
 
         public static string SpriteToBase64(Sprite input)
@@ -88,6 +77,47 @@ namespace SongBrowser.UI
         private static int ReadInt(byte[] imageData, int offset)
         {
             return (imageData[offset] << 8) | imageData[offset + 1];
+        }
+
+        public static Texture2D LoadTextureRaw(byte[] file)
+        {
+            if (file.Count() > 0)
+            {
+                Texture2D Tex2D = new Texture2D(2, 2);
+                if (Tex2D.LoadImage(file))
+                    return Tex2D;
+            }
+            return null;
+        }
+
+        public static Texture2D LoadTextureFromResources(string resourcePath)
+        {
+            return LoadTextureRaw(GetResource(Assembly.GetCallingAssembly(), resourcePath));
+        }
+
+        public static Sprite LoadSpriteRaw(byte[] image, float PixelsPerUnit = 100.0f)
+        {
+            return LoadSpriteFromTexture(LoadTextureRaw(image), PixelsPerUnit);
+        }
+
+        public static Sprite LoadSpriteFromTexture(Texture2D SpriteTexture, float PixelsPerUnit = 100.0f)
+        {
+            if (SpriteTexture)
+                return Sprite.Create(SpriteTexture, new Rect(0, 0, SpriteTexture.width, SpriteTexture.height), new Vector2(0, 0), PixelsPerUnit);
+            return null;
+        }
+
+        public static Sprite LoadSpriteFromResources(string resourcePath, float PixelsPerUnit = 100.0f)
+        {
+            return LoadSpriteRaw(GetResource(Assembly.GetCallingAssembly(), resourcePath), PixelsPerUnit);
+        }
+
+        public static byte[] GetResource(Assembly asm, string ResourceName)
+        {
+            System.IO.Stream stream = asm.GetManifestResourceStream(ResourceName);
+            byte[] data = new byte[stream.Length];
+            stream.Read(data, 0, (int)stream.Length);
+            return data;
         }
     }
 }

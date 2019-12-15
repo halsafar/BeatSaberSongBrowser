@@ -1,17 +1,15 @@
 ﻿using UnityEngine.SceneManagement;
 using SongBrowser.UI;
 using Logger = SongBrowser.Logging.Logger;
-using SongBrowser.DataAccess;
-using System.Collections.Generic;
-using SongBrowser.Internals;
 using System;
 using IPA;
+using BS_Utils.Utilities;
 
 namespace SongBrowser
 {
     public class Plugin : IBeatSaberPlugin
     {
-        public const string VERSION_NUMBER = "5.5.2";
+        public const string VERSION_NUMBER = "6.0.0";
         public static Plugin Instance;
         public static IPA.Logging.Logger Log;
 
@@ -24,12 +22,7 @@ namespace SongBrowser
         {
             Instance = this;
 
-            PluginConfig.LoadOrCreateConfig();
-
             Base64Sprites.Init();
-
-            PlaylistsCollection.ReloadPlaylists();
-            SongCore.Loader.SongsLoadedEvent += SongCore_SongsLoadedEvent;
 
             BSEvents.OnLoad();
             BSEvents.menuSceneLoadedFresh += OnMenuSceneLoadedFresh;
@@ -48,18 +41,6 @@ namespace SongBrowser
             catch (Exception e)
             {
                 Logger.Exception("Exception on fresh menu scene change: " + e);
-            }
-        }
-
-        public void SongCore_SongsLoadedEvent(SongCore.Loader sender, Dictionary<string, CustomPreviewBeatmapLevel> levels)
-        {
-            try
-            {
-                PlaylistsCollection.MatchSongsForAllPlaylists(true);
-            }
-            catch (Exception e)
-            {
-                Logger.Exception("Unable to match songs for all playlists! Exception: " + e);
             }
         }
 

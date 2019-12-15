@@ -4,34 +4,33 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using System.Linq;
 using SongCore.Utilities;
+
 
 namespace SongBrowser.UI
 {
-    // Modified version of:
-    // https://raw.githubusercontent.com/xyonico/BeatSaberSongLoader/master/SongLoaderPlugin/ProgressBar.cs
-    // - Removed loading bar
-    // - 
+    /// <summary>
+    /// Taken from SongCore, modified
+    /// </summary>
     public class ProgressBar : MonoBehaviour
     {
         private Canvas _canvas;
         private TMP_Text _authorNameText;
         private TMP_Text _pluginNameText;
         private TMP_Text _headerText;
-        private Image _loadingBackg;
+        internal Image _loadingBackg;
 
-        private static readonly Vector3 Position = new Vector3(0, -0.60f, 2.5f);
+        private static readonly Vector3 Position = new Vector3(0, -0.85f, 2.5f);
         private static readonly Vector3 Rotation = new Vector3(0, 0, 0);
         private static readonly Vector3 Scale = new Vector3(0.01f, 0.01f, 0.01f);
 
         private static readonly Vector2 CanvasSize = new Vector2(200, 50);
 
-        private const string AuthorNameText = "halsafar's";
+        private const string AuthorNameText = "Halsafar";
         private const float AuthorNameFontSize = 7f;
         private static readonly Vector2 AuthorNamePosition = new Vector2(10, 31);
 
-        private const string PluginNameText = "Song Browser Plugin <size=75%>" + Plugin.VERSION_NUMBER + "</size>";
+        private const string PluginNameText = "Song Browser - v<size=100%>" + Plugin.VERSION_NUMBER + "</size>";
         private const float PluginNameFontSize = 9f;
         private static readonly Vector2 PluginNamePosition = new Vector2(10, 23);
 
@@ -98,10 +97,11 @@ namespace SongBrowser.UI
 
         private void SongBrowserFinishedProcessingSongs(Dictionary<string, CustomPreviewBeatmapLevel> arg2)
         {
+            StopAllCoroutines();
             _showingMessage = false;
             _headerText.text = arg2.Count + " songs processed";
             _loadingBackg.enabled = false;
-            StartCoroutine(DisableCanvasRoutine(5f));
+            StartCoroutine(DisableCanvasRoutine(8f));
         }
 
         private IEnumerator DisableCanvasRoutine(float time)
@@ -123,7 +123,7 @@ namespace SongBrowser.UI
             var rectTransform = _canvas.transform as RectTransform;
             rectTransform.sizeDelta = CanvasSize;
 
-            _authorNameText = CustomUI.BeatSaber.BeatSaberUI.CreateText(_canvas.transform as RectTransform, AuthorNameText, AuthorNamePosition);
+            _authorNameText = Utils.CreateText(_canvas.transform as RectTransform, AuthorNameText, AuthorNamePosition);
             rectTransform = _authorNameText.transform as RectTransform;
             rectTransform.SetParent(_canvas.transform, false);
             rectTransform.anchoredPosition = AuthorNamePosition;
@@ -131,7 +131,7 @@ namespace SongBrowser.UI
             _authorNameText.text = AuthorNameText;
             _authorNameText.fontSize = AuthorNameFontSize;
 
-            _pluginNameText = CustomUI.BeatSaber.BeatSaberUI.CreateText(_canvas.transform as RectTransform, PluginNameText, PluginNamePosition);
+            _pluginNameText = Utils.CreateText(_canvas.transform as RectTransform, PluginNameText, PluginNamePosition);
             rectTransform = _pluginNameText.transform as RectTransform;
             rectTransform.SetParent(_canvas.transform, false);
             rectTransform.sizeDelta = HeaderSize;
@@ -139,7 +139,7 @@ namespace SongBrowser.UI
             _pluginNameText.text = PluginNameText;
             _pluginNameText.fontSize = PluginNameFontSize;
 
-            _headerText = CustomUI.BeatSaber.BeatSaberUI.CreateText(_canvas.transform as RectTransform, HeaderText, HeaderPosition);
+            _headerText = Utils.CreateText(_canvas.transform as RectTransform, HeaderText, HeaderPosition);
             rectTransform = _headerText.transform as RectTransform;
             rectTransform.SetParent(_canvas.transform, false);
             rectTransform.anchoredPosition = HeaderPosition;

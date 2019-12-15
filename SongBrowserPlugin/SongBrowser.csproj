@@ -37,22 +37,21 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Assembly-CSharp.dll</HintPath>
+    <Reference Include="BS_Utils">
+      <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Plugins\BS_Utils.dll</HintPath>
     </Reference>
-    <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+    <Reference Include="HMLib">
+      <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\HMLib.dll</HintPath>
     </Reference>
-    <Reference Include="BeatSaberCustomUI">
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\BeatSaberCustomUI.dll</HintPath>
-    </Reference>
-    <Reference Include="BeatSaverDownloader">
-      <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Plugins\BeatSaverDownloader.dll</HintPath>
+    <Reference Include="HMUI">
+      <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\HMUI.dll</HintPath>
     </Reference>
     <Reference Include="IPA.Loader, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\IPA.Loader.dll</HintPath>
+    </Reference>
+    <Reference Include="MainAssembly">
+      <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\MainAssembly.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Newtonsoft.Json.dll</HintPath>
@@ -124,50 +123,33 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Internals\BeatSaberUI.cs" />
+    <Compile Include="Internals\BeatSaberExtensions.cs" />
+    <Compile Include="Internals\ReflectionUtils.cs" />
     <Compile Include="UI\Browser\BeatSaberUIController.cs" />
-    <Compile Include="DataAccess\BeatSaverApi\BeatSaverApiResults.cs" />
-    <Compile Include="DataAccess\FileOperationApiWrapper.cs" />
-    <Compile Include="DataAccess\LoadScripts.cs" />
     <Compile Include="DataAccess\Playlist.cs" />
-    <Compile Include="DataAccess\Network\Downloader.cs" />
-    <Compile Include="Internals\BSEvents.cs" />
-    <Compile Include="Internals\CustomHelpers.cs" />
     <Compile Include="Internals\SimpleJSON.cs" />
     <Compile Include="Logging\Logger.cs" />
-    <Compile Include="PluginConfig.cs" />
-    <Compile Include="UI\BackButtonNavigationController.cs" />
-    <Compile Include="UI\DownloadQueue\DownloadQueueTableCell.cs" />
-    <Compile Include="UI\DownloadQueue\DownloadQueueViewController.cs" />
     <Compile Include="UI\ProgressBar.cs" />
     <Compile Include="SongBrowserApplication.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DataAccess\SongBrowserModel.cs" />
     <Compile Include="DataAccess\SongBrowserSettings.cs" />
-    <Compile Include="UI\Playlists\PlaylistDetailViewController.cs" />
-    <Compile Include="UI\Playlists\PlaylistFlowCoordinator.cs" />
-    <Compile Include="UI\Playlists\PlaylistSelectionListViewController.cs" />
     <Compile Include="UI\Base64Sprites.cs" />
     <Compile Include="UI\Keyboard\CustomUIKeyboard.cs" />
     <Compile Include="UI\Keyboard\SearchKeyboardViewController.cs" />
     <Compile Include="UI\Browser\SongBrowserUI.cs" />
     <Compile Include="UI\Browser\SongFilterButton.cs" />
     <Compile Include="UI\Browser\SongSortButton.cs" />
-    <Compile Include="UI\UIBuilder.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Assets\AddToFavorites.png" />
     <EmbeddedResource Include="Assets\DeleteIcon.png" />
     <EmbeddedResource Include="Assets\DoubleArrow.png" />
-    <EmbeddedResource Include="Assets\BeastSaberLogo.png" />
-    <EmbeddedResource Include="Assets\DownloadIcon.png" />
     <EmbeddedResource Include="Assets\Graph.png" />
     <EmbeddedResource Include="Assets\RandomIcon.png" />
     <EmbeddedResource Include="Assets\SongIcon.png" />
-    <EmbeddedResource Include="Assets\PlaylistIcon.png" />
-    <EmbeddedResource Include="Assets\StarEmpty.png" />
     <EmbeddedResource Include="Assets\StarFull.png" />
-    <EmbeddedResource Include="Assets\RemoveFromFavorites.png" />
     <EmbeddedResource Include="Assets\Search.png" />
     <EmbeddedResource Include="Assets\Speed.png" />
     <EmbeddedResource Include="Assets\X.png" />

@@ -40,7 +40,7 @@ namespace SongBrowser
 
             new GameObject("Beat Saber SongBrowser Plugin").AddComponent<SongBrowserApplication>();
 
-            SongBrowserApplication.MainProgressBar = SongBrowser.UI.ProgressBar.Create();
+            SongBrowserApplication.MainProgressBar = SongBrowser.UI.ProgressBar.Create();            
 
             Console.WriteLine("SongBrowser Plugin Loaded()");
         }
@@ -226,6 +226,7 @@ namespace SongBrowser
         {
             Logger.Trace("HandleModeSelection()");
             _songBrowserUI.CreateUI(mode);
+            SongBrowserApplication.MainProgressBar.ShowMessage("");
             StartCoroutine(UpdateBrowserUI());
         }
 

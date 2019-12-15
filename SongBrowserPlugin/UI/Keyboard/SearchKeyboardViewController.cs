@@ -1,16 +1,14 @@
-﻿using CustomUI.BeatSaber;
+﻿using SongBrowser.Internals;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
-using VRUI;
+
 
 namespace SongBrowser.UI
 {
     // https://github.com/andruzzzhka/BeatSaverDownloader/blob/master/BeatSaverDownloader/PluginUI/ViewControllers/SearchKeyboardViewController.cs
-    class SearchKeyboardViewController : VRUIViewController
+    class SearchKeyboardViewController : HMUI.ViewController
     {
         GameObject _searchKeyboardGO;
 
