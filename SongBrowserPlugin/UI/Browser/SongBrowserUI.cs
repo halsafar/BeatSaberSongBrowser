@@ -1059,7 +1059,7 @@ namespace SongBrowser.UI
 
             // Check if we have data for this song
             Logger.Debug("Checking if have info for song {0}", level.songName);
-            var hash = CustomHelpers.GetSongHash(level.levelID);
+            var hash = SongBrowserModel.GetSongHash(level.levelID);
             if (SongDataCore.Plugin.ScoreSaber.Data.Songs.ContainsKey(hash))
             {
                 Logger.Debug("Checking if have difficulty for song {0} difficulty {1}", level.songName, difficultyString);

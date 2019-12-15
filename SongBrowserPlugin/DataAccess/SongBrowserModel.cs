@@ -394,7 +394,7 @@ namespace SongBrowser
         {
             return levels.Where(x =>
             {
-                var hash = CustomHelpers.GetSongHash(x.levelID);
+                var hash = SongBrowserModel.GetSongHash(x.levelID);
                 double maxPP = 0.0;
                 if (SongDataCore.Plugin.ScoreSaber.Data.Songs.ContainsKey(hash))
                 {
@@ -481,7 +481,7 @@ namespace SongBrowser
             return levels
                 .OrderByDescending(x =>
                 {
-                    var hash = CustomHelpers.GetSongHash(x.levelID);
+                    var hash = SongBrowserModel.GetSongHash(x.levelID);
                     if (SongDataCore.Plugin.ScoreSaber.Data.Songs.ContainsKey(hash))
                     {
                         return SongDataCore.Plugin.ScoreSaber.Data.Songs[hash].diffs.Max(y => y.pp);
@@ -511,7 +511,7 @@ namespace SongBrowser
             return levels
                 .OrderByDescending(x =>
                 {
-                    var hash = CustomHelpers.GetSongHash(x.levelID);
+                    var hash = SongBrowserModel.GetSongHash(x.levelID);
                     var stars = 0.0;
                     if (SongDataCore.Plugin.ScoreSaber.Data.Songs.ContainsKey(hash))
                     {
@@ -585,7 +585,7 @@ namespace SongBrowser
 
             return levelIds
                 .OrderByDescending(x => {
-                    var hash = CustomHelpers.GetSongHash(x.levelID);
+                    var hash = SongBrowserModel.GetSongHash(x.levelID);
                     if (SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
                     {
                         return SongDataCore.Plugin.BeatSaver.Data.Songs[hash].stats.upVotes;
@@ -615,7 +615,7 @@ namespace SongBrowser
 
             return levelIds
                 .OrderByDescending(x => {
-                    var hash = CustomHelpers.GetSongHash(x.levelID);
+                    var hash = SongBrowserModel.GetSongHash(x.levelID);
                     if (SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
                     {
                         return SongDataCore.Plugin.BeatSaver.Data.Songs[hash].stats.plays;
@@ -645,7 +645,7 @@ namespace SongBrowser
 
             return levelIds
                 .OrderByDescending(x => {
-                    var hash = CustomHelpers.GetSongHash(x.levelID);
+                    var hash = SongBrowserModel.GetSongHash(x.levelID);
                     if (SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
                     {
                         return SongDataCore.Plugin.BeatSaver.Data.Songs[hash].stats.rating;
@@ -675,7 +675,7 @@ namespace SongBrowser
 
             return levelIds
                 .OrderByDescending(x => {
-                    var hash = CustomHelpers.GetSongHash(x.levelID);
+                    var hash = SongBrowserModel.GetSongHash(x.levelID);
                     if (SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
                     {
                         return SongDataCore.Plugin.BeatSaver.Data.Songs[hash].stats.heat;
@@ -687,5 +687,18 @@ namespace SongBrowser
                 })
                 .ToList();
         }
+
+        #region Song helpers
+        /// <summary>
+        /// Get the song hash from a levelID
+        /// </summary>
+        /// <param name="levelId"></param>
+        /// <returns></returns>
+        public static string GetSongHash(string levelId)
+        {
+            var split = levelId.Split('_');
+            return split.Length > 2 ? split[2] : levelId;
+        }
+        #endregion
     }
 }

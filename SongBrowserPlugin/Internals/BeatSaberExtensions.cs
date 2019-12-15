@@ -116,6 +116,4 @@ namespace SongBrowser.Internals
         }
         #endregion
     }
-
-
 }

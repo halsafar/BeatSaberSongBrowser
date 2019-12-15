@@ -128,7 +128,6 @@
     <Compile Include="Internals\ReflectionUtils.cs" />
     <Compile Include="UI\Browser\BeatSaberUIController.cs" />
     <Compile Include="DataAccess\Playlist.cs" />
-    <Compile Include="Internals\CustomHelpers.cs" />
     <Compile Include="Internals\SimpleJSON.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="UI\ProgressBar.cs" />
