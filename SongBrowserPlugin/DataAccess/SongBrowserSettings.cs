@@ -88,15 +88,11 @@ namespace SongBrowser.DataAccess
 
         public SongSortMode sortMode = default(SongSortMode);
         public SongFilterMode filterMode = default(SongFilterMode);
-       
-        private HashSet<String> _favorites = default(HashSet<String>);
 
         public List<String> searchTerms = default(List<String>);
 
         public String currentLevelId = default(String);
         public String currentDirectory = default(String);
-        //public String currentPlaylistFile = default(String);
-        //public String currentEditingPlaylistFile = default(String);
         public String currentLevelPackId = default(String);
 
         public bool randomInstantQueue = false;
@@ -108,22 +104,12 @@ namespace SongBrowser.DataAccess
         [NonSerialized]
         public bool DisableSavingSettings = false;
 
-        [XmlArray(@"favorites")]
-        public HashSet<String> Favorites
-        {
-            get
-            {
-                return _favorites;
-            }
-        }
-
         /// <summary>
         /// Constructor.
         /// </summary>
         public SongBrowserSettings()
         {
             searchTerms = new List<string>();
-            _favorites = new HashSet<String>();
         }
 
         /// <summary>
