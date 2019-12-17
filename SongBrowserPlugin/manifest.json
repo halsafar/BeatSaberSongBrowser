@@ -5,7 +5,7 @@
   "gameVersion": "1.6.0",
   "id": "SongBrowser",
   "name": "Song Browser",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "dependsOn": {
     "SongCore": "^2.7.2",
     "SongDataCore": "^1.1.5"
