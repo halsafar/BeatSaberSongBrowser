@@ -21,7 +21,6 @@ A plugin for customizing the in-game song browser.
   - PlayCount: BeatSaver's played count.
   - Random: Randomize the song list each time.
 - Filters:
-  - Playlists.
   - Search (with keyboard support).
   - Favorites (all songs you have marked as a favorite).
   - Ranked.
@@ -32,36 +31,8 @@ A plugin for customizing the in-game song browser.
 - Tips:
   - Sort buttons can be pressed a second time to invert the sorting.
   - Filters can be cancelled by selecting them again.
- 
-## Playlist Format
-```json
-{
-  "playlistTitle": "My Songs",
-  "playlistAuthor": "Me",
-  "image": "",
-  "customArchiveUrl": "",
-  "customDetailUrl": "",
-  "songs": [
-    {
-      "key": "0000",
-      "songName": "SomeCoolSong",
-      "hash": "00000000000000000000000000000000"
-    },
-    {
-      "key": "0000",
-      "songName": "AnotherCoolSong",
-      "hash": "00000000000000000000000000000000"
-    }    
-  ]
-}
-```
-
-- `image` (optional): Base64 JPEG or PNG
-- `customArchiveUrl` (optional): Expects a URL directly to an archive with a wildcard [KEY] which is replace with the song key.
-  - Example: `"customArchiveUrl": "http://website/dlsongs/[KEY].zip"`
-- `customDetailUrl` (optional): Expects a response equivalent to BeatSaver.com API.
 
 ## Status
-- Working with BeatSaber 1.1.0p1
+- Working with BeatSaber 1.6.0
 
 
