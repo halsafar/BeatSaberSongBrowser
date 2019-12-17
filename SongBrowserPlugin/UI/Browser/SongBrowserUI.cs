@@ -849,10 +849,21 @@ namespace SongBrowser.UI
         /// <param name="bc"></param>
         private void OnDidSelectBeatmapCharacteristic(BeatmapCharacteristicSegmentedControlController view, BeatmapCharacteristicSO bc)
         {
-            Logger.Trace("OnDidSelectBeatmapCharacteristic({0}", bc.name);
-            _model.CurrentBeatmapCharacteristicSO = bc;
-            _model.UpdateLevelRecords();
-            this.RefreshSongList();
+            try
+            {
+                Logger.Trace("OnDidSelectBeatmapCharacteristic({0})", bc.compoundIdPartName);
+                _model.CurrentBeatmapCharacteristicSO = bc;
+
+                if (_beatUi.StandardLevelDetailView != null)
+                {
+                    RefreshScoreSaberData(_beatUi.StandardLevelDetailView.selectedDifficultyBeatmap.level);
+                    RefreshNoteJumpSpeed(_beatUi.StandardLevelDetailView.selectedDifficultyBeatmap.difficulty);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Exception(e);
+            }
         }
 
         /// <summary>
