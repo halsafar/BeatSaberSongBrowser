@@ -241,10 +241,10 @@ namespace SongBrowser.Internals
         {
             HoverHintController hoverHintController = Resources.FindObjectsOfTypeAll<HoverHintController>().First();
             DestroyHoverHint(button);
-            HoverHint hoverHint = button.gameObject.AddComponent<HoverHint>();
-            hoverHint.SetPrivateField("_hoverHintController", hoverHintController);
-            hoverHint.text = text;
-            hoverHint.name = name;
+            var newHoverHint = button.gameObject.AddComponent<HoverHint>();
+            newHoverHint.SetPrivateField("_hoverHintController", hoverHintController);
+            newHoverHint.text = text;
+            newHoverHint.name = name;
         }
 
         /// <summary>
@@ -253,7 +253,7 @@ namespace SongBrowser.Internals
         /// <param name="button"></param>
         public static void DestroyHoverHint(RectTransform button)
         {
-            HoverHint currentHoverHint = button.GetComponentsInChildren<HMUI.HoverHint>().FirstOrDefault();
+            HoverHint currentHoverHint = button.GetComponentsInChildren<HMUI.HoverHint>().First();
             if (currentHoverHint != null)
             {
                 UnityEngine.GameObject.DestroyImmediate(currentHoverHint);
