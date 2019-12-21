@@ -1,10 +1,10 @@
 SongBrowser
 
-6.0.1
+6.0.2
 
 SongCore@2.7.2,SongDataCore@1.1.5
 
-Adds various sorting and filtering methods to the UI. Search, favorites, ranked, and unranked filters. Sort by BeatSaver and ScoreSaber statistics. Adds PP and other extra stats to the existing menu.
+Adds various sorting and filtering methods to the UI. Search, favorites, ranked, and unranked filters. Sort by BeatSaver and ScoreSaber statistics. Adds PP and other extra stats to the stat panel.
 
 https://github.com/halsafar/BeatSaberSongBrowser
 
