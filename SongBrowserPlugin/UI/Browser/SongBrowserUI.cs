@@ -355,7 +355,7 @@ namespace SongBrowser.UI
             _pageUpFastButton = Instantiate(_beatUi.TableViewPageUpButton, _beatUi.LevelCollectionTableViewTransform, false);
             (_pageUpFastButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 1f);
             (_pageUpFastButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 1f);
-            (_pageUpFastButton.transform as RectTransform).anchoredPosition = new Vector2(-26f, 0.25f);
+            (_pageUpFastButton.transform as RectTransform).anchoredPosition = new Vector2(-26f, 1f);
             (_pageUpFastButton.transform as RectTransform).sizeDelta = new Vector2(8f, 6f);
             _pageUpFastButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "BG").sizeDelta = new Vector2(8f, 6f);
             _pageUpFastButton.GetComponentsInChildren<UnityEngine.UI.Image>().First(x => x.name == "Arrow").sprite = Base64Sprites.DoubleArrow;
