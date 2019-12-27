@@ -129,7 +129,7 @@ namespace SongBrowser.UI
                 CreateOuterUi();
                 CreateSortButtons();
                 CreateFilterButtons();
-                //CreateDeleteButton();
+                CreateDeleteButton();
                 CreateFastPageButtons();
 
                 this.InstallHandlers();
@@ -388,6 +388,7 @@ namespace SongBrowser.UI
             _deleteButton.onClick.AddListener(delegate () {
                 HandleDeleteSelectedLevel();
             });
+            BeatSaberUI.DestroyHoverHint(_deleteButton.transform as RectTransform);
         }
 
         /// <summary>
@@ -500,10 +501,6 @@ namespace SongBrowser.UI
             {
                 StartCoroutine(RefreshQuickScrollButtonsAsync());
             });
-
-            // finished level
-            ResultsViewController resultsViewController = _beatUi.LevelSelectionFlowCoordinator.GetPrivateField<ResultsViewController>("_resultsViewController");
-            resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
         }
 
         /// <summary>
@@ -553,35 +550,6 @@ namespace SongBrowser.UI
             Sprite _headerSprite = _beatUi.LevelCollectionTableView.GetPrivateField<Sprite>("_headerSprite");
 
             _beatUi.LevelCollectionViewController.SetData(_lastLevelPack.beatmapLevelCollection, _headerText, _headerSprite, false, _noDataText.text);
-        }
-
-        /// <summary>
-        /// Handle updating the level pack selection after returning from a song.
-        /// </summary>SongBrowserPlugin/UI/Browser/SongBrowserUI.cs 
-        /// <param name="obj"></param>
-        private void ResultsViewController_continueButtonPressedEvent(ResultsViewController obj)
-        {
-            StartCoroutine(this.UpdateLevelPackSelectionEndOfFrame());
-        }
-
-        /// <summary>
-        /// TODO - evaluate this sillyness...
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerator UpdateLevelPackSelectionEndOfFrame()
-        {
-            yield return new WaitForEndOfFrame();
-
-            try
-            {
-                UpdateLevelPackSelection();
-                _beatUi.SelectAndScrollToLevel(_model.LastSelectedLevelId);
-                RefreshQuickScrollButtons();
-            }
-            catch (Exception e)
-            {
-                Logger.Exception("Exception:", e);
-            }
         }
 
         /// <summary>
@@ -878,7 +846,7 @@ namespace SongBrowser.UI
                 return;
             }
 
-            //_deleteButton.interactable = (view.selectedDifficultyBeatmap.level.levelID.Length >= 32);
+            _deleteButton.interactable = (view.selectedDifficultyBeatmap.level.levelID.Length >= 32);
 
             RefreshScoreSaberData(view.selectedDifficultyBeatmap.level);
             RefreshNoteJumpSpeed(beatmap.difficulty);
@@ -898,7 +866,7 @@ namespace SongBrowser.UI
                 return;
             }
 
-            //_deleteButton.interactable = (_beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID.Length >= 32);
+            _deleteButton.interactable = (_beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID.Length >= 32);
 
             RefreshScoreSaberData(view.selectedDifficultyBeatmap.level);
             RefreshNoteJumpSpeed(view.selectedDifficultyBeatmap.difficulty);
@@ -912,7 +880,7 @@ namespace SongBrowser.UI
         {
             Logger.Trace("HandleDidSelectLevelRow({0})", level);
 
-            //_deleteButton.interactable = (level.levelID.Length >= 32);
+            _deleteButton.interactable = (level.levelID.Length >= 32);
 
             RefreshQuickScrollButtons();
         }
@@ -922,7 +890,7 @@ namespace SongBrowser.UI
         /// </summary>
         private void HandleDeleteSelectedLevel()
         {
-            /*IBeatmapLevel level = _beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level;
+            IBeatmapLevel level = _beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level;
             _deleteDialog.Init("Delete song", $"Do you really want to delete \"{ level.songName} {level.songSubName}\"?", "Delete", "Cancel",
                 (selectedButton) =>
                 {
@@ -934,25 +902,32 @@ namespace SongBrowser.UI
                             // determine the index we are deleting so we can keep the cursor near the same spot after
                             // the header counts as an index, so if the index came from the level array we have to add 1.
                             var levelsTableView = _beatUi.LevelCollectionTableView;
-                            List<IPreviewBeatmapLevel> levels = levelsTableView.GetPrivateField<IBeatmapLevelPack>("_pack").beatmapLevelCollection.beatmapLevels.ToList();
+                            List<IPreviewBeatmapLevel> levels = _beatUi.GetCurrentLevelPackLevels().ToList();
                             int selectedIndex = levels.FindIndex(x => x.levelID == _beatUi.StandardLevelDetailView.selectedDifficultyBeatmap.level.levelID);
 
                             if (selectedIndex > -1)
                             {
                                 var song = SongCore.Loader.CustomLevels.First(x => x.Value.levelID == _beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID).Value;
+
+                                Logger.Info($"Deleting song: {song.customLevelPath}");
                                 SongCore.Loader.Instance.DeleteSong(song.customLevelPath);
                                 this._model.RemoveSongFromLevelPack(_beatUi.GetCurrentSelectedLevelPack(), _beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID);
-
-                                this.UpdateLevelDataModel();
-                                this.RefreshSongList();
 
                                 int removedLevels = levels.RemoveAll(x => x.levelID == _beatUi.StandardLevelDetailView.selectedDifficultyBeatmap.level.levelID);
                                 Logger.Info("Removed " + removedLevels + " level(s) from song list!");
 
-                                TableView listTableView = levelsTableView.GetPrivateField<TableView>("_tableView");
-                                listTableView.ScrollToCellWithIdx(selectedIndex, TableViewScroller.ScrollPositionType.Beginning, false);
-                                levelsTableView.SetPrivateField("_selectedRow", selectedIndex);
-                                listTableView.SelectCellWithIdx(selectedIndex, true);
+                                this.UpdateLevelDataModel();
+
+                                // if we have a song to select at the same index, set the last selected level id, UI updates takes care of the rest.
+                                if (selectedIndex < levels.Count)
+                                {
+                                    if (levels[selectedIndex].levelID != null)
+                                    {
+                                        _model.LastSelectedLevelId = levels[selectedIndex].levelID;
+                                    }
+                                }
+
+                                this.RefreshSongList();
                             }
                         }
                         catch (Exception e)
@@ -961,7 +936,7 @@ namespace SongBrowser.UI
                         }
                     }
                 });
-            _beatUi.LevelSelectionFlowCoordinator.InvokePrivateMethod("PresentViewController", new object[] { _deleteDialog, null, false });*/
+            _beatUi.LevelSelectionFlowCoordinator.InvokePrivateMethod("PresentViewController", new object[] { _deleteDialog, null, false });
         }        
 
         /// <summary>
@@ -1178,7 +1153,7 @@ namespace SongBrowser.UI
 
             RefreshOuterUIState(visible == true ? UIState.Main : UIState.Disabled);
 
-            //_deleteButton.gameObject.SetActive(visible);
+            _deleteButton.gameObject.SetActive(visible);
 
             _pageUpFastButton.gameObject.SetActive(visible);
             _pageDownFastButton.gameObject.SetActive(visible);
