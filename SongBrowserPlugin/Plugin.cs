@@ -56,7 +56,7 @@ namespace SongBrowser
 
         public void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
         {
- 
+
         }
 
         public void OnSceneUnloaded(Scene scene)

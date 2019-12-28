@@ -253,7 +253,11 @@ namespace SongBrowser.DataAccess
             Logger.Debug("Scrolling level list to idx: {0}", selectedIndex);
 
             TableView tableView = LevelCollectionTableView.GetPrivateField<TableView>("_tableView");
-            LevelCollectionTableView.HandleDidSelectRowEvent(tableView, selectedIndex);
+
+            if (LevelCollectionTableView.selectedRow != selectedIndex && LevelCollectionTableView.isActiveAndEnabled)
+            {
+                LevelCollectionTableView.HandleDidSelectRowEvent(tableView, selectedIndex);
+            }
             tableView.ScrollToCellWithIdx(selectedIndex, TableViewScroller.ScrollPositionType.Beginning, true);
             tableView.SelectCellWithIdx(selectedIndex);            
         }

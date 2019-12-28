@@ -324,8 +324,10 @@ namespace SongBrowser
             bool _showPlayerStatsInDetailView = navController.GetPrivateField<bool>("_showPlayerStatsInDetailView");
             bool _showPracticeButtonInDetailView = navController.GetPrivateField<bool>("_showPracticeButtonInDetailView");
 
-            //levelCollectionViewController.SetData(levelPack.beatmapLevelCollection, _headerText, _headerSprite, false, _noDataText.text);
-            navController.SetData(levelPack, true, _showPlayerStatsInDetailView, _showPracticeButtonInDetailView, _noDataText.text);
+            if (navController.isInViewControllerHierarchy && navController.isActiveAndEnabled)
+            {
+                navController.SetData(levelPack, true, _showPlayerStatsInDetailView, _showPracticeButtonInDetailView, _noDataText.text);
+            }
 
             //_sortedSongs.ForEach(x => Logger.Debug(x.levelID));
         }
