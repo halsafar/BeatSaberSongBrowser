@@ -218,9 +218,11 @@ namespace SongBrowser.DataAccess
         /// </summary>
         public static void MigrateFavorites()
         {
-            // Always the favorites, never used this feature    
+            String migratedPlaylistPath = Path.Combine(Environment.CurrentDirectory, "Playlists", MigratedFavoritesPlaylistName);
             String oldFavoritesPath = Path.Combine(Environment.CurrentDirectory, "Playlists", DefaultConvertedFavoritesPlaylistName);
-            if (!File.Exists(oldFavoritesPath))
+
+            // Skip if already migrated or if the song browser favorites do not exist
+            if (!File.Exists(oldFavoritesPath) || File.Exists(migratedPlaylistPath))
             {
                 return;
             }
@@ -236,7 +238,6 @@ namespace SongBrowser.DataAccess
                 playerData.playerData.favoritesLevelIds.Add(levelID);
             }
 
-            String migratedPlaylistPath = Path.Combine(Environment.CurrentDirectory, "Playlists", MigratedFavoritesPlaylistName);
             Logger.Info("Moving [{0}->{1}] into the In-Game favorites.", oldFavoritesPath, migratedPlaylistPath);
             File.Move(oldFavoritesPath, migratedPlaylistPath);
 
