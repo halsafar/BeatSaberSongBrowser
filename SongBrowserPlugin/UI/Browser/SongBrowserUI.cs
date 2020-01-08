@@ -624,11 +624,11 @@ namespace SongBrowser.UI
             Logger.Debug($"Cancelling filter, levelPack {_lastLevelPack}");
             _model.Settings.filterMode = SongFilterMode.None;
 
-            TextMeshProUGUI _noDataText = _beatUi.LevelCollectionViewController.GetPrivateField<TextMeshProUGUI>("_noDataText");
+            GameObject _noDataGO = _beatUi.LevelCollectionViewController.GetPrivateField<GameObject>("_noDataInfoGO");
             string _headerText = _beatUi.LevelCollectionTableView.GetPrivateField<string>("_headerText");
             Sprite _headerSprite = _beatUi.LevelCollectionTableView.GetPrivateField<Sprite>("_headerSprite");
 
-            _beatUi.LevelCollectionViewController.SetData(_lastLevelPack.beatmapLevelCollection, _headerText, _headerSprite, false, _noDataText.text);
+            _beatUi.LevelCollectionViewController.SetData(_lastLevelPack.beatmapLevelCollection, _headerText, _headerSprite, false, _noDataGO);
         }
 
         /// <summary>
@@ -659,7 +659,8 @@ namespace SongBrowser.UI
         /// <param name="arg2"></param>
         /// <param name="arg3"></param>
         /// <param name="arg4"></param>
-        private void _levelFilteringNavController_didSelectPackEvent(LevelFilteringNavigationController arg1, IAnnotatedBeatmapLevelCollection arg2, string arg3, BeatmapCharacteristicSO arg4)
+        private void _levelFilteringNavController_didSelectPackEvent(LevelFilteringNavigationController arg1, IAnnotatedBeatmapLevelCollection arg2, 
+            GameObject arg3, BeatmapCharacteristicSO arg4)
         {
             Logger.Trace("_levelFilteringNavController_didSelectPackEvent(levelPack={0})", arg2);
 
@@ -816,11 +817,11 @@ namespace SongBrowser.UI
             }
             else
             {              
-                TextMeshProUGUI _noDataText = _beatUi.LevelCollectionViewController.GetPrivateField<TextMeshProUGUI>("_noDataText");
+                GameObject _noDataGO = _beatUi.LevelCollectionViewController.GetPrivateField<GameObject>("_noDataInfoGO");
                 string _headerText = _beatUi.LevelCollectionTableView.GetPrivateField<string>("_headerText");
                 Sprite _headerSprite = _beatUi.LevelCollectionTableView.GetPrivateField<Sprite>("_headerSprite");
                 
-                _beatUi.LevelCollectionViewController.SetData(_lastLevelPack.beatmapLevelCollection, _headerText, _headerSprite, false, _noDataText.text);
+                _beatUi.LevelCollectionViewController.SetData(_lastLevelPack.beatmapLevelCollection, _headerText, _headerSprite, false, _noDataGO);
             }
 
             // If selecting the same filter, cancel

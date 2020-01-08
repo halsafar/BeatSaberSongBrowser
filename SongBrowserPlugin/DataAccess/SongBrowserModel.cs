@@ -321,14 +321,14 @@ namespace SongBrowser
             }
             BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsPackId, packName, selectedLevelPack.shortPackName, selectedLevelPack.coverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
 
-            TextMeshProUGUI _noDataText = levelCollectionViewController.GetPrivateField<TextMeshProUGUI>("_noDataText");
+            GameObject _noDataGO = levelCollectionViewController.GetPrivateField<GameObject>("_noDataInfoGO");
             //string _headerText = tableView.GetPrivateField<string>("_headerText");
             //Sprite _headerSprite = tableView.GetPrivateField<Sprite>("_headerSprite");
 
             bool _showPlayerStatsInDetailView = navController.GetPrivateField<bool>("_showPlayerStatsInDetailView");
             bool _showPracticeButtonInDetailView = navController.GetPrivateField<bool>("_showPracticeButtonInDetailView");
 
-            navController.SetData(levelPack, true, _showPlayerStatsInDetailView, _showPracticeButtonInDetailView, _noDataText.text);
+            navController.SetData(levelPack, true, _showPlayerStatsInDetailView, _showPracticeButtonInDetailView, _noDataGO);
 
             //_sortedSongs.ForEach(x => Logger.Debug(x.levelID));
         }
