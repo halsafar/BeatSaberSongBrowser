@@ -253,8 +253,8 @@ namespace SongBrowser.DataAccess
             Logger.Debug("Scrolling level list to idx: {0}", selectedIndex);
 
             TableView tableView = LevelCollectionTableView.GetPrivateField<TableView>("_tableView");
-
-            if (LevelCollectionTableView.selectedRow != selectedIndex && LevelCollectionTableView.isActiveAndEnabled)
+            var selectedRow = LevelCollectionTableView.GetPrivateField<int>("_selectedRow");
+            if (selectedRow != selectedIndex && LevelCollectionTableView.isActiveAndEnabled)
             {
                 LevelCollectionTableView.HandleDidSelectRowEvent(tableView, selectedIndex);
             }
