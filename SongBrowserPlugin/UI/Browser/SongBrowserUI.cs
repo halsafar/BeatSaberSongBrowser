@@ -62,7 +62,6 @@ namespace SongBrowser.UI
 
         private IBeatmapLevelPack _lastLevelPack;
 
-        // Model
         private SongBrowserModel _model;
         public SongBrowserModel Model
         {
@@ -77,9 +76,11 @@ namespace SongBrowser.UI
             }
         }
 
-        // UI Created
         private bool _uiCreated = false;
+        
         private UIState _currentUiState = UIState.Disabled;
+
+        private bool _asyncUpdating = false;
 
         /// <summary>
         /// Builds the UI for this plugin.
@@ -501,6 +502,84 @@ namespace SongBrowser.UI
             {
                 StartCoroutine(RefreshQuickScrollButtonsAsync());
             });
+
+            // finished level	
+            //ResultsViewController resultsViewController = _beatUi.LevelSelectionFlowCoordinator.GetPrivateField<ResultsViewController>("_resultsViewController");
+            //resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
+        }
+
+        /*/// <summary>	
+        /// Handle updating the level pack selection after returning from a song.	
+        /// </summary>SongBrowserPlugin/UI/Browser/SongBrowserUI.cs 	
+        /// <param name="obj"></param>	
+        private void ResultsViewController_continueButtonPressedEvent(ResultsViewController obj)
+        {
+            StartCoroutine(this.UpdateLevelPackSelectionEndOfFrame());
+        }
+
+        /// <summary>	
+        /// TODO - evaluate this sillyness...	
+        /// </summary>	
+        /// <returns></returns>	
+        public IEnumerator UpdateLevelPackSelectionEndOfFrame()
+        {
+            yield return new WaitForEndOfFrame();
+
+            try
+            {
+                UpdateLevelPackSelection();
+                _beatUi.SelectAndScrollToLevel(_model.LastSelectedLevelId);
+                RefreshQuickScrollButtons();
+            }
+            catch (Exception e)
+            {
+                Logger.Exception("Exception:", e);
+            }
+        }*/
+
+        /// <summary>
+        /// Waits for the song UI to be available before trying to update.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator AsyncWaitForSongUIUpdate()
+        {
+            if (_asyncUpdating)
+            {
+                yield break;
+            }
+
+            if (!_uiCreated)
+            {
+                yield break;
+            }
+
+            if (!_model.SortWasMissingData)
+            {
+                yield break;
+            }
+
+            _asyncUpdating = true;
+
+            while (_beatUi.LevelSelectionNavigationController.GetPrivateField<bool>("_isInTransition") ||
+                   _beatUi.LevelDetailViewController.GetPrivateField<bool>("_isInTransition") ||
+                   !_beatUi.LevelSelectionNavigationController.isInViewControllerHierarchy ||
+                   !_beatUi.LevelDetailViewController.isInViewControllerHierarchy ||
+                   !_beatUi.LevelSelectionNavigationController.isActiveAndEnabled ||
+                   !_beatUi.LevelDetailViewController.isActiveAndEnabled)
+            {
+                yield return null;
+            }
+
+            //yield return new WaitForEndOfFrame();
+
+            if (_model.Settings.sortMode.NeedsBeatSaverData() && SongDataCore.Plugin.BeatSaver.IsDataAvailable() ||
+                _model.Settings.sortMode.NeedsScoreSaberData() && SongDataCore.Plugin.ScoreSaber.IsDataAvailable())
+            {
+                ProcessSongList();
+                RefreshSongUI();
+            }
+
+            _asyncUpdating = false;
         }
 
         /// <summary>

@@ -33,6 +33,8 @@ namespace SongBrowser
         public static Func<IBeatmapLevelPack, List<IPreviewBeatmapLevel>> CustomFilterHandler;
         public static Action<Dictionary<string, CustomPreviewBeatmapLevel>> didFinishProcessingSongs;
 
+        public bool SortWasMissingData { get; private set; } = false;
+
         /// <summary>
         /// Get the settings the model is using.
         /// </summary>
@@ -260,6 +262,8 @@ namespace SongBrowser
             Logger.Debug("Starting to sort songs...");
             stopwatch = Stopwatch.StartNew();
 
+            SortWasMissingData = false;
+
             switch (_settings.sortMode)
             {
                 case SongSortMode.Original:
@@ -324,10 +328,7 @@ namespace SongBrowser
             bool _showPlayerStatsInDetailView = navController.GetPrivateField<bool>("_showPlayerStatsInDetailView");
             bool _showPracticeButtonInDetailView = navController.GetPrivateField<bool>("_showPracticeButtonInDetailView");
 
-            if (navController.isInViewControllerHierarchy && navController.isActiveAndEnabled)
-            {
-                navController.SetData(levelPack, true, _showPlayerStatsInDetailView, _showPracticeButtonInDetailView, _noDataText.text);
-            }
+            navController.SetData(levelPack, true, _showPlayerStatsInDetailView, _showPracticeButtonInDetailView, _noDataText.text);
 
             //_sortedSongs.ForEach(x => Logger.Debug(x.levelID));
         }
@@ -473,6 +474,7 @@ namespace SongBrowser
 
             if (!SongDataCore.Plugin.ScoreSaber.IsDataAvailable())
             {
+                SortWasMissingData = true;
                 return levels;
             }
 
@@ -503,6 +505,7 @@ namespace SongBrowser
 
             if (!SongDataCore.Plugin.ScoreSaber.IsDataAvailable())
             {
+                SortWasMissingData = true;
                 return levels;
             }
 
@@ -578,6 +581,7 @@ namespace SongBrowser
             // Do not always have data when trying to sort by UpVotes
             if (!SongDataCore.Plugin.BeatSaver.IsDataAvailable())
             {
+                SortWasMissingData = true;
                 return levelIds;
             }
 
@@ -608,6 +612,7 @@ namespace SongBrowser
             // Do not always have data when trying to sort by UpVotes
             if (!SongDataCore.Plugin.BeatSaver.IsDataAvailable())
             {
+                SortWasMissingData = true;
                 return levelIds;
             }
 
@@ -638,6 +643,7 @@ namespace SongBrowser
             // Do not always have data when trying to sort by rating
             if (!SongDataCore.Plugin.BeatSaver.IsDataAvailable())
             {
+                SortWasMissingData = true;
                 return levelIds;
             }
 
@@ -668,6 +674,7 @@ namespace SongBrowser
             // Do not always have data when trying to sort by heat
             if (!SongDataCore.Plugin.BeatSaver.IsDataAvailable())
             {
+                SortWasMissingData = true;
                 return levelIds;
             }
 

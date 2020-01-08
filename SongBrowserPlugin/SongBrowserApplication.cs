@@ -125,15 +125,7 @@ namespace SongBrowser
             Logger.Trace("OnScoreSaberDataDownloaded");
             try
             {
-                if (_songBrowserModel.Settings.sortMode.NeedsScoreSaberData())
-                {
-                    _songBrowserUI.ProcessSongList();
-                    _songBrowserUI.RefreshSongUI();
-                }
-                else
-                {
-                    _songBrowserUI.RefreshSortButtonUI();
-                }
+                StartCoroutine(_songBrowserUI.AsyncWaitForSongUIUpdate());
             }
             catch (Exception e)
             {
@@ -149,19 +141,11 @@ namespace SongBrowser
             Logger.Trace("OnBeatSaverDataDownloaded");
             try
             {
-                if (_songBrowserModel.Settings.sortMode.NeedsBeatSaverData())
-                {
-                    _songBrowserUI.ProcessSongList();
-                    _songBrowserUI.RefreshSongUI();
-                }
-                else
-                {
-                    _songBrowserUI.RefreshSortButtonUI();
-                }
+                StartCoroutine(_songBrowserUI.AsyncWaitForSongUIUpdate());
             }
             catch (Exception e)
             {
-                Logger.Exception("Exception during OnDownloaderScrappedDataDownloaded: ", e);
+                Logger.Exception("Exception during OnBeatSaverDataDownloaded: ", e);
             }
         }
 
