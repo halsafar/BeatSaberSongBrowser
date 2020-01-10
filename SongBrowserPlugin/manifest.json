@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/beat-saber-modding-group/BSIPA-MetadataFileSchema/master/Schema.json",
   "author": "Halsafar",
   "description": "Adds sort and filter features to the level selection UI.",
-  "gameVersion": "1.6.0",
+  "gameVersion": "1.6.1",
   "id": "SongBrowser",
   "name": "Song Browser",
   "version": "6.0.3",
