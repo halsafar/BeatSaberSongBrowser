@@ -905,7 +905,7 @@ namespace SongBrowser.UI
                 if (_beatUi.StandardLevelDetailView != null)
                 {
                     RefreshScoreSaberData(_beatUi.StandardLevelDetailView.selectedDifficultyBeatmap.level);
-                    RefreshNoteJumpSpeed(_beatUi.StandardLevelDetailView.selectedDifficultyBeatmap.difficulty);
+                    RefreshNoteJumpSpeed(_beatUi.StandardLevelDetailView.selectedDifficultyBeatmap.noteJumpMovementSpeed);
                 }
             }
             catch (Exception e)
@@ -929,7 +929,7 @@ namespace SongBrowser.UI
             _deleteButton.interactable = (view.selectedDifficultyBeatmap.level.levelID.Length >= 32);
 
             RefreshScoreSaberData(view.selectedDifficultyBeatmap.level);
-            RefreshNoteJumpSpeed(beatmap.difficulty);
+            RefreshNoteJumpSpeed(beatmap.noteJumpMovementSpeed);
         }
 
         /// <summary>
@@ -949,7 +949,7 @@ namespace SongBrowser.UI
             _deleteButton.interactable = (_beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID.Length >= 32);
 
             RefreshScoreSaberData(view.selectedDifficultyBeatmap.level);
-            RefreshNoteJumpSpeed(view.selectedDifficultyBeatmap.difficulty);
+            RefreshNoteJumpSpeed(view.selectedDifficultyBeatmap.noteJumpMovementSpeed);
         }
 
         /// <summary>
@@ -1162,10 +1162,10 @@ namespace SongBrowser.UI
         /// <summary>
         /// Helper to refresh the NJS widget.
         /// </summary>
-        /// <param name="beatmap"></param>
-        private void RefreshNoteJumpSpeed(BeatmapDifficulty beatmap)
+        /// <param name="noteJumpMovementSpeed"></param>
+        private void RefreshNoteJumpSpeed(float noteJumpMovementSpeed)
         {
-            BeatSaberUI.SetStatButtonText(_njsStatButton, String.Format("{0}", beatmap.NoteJumpMovementSpeed()));
+            BeatSaberUI.SetStatButtonText(_njsStatButton, String.Format("{0}", noteJumpMovementSpeed));
         }
 
         /// <summary>
