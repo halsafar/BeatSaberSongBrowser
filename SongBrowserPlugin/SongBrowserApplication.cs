@@ -72,8 +72,7 @@ namespace SongBrowser
 
             InstallHandlers();
 
-            SongDataCore.Plugin.ScoreSaber.OnDataFinishedProcessing += OnScoreSaberDataDownloaded;
-            SongDataCore.Plugin.BeatSaver.OnDataFinishedProcessing += OnBeatSaverDataDownloaded;
+            SongDataCore.Plugin.Songs.OnDataFinishedProcessing += OnScoreSaberDataDownloaded;
 
             if (SongCore.Loader.AreSongsLoaded)
             {
@@ -130,22 +129,6 @@ namespace SongBrowser
             catch (Exception e)
             {
                 Logger.Exception("Exception during OnScoreSaberDataDownloaded: ", e);
-            }
-        }
-
-        /// <summary>
-        /// Update mapping of scrapped song data.
-        /// </summary>
-        private void OnBeatSaverDataDownloaded()
-        {
-            Logger.Trace("OnBeatSaverDataDownloaded");
-            try
-            {
-                StartCoroutine(_songBrowserUI.AsyncWaitForSongUIUpdate());
-            }
-            catch (Exception e)
-            {
-                Logger.Exception("Exception during OnBeatSaverDataDownloaded: ", e);
             }
         }
 

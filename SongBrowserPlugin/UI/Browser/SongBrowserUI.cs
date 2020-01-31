@@ -10,7 +10,7 @@ using Logger = SongBrowser.Logging.Logger;
 using System.Collections;
 using SongCore.Utilities;
 using SongBrowser.Internals;
-using SongDataCore.ScoreSaber;
+using SongDataCore.BeatStar;
 
 namespace SongBrowser.UI
 {
@@ -572,8 +572,7 @@ namespace SongBrowser.UI
 
             //yield return new WaitForEndOfFrame();
 
-            if (_model.Settings.sortMode.NeedsBeatSaverData() && SongDataCore.Plugin.BeatSaver.IsDataAvailable() ||
-                _model.Settings.sortMode.NeedsScoreSaberData() && SongDataCore.Plugin.ScoreSaber.IsDataAvailable())
+            if (_model.Settings.sortMode.NeedsScoreSaberData() && SongDataCore.Plugin.Songs.IsDataAvailable())
             {
                 ProcessSongList();
                 RefreshSongUI();
@@ -769,8 +768,7 @@ namespace SongBrowser.UI
         {
             Logger.Debug("Sort button - {0} - pressed.", sortMode.ToString());
 
-            if ((sortMode.NeedsScoreSaberData() && !SongDataCore.Plugin.ScoreSaber.IsDataAvailable()) ||
-                (sortMode.NeedsBeatSaverData() && !SongDataCore.Plugin.BeatSaver.IsDataAvailable()))
+            if ((sortMode.NeedsScoreSaberData() && !SongDataCore.Plugin.Songs.IsDataAvailable()))
             {
                 Logger.Info("Data for sort type is not available.");
                 return;
@@ -1114,7 +1112,7 @@ namespace SongBrowser.UI
         {
             Logger.Trace("RefreshScoreSaberData({0})", level.levelID);
 
-            if (!SongDataCore.Plugin.ScoreSaber.IsDataAvailable())
+            if (!SongDataCore.Plugin.Songs.IsDataAvailable())
             {
                 return;
             }
@@ -1130,11 +1128,11 @@ namespace SongBrowser.UI
             // Check if we have data for this song
             Logger.Debug("Checking if have info for song {0}", level.songName);
             var hash = SongBrowserModel.GetSongHash(level.levelID);
-            if (SongDataCore.Plugin.ScoreSaber.Data.Songs.ContainsKey(hash))
+            if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
             {
                 Logger.Debug("Checking if have difficulty for song {0} difficulty {1}", level.songName, difficultyString);
-                ScoreSaberSong scoreSaberSong = SongDataCore.Plugin.ScoreSaber.Data.Songs[hash];
-                ScoreSaberSongDifficultyStats scoreSaberSongDifficulty = scoreSaberSong.diffs.FirstOrDefault(x => String.Equals(x.diff, difficultyString));
+                BeatStarSong scoreSaberSong = SongDataCore.Plugin.Songs.Data.Songs[hash];
+                BeatStarSongDifficultyStats scoreSaberSongDifficulty = scoreSaberSong.diffs.FirstOrDefault(x => String.Equals(x.diff, difficultyString));
                 if (scoreSaberSongDifficulty != null)
                 {
                     Logger.Debug("Display pp for song.");
@@ -1315,11 +1313,7 @@ namespace SongBrowser.UI
             // So far all we need to refresh is the sort buttons.
             foreach (SongSortButton sortButton in _sortButtonGroup)
             {
-                if (sortButton.SortMode.NeedsBeatSaverData() && !SongDataCore.Plugin.BeatSaver.IsDataAvailable())
-                {
-                    BeatSaberUI.SetButtonBorder(sortButton.Button, Color.gray);
-                }
-                else if (sortButton.SortMode.NeedsScoreSaberData() && !SongDataCore.Plugin.ScoreSaber.IsDataAvailable())
+                if (sortButton.SortMode.NeedsScoreSaberData() && !SongDataCore.Plugin.Songs.IsDataAvailable())
                 {
                     BeatSaberUI.SetButtonBorder(sortButton.Button, Color.gray);
                 }

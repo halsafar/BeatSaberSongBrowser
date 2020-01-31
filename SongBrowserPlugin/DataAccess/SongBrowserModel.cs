@@ -395,9 +395,9 @@ namespace SongBrowser
             {
                 var hash = SongBrowserModel.GetSongHash(x.levelID);
                 double maxPP = 0.0;
-                if (SongDataCore.Plugin.ScoreSaber.Data.Songs.ContainsKey(hash))
+                if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
                 {
-                     maxPP = SongDataCore.Plugin.ScoreSaber.Data.Songs[hash].diffs.Max(y => y.pp);
+                     maxPP = SongDataCore.Plugin.Songs.Data.Songs[hash].diffs.Max(y => y.pp);
                 }
 
                 if (maxPP > 0f)
@@ -472,7 +472,7 @@ namespace SongBrowser
         {
             Logger.Info("Sorting song list by performance points...");
 
-            if (!SongDataCore.Plugin.ScoreSaber.IsDataAvailable())
+            if (!SongDataCore.Plugin.Songs.IsDataAvailable())
             {
                 SortWasMissingData = true;
                 return levels;
@@ -482,9 +482,9 @@ namespace SongBrowser
                 .OrderByDescending(x =>
                 {
                     var hash = SongBrowserModel.GetSongHash(x.levelID);
-                    if (SongDataCore.Plugin.ScoreSaber.Data.Songs.ContainsKey(hash))
+                    if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
                     {
-                        return SongDataCore.Plugin.ScoreSaber.Data.Songs[hash].diffs.Max(y => y.pp);
+                        return SongDataCore.Plugin.Songs.Data.Songs[hash].diffs.Max(y => y.pp);
                     }
                     else
                     {
@@ -503,7 +503,7 @@ namespace SongBrowser
         {
             Logger.Info("Sorting song list by star points...");
 
-            if (!SongDataCore.Plugin.ScoreSaber.IsDataAvailable())
+            if (!SongDataCore.Plugin.Songs.IsDataAvailable())
             {
                 SortWasMissingData = true;
                 return levels;
@@ -514,9 +514,9 @@ namespace SongBrowser
                 {
                     var hash = SongBrowserModel.GetSongHash(x.levelID);
                     var stars = 0.0;
-                    if (SongDataCore.Plugin.ScoreSaber.Data.Songs.ContainsKey(hash))
+                    if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
                     {
-                        var diffs = SongDataCore.Plugin.ScoreSaber.Data.Songs[hash].diffs;   
+                        var diffs = SongDataCore.Plugin.Songs.Data.Songs[hash].diffs;   
                         stars = diffs.Max(y => y.star);
                     }
 
@@ -579,7 +579,7 @@ namespace SongBrowser
             Logger.Info("Sorting song list by BeatSaver UpVotes");
 
             // Do not always have data when trying to sort by UpVotes
-            if (!SongDataCore.Plugin.BeatSaver.IsDataAvailable())
+            if (!SongDataCore.Plugin.Songs.IsDataAvailable())
             {
                 SortWasMissingData = true;
                 return levelIds;
@@ -588,9 +588,9 @@ namespace SongBrowser
             return levelIds
                 .OrderByDescending(x => {
                     var hash = SongBrowserModel.GetSongHash(x.levelID);
-                    if (SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
+                    if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
                     {
-                        return SongDataCore.Plugin.BeatSaver.Data.Songs[hash].stats.upVotes;
+                        return SongDataCore.Plugin.Songs.Data.Songs[hash].upVotes;
                     }
                     else
                     {
@@ -608,9 +608,9 @@ namespace SongBrowser
         private List<IPreviewBeatmapLevel> SortBeatSaverPlayCount(List<IPreviewBeatmapLevel> levelIds)
         {
             Logger.Info("Sorting song list by BeatSaver PlayCount");
-
+            return levelIds;
             // Do not always have data when trying to sort by UpVotes
-            if (!SongDataCore.Plugin.BeatSaver.IsDataAvailable())
+            /*if (!SongDataCore.Plugin.Songs.IsDataAvailable())
             {
                 SortWasMissingData = true;
                 return levelIds;
@@ -619,16 +619,16 @@ namespace SongBrowser
             return levelIds
                 .OrderByDescending(x => {
                     var hash = SongBrowserModel.GetSongHash(x.levelID);
-                    if (SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
+                    if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
                     {
-                        return SongDataCore.Plugin.BeatSaver.Data.Songs[hash].stats.plays;
+                        return SongDataCore.Plugin.Songs.Data.Songs[hash].plays;
                     }
                     else
                     {
                         return int.MinValue;
                     }
                 })
-                .ToList();
+                .ToList();*/
         }
 
         /// <summary>
@@ -641,7 +641,7 @@ namespace SongBrowser
             Logger.Info("Sorting song list by BeatSaver Rating!");
 
             // Do not always have data when trying to sort by rating
-            if (!SongDataCore.Plugin.BeatSaver.IsDataAvailable())
+            if (!SongDataCore.Plugin.Songs.IsDataAvailable())
             {
                 SortWasMissingData = true;
                 return levelIds;
@@ -650,9 +650,9 @@ namespace SongBrowser
             return levelIds
                 .OrderByDescending(x => {
                     var hash = SongBrowserModel.GetSongHash(x.levelID);
-                    if (SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
+                    if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
                     {
-                        return SongDataCore.Plugin.BeatSaver.Data.Songs[hash].stats.rating;
+                        return SongDataCore.Plugin.Songs.Data.Songs[hash].rating;
                     }
                     else
                     {
@@ -672,7 +672,7 @@ namespace SongBrowser
             Logger.Info("Sorting song list by BeatSaver Heat!");
 
             // Do not always have data when trying to sort by heat
-            if (!SongDataCore.Plugin.BeatSaver.IsDataAvailable())
+            if (!SongDataCore.Plugin.Songs.IsDataAvailable())
             {
                 SortWasMissingData = true;
                 return levelIds;
@@ -681,9 +681,9 @@ namespace SongBrowser
             return levelIds
                 .OrderByDescending(x => {
                     var hash = SongBrowserModel.GetSongHash(x.levelID);
-                    if (SongDataCore.Plugin.BeatSaver.Data.Songs.ContainsKey(hash))
+                    if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
                     {
-                        return SongDataCore.Plugin.BeatSaver.Data.Songs[hash].stats.heat;
+                        return SongDataCore.Plugin.Songs.Data.Songs[hash].heat;
                     }
                     else
                     {
