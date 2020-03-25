@@ -90,7 +90,7 @@ namespace SongBrowser.UI
             Logger.Trace("CreateUI()");
 
             // Determine the flow controller to use
-            FlowCoordinator flowCoordinator = null;
+            LevelSelectionFlowCoordinator flowCoordinator = null;
             if (mode == MainMenuViewController.MenuButton.SoloFreePlay)
             {
                 Logger.Debug("Entering SOLO mode...");
@@ -104,7 +104,7 @@ namespace SongBrowser.UI
             else
             {
                 Logger.Debug("Entering SOLO CAMPAIGN mode...");
-                flowCoordinator = Resources.FindObjectsOfTypeAll<CampaignFlowCoordinator>().First();
+                // CampaignFlowCoordinator isn't a LevelSelectionFlowCoordinator
                 return;
             }
 
@@ -635,7 +635,7 @@ namespace SongBrowser.UI
         /// </summary>
         /// <param name="arg1"></param>
         /// <param name="arg2"></param>
-        private void _levelPacksTableView_didSelectPackEvent(LevelPacksTableView arg1, IBeatmapLevelPack arg2)
+        private void _levelPacksTableView_didSelectPackEvent(LevelCollectionTableView arg1, IBeatmapLevelPack arg2)
         {
             Logger.Trace("_levelPacksTableView_didSelectPackEvent(arg2={0})", arg2);
 

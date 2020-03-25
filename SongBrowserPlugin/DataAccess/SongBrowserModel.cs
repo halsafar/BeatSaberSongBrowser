@@ -193,7 +193,7 @@ namespace SongBrowser
             _levelIdToPlayCount = new Dictionary<string, int>();
 
             // Build a map of levelId to sum of all playcounts and sort.
-            PlayerDataModelSO playerData = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().FirstOrDefault();            
+            PlayerDataModel playerData = Resources.FindObjectsOfTypeAll<PlayerDataModel>().FirstOrDefault();
             foreach (var levelData in playerData.playerData.levelsStatsData)
             {
                 if (!_levelIdToPlayCount.ContainsKey(levelData.levelID))
@@ -340,7 +340,7 @@ namespace SongBrowser
         {
             Logger.Info("Filtering song list as favorites playlist...");
 
-            PlayerDataModelSO playerData = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().FirstOrDefault();
+            PlayerDataModel playerData = Resources.FindObjectsOfTypeAll<PlayerDataModel>().FirstOrDefault();
             return levels.Where(x => playerData.playerData.favoritesLevelIds.Contains(x.levelID)).ToList();
         }
 

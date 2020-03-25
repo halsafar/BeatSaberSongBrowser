@@ -12,7 +12,7 @@ namespace SongBrowser.DataAccess
     public class BeatSaberUIController
     {
         // Beat Saber UI Elements
-        public FlowCoordinator LevelSelectionFlowCoordinator;
+        public LevelSelectionFlowCoordinator LevelSelectionFlowCoordinator;
         public LevelSelectionNavigationController LevelSelectionNavigationController;
 
         public LevelFilteringNavigationController LevelFilteringNavigationController;
@@ -51,48 +51,48 @@ namespace SongBrowser.DataAccess
         /// Constructor.  Acquire all necessary BeatSaberUi elements.
         /// </summary>
         /// <param name="flowCoordinator"></param>
-        public BeatSaberUIController(FlowCoordinator flowCoordinator)
+        public BeatSaberUIController(LevelSelectionFlowCoordinator flowCoordinator)
         {
             Logger.Debug("Collecting all BeatSaberUI Elements...");
 
             LevelSelectionFlowCoordinator = flowCoordinator;
 
             // gather flow coordinator elements
-            LevelSelectionNavigationController = LevelSelectionFlowCoordinator.GetPrivateField<LevelSelectionNavigationController>("_levelSelectionNavigationController");
+            LevelSelectionNavigationController = LevelSelectionFlowCoordinator.GetField<LevelSelectionNavigationController, LevelSelectionFlowCoordinator>("_levelSelectionNavigationController");
             Logger.Debug("Acquired LevelSelectionNavigationController [{0}]", LevelSelectionNavigationController.GetInstanceID());
 
             // this is loaded late but available early, grab globally.
             LevelFilteringNavigationController = Resources.FindObjectsOfTypeAll<LevelFilteringNavigationController>().First();
-            //LevelSelectionFlowCoordinator.GetPrivateField<LevelFilteringNavigationController>("_levelFilteringNavigationController");
+            //LevelSelectionFlowCoordinator.GetField<LevelFilteringNavigationController, FlowController>("_levelFilteringNavigationController");
             Logger.Debug("Acquired LevelFilteringNavigationController [{0}]", LevelFilteringNavigationController.GetInstanceID());
 
             // grab nav controller elements
-            LevelCollectionViewController = LevelSelectionNavigationController.GetPrivateField<LevelCollectionViewController>("_levelCollectionViewController");
+            LevelCollectionViewController = LevelSelectionNavigationController.GetField<LevelCollectionViewController, LevelSelectionNavigationController>("_levelCollectionViewController");
             Logger.Debug("Acquired LevelPackLevelsViewController [{0}]", LevelCollectionViewController.GetInstanceID());
 
-            LevelDetailViewController = LevelSelectionNavigationController.GetPrivateField<StandardLevelDetailViewController>("_levelDetailViewController");
+            LevelDetailViewController = LevelSelectionNavigationController.GetField<StandardLevelDetailViewController, LevelSelectionNavigationController>("_levelDetailViewController");
             Logger.Debug("Acquired StandardLevelDetailViewController [{0}]", LevelDetailViewController.GetInstanceID());
 
             // grab level collection view controller elements
-            LevelCollectionTableView = this.LevelCollectionViewController.GetPrivateField<LevelCollectionTableView>("_levelCollectionTableView");
+            LevelCollectionTableView = this.LevelCollectionViewController.GetField<LevelCollectionTableView, LevelCollectionViewController>("_levelCollectionTableView");
             Logger.Debug("Acquired LevelPackLevelsTableView [{0}]", LevelCollectionTableView.GetInstanceID());
 
             // grab letel detail view
-            StandardLevelDetailView = LevelDetailViewController.GetPrivateField<StandardLevelDetailView>("_standardLevelDetailView");
+            StandardLevelDetailView = LevelDetailViewController.GetField<StandardLevelDetailView, StandardLevelDetailViewController>("_standardLevelDetailView");
             Logger.Debug("Acquired StandardLevelDetailView [{0}]", StandardLevelDetailView.GetInstanceID());
 
             BeatmapCharacteristicSelectionViewController = Resources.FindObjectsOfTypeAll<BeatmapCharacteristicSegmentedControlController>().First();
             Logger.Debug("Acquired BeatmapCharacteristicSegmentedControlController [{0}]", BeatmapCharacteristicSelectionViewController.GetInstanceID());
 
-            LevelDifficultyViewController = StandardLevelDetailView.GetPrivateField<BeatmapDifficultySegmentedControlController>("_beatmapDifficultySegmentedControlController");
+            LevelDifficultyViewController = StandardLevelDetailView.GetField<BeatmapDifficultySegmentedControlController, StandardLevelDetailView>("_beatmapDifficultySegmentedControlController");
             Logger.Debug("Acquired BeatmapDifficultySegmentedControlController [{0}]", LevelDifficultyViewController.GetInstanceID());
 
             LevelCollectionTableViewTransform = LevelCollectionTableView.transform as RectTransform;
             Logger.Debug("Acquired TableViewRectTransform from LevelPackLevelsTableView [{0}]", LevelCollectionTableViewTransform.GetInstanceID());
 
-            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(LevelCollectionTableView, "_tableView");
-            TableViewPageUpButton = tableView.GetPrivateField<Button>("_pageUpButton");
-            TableViewPageDownButton = tableView.GetPrivateField<Button>("_pageDownButton");
+            TableView tableView = LevelCollectionTableView.GetField<TableView, LevelCollectionTableView>("_tableView");
+            TableViewPageUpButton = tableView.GetField<Button, TableView>("_pageUpButton");
+            TableViewPageDownButton = tableView.GetField<Button, TableView>("_pageDownButton");
             Logger.Debug("Acquired Page Up and Down buttons...");
 
             PlayContainer = StandardLevelDetailView.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayContainer");
@@ -117,7 +117,7 @@ namespace SongBrowser.DataAccess
                 return null;
             }
 
-            var pack = LevelSelectionNavigationController.GetPrivateField<IBeatmapLevelPack>("_levelPack");
+            var pack = LevelSelectionNavigationController.GetField<IBeatmapLevelPack, LevelSelectionNavigationController>("_levelPack");
             return pack;
         }
 
@@ -230,7 +230,7 @@ namespace SongBrowser.DataAccess
                 // so the last row is +1 the max index, the count.
                 int maxCount = levels.Count;
 
-                int selectedRow = LevelCollectionTableView.GetPrivateField<int>("_selectedRow");
+                int selectedRow = LevelCollectionTableView.GetField<int, LevelCollectionTableView>("_selectedRow");
 
                 Logger.Debug("Song is not in the level pack, cannot scroll to it...  Using last known row {0}/{1}", selectedRow, maxCount);
                 selectedIndex = Math.Min(maxCount, selectedRow);
@@ -252,8 +252,8 @@ namespace SongBrowser.DataAccess
         {
             Logger.Debug("Scrolling level list to idx: {0}", selectedIndex);
 
-            TableView tableView = LevelCollectionTableView.GetPrivateField<TableView>("_tableView");
-            var selectedRow = LevelCollectionTableView.GetPrivateField<int>("_selectedRow");
+            TableView tableView = LevelCollectionTableView.GetField<TableView, LevelCollectionTableView>("_tableView");
+            var selectedRow = LevelCollectionTableView.GetField<int, LevelCollectionTableView>("_selectedRow");
             if (selectedRow != selectedIndex && LevelCollectionTableView.isActiveAndEnabled)
             {
                 LevelCollectionTableView.HandleDidSelectRowEvent(tableView, selectedIndex);
@@ -278,8 +278,8 @@ namespace SongBrowser.DataAccess
                 }
 
                 Logger.Debug("Checking if TableView is initialized...");
-                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(LevelCollectionTableView, "_tableView");
-                bool tableViewInit = ReflectionUtil.GetPrivateField<bool>(tableView, "_isInitialized");
+                TableView tableView = LevelCollectionTableView.GetField<TableView, LevelCollectionTableView>("_tableView");
+                bool tableViewInit = tableView.GetField<bool, TableView>("_isInitialized");
 
                 Logger.Debug("Reloading SongList TableView");
                 tableView.ReloadData();
