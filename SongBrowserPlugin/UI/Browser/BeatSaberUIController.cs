@@ -1,4 +1,5 @@
-﻿using HMUI;
+﻿using BS_Utils.Utilities;
+using HMUI;
 using IPA.Utilities;
 using System;
 using System.Collections.Generic;
@@ -90,7 +91,7 @@ namespace SongBrowser.DataAccess
             LevelCollectionTableViewTransform = LevelCollectionTableView.transform as RectTransform;
             Logger.Debug("Acquired TableViewRectTransform from LevelPackLevelsTableView [{0}]", LevelCollectionTableViewTransform.GetInstanceID());
 
-            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(LevelCollectionTableView, "_tableView");
+            TableView tableView = LevelCollectionTableView.GetPrivateField<TableView>("_tableView");
             TableViewPageUpButton = tableView.GetPrivateField<Button>("_pageUpButton");
             TableViewPageDownButton = tableView.GetPrivateField<Button>("_pageDownButton");
             Logger.Debug("Acquired Page Up and Down buttons...");
@@ -278,8 +279,8 @@ namespace SongBrowser.DataAccess
                 }
 
                 Logger.Debug("Checking if TableView is initialized...");
-                TableView tableView = ReflectionUtil.GetPrivateField<TableView>(LevelCollectionTableView, "_tableView");
-                bool tableViewInit = ReflectionUtil.GetPrivateField<bool>(tableView, "_isInitialized");
+                TableView tableView = LevelCollectionTableView.GetPrivateField<TableView>("_tableView");
+                bool tableViewInit = tableView.GetPrivateField<bool>("_isInitialized");
 
                 Logger.Debug("Reloading SongList TableView");
                 tableView.ReloadData();

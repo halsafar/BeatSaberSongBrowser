@@ -220,7 +220,7 @@ namespace SongBrowser.DataAccess
             Logger.Info("Migrating [{0}] into the In-Game favorites.", oldFavoritesPath);
 
             Playlist oldFavorites = Playlist.LoadPlaylist(oldFavoritesPath);
-            PlayerDataModelSO playerData = Resources.FindObjectsOfTypeAll<PlayerDataModelSO>().FirstOrDefault();
+            PlayerDataModel playerData = Resources.FindObjectsOfTypeAll<PlayerDataModel>().FirstOrDefault();
             foreach (PlaylistSong song in oldFavorites.songs)
             {
                 string levelID = CustomLevelLoader.kCustomLevelPrefixId + song.hash;

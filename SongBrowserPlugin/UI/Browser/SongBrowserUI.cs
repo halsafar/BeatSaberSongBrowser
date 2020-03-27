@@ -635,7 +635,7 @@ namespace SongBrowser.UI
         /// </summary>
         /// <param name="arg1"></param>
         /// <param name="arg2"></param>
-        private void _levelPacksTableView_didSelectPackEvent(LevelPacksTableView arg1, IBeatmapLevelPack arg2)
+        private void _levelPacksTableView_didSelectPackEvent(AnnotatedBeatmapLevelCollectionsTableView arg1, IBeatmapLevelPack arg2)
         {
             Logger.Trace("_levelPacksTableView_didSelectPackEvent(arg2={0})", arg2);
 

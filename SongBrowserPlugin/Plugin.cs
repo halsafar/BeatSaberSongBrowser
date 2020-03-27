@@ -7,17 +7,20 @@ using BS_Utils.Utilities;
 
 namespace SongBrowser
 {
-    public class Plugin : IBeatSaberPlugin
+    [Plugin(RuntimeOptions.SingleStartInit)]
+    public class Plugin
     {
-        public const string VERSION_NUMBER = "6.0.4";
+        public const string VERSION_NUMBER = "6.0.5";
         public static Plugin Instance;
         public static IPA.Logging.Logger Log;
 
-        public void Init(object nullObject, IPA.Logging.Logger logger)
+        [Init]
+        public void Init(IPA.Logging.Logger logger)
         {
             Log = logger;
         }
 
+        [OnStart]
         public void OnApplicationStart()
         {
             Instance = this;
@@ -28,6 +31,7 @@ namespace SongBrowser
             BSEvents.menuSceneLoadedFresh += OnMenuSceneLoadedFresh;
         }
 
+        [OnExit]
         public void OnApplicationQuit()
         {            
         }
@@ -42,31 +46,6 @@ namespace SongBrowser
             {
                 Logger.Exception("Exception on fresh menu scene change: " + e);
             }
-        }
-
-        public void OnUpdate()
-        {
-
-        }
-
-        public void OnFixedUpdate()
-        {
-
-        }
-
-        public void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
-        {
-
-        }
-
-        public void OnSceneUnloaded(Scene scene)
-        {
-
-        }
-
-        public void OnActiveSceneChanged(Scene prevScene, Scene nextScene)
-        {
-
         }
     }
 }
