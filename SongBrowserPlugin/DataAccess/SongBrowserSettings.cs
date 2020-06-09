@@ -73,7 +73,7 @@ namespace SongBrowser.DataAccess
         public static readonly XmlSerializer SettingsSerializer = new XmlSerializer(typeof(SongBrowserSettings));
         public static readonly String DefaultConvertedFavoritesPlaylistName = "SongBrowserPluginFavorites.json";
         public static readonly String MigratedFavoritesPlaylistName = "SongBrowserPluginFavorites_Migrated.json";
-        public static readonly String CUSTOM_SONG_LEVEL_PACK_ID = "custom_levelpack_CustomLevels";
+        public static readonly String CUSTOM_SONGS_LEVEL_COLLECTION_NAME = "Custom Levels";
 
         public SongSortMode sortMode = default(SongSortMode);
         public SongFilterMode filterMode = default(SongFilterMode);
@@ -82,7 +82,7 @@ namespace SongBrowser.DataAccess
 
         public String currentLevelId = default(String);
         public String currentDirectory = default(String);
-        public String currentLevelPackId = default(String);
+        public String currentLevelCollectionName = default(String);
 
         public bool randomInstantQueue = false;
         public bool deleteNumberedSongFolder = true;
@@ -191,13 +191,13 @@ namespace SongBrowser.DataAccess
         /// <param name="settings"></param>
         private static void ApplyFixes(SongBrowserSettings settings)
         {
-            if (String.Equals(settings.currentLevelPackId, "CustomMaps"))
+            if (String.Equals(settings.currentLevelCollectionName, "CustomMaps"))
             {
-                settings.currentLevelPackId = "ModdedCustomMaps";
+                settings.currentLevelCollectionName = "ModdedCustomMaps";
             }
-            else if (String.Equals(settings.currentLevelPackId, "ModdedCustomMaps"))
+            else if (String.Equals(settings.currentLevelCollectionName, "ModdedCustomMaps"))
             {
-                settings.currentLevelPackId = SongBrowserSettings.CUSTOM_SONG_LEVEL_PACK_ID;
+                settings.currentLevelCollectionName = SongBrowserSettings.CUSTOM_SONGS_LEVEL_COLLECTION_NAME;
             }
 
             settings.Save();

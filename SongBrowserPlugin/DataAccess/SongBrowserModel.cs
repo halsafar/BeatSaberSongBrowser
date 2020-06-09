@@ -14,7 +14,8 @@ namespace SongBrowser
 {
     public class SongBrowserModel
     {
-        public static readonly string FilteredSongsPackId = CustomLevelLoader.kCustomLevelPackPrefixId + "SongBrowser_FilteredSongPack";
+        public static readonly string FilteredSongsCollectionName = CustomLevelLoader.kCustomLevelPackPrefixId + "SongBrowser_FilteredSongPack";
+        public static readonly string PlaylistSongsCollectionName = "SongBrowser_PlaylistPack";
 
         private readonly String CUSTOM_SONGS_DIR = Path.Combine("Beat Saber_Data", "CustomLevels");
 
@@ -30,7 +31,7 @@ namespace SongBrowser
 
         public BeatmapCharacteristicSO CurrentBeatmapCharacteristicSO;
 
-        public static Func<IBeatmapLevelPack, List<IPreviewBeatmapLevel>> CustomFilterHandler;
+        public static Func<IAnnotatedBeatmapLevelCollection, List<IPreviewBeatmapLevel>> CustomFilterHandler;
         public static Action<Dictionary<string, CustomPreviewBeatmapLevel>> didFinishProcessingSongs;
 
         public bool SortWasMissingData { get; private set; } = false;
@@ -176,11 +177,11 @@ namespace SongBrowser
         /// <summary>
         /// SongLoader doesn't fire event when we delete a song.
         /// </summary>
-        /// <param name="levelPack"></param>
+        /// <param name="levelCollection"></param>
         /// <param name="levelId"></param>
-        public void RemoveSongFromLevelPack(IBeatmapLevelPack levelPack, String levelId)
+        public void RemoveSongFromLevelCollection(IAnnotatedBeatmapLevelCollection levelCollection, String levelId)
         {
-            levelPack.beatmapLevelCollection.beatmapLevels.ToList().RemoveAll(x => x.levelID == levelId);
+            levelCollection.beatmapLevelCollection.beatmapLevels.ToList().RemoveAll(x => x.levelID == levelId);
         }
 
         /// <summary>
@@ -208,7 +209,7 @@ namespace SongBrowser
         /// <summary>
         /// Sort the song list based on the settings.
         /// </summary>
-        public void ProcessSongList(IBeatmapLevelPack selectedLevelPack, LevelCollectionViewController levelCollectionViewController, LevelSelectionNavigationController navController)
+        public void ProcessSongList(IAnnotatedBeatmapLevelCollection selectedBeatmapCollection, LevelCollectionViewController levelCollectionViewController, LevelSelectionNavigationController navController)
         {
             Logger.Trace("ProcessSongList()");
 
@@ -217,14 +218,14 @@ namespace SongBrowser
             List<IPreviewBeatmapLevel> sortedSongs = null;
 
             // Abort
-            if (selectedLevelPack == null)
+            if (selectedBeatmapCollection == null)
             {
-                Logger.Debug("Cannot process songs yet, no level pack selected...");
+                Logger.Debug("Cannot process songs yet, no level collection selected...");
                 return;
             }
             
-            Logger.Debug("Using songs from level pack: {0}", selectedLevelPack.packID);
-            unsortedSongs = selectedLevelPack.beatmapLevelCollection.beatmapLevels.ToList();            
+            Logger.Debug("Using songs from level collection: {0}", selectedBeatmapCollection.collectionName);
+            unsortedSongs = selectedBeatmapCollection.beatmapLevelCollection.beatmapLevels.ToList();
 
             // filter
             Logger.Debug($"Starting filtering songs by {_settings.filterMode}");
@@ -246,7 +247,7 @@ namespace SongBrowser
                     break;
                 case SongFilterMode.Custom:
                     Logger.Info("Song filter mode set to custom. Deferring filter behaviour to another mod.");
-                    filteredSongs = CustomFilterHandler != null ? CustomFilterHandler.Invoke(selectedLevelPack) : unsortedSongs;
+                    filteredSongs = CustomFilterHandler != null ? CustomFilterHandler.Invoke(selectedBeatmapCollection) : unsortedSongs;
                     break;
                 case SongFilterMode.None:
                 default:
@@ -313,18 +314,16 @@ namespace SongBrowser
             stopwatch.Stop();
             Logger.Info("Sorting songs took {0}ms", stopwatch.ElapsedMilliseconds);
 
+            // Still hacking in a custom level pack
             // Asterisk the pack name so it is identifable as filtered.
-            var packName = selectedLevelPack.packName;
+            var packName = selectedBeatmapCollection.collectionName;
             if (!packName.EndsWith("*") && _settings.filterMode != SongFilterMode.None)
             {
                 packName += "*";
             }
-            BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsPackId, packName, selectedLevelPack.shortPackName, selectedLevelPack.coverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
+            BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsCollectionName, packName, selectedBeatmapCollection.collectionName, selectedBeatmapCollection.coverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
 
             GameObject _noDataGO = levelCollectionViewController.GetPrivateField<GameObject>("_noDataInfoGO");
-            //string _headerText = tableView.GetPrivateField<string>("_headerText");
-            //Sprite _headerSprite = tableView.GetPrivateField<Sprite>("_headerSprite");
-
             bool _showPlayerStatsInDetailView = navController.GetPrivateField<bool>("_showPlayerStatsInDetailView");
             bool _showPracticeButtonInDetailView = navController.GetPrivateField<bool>("_showPracticeButtonInDetailView");
 
