@@ -27,6 +27,9 @@ namespace SongBrowser.DataAccess
         PlayCount,
         Stars,
 
+        // Allow mods to extend functionality.
+        Custom,
+
         // Deprecated
         Favorites,
         Playlist,

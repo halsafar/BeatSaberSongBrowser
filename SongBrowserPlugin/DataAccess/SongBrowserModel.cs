@@ -32,6 +32,7 @@ namespace SongBrowser
         public BeatmapCharacteristicSO CurrentBeatmapCharacteristicSO;
 
         public static Func<IAnnotatedBeatmapLevelCollection, List<IPreviewBeatmapLevel>> CustomFilterHandler;
+        public static Func<List<IPreviewBeatmapLevel>, List<IPreviewBeatmapLevel>> CustomSortHandler;
         public static Action<Dictionary<string, CustomPreviewBeatmapLevel>> didFinishProcessingSongs;
 
         public bool SortWasMissingData { get; private set; } = false;
@@ -299,6 +300,9 @@ namespace SongBrowser
                     break;
                 case SongSortMode.Random:
                     sortedSongs = SortRandom(filteredSongs);
+                    break;
+                case SongSortMode.Custom:
+                    sortedSongs = CustomSortHandler != null ? CustomSortHandler.Invoke(filteredSongs) : filteredSongs;
                     break;
                 case SongSortMode.Default:
                 default:
