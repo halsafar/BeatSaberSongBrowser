@@ -206,7 +206,7 @@ namespace SongBrowser
             yield return new WaitForEndOfFrame();
 
             _songBrowserUI.UpdateLevelDataModel();
-            _songBrowserUI.UpdateLevelPackSelection();
+            _songBrowserUI.UpdateLevelCollectionSelection();
             _songBrowserUI.RefreshSongList();
         }
     }

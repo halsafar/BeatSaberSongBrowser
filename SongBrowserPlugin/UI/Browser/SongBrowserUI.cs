@@ -60,7 +60,7 @@ namespace SongBrowser.UI
         private RectTransform _starStatButton;
         private RectTransform _njsStatButton;
 
-        private IBeatmapLevelPack _lastLevelPack;
+        private IAnnotatedBeatmapLevelCollection _lastLevelCollection;
 
         private SongBrowserModel _model;
         public SongBrowserModel Model
@@ -111,7 +111,7 @@ namespace SongBrowser.UI
             Logger.Debug("Done fetching Flow Coordinator for the appropriate mode...");
 
             _beatUi = new DataAccess.BeatSaberUIController(flowCoordinator);
-            _lastLevelPack = null;
+            _lastLevelCollection = null;
 
             // returning to the menu and switching modes could trigger this.
             if (_uiCreated)
@@ -469,7 +469,7 @@ namespace SongBrowser.UI
         /// </summary>
         private void InstallHandlers()
         {
-            // level pack, level, difficulty handlers, characteristics
+            // level collection, level, difficulty handlers, characteristics
             TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_beatUi.LevelCollectionTableView, "_tableView");
 
             // update stats
@@ -483,11 +483,11 @@ namespace SongBrowser.UI
             _beatUi.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyEvent;
 
             // update our view of the game state
-            _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent -= _levelFilteringNavController_didSelectPackEvent;
-            _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += _levelFilteringNavController_didSelectPackEvent;
+            _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent -= _levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
+            _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += _levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
 
-            _beatUi.LevelSelectionNavigationController.didSelectLevelPackEvent -= _levelSelectionNavigationController_didSelectPackEvent;
-            _beatUi.LevelSelectionNavigationController.didSelectLevelPackEvent += _levelSelectionNavigationController_didSelectPackEvent;
+            _beatUi.AnnotatedBeatmapLevelCollectionsViewController.didSelectAnnotatedBeatmapLevelCollectionEvent -= handleDidSelectAnnotatedBeatmapLevelCollection;
+            _beatUi.AnnotatedBeatmapLevelCollectionsViewController.didSelectAnnotatedBeatmapLevelCollectionEvent += handleDidSelectAnnotatedBeatmapLevelCollection;
 
             // Respond to characteristics changes
             _beatUi.BeatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent -= OnDidSelectBeatmapCharacteristic;
@@ -502,40 +502,7 @@ namespace SongBrowser.UI
             {
                 StartCoroutine(RefreshQuickScrollButtonsAsync());
             });
-
-            // finished level	
-            //ResultsViewController resultsViewController = _beatUi.LevelSelectionFlowCoordinator.GetPrivateField<ResultsViewController>("_resultsViewController");
-            //resultsViewController.continueButtonPressedEvent += ResultsViewController_continueButtonPressedEvent;
         }
-
-        /*/// <summary>	
-        /// Handle updating the level pack selection after returning from a song.	
-        /// </summary>SongBrowserPlugin/UI/Browser/SongBrowserUI.cs 	
-        /// <param name="obj"></param>	
-        private void ResultsViewController_continueButtonPressedEvent(ResultsViewController obj)
-        {
-            StartCoroutine(this.UpdateLevelPackSelectionEndOfFrame());
-        }
-
-        /// <summary>	
-        /// TODO - evaluate this sillyness...	
-        /// </summary>	
-        /// <returns></returns>	
-        public IEnumerator UpdateLevelPackSelectionEndOfFrame()
-        {
-            yield return new WaitForEndOfFrame();
-
-            try
-            {
-                UpdateLevelPackSelection();
-                _beatUi.SelectAndScrollToLevel(_model.LastSelectedLevelId);
-                RefreshQuickScrollButtons();
-            }
-            catch (Exception e)
-            {
-                Logger.Exception("Exception:", e);
-            }
-        }*/
 
         /// <summary>
         /// Waits for the song UI to be available before trying to update.
@@ -611,8 +578,7 @@ namespace SongBrowser.UI
                 return;
             }
 
-            var levelPack = _lastLevelPack;
-            this._model.ProcessSongList(levelPack, _beatUi.LevelCollectionViewController, _beatUi.LevelSelectionNavigationController);
+            this._model.ProcessSongList(_lastLevelCollection, _beatUi.LevelCollectionViewController, _beatUi.LevelSelectionNavigationController);
         }
 
         /// <summary>
@@ -620,59 +586,59 @@ namespace SongBrowser.UI
         /// </summary>
         public void CancelFilter()
         {
-            Logger.Debug($"Cancelling filter, levelPack {_lastLevelPack}");
+            Logger.Debug($"Cancelling filter, levelCollection {_lastLevelCollection}");
             _model.Settings.filterMode = SongFilterMode.None;
 
             GameObject _noDataGO = _beatUi.LevelCollectionViewController.GetPrivateField<GameObject>("_noDataInfoGO");
             string _headerText = _beatUi.LevelCollectionTableView.GetPrivateField<string>("_headerText");
             Sprite _headerSprite = _beatUi.LevelCollectionTableView.GetPrivateField<Sprite>("_headerSprite");
 
-            _beatUi.LevelCollectionViewController.SetData(_lastLevelPack.beatmapLevelCollection, _headerText, _headerSprite, false, _noDataGO);
+            IBeatmapLevelCollection levelCollection = _beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection().beatmapLevelCollection;
+            _beatUi.LevelCollectionViewController.SetData(levelCollection, _headerText, _headerSprite, false, _noDataGO);
         }
 
         /// <summary>
-        /// Handler for level pack selection.
+        /// Playlists (fancy name for AnnotatedBeatmapLevelCollection)
         /// </summary>
-        /// <param name="arg1"></param>
-        /// <param name="arg2"></param>
-        private void _levelPacksTableView_didSelectPackEvent(AnnotatedBeatmapLevelCollectionsTableView arg1, IBeatmapLevelPack arg2)
+        /// <param name="annotatedBeatmapLevelCollection"></param>
+        public virtual void handleDidSelectAnnotatedBeatmapLevelCollection(IAnnotatedBeatmapLevelCollection annotatedBeatmapLevelCollection)
         {
-            Logger.Trace("_levelPacksTableView_didSelectPackEvent(arg2={0})", arg2);
-
-            try
-            {
-                RefreshSortButtonUI();
-                RefreshQuickScrollButtons();
-            }
-            catch (Exception e)
-            {
-                Logger.Exception("Exception handling didSelectPackEvent...", e);
-            }
+            Logger.Trace("handleDidSelectAnnotatedBeatmapLevelCollection()");
+            _lastLevelCollection = annotatedBeatmapLevelCollection;
+            Logger.Debug("Selected Level Collection={0}", _lastLevelCollection);
         }
 
         /// <summary>
-        /// Handler for level pack selection, controller.
-        /// Sets the current level pack into the model and updates.
+        /// Handler for level collection selection, controller.
+        /// Sets the current level collection into the model and updates.
         /// </summary>
         /// <param name="arg1"></param>
         /// <param name="arg2"></param>
         /// <param name="arg3"></param>
         /// <param name="arg4"></param>
-        private void _levelFilteringNavController_didSelectPackEvent(LevelFilteringNavigationController arg1, IAnnotatedBeatmapLevelCollection arg2, 
+        private void _levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent(LevelFilteringNavigationController arg1, IAnnotatedBeatmapLevelCollection arg2, 
             GameObject arg3, BeatmapCharacteristicSO arg4)
         {
-            Logger.Trace("_levelFilteringNavController_didSelectPackEvent(levelPack={0})", arg2);
+            Logger.Trace("_levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent(levelCollection={0})", arg2);
 
-            // Skip the first time - Effectively ignores BeatSaber forcing OST1 on us on first load.
-            if (_lastLevelPack == null)
+            if (arg2 == null)
             {
-                return;
+                // Probably means we transitioned between Music Packs and Playlists
+                arg2 = _beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection();
+                if (arg2 == null)
+                {
+                    Logger.Warning("Nothing selected.  This is likely an error.");
+                    return;
+                }
             }
 
-            IBeatmapLevelPack levelPack = arg2 as IBeatmapLevelPack;
-            if (levelPack == null)
+            Logger.Debug("Selected Level Collection={0}", arg2);
+
+            // Do something about preview level packs, they can't be used past this point
+            if (arg2 as PreviewBeatmapLevelPackSO)
             {
-                Logger.Info("Hiding SongBrowser, Playlist mode currently unsupported...");
+                Logger.Info("Hiding SongBrowser, previewing a song pack.");
+                //CancelFilter();
                 Hide();
                 return;
             }
@@ -681,53 +647,49 @@ namespace SongBrowser.UI
                 Show();
             }
 
-            SelectPack(levelPack);
+            // Skip the first time - Effectively ignores BeatSaber forcing OST1 on us on first load.
+            // Skip when we have a playlist
+            if (_lastLevelCollection == null)
+            {
+                return;
+            }
+
+            SelectLevelCollection(arg2);
         }
 
         /// <summary>
-        /// Dummy method for now.
-        /// </summary>
-        /// <param name="arg1"></param>
-        /// <param name="arg2"></param>
-        private void _levelSelectionNavigationController_didSelectPackEvent(LevelSelectionNavigationController controller, IBeatmapLevelPack levelPack)
-        {
-            Logger.Trace("_levelSelectionNavigationController_didSelectPackEvent(levelPack={0})", levelPack);
-            //SelectPack(levelPack);
-        }
-
-        /// <summary>
-        /// Logic for selecting a level pack.
+        /// Logic for selecting a level collection.
         /// </summary>
         /// <param name="levelPack"></param>
-        public void SelectPack(IBeatmapLevelPack levelPack)
+        public void SelectLevelCollection(IAnnotatedBeatmapLevelCollection levelCollection)
         {
             try
             {
-                if (levelPack == null)
+                if (levelCollection == null)
                 {
-                    Logger.Debug("Invalid level pack, seems to be playlists mode...");
+                    Logger.Debug("No level collection selected...");
                     return;
                 }
 
-                // store the real level pack
-                if (levelPack.packID != SongBrowserModel.FilteredSongsPackId && _lastLevelPack != null)
+                // store the real level collection
+                if (levelCollection.collectionName != SongBrowserModel.FilteredSongsCollectionName && _lastLevelCollection != null)
                 {
-                    Logger.Debug("Recording levelPack: {0}", levelPack.packID);
-                    _lastLevelPack = levelPack;
+                    Logger.Debug("Recording levelCollection: {0}", levelCollection.collectionName);
+                    _lastLevelCollection = levelCollection;
                 }
 
                 // reset level selection
                 _model.LastSelectedLevelId = null;
 
-                // save level packs
-                this._model.Settings.currentLevelPackId = levelPack.packID;
+                // save level collection
+                this._model.Settings.currentLevelCollectionName = levelCollection.collectionName;
                 this._model.Settings.Save();
 
                 StartCoroutine(ProcessSongListEndOfFrame());
             }
             catch (Exception e)
             {
-                Logger.Exception("Exception handling didSelectPackEvent...", e);
+                Logger.Exception("Exception handling SelectLevelCollection...", e);
             }
         }
 
@@ -804,22 +766,27 @@ namespace SongBrowser.UI
         {
             Logger.Debug($"FilterButton {mode} clicked.");
 
-            if (_lastLevelPack == null || _beatUi.GetCurrentSelectedLevelPack().packID != SongBrowserModel.FilteredSongsPackId)
+            var curCollection = _beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection();
+            if (_lastLevelCollection == null || 
+                (curCollection != null &&
+                curCollection.collectionName != SongBrowserModel.FilteredSongsCollectionName &&
+                curCollection.collectionName != SongBrowserModel.PlaylistSongsCollectionName))
             {
-                _lastLevelPack = _beatUi.GetCurrentSelectedLevelPack();
+                _lastLevelCollection = _beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection();
             }
 
             if (mode == SongFilterMode.Favorites)
             {
-                _beatUi.SelectLevelPack(SongBrowserSettings.CUSTOM_SONG_LEVEL_PACK_ID);
+                _beatUi.SelectLevelCollection(SongBrowserSettings.CUSTOM_SONGS_LEVEL_COLLECTION_NAME);
             }
             else
-            {              
+            {
                 GameObject _noDataGO = _beatUi.LevelCollectionViewController.GetPrivateField<GameObject>("_noDataInfoGO");
                 string _headerText = _beatUi.LevelCollectionTableView.GetPrivateField<string>("_headerText");
                 Sprite _headerSprite = _beatUi.LevelCollectionTableView.GetPrivateField<Sprite>("_headerSprite");
-                
-                _beatUi.LevelCollectionViewController.SetData(_lastLevelPack.beatmapLevelCollection, _headerText, _headerSprite, false, _noDataGO);
+
+                IBeatmapLevelCollection levelCollection = _beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection().beatmapLevelCollection;
+                _beatUi.LevelCollectionViewController.SetData(levelCollection, _headerText, _headerSprite, false, _noDataGO);
             }
 
             // If selecting the same filter, cancel
@@ -980,7 +947,7 @@ namespace SongBrowser.UI
                             // determine the index we are deleting so we can keep the cursor near the same spot after
                             // the header counts as an index, so if the index came from the level array we have to add 1.
                             var levelsTableView = _beatUi.LevelCollectionTableView;
-                            List<IPreviewBeatmapLevel> levels = _beatUi.GetCurrentLevelPackLevels().ToList();
+                            List<IPreviewBeatmapLevel> levels = _beatUi.GetCurrentLevelCollectionLevels().ToList();
                             int selectedIndex = levels.FindIndex(x => x.levelID == _beatUi.StandardLevelDetailView.selectedDifficultyBeatmap.level.levelID);
 
                             if (selectedIndex > -1)
@@ -989,7 +956,7 @@ namespace SongBrowser.UI
 
                                 Logger.Info($"Deleting song: {song.customLevelPath}");
                                 SongCore.Loader.Instance.DeleteSong(song.customLevelPath);
-                                this._model.RemoveSongFromLevelPack(_beatUi.GetCurrentSelectedLevelPack(), _beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID);
+                                this._model.RemoveSongFromLevelCollection(_beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection(), _beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID);
 
                                 int removedLevels = levels.RemoveAll(x => x.levelID == _beatUi.StandardLevelDetailView.selectedDifficultyBeatmap.level.levelID);
                                 Logger.Info("Removed " + removedLevels + " level(s) from song list!");
@@ -1072,7 +1039,7 @@ namespace SongBrowser.UI
         /// <param name="numJumps"></param>
         private void JumpSongList(int numJumps, float segmentPercent)
         {
-            var levels = _beatUi.GetCurrentLevelPackLevels();
+            var levels = _beatUi.GetCurrentLevelCollectionLevels();
             if (levels == null)
             {
                 return;
@@ -1403,44 +1370,44 @@ namespace SongBrowser.UI
         /// <summary>
         /// Logic for fixing BeatSaber's level pack selection bugs.
         /// </summary>
-        public bool UpdateLevelPackSelection()
+        public bool UpdateLevelCollectionSelection()
         {
             if (_uiCreated)
             {
-                IBeatmapLevelPack currentSelected = _beatUi.GetCurrentSelectedLevelPack();
-                Logger.Debug("Current selected level pack: {0}", currentSelected);
+                IAnnotatedBeatmapLevelCollection currentSelected = _beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection();
+                Logger.Debug("Current selected level collection: {0}", currentSelected);
 
-                if (String.IsNullOrEmpty(_model.Settings.currentLevelPackId))
+                if (String.IsNullOrEmpty(_model.Settings.currentLevelCollectionName))
                 {
                     if (currentSelected == null)
                     {
-                        Logger.Debug("No level pack selected, acquiring the first available...");
+                        Logger.Debug("No level collection selected, acquiring the first available, likely OST1...");
                         currentSelected = _beatUi.BeatmapLevelsModel.allLoadedBeatmapLevelPackCollection.beatmapLevelPacks[0];
                     }
                 }
-                else if (currentSelected == null || (currentSelected.packID != _model.Settings.currentLevelPackId))
+                else if (currentSelected == null || (currentSelected.collectionName != _model.Settings.currentLevelCollectionName))
                 {
-                    Logger.Debug("Automatically selecting level pack: {0}", _model.Settings.currentLevelPackId);
+                    Logger.Debug("Automatically selecting level collection: {0}", _model.Settings.currentLevelCollectionName);
+                    _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent -= _levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
 
-                    _beatUi.LevelSelectionNavigationController.didSelectLevelPackEvent -= _levelSelectionNavigationController_didSelectPackEvent;
-                    _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent -= _levelFilteringNavController_didSelectPackEvent;
-
-                    _lastLevelPack = _beatUi.GetLevelPackByPackId(_model.Settings.currentLevelPackId);
-                    _beatUi.SelectLevelPack(_model.Settings.currentLevelPackId);
-
-                    _beatUi.LevelSelectionNavigationController.didSelectLevelPackEvent += _levelSelectionNavigationController_didSelectPackEvent;
-                    _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += _levelFilteringNavController_didSelectPackEvent;
+                    _lastLevelCollection = _beatUi.GetLevelCollectionByName(_model.Settings.currentLevelCollectionName);
+                    if (_lastLevelCollection as PreviewBeatmapLevelPackSO)
+                    {
+                        Hide();
+                    }
+                    _beatUi.SelectLevelCollection(_model.Settings.currentLevelCollectionName);
+                    _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += _levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
                 }
 
-                if (_lastLevelPack == null)
+                if (_lastLevelCollection == null)
                 {
-                    if (currentSelected.packID != SongBrowserModel.FilteredSongsPackId)
-                    {                        
-                        _lastLevelPack = currentSelected;
+                    if (currentSelected.collectionName != SongBrowserModel.FilteredSongsCollectionName && currentSelected.collectionName != SongBrowserModel.PlaylistSongsCollectionName)
+                    {
+                        _lastLevelCollection = currentSelected;
                     }
                 }
 
-                Logger.Debug("Last levelPack is: {0}", _lastLevelPack);
+                Logger.Debug("Current Level Collection is: {0}", _lastLevelCollection);
                 ProcessSongList();
             }
 
