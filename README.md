@@ -14,7 +14,7 @@ A plugin for customizing the in-game song browser.
   - Original: Match the original sorting you would normally get after SongLoaderPlugin.
   - Newest: Sort by the date you downloaded the custom song.
   - YourPlays: Sort by your most played.
-  - PP: Performance points!  Using @WesVleuten score saber data.  
+  - PP: Performance points!  Using @WesVleuten (Westar#0001) score saber data.  
   - Star: Sort by ScoreSaber's Stars difficulty rating.
   - UpVotes: BeatSaver's upvote count.
   - Rating: BeatSaver's rating statistic.
