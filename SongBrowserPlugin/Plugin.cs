@@ -10,7 +10,7 @@ namespace SongBrowser
     [Plugin(RuntimeOptions.SingleStartInit)]
     public class Plugin
     {
-        public const string VERSION_NUMBER = "6.0.6";
+        public const string VERSION_NUMBER = "6.0.7";
         public static Plugin Instance;
         public static IPA.Logging.Logger Log;
 
@@ -28,7 +28,7 @@ namespace SongBrowser
             Base64Sprites.Init();
 
             BSEvents.OnLoad();
-            BSEvents.menuSceneLoadedFresh += OnMenuSceneLoadedFresh;
+            BSEvents.lateMenuSceneLoadedFresh += OnMenuSceneLoadedFresh;
         }
 
         [OnExit]
@@ -36,7 +36,7 @@ namespace SongBrowser
         {            
         }
 
-        private void OnMenuSceneLoadedFresh()
+        private void OnMenuSceneLoadedFresh(ScenesTransitionSetupDataSO data)
         {
             try
             {
