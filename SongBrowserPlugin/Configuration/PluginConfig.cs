@@ -29,9 +29,9 @@ namespace SongBrowser.Configuration
         /// </summary>
         public virtual void Changed()
         {
-            if (this.SearchTerms.Count > MaxSearchTerms)
+            if (SearchTerms.Count > MaxSearchTerms)
             {
-                this.SearchTerms.RemoveRange(MaxSearchTerms, this.SearchTerms.Count - MaxSearchTerms);
+                SearchTerms.RemoveRange(MaxSearchTerms, SearchTerms.Count - MaxSearchTerms);
             }
         }
 

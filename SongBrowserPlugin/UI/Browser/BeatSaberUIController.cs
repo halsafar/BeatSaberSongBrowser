@@ -46,8 +46,8 @@ namespace SongBrowser.DataAccess
         public BeatmapLevelsModel BeatmapLevelsModel;
 
         // Plugin Compat checks
-        private bool _detectedTwitchPluginQueue = false;
-        private bool _checkedForTwitchPlugin = false;
+        private bool _detectedTwitchPluginQueue;
+        private bool _checkedForTwitchPlugin;
 
         /// <summary>
         /// Constructor.  Acquire all necessary BeatSaberUi elements.
@@ -75,7 +75,7 @@ namespace SongBrowser.DataAccess
             LevelDetailViewController = LevelCollectionNavigationController.GetField<StandardLevelDetailViewController, LevelCollectionNavigationController>("_levelDetailViewController");
             Logger.Debug("Acquired StandardLevelDetailViewController [{0}]", LevelDetailViewController.GetInstanceID());
 
-            LevelCollectionTableView = this.LevelCollectionViewController.GetField<LevelCollectionTableView, LevelCollectionViewController>("_levelCollectionTableView");
+            LevelCollectionTableView = LevelCollectionViewController.GetField<LevelCollectionTableView, LevelCollectionViewController>("_levelCollectionTableView");
             Logger.Debug("Acquired LevelPackLevelsTableView [{0}]", LevelCollectionTableView.GetInstanceID());
 
             StandardLevelDetailView = LevelDetailViewController.GetField<StandardLevelDetailView, StandardLevelDetailViewController>("_standardLevelDetailView");
@@ -93,8 +93,8 @@ namespace SongBrowser.DataAccess
             AnnotatedBeatmapLevelCollectionsViewController = LevelFilteringNavigationController.GetField<AnnotatedBeatmapLevelCollectionsViewController, LevelFilteringNavigationController>("_annotatedBeatmapLevelCollectionsViewController");
             Logger.Debug("Acquired AnnotatedBeatmapLevelCollectionsViewController from LevelFilteringNavigationController [{0}]", AnnotatedBeatmapLevelCollectionsViewController.GetInstanceID());
 
-            TableView tableView = LevelCollectionTableView.GetField<TableView, LevelCollectionTableView>("_tableView");
-            ScrollView scrollView = tableView.GetField<ScrollView, TableView>("_scrollView");
+            var tableView = LevelCollectionTableView.GetField<TableView, LevelCollectionTableView>("_tableView");
+            var scrollView = tableView.GetField<ScrollView, TableView>("_scrollView");
             TableViewPageUpButton = scrollView.GetField<Button, ScrollView>("_pageUpButton");
             TableViewPageDownButton = scrollView.GetField<Button, ScrollView>("_pageDownButton");
             Logger.Debug("Acquired Page Up and Down buttons...");
@@ -153,7 +153,7 @@ namespace SongBrowser.DataAccess
                 return null;
             }
 
-            IPlaylist playlist = AnnotatedBeatmapLevelCollectionsViewController.selectedAnnotatedBeatmapLevelCollection as IPlaylist;
+            var playlist = AnnotatedBeatmapLevelCollectionsViewController.selectedAnnotatedBeatmapLevelCollection as IPlaylist;
             return playlist;
         }
 
@@ -162,16 +162,16 @@ namespace SongBrowser.DataAccess
         /// </summary>
         /// <param name="levelCollectionName"></param>
         /// <returns></returns>
-        public IAnnotatedBeatmapLevelCollection GetLevelCollectionByName(String levelCollectionName)
+        public IAnnotatedBeatmapLevelCollection GetLevelCollectionByName(string levelCollectionName)
         {
             IAnnotatedBeatmapLevelCollection levelCollection = null;
 
             // search level packs
-            BeatmapLevelPackCollectionSO beatMapLevelPackCollection = Resources.FindObjectsOfTypeAll<BeatmapLevelPackCollectionSO>().Last();
-            IBeatmapLevelPack[] levelPacks = beatMapLevelPackCollection.GetField<IBeatmapLevelPack[], BeatmapLevelPackCollectionSO>("_allBeatmapLevelPacks");
-            foreach (IBeatmapLevelPack o in levelPacks)
+            var beatMapLevelPackCollection = Resources.FindObjectsOfTypeAll<BeatmapLevelPackCollectionSO>().Last();
+            var levelPacks = beatMapLevelPackCollection.GetField<IBeatmapLevelPack[], BeatmapLevelPackCollectionSO>("_allBeatmapLevelPacks");
+            foreach (var o in levelPacks)
             {
-                if (String.Equals(o.collectionName, levelCollectionName))
+                if (string.Equals(o.collectionName, levelCollectionName))
                 {
                     levelCollection = o;
                     break;
@@ -181,10 +181,10 @@ namespace SongBrowser.DataAccess
             // search playlists
             if (levelCollection == null)
             {
-                IReadOnlyList<IAnnotatedBeatmapLevelCollection> _annotatedBeatmapLevelCollections = AnnotatedBeatmapLevelCollectionsViewController.GetField<IReadOnlyList<IAnnotatedBeatmapLevelCollection>, AnnotatedBeatmapLevelCollectionsViewController>("_annotatedBeatmapLevelCollections");
-                foreach (IAnnotatedBeatmapLevelCollection c in _annotatedBeatmapLevelCollections)
+                var _annotatedBeatmapLevelCollections = AnnotatedBeatmapLevelCollectionsViewController.GetField<IReadOnlyList<IAnnotatedBeatmapLevelCollection>, AnnotatedBeatmapLevelCollectionsViewController>("_annotatedBeatmapLevelCollections");
+                foreach (var c in _annotatedBeatmapLevelCollections)
                 {
-                    if (String.Equals(c.collectionName, levelCollectionName))
+                    if (string.Equals(c.collectionName, levelCollectionName))
                     {
                         levelCollection = c;
                         break;
@@ -210,13 +210,13 @@ namespace SongBrowser.DataAccess
             return SongBrowserModel.GetLevelsForLevelCollection(levelCollection);
         }
 
-        public bool SelectLevelCategory(String levelCategoryName)
+        public bool SelectLevelCategory(string levelCategoryName)
         {
             Logger.Trace("SelectLevelCategory({0})", levelCategoryName);
 
             try
             {
-                if (String.IsNullOrEmpty(levelCategoryName))
+                if (string.IsNullOrEmpty(levelCategoryName))
                 {
                     // hack for now, just assume custom levels if a user has an old settings file, corrects itself first time they change level packs.
                     levelCategoryName = SelectLevelCategoryViewController.LevelCategory.CustomSongs.ToString();
@@ -244,7 +244,7 @@ namespace SongBrowser.DataAccess
                 var selectLeveCategoryViewController = LevelFilteringNavigationController.GetComponentInChildren<SelectLevelCategoryViewController>();
                 var iconSegementController = selectLeveCategoryViewController.GetComponentInChildren<IconSegmentedControl>();
 
-                int selectCellNumber = (from x in selectLeveCategoryViewController.GetField<SelectLevelCategoryViewController.LevelCategoryInfo[], SelectLevelCategoryViewController>("_levelCategoryInfos")
+                var selectCellNumber = (from x in selectLeveCategoryViewController.GetField<SelectLevelCategoryViewController.LevelCategoryInfo[], SelectLevelCategoryViewController>("_levelCategoryInfos")
                                         select x.levelCategory).ToList().IndexOf(category);
 
                 iconSegementController.SelectCellWithNumber(selectCellNumber);
@@ -268,13 +268,13 @@ namespace SongBrowser.DataAccess
         /// Select a level collection.
         /// </summary>
         /// <param name="levelCollectionName"></param>
-        public void SelectLevelCollection(String levelCollectionName)
+        public void SelectLevelCollection(string levelCollectionName)
         {
             Logger.Trace("SelectLevelCollection({0})", levelCollectionName);
 
             try
             {
-                IAnnotatedBeatmapLevelCollection collection = GetLevelCollectionByName(levelCollectionName);
+                var collection = GetLevelCollectionByName(levelCollectionName);
                 if (collection == null)
                 {
                     Logger.Debug("Could not locate requested level collection...");
@@ -307,7 +307,7 @@ namespace SongBrowser.DataAccess
             if (!_checkedForTwitchPlugin)
             {
                 Logger.Info("Checking for BeatSaber Twitch Integration Plugin...");
-                _detectedTwitchPluginQueue = Resources.FindObjectsOfTypeAll<HMUI.ViewController>().Any(x => x.name == "RequestInfo");
+                _detectedTwitchPluginQueue = Resources.FindObjectsOfTypeAll<ViewController>().Any(x => x.name == "RequestInfo");
                 Logger.Info("BeatSaber Twitch Integration plugin detected: " + _detectedTwitchPluginQueue);
 
                 _checkedForTwitchPlugin = true;
@@ -321,8 +321,8 @@ namespace SongBrowser.DataAccess
             }
 
             // try to find the index and scroll to it
-            int selectedIndex = 0;
-            List<IPreviewBeatmapLevel> levels = GetCurrentLevelCollectionLevels().ToList();
+            var selectedIndex = 0;
+            var levels = GetCurrentLevelCollectionLevels().ToList();
             if (levels.Count <= 0)
             {
                 return;
@@ -334,9 +334,9 @@ namespace SongBrowser.DataAccess
             {
                 // this might look like an off by one error but the _level list we keep is missing the header entry BeatSaber.
                 // so the last row is +1 the max index, the count.
-                int maxCount = levels.Count;
+                var maxCount = levels.Count;
 
-                int selectedRow = LevelCollectionTableView.GetField<int, LevelCollectionTableView>("_selectedRow");
+                var selectedRow = LevelCollectionTableView.GetField<int, LevelCollectionTableView>("_selectedRow");
 
                 Logger.Debug("Song is not in the level pack, cannot scroll to it...  Using last known row {0}/{1}", selectedRow, maxCount);
                 selectedIndex = Math.Min(maxCount, selectedRow);
@@ -358,7 +358,7 @@ namespace SongBrowser.DataAccess
         {
             Logger.Debug("Scrolling level list to idx: {0}", selectedIndex);
 
-            TableView tableView = LevelCollectionTableView.GetField<TableView, LevelCollectionTableView>("_tableView");
+            var tableView = LevelCollectionTableView.GetField<TableView, LevelCollectionTableView>("_tableView");
             var selectedRow = LevelCollectionTableView.GetField<int, LevelCollectionTableView>("_selectedRow");
             if (selectedRow != selectedIndex && LevelCollectionTableView.isActiveAndEnabled)
             {
@@ -384,15 +384,15 @@ namespace SongBrowser.DataAccess
                 }
 
                 Logger.Debug("Checking if TableView is initialized...");
-                TableView tableView = LevelCollectionTableView.GetField<TableView, LevelCollectionTableView>("_tableView");
-                bool tableViewInit = tableView.GetField<bool, TableView>("_isInitialized");
+                var tableView = LevelCollectionTableView.GetField<TableView, LevelCollectionTableView>("_tableView");
+                var tableViewInit = tableView.GetField<bool, TableView>("_isInitialized");
 
                 Logger.Debug("Reloading SongList TableView");
                 tableView.ReloadData();
 
                 Logger.Debug("Attempting to scroll to level [{0}]", currentSelectedLevelId);
-                String selectedLevelID = currentSelectedLevelId;
-                if (!String.IsNullOrEmpty(currentSelectedLevelId))
+                var selectedLevelID = currentSelectedLevelId;
+                if (!string.IsNullOrEmpty(currentSelectedLevelId))
                 {
                     selectedLevelID = currentSelectedLevelId;
                 }

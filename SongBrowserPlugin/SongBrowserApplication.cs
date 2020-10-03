@@ -2,9 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
 using Logger = SongBrowser.Logging.Logger;
 
 namespace SongBrowser
@@ -17,26 +15,14 @@ namespace SongBrowser
         private SongBrowserUI _songBrowserUI;
         private SongBrowserModel _songBrowserModel;
 
-        public static SongBrowser.UI.ProgressBar MainProgressBar;
+        public static ProgressBar MainProgressBar;
 
-        private bool _hasShownProgressBar = false;
+        private bool _hasShownProgressBar;
 
 
-        public SongBrowserModel Model
-        {
-            get
-            {
-                return _songBrowserModel;
-            }
-        }
+        public SongBrowserModel Model => _songBrowserModel;
 
-        public SongBrowserUI Ui
-        {
-            get
-            {
-                return _songBrowserUI;
-            }
-        }
+        public SongBrowserUI Ui => _songBrowserUI;
 
         /// <summary>
         /// Load the main song browser app.
@@ -50,7 +36,7 @@ namespace SongBrowser
 
             new GameObject("Beat Saber SongBrowser Plugin").AddComponent<SongBrowserApplication>();
 
-            SongBrowserApplication.MainProgressBar = SongBrowser.UI.ProgressBar.Create();
+            MainProgressBar = ProgressBar.Create();
 
             Plugin.Log.Info("SongBrowser Plugin OnLoad Complete");
         }
@@ -207,7 +193,7 @@ namespace SongBrowser
 
             if (!_hasShownProgressBar)
             {
-                SongBrowserApplication.MainProgressBar.ShowMessage("");
+                MainProgressBar.ShowMessage("");
                 _hasShownProgressBar = true;
             }
 

@@ -21,15 +21,15 @@ namespace SongBrowser.UI
 
         public static void Init()
         {
-            SpeedIcon = Base64Sprites.LoadSpriteFromResources("SongBrowser.Assets.Speed.png");
-            GraphIcon = Base64Sprites.LoadSpriteFromResources("SongBrowser.Assets.Graph.png");
-            XIcon = Base64Sprites.LoadSpriteFromResources("SongBrowser.Assets.X.png");
-            StarFullIcon = Base64Sprites.LoadSpriteFromResources("SongBrowser.Assets.StarFull.png");
-            DeleteIcon = Base64Sprites.LoadSpriteFromResources("SongBrowser.Assets.DeleteIcon.png");
-            DoubleArrow = Base64Sprites.LoadSpriteFromResources("SongBrowser.Assets.DoubleArrow.png");
-            RandomIcon = Base64Sprites.LoadSpriteFromResources("SongBrowser.Assets.RandomIcon.png");
-            NoteStartOffsetIcon = Base64Sprites.LoadSpriteFromResources("SongBrowser.Assets.NoteStartOffset.png");
-            PlaylistIcon = Base64Sprites.LoadSpriteFromResources("SongBrowser.Assets.PlaylistIcon.png");
+            SpeedIcon = LoadSpriteFromResources("SongBrowser.Assets.Speed.png");
+            GraphIcon = LoadSpriteFromResources("SongBrowser.Assets.Graph.png");
+            XIcon = LoadSpriteFromResources("SongBrowser.Assets.X.png");
+            StarFullIcon = LoadSpriteFromResources("SongBrowser.Assets.StarFull.png");
+            DeleteIcon = LoadSpriteFromResources("SongBrowser.Assets.DeleteIcon.png");
+            DoubleArrow = LoadSpriteFromResources("SongBrowser.Assets.DoubleArrow.png");
+            RandomIcon = LoadSpriteFromResources("SongBrowser.Assets.RandomIcon.png");
+            NoteStartOffsetIcon = LoadSpriteFromResources("SongBrowser.Assets.NoteStartOffset.png");
+            PlaylistIcon = LoadSpriteFromResources("SongBrowser.Assets.PlaylistIcon.png");
         }
 
         public static string SpriteToBase64(Sprite input)
@@ -40,13 +40,13 @@ namespace SongBrowser.UI
         public static Sprite Base64ToSprite(string base64)
         {
             // prune base64 encoded image header
-            Regex r = new Regex(@"data:image.*base64,");
+            var r = new Regex(@"data:image.*base64,");
             base64 = r.Replace(base64, "");
 
             Sprite s;
             try
             {
-                Texture2D tex = Base64ToTexture2D(base64);
+                var tex = Base64ToTexture2D(base64);
                 s = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), (Vector2.one / 2f));
             }
             catch (Exception)
@@ -60,12 +60,12 @@ namespace SongBrowser.UI
 
         public static Texture2D Base64ToTexture2D(string encodedData)
         {
-            byte[] imageData = Convert.FromBase64String(encodedData);
+            var imageData = Convert.FromBase64String(encodedData);
 
             int width, height;
             GetImageSize(imageData, out width, out height);
 
-            Texture2D texture = new Texture2D(width, height, TextureFormat.ARGB32, false, true)
+            var texture = new Texture2D(width, height, TextureFormat.ARGB32, false, true)
             {
                 hideFlags = HideFlags.HideAndDontSave,
                 filterMode = FilterMode.Trilinear
@@ -89,7 +89,7 @@ namespace SongBrowser.UI
         {
             if (file.Count() > 0)
             {
-                Texture2D Tex2D = new Texture2D(2, 2, TextureFormat.RGBA32, false, false);
+                var Tex2D = new Texture2D(2, 2, TextureFormat.RGBA32, false, false);
                 if (Tex2D.LoadImage(file))
                     return Tex2D;
             }
@@ -120,8 +120,8 @@ namespace SongBrowser.UI
 
         public static byte[] GetResource(Assembly asm, string ResourceName)
         {
-            System.IO.Stream stream = asm.GetManifestResourceStream(ResourceName);
-            byte[] data = new byte[stream.Length];
+            var stream = asm.GetManifestResourceStream(ResourceName);
+            var data = new byte[stream.Length];
             stream.Read(data, 0, (int)stream.Length);
             return data;
         }

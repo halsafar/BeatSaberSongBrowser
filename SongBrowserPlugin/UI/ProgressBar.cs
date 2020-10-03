@@ -74,13 +74,13 @@ namespace SongBrowser.UI
         protected void OnEnable()
         {
             SceneManager.activeSceneChanged += SceneManagerOnActiveSceneChanged;
-            SongBrowserModel.didFinishProcessingSongs += SongBrowserFinishedProcessingSongs;
+            SongBrowserModel.DidFinishProcessingSongs += SongBrowserFinishedProcessingSongs;
         }
 
         protected void OnDisable()
         {
             SceneManager.activeSceneChanged -= SceneManagerOnActiveSceneChanged;
-            SongBrowserModel.didFinishProcessingSongs -= SongBrowserFinishedProcessingSongs;               
+            SongBrowserModel.DidFinishProcessingSongs -= SongBrowserFinishedProcessingSongs;               
         }
 
         private void SceneManagerOnActiveSceneChanged(Scene oldScene, Scene newScene)

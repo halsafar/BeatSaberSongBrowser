@@ -18,22 +18,22 @@ namespace SongBrowser.HarmonyPatches
             if (flowType == typeof(SoloFreePlayFlowCoordinator))
             {
                 Logger.Info("Initializing SongBrowser for Single Player Mode");
-                SongBrowser.SongBrowserApplication.Instance.HandleSoloModeSelection();
+                SongBrowserApplication.Instance.HandleSoloModeSelection();
             }
             else if (flowType == typeof(MultiplayerLevelSelectionFlowCoordinator))
             {
                 Logger.Info("Initializing SongBrowser for Multiplayer Mode");
-                SongBrowser.SongBrowserApplication.Instance.HandleMultiplayerModeSelection();
+                SongBrowserApplication.Instance.HandleMultiplayerModeSelection();
             }
             else if (flowType == typeof(PartyFreePlayFlowCoordinator))
             {
                 Logger.Info("Initializing SongBrowser for Party Mode");
-                SongBrowser.SongBrowserApplication.Instance.HandlePartyModeSelection();
+                SongBrowserApplication.Instance.HandlePartyModeSelection();
             }
             else if (flowType == typeof(CampaignFlowCoordinator))
             {
                 Logger.Info("Initializing SongBrowser for Multiplayer Mode");
-                SongBrowser.SongBrowserApplication.Instance.HandleCampaignModeSelection();
+                SongBrowserApplication.Instance.HandleCampaignModeSelection();
             }
 
             return;

@@ -2,9 +2,6 @@
 using IPA.Config.Stores.Converters;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SongBrowser.Configuration
 {
@@ -18,7 +15,7 @@ namespace SongBrowser.Configuration
         public virtual SongMetadata GetMetadataForLevelID(string levelID)
         {
             if (!Songs.ContainsKey(levelID))
-                SongMetadataStore.Instance.Songs.Add(levelID, new SongMetadata());
+                Instance.Songs.Add(levelID, new SongMetadata());
             return Songs[levelID];
         }
     }

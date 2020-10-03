@@ -29,38 +29,38 @@ namespace SongBrowser.Logging
                 return;
             }
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Plugin.Log.Trace("[" + LoggerName + " @ " + DateTime.Now.ToString("HH:mm") + " - Trace] " + String.Format(format, args));
+            Plugin.Log.Trace("[" + LoggerName + " @ " + DateTime.Now.ToString("HH:mm") + " - Trace] " + string.Format(format, args));
             ResetForegroundColor();
         }
 
         public static void Debug(string format, params object[] args)
         {
-            Plugin.Log.Debug(String.Format(format, args));
+            Plugin.Log.Debug(string.Format(format, args));
         }
 
         public static void Info(string format, params object[] args)
         {
-            Plugin.Log.Info(String.Format(format, args));
+            Plugin.Log.Info(string.Format(format, args));
         }
 
         public static void Log(string format, params object[] args)
         {
-            Logger.Debug(format, args);
+            Debug(format, args);
         }
 
         public static void Warning(string format, params object[] args)
         {
-            Plugin.Log.Warn(String.Format(format, args));
+            Plugin.Log.Warn(string.Format(format, args));
         }
 
         public static void Error(Exception e)
         {
-            Logger.Error("{0}", e.Message);
+            Error("{0}", e.Message);
         }
 
         public static void Error(string format, params object[] args)
         {
-            Plugin.Log.Error(String.Format(format, args));
+            Plugin.Log.Error(string.Format(format, args));
         }
 
         public static void Exception(string message)

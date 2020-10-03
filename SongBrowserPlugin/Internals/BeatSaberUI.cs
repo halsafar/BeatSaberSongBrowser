@@ -1,7 +1,6 @@
 ﻿using BeatSaberMarkupLanguage.Components;
 using HMUI;
 using IPA.Utilities;
-using System;
 using System.Linq;
 using TMPro;
 using UnityEngine;
@@ -10,6 +9,7 @@ using UnityEngine.UI;
 using VRUIControls;
 using Image = UnityEngine.UI.Image;
 using Logger = SongBrowser.Logging.Logger;
+using Object = UnityEngine.Object;
 
 namespace SongBrowser.Internals
 {
@@ -33,7 +33,7 @@ namespace SongBrowser.Internals
         /// <returns>The newly created ViewController of type T.</returns>
         public static T CreateViewController<T>(string name) where T : ViewController
         {
-            T vc = new GameObject(typeof(T).Name, typeof(VRGraphicRaycaster), typeof(CanvasGroup), typeof(T)).GetComponent<T>();
+            var vc = new GameObject(typeof(T).Name, typeof(VRGraphicRaycaster), typeof(CanvasGroup), typeof(T)).GetComponent<T>();
             vc.GetComponent<VRGraphicRaycaster>().SetField("_physicsRaycaster", PhysicsRaycasterWithCache);
 
             vc.rectTransform.anchorMin = new Vector2(0f, 0f);
@@ -47,7 +47,7 @@ namespace SongBrowser.Internals
 
         public static T CreateCurvedViewController<T>(string name, float curveRadius) where T : ViewController
         {
-            T vc = new GameObject(typeof(T).Name, typeof(VRGraphicRaycaster), typeof(CurvedCanvasSettings), typeof(CanvasGroup), typeof(T)).GetComponent<T>();
+            var vc = new GameObject(typeof(T).Name, typeof(VRGraphicRaycaster), typeof(CurvedCanvasSettings), typeof(CanvasGroup), typeof(T)).GetComponent<T>();
             vc.GetComponent<VRGraphicRaycaster>().SetField("_physicsRaycaster", PhysicsRaycasterWithCache);
 
             vc.GetComponent<CurvedCanvasSettings>().SetRadius(curveRadius);
@@ -67,9 +67,9 @@ namespace SongBrowser.Internals
         /// <param name="parent"></param>
         /// <param name="buttonTemplate"></param>
         /// <returns></returns>
-        public static Button CreateBaseButton(String name, RectTransform parent, String buttonTemplate)
+        public static Button CreateBaseButton(string name, RectTransform parent, string buttonTemplate)
         {
-            Button btn = UnityEngine.Object.Instantiate(Resources.FindObjectsOfTypeAll<Button>().Last(x => (x.name == buttonTemplate)), parent, false);
+            var btn = UnityEngine.Object.Instantiate(Resources.FindObjectsOfTypeAll<Button>().Last(x => (x.name == buttonTemplate)), parent, false);
             btn.name = name;
             btn.interactable = true;
             return btn;
@@ -82,15 +82,15 @@ namespace SongBrowser.Internals
         /// <param name="parent"></param>
         /// <param name="buttonTemplate"></param>
         /// <returns></returns>
-        public static Button CreateIconButton(String name, RectTransform parent, String buttonTemplate, Sprite icon, String hint)
+        public static Button CreateIconButton(string name, RectTransform parent, string buttonTemplate, Sprite icon, string hint)
         {
-            Button btn = CreateBaseButton(name, parent, buttonTemplate);
+            var btn = CreateBaseButton(name, parent, buttonTemplate);
 
-            BeatSaberUI.SetHoverHint(btn.transform as RectTransform, $"{name}_hoverHintText", hint);
+            SetHoverHint(btn.transform as RectTransform, $"{name}_hoverHintText", hint);
             btn.gameObject.AddComponent<ExternalComponents>().components.Add(btn.GetComponentsInChildren<LayoutGroup>().First(x => x.name == "Content"));
 
-            Transform contentTransform = btn.transform.Find("Content");
-            GameObject.Destroy(contentTransform.Find("Text").gameObject);
+            var contentTransform = btn.transform.Find("Content");
+            Object.Destroy(contentTransform.Find("Text").gameObject);
             Image iconImage = new GameObject("Icon").AddComponent<ImageView>();
             iconImage.material = BeatSaberMarkupLanguage.Utilities.ImageResources.NoGlowMat;
             iconImage.rectTransform.SetParent(contentTransform, false);
@@ -99,14 +99,14 @@ namespace SongBrowser.Internals
             iconImage.preserveAspect = true;
             if (iconImage != null)
             {
-                ButtonIconImage btnIcon = btn.gameObject.AddComponent<ButtonIconImage>();
+                var btnIcon = btn.gameObject.AddComponent<ButtonIconImage>();
                 btnIcon.image = iconImage;
             }
 
-            GameObject.Destroy(btn.transform.Find("Content").GetComponent<LayoutElement>());
+            Object.Destroy(btn.transform.Find("Content").GetComponent<LayoutElement>());
             btn.GetComponentsInChildren<RectTransform>().First(x => x.name == "Underline").gameObject.SetActive(false);
 
-            ContentSizeFitter buttonSizeFitter = btn.gameObject.AddComponent<ContentSizeFitter>();
+            var buttonSizeFitter = btn.gameObject.AddComponent<ContentSizeFitter>();
             buttonSizeFitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
             buttonSizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
 
@@ -122,10 +122,10 @@ namespace SongBrowser.Internals
         /// <param name="buttonTemplate"></param>
         /// <param name="iconSprite"></param>
         /// <returns></returns>
-        public static Button CreateIconButton(String name, RectTransform parent, String buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick, Sprite icon, String hint)
+        public static Button CreateIconButton(string name, RectTransform parent, string buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick, Sprite icon, string hint)
         {
             Logger.Debug("CreateIconButton({0}, {1}, {2}, {3}, {4}", name, parent, buttonTemplate, anchoredPosition, sizeDelta);
-            Button btn = CreateIconButton(name, parent, buttonTemplate, icon, hint);
+            var btn = CreateIconButton(name, parent, buttonTemplate, icon, hint);
 
             (btn.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
             (btn.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
@@ -139,10 +139,10 @@ namespace SongBrowser.Internals
             return btn;
         }
 
-        public static Button CreatePageButton(String name, RectTransform parent, String buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick, Sprite icon)
+        public static Button CreatePageButton(string name, RectTransform parent, string buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick, Sprite icon)
         {
             Logger.Debug("CreatePageButton({0}, {1}, {2}, {3}, {4}", name, parent, buttonTemplate, anchoredPosition, sizeDelta);
-            Button btn = CreateBaseButton(name, parent, buttonTemplate);
+            var btn = CreateBaseButton(name, parent, buttonTemplate);
 
             (btn.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
             (btn.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
@@ -150,7 +150,7 @@ namespace SongBrowser.Internals
             (btn.transform as RectTransform).sizeDelta = sizeDelta;
             (btn.transform as RectTransform).pivot = new Vector2(0.5f, 0.5f);
 
-            ButtonIconImage btnIcon = btn.gameObject.AddComponent<ButtonIconImage>();
+            var btnIcon = btn.gameObject.AddComponent<ButtonIconImage>();
             btnIcon.image = btn.gameObject.GetComponentsInChildren<Image>(true).Where(x => x.gameObject.name == "Icon").FirstOrDefault();
             btnIcon.image.sprite = icon;
 
@@ -172,33 +172,33 @@ namespace SongBrowser.Internals
         /// <param name="buttonText">The text that should be shown on the button.</param>
         /// <param name="icon">The icon that should be shown on the button.</param>
         /// <returns>The newly created button.</returns>
-        public static Button CreateUIButton(String name, RectTransform parent, string buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick = null, string buttonText = "BUTTON")
+        public static Button CreateUIButton(string name, RectTransform parent, string buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick = null, string buttonText = "BUTTON")
         {
             Logger.Debug("CreateUIButton({0}, {1}, {2}, {3}, {4}", name, parent, buttonTemplate, anchoredPosition, sizeDelta);
-            Button btn = CreateBaseButton(name, parent, buttonTemplate);
+            var btn = CreateBaseButton(name, parent, buttonTemplate);
             btn.gameObject.SetActive(true);
 
-            Polyglot.LocalizedTextMeshProUGUI localizer = btn.GetComponentInChildren<Polyglot.LocalizedTextMeshProUGUI>();
+            var localizer = btn.GetComponentInChildren<Polyglot.LocalizedTextMeshProUGUI>();
             if (localizer != null)
             {
-                GameObject.Destroy(localizer);
+                Object.Destroy(localizer);
             }
-            BeatSaberMarkupLanguage.Components.ExternalComponents externalComponents = btn.gameObject.AddComponent<BeatSaberMarkupLanguage.Components.ExternalComponents>();
-            TextMeshProUGUI textMesh = btn.GetComponentInChildren<TextMeshProUGUI>();
+            var externalComponents = btn.gameObject.AddComponent<ExternalComponents>();
+            var textMesh = btn.GetComponentInChildren<TextMeshProUGUI>();
             textMesh.richText = true;
             externalComponents.components.Add(textMesh);
 
             var contentTransform = btn.transform.Find("Content").GetComponent<LayoutElement>();
             if (contentTransform != null)
             {
-                GameObject.Destroy(contentTransform);
+                Object.Destroy(contentTransform);
             }
 
-            ContentSizeFitter buttonSizeFitter = btn.gameObject.AddComponent<ContentSizeFitter>();
+            var buttonSizeFitter = btn.gameObject.AddComponent<ContentSizeFitter>();
             buttonSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             buttonSizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
 
-            LayoutGroup stackLayoutGroup = btn.GetComponentInChildren<LayoutGroup>();
+            var stackLayoutGroup = btn.GetComponentInChildren<LayoutGroup>();
             if (stackLayoutGroup != null)
             {
                 externalComponents.components.Add(stackLayoutGroup);
@@ -220,17 +220,17 @@ namespace SongBrowser.Internals
             return btn;
         }
 
-        public static RectTransform CreateStatIcon(string name, RectTransform template, Transform parent, Sprite icon, String hoverHintText = null)
+        public static RectTransform CreateStatIcon(string name, RectTransform template, Transform parent, Sprite icon, string hoverHintText = null)
         {
-            RectTransform statIcon = UnityEngine.Object.Instantiate(template, parent, false);
+            var statIcon = UnityEngine.Object.Instantiate(template, parent, false);
             statIcon.name = name;
             (statIcon.transform as RectTransform).Translate(0, -0.1f, 0);
-            BeatSaberUI.SetStatButtonIcon(statIcon, icon);
-            BeatSaberUI.DestroyHoverHint(statIcon);
+            SetStatButtonIcon(statIcon, icon);
+            DestroyHoverHint(statIcon);
 
-            if (!String.IsNullOrEmpty(hoverHintText))
+            if (!string.IsNullOrEmpty(hoverHintText))
             {
-                BeatSaberUI.SetHoverHint(statIcon, $"{name}_hoverHintText", hoverHintText);
+                SetHoverHint(statIcon, $"{name}_hoverHintText", hoverHintText);
             }
 
             return statIcon;
@@ -238,7 +238,7 @@ namespace SongBrowser.Internals
 
         public static TextMeshProUGUI CreateText(RectTransform parent, string text, float fontSize, Vector2 anchoredPosition, Vector2 sizeDelta)
         {
-            GameObject gameObj = new GameObject("CustomUIText");
+            var gameObj = new GameObject("CustomUIText");
             gameObj.SetActive(false);
 
             TextMeshProUGUI textMesh = gameObj.AddComponent<CurvedTextMeshPro>();
@@ -265,7 +265,7 @@ namespace SongBrowser.Internals
         /// <param name="text"></param>
         public static void SetHoverHint(RectTransform button, string name, string text)
         {
-            HoverHint hover = button.gameObject.AddComponent<HoverHint>();
+            var hover = button.gameObject.AddComponent<HoverHint>();
             hover.text = text;
             hover.name = name;
             hover.SetField("_hoverHintController", Resources.FindObjectsOfTypeAll<HoverHintController>().First());
@@ -277,10 +277,10 @@ namespace SongBrowser.Internals
         /// <param name="button"></param>
         public static void DestroyHoverHint(RectTransform button)
         {
-            HoverHint currentHoverHint = button.GetComponentsInChildren<HMUI.HoverHint>().First();
+            var currentHoverHint = button.GetComponentsInChildren<HoverHint>().First();
             if (currentHoverHint != null)
             {
-                UnityEngine.GameObject.DestroyImmediate(currentHoverHint);
+                Object.DestroyImmediate(currentHoverHint);
             }
         }
 
@@ -291,7 +291,7 @@ namespace SongBrowser.Internals
         /// <param name="fontSize"></param>
         static public void SetButtonTextColor(Button button, Color color)
         {
-            TextMeshProUGUI txt = button.GetComponentsInChildren<TextMeshProUGUI>().FirstOrDefault(x => x.name == "Text");
+            var txt = button.GetComponentsInChildren<TextMeshProUGUI>().FirstOrDefault(x => x.name == "Text");
             if (txt != null)
             {
                 txt.color = color;
@@ -303,9 +303,9 @@ namespace SongBrowser.Internals
         /// </summary>
         /// <param name="rect"></param>
         /// <param name="text"></param>
-        static public void SetStatButtonText(RectTransform rect, String text)
+        static public void SetStatButtonText(RectTransform rect, string text)
         {
-            TextMeshProUGUI txt = rect.GetComponentsInChildren<TextMeshProUGUI>().FirstOrDefault(x => x.name == "ValueText");
+            var txt = rect.GetComponentsInChildren<TextMeshProUGUI>().FirstOrDefault(x => x.name == "ValueText");
             if (txt != null)
             {
                 txt.text = text;
@@ -319,7 +319,7 @@ namespace SongBrowser.Internals
         /// <param name="icon"></param>
         static public void SetStatButtonIcon(RectTransform rect, Sprite icon)
         {
-            Image img = rect.GetComponentsInChildren<Image>().FirstOrDefault(x => x.name == "Icon");
+            var img = rect.GetComponentsInChildren<Image>().FirstOrDefault(x => x.name == "Icon");
             if (img != null)
             {
                 img.sprite = icon;
