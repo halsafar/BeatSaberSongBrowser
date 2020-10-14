@@ -1,6 +1,6 @@
 # Beat Saber SongBrowser
 
-* BROKEN IN LATEST UPDATE - FIX COMING *
+*BROKEN IN LATEST UPDATE - FIX COMING*
 
 A plugin for customizing the in-game song browser.
 
