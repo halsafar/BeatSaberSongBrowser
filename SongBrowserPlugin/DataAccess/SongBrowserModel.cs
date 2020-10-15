@@ -234,6 +234,13 @@ namespace SongBrowser
 
             switch (_settings.filterMode)
             {
+                case SongFilterMode.Easy:
+                case SongFilterMode.Normal:
+                case SongFilterMode.Hard:
+                case SongFilterMode.Expert:
+                case SongFilterMode.ExpertPlus:
+                    filteredSongs = FilterDifficulty(unsortedSongs, (BeatmapDifficulty)_settings.filterMode);
+                    break;
                 case SongFilterMode.Favorites:
                     filteredSongs = FilterFavorites(unsortedSongs);
                     break;
@@ -412,6 +419,16 @@ namespace SongBrowser
                     return includeUnranked;
                 }
             }).ToList();
+        }
+        /// <summary>
+        /// Filter songs based on a difficulty.
+        /// </summary>
+        /// <param name="levels"></param>
+        /// <param name="beatmapDifficulty"></param>
+        /// <returns></returns>
+        private List<IPreviewBeatmapLevel> FilterDifficulty(List<IPreviewBeatmapLevel> levels, BeatmapDifficulty beatmapDifficulty)
+        {
+            return levels.Where(x => x.previewDifficultyBeatmapSets.Any(y => y.beatmapDifficulties.Any(z => z.Equals(beatmapDifficulty)))).ToList();
         }
 
         /// <summary>
