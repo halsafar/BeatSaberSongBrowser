@@ -20,9 +20,9 @@ namespace SongBrowser.UI
         public event Action<string> searchButtonPressed;
         public event Action backButtonPressed;
 
-        protected override void DidActivate(bool firstActivation, ActivationType type)
+        protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
-            if (type == ActivationType.AddedToHierarchy && firstActivation)
+            if (addedToHierarchy && firstActivation)
             {
                 _searchKeyboardGO = Instantiate(Resources.FindObjectsOfTypeAll<UIKeyboard>().First(x => x.name != "CustomUIKeyboard"), rectTransform, false).gameObject;
 
