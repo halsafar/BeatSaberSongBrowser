@@ -37,6 +37,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BeatmapCore">
+      <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Beat Saber_Data\Managed\BeatmapCore.dll</HintPath>
+    </Reference>
     <Reference Include="BS_Utils">
       <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Plugins\BS_Utils.dll</HintPath>
     </Reference>
