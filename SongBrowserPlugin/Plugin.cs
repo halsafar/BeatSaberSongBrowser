@@ -10,7 +10,7 @@ namespace SongBrowser
     [Plugin(RuntimeOptions.SingleStartInit)]
     public class Plugin
     {
-        public const string VERSION_NUMBER = "6.0.7";
+        public const string VERSION_NUMBER = "6.1.0";
         public static Plugin Instance;
         public static IPA.Logging.Logger Log;
 
