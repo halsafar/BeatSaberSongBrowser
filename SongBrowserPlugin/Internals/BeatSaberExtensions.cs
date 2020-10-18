@@ -1,10 +1,12 @@
 ﻿using BS_Utils.Utilities;
+using HMUI;
 using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using Image = UnityEngine.UI.Image;
+using Logger = SongBrowser.Logging.Logger;
 
 namespace SongBrowser.Internals
 {
@@ -13,12 +15,11 @@ namespace SongBrowser.Internals
         #region Button Extensions
         public static void SetButtonText(this Button _button, string _text)
         {
-            Polyglot.LocalizedTextMeshProUGUI localizer = _button.GetComponentInChildren<Polyglot.LocalizedTextMeshProUGUI>();
-            if (localizer != null)
-                GameObject.Destroy(localizer);
-            TextMeshProUGUI tmpUgui = _button.GetComponentInChildren<TextMeshProUGUI>();
-            if (tmpUgui != null)
-                tmpUgui.text = _text;
+            HMUI.CurvedTextMeshPro textMesh = _button.GetComponentInChildren<HMUI.CurvedTextMeshPro>();
+            if (textMesh != null)
+            {
+                textMesh.SetText(_text);
+            }
         }
 
         public static void SetButtonTextSize(this Button _button, float _fontSize)
@@ -39,80 +40,51 @@ namespace SongBrowser.Internals
 
         public static void SetButtonIcon(this Button _button, Sprite _icon)
         {
-            if (_button.GetComponentsInChildren<Image>().Count() > 1)
-                _button.GetComponentsInChildren<Image>().First(x => x.name == "Icon").sprite = _icon;
+            _button.GetComponentsInChildren<ImageView>().First().sprite = _icon;
         }
 
-        public static void SetButtonBackground(this Button _button, Sprite _background)
+        public static void SetButtonBackgroundActive(this Button parent, bool active)
         {
-            if (_button.GetComponentsInChildren<Image>().Count() > 0)
-                _button.GetComponentsInChildren<Image>()[0].sprite = _background;
+            HMUI.ImageView img = parent.GetComponentsInChildren<HMUI.ImageView>().Last(x => x.name == "BG");
+            if (img != null)
+            {
+                img.gameObject.SetActive(active);
+            }
+        }
+
+        public static void SetButtonBorderActive(this Button parent, bool active)
+        {
+            HMUI.ImageView img = parent.GetComponentsInChildren<HMUI.ImageView>().FirstOrDefault(x => x.name == "Border");
+            if (img != null)
+            {
+                img.gameObject.SetActive(active);
+            }
+        }
+
+        public static void SetButtonBorder(this Button button, Color color)
+        {
+            HMUI.ImageView img = button.GetComponentsInChildren<HMUI.ImageView>().FirstOrDefault(x => x.name == "Border");
+            if (img != null)
+            {
+                img.color0 = color;
+                img.color1 = color;
+                img.color = color;
+                img.fillMethod = Image.FillMethod.Horizontal;
+                img.SetAllDirty();
+            }
         }
         #endregion
 
         #region ViewController Extensions
-
-        public static Button CreateUIButton(this HMUI.ViewController parent, string buttonTemplate)
+        public static Button CreateUIButton(this HMUI.ViewController parent, string name, string buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick = null, string buttonText = "BUTTON")
         {
-            Button btn = BeatSaberUI.CreateUIButton(parent.rectTransform, buttonTemplate);
+            Button btn = BeatSaberUI.CreateUIButton(name, parent.rectTransform, buttonTemplate, anchoredPosition, sizeDelta, onClick, buttonText);
             return btn;
         }
-
-        public static Button CreateUIButton(this HMUI.ViewController parent, string buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick = null, string buttonText = "BUTTON", Sprite icon = null)
+        public static Button CreateIconButton(this HMUI.ViewController parent, string name, string buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick, Sprite icon)
         {
-            Button btn = BeatSaberUI.CreateUIButton(parent.rectTransform, buttonTemplate, anchoredPosition, sizeDelta, onClick, buttonText, icon);
+            Button btn = BeatSaberUI.CreateIconButton(name, parent.rectTransform, buttonTemplate, anchoredPosition, sizeDelta, onClick, icon);
             return btn;
-        }
-
-        public static Button CreateUIButton(this HMUI.ViewController parent, string buttonTemplate, Vector2 anchoredPosition, UnityAction onClick = null, string buttonText = "BUTTON", Sprite icon = null)
-        {
-            Button btn = BeatSaberUI.CreateUIButton(parent.rectTransform, buttonTemplate, anchoredPosition, onClick, buttonText, icon);
-            return btn;
-        }
-
-        public static Button CreateUIButton(this HMUI.ViewController parent, string buttonTemplate, UnityAction onClick = null, string buttonText = "BUTTON", Sprite icon = null)
-        {
-            Button btn = BeatSaberUI.CreateUIButton(parent.rectTransform, buttonTemplate, onClick, buttonText, icon);
-            return btn;
-        }
-
-        public static Button CreateBackButton(this HMUI.ViewController parent)
-        {
-            Button btn = BeatSaberUI.CreateBackButton(parent.rectTransform);
-            return btn;
-        }
-
-        /*public static GameObject CreateLoadingSpinner(this HMUI.ViewController parent)
-        {
-            GameObject loadingSpinner = BeatSaberUI.CreateLoadingSpinner(parent.rectTransform);
-            return loadingSpinner;
-        }*/
-
-        public static TextMeshProUGUI CreateText(this HMUI.ViewController parent, string text, Vector2 anchoredPosition, Vector2 sizeDelta)
-        {
-            TextMeshProUGUI textMesh = BeatSaberUI.CreateText(parent.rectTransform, text, anchoredPosition, sizeDelta);
-            return textMesh;
-        }
-
-        public static TextMeshProUGUI CreateText(this HMUI.ViewController parent, string text, Vector2 anchoredPosition)
-        {
-            TextMeshProUGUI textMesh = BeatSaberUI.CreateText(parent.rectTransform, text, anchoredPosition);
-            return textMesh;
-        }
-
-        public static void SetText(this LevelListTableCell cell, string text)
-        {
-            cell.GetPrivateField<TextMeshProUGUI>("_songNameText").text = text;
-        }
-
-        public static void SetSubText(this LevelListTableCell cell, string subtext)
-        {
-            cell.GetPrivateField<TextMeshProUGUI>("_authorText").text = subtext;
-        }
-
-        public static void SetIcon(this LevelListTableCell cell, Sprite icon)
-        {
-            cell.GetPrivateField<UnityEngine.UI.Image>("_coverImage").sprite = icon;
         }
         #endregion
     }
