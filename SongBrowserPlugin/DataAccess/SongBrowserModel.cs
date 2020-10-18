@@ -331,7 +331,8 @@ namespace SongBrowser
             bool _showPlayerStatsInDetailView = navController.GetPrivateField<bool>("_showPlayerStatsInDetailView");
             bool _showPracticeButtonInDetailView = navController.GetPrivateField<bool>("_showPracticeButtonInDetailView");
 
-            navController.SetData(levelPack, true, _showPlayerStatsInDetailView, _showPracticeButtonInDetailView, _noDataGO);
+            // TODO v1.12.1 - Support overwriting level pack
+            //navController.SetData(levelPack, true, _showPlayerStatsInDetailView, _showPracticeButtonInDetailView, _noDataGO);
 
             //_sortedSongs.ForEach(x => Logger.Debug(x.levelID));
         }
