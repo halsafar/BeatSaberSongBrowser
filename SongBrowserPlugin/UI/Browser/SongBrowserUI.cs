@@ -22,6 +22,11 @@ namespace SongBrowser.UI
         FilterBy
     }
 
+    public class SongBrowserViewController : ViewController
+    {
+        // Named instance
+    }
+
     /// <summary>
     /// Hijack the flow coordinator.  Have access to all StandardLevel easily.
     /// </summary>
@@ -32,12 +37,15 @@ namespace SongBrowser.UI
 
         private const float SEGMENT_PERCENT = 0.1f;
         private const int LIST_ITEMS_VISIBLE_AT_ONCE = 6;
-        private const float BUTTON_ROW_Y = -37.0f;
+        private const float CLEAR_BUTTON_Y = -32.5f;
+        private const float BUTTON_ROW_Y = -32.5f;
 
         // BeatSaber Internal UI structures
         DataAccess.BeatSaberUIController _beatUi;
 
         // New UI Elements
+        private SongBrowserViewController _viewController;
+
         private List<SongSortButton> _sortButtonGroup;
         private List<SongFilterButton> _filterButtonGroup;
 
@@ -121,7 +129,20 @@ namespace SongBrowser.UI
             }
 
             try
-            {                
+            {
+                // Create a view controller to store all SongBrowser elements
+                if (_viewController)
+                {
+                    UnityEngine.GameObject.Destroy(_viewController);
+                }
+                _viewController = BeatSaberUI.CreateCurvedViewController<SongBrowserViewController>("SongBrowserViewController", 125.0f);
+                _viewController.rectTransform.SetParent(_beatUi.LevelCollectionNavigationController.rectTransform, false);
+                _viewController.rectTransform.anchorMin = new Vector2(0f, 0f);
+                _viewController.rectTransform.anchorMax = new Vector2(1f, 1f);
+                _viewController.rectTransform.anchoredPosition = new Vector2(0, 0);
+                _viewController.rectTransform.sizeDelta = new Vector2(125, 25);
+                _viewController.gameObject.SetActive(true);
+
                 // delete dialog
                 this._deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(_beatUi.SimpleDialogPromptViewControllerPrefab);
                 this._deleteDialog.name = "DeleteDialogPromptViewController";
@@ -161,18 +182,18 @@ namespace SongBrowser.UI
         {
             Logger.Debug("Creating outer UI...");
 
-            float clearButtonX = -32.5f;
-            float clearButtonY = BUTTON_ROW_Y;
+            float clearButtonX = -72.5f;
+            float clearButtonY = CLEAR_BUTTON_Y;
             float buttonY = BUTTON_ROW_Y;
             float buttonHeight = 5.0f;
-            float sortByButtonX = -22.5f + buttonHeight;
+            float sortByButtonX = -62.5f + buttonHeight;
             float outerButtonFontSize = 3.0f;
             float displayButtonFontSize = 2.5f;
             float outerButtonWidth = 24.0f;
             float randomButtonWidth = 10.0f;
 
             // clear button
-            _clearSortFilterButton = _beatUi.LevelCollectionViewController.CreateIconButton(
+            _clearSortFilterButton = _viewController.CreateIconButton(
                 "ClearSortAndFilterButton", 
                 "PracticeButton", 
                 new Vector2(clearButtonX, clearButtonY), 
@@ -195,7 +216,7 @@ namespace SongBrowser.UI
             float curX = sortByButtonX;
 
             Logger.Debug("Creating Sort By...");            
-            _sortByButton = _beatUi.LevelCollectionViewController.CreateUIButton("sortBy", "PracticeButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
+            _sortByButton = _viewController.CreateUIButton("sortBy", "PracticeButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 RefreshOuterUIState(UIState.SortBy);
             }, "Sort By");
@@ -205,7 +226,7 @@ namespace SongBrowser.UI
             curX += outerButtonWidth;
 
             Logger.Debug("Creating Sort By Display...");
-            _sortByDisplay = _beatUi.LevelCollectionViewController.CreateUIButton("sortByValue", "ActionButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
+            _sortByDisplay = _viewController.CreateUIButton("sortByValue", "PracticeButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 OnSortButtonClickEvent(_model.Settings.sortMode);
             }, "");
@@ -217,7 +238,7 @@ namespace SongBrowser.UI
 
             // create FilterBy button and its display
             Logger.Debug("Creating Filter By...");
-            _filterByButton = _beatUi.LevelCollectionViewController.CreateUIButton("filterBy", "PracticeButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
+            _filterByButton = _viewController.CreateUIButton("filterBy", "PracticeButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 RefreshOuterUIState(UIState.FilterBy);
             }, "Filter By");
@@ -227,7 +248,7 @@ namespace SongBrowser.UI
             curX += outerButtonWidth;
 
             Logger.Debug("Creating Filter By Display...");
-            _filterByDisplay = _beatUi.LevelCollectionViewController.CreateUIButton("filterValue", "ActionButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
+            _filterByDisplay = _viewController.CreateUIButton("filterValue", "ActionButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 _model.Settings.filterMode = SongFilterMode.None;
                 CancelFilter();
@@ -240,7 +261,7 @@ namespace SongBrowser.UI
 
             // random button
             Logger.Debug("Creating Random Button...");
-            _randomButton = _beatUi.LevelCollectionViewController.CreateIconButton("randomButton", "PracticeButton", new Vector2(curX + (outerButtonWidth / 2.0f) + (randomButtonWidth / 2.0f), clearButtonY), new Vector2(randomButtonWidth, randomButtonWidth), () =>
+            _randomButton = _viewController.CreateIconButton("randomButton", "PracticeButton", new Vector2(curX + (outerButtonWidth / 2.0f) + (randomButtonWidth / 2.0f), clearButtonY), new Vector2(randomButtonWidth, randomButtonWidth), () =>
             {
                 OnSortButtonClickEvent(SongSortMode.Random);
             }, Base64Sprites.RandomIcon);
@@ -255,7 +276,7 @@ namespace SongBrowser.UI
             Logger.Debug("Create sort buttons...");
 
             float sortButtonFontSize = 2.15f;
-            float sortButtonX = -23.0f;
+            float sortButtonX = -63.0f;
             float sortButtonWidth = 12.0f;
             float buttonSpacing = 0.25f;
             float buttonY = BUTTON_ROW_Y;
@@ -277,7 +298,7 @@ namespace SongBrowser.UI
                 float curButtonX = sortButtonX + (sortButtonWidth * i) + (buttonSpacing * i);
                 SongSortButton sortButton = new SongSortButton();
                 sortButton.SortMode = sortModes[i];
-                sortButton.Button = _beatUi.LevelCollectionViewController.CreateUIButton(String.Format("Sort{0}Button", sortButton.SortMode), "PracticeButton",
+                sortButton.Button = _viewController.CreateUIButton(String.Format("Sort{0}Button", sortButton.SortMode), "PracticeButton",
                     new Vector2(curButtonX, buttonY), new Vector2(sortButtonWidth, buttonHeight),
                     () =>
                     {
@@ -300,7 +321,7 @@ namespace SongBrowser.UI
             Logger.Debug("Creating filter buttons...");
 
             float filterButtonFontSize = 2.25f;
-            float filterButtonX = -23.0f;
+            float filterButtonX = -63.0f;
             float filterButtonWidth = 12.25f;
             float buttonSpacing = 0.5f;
             float buttonY = BUTTON_ROW_Y;
@@ -322,7 +343,7 @@ namespace SongBrowser.UI
                 float curButtonX = filterButtonX + (filterButtonWidth * i) + (buttonSpacing * i);
                 SongFilterButton filterButton = new SongFilterButton();
                 filterButton.FilterMode = filterModes[i];
-                filterButton.Button = _beatUi.LevelCollectionViewController.CreateUIButton(String.Format("Filter{0}Button", filterButton.FilterMode), "PracticeButton",
+                filterButton.Button = _viewController.CreateUIButton(String.Format("Filter{0}Button", filterButton.FilterMode), "PracticeButton",
                     new Vector2(curButtonX, buttonY), new Vector2(filterButtonWidth, buttonHeight),
                     () =>
                     {

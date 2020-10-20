@@ -1,36 +1,64 @@
-﻿using BS_Utils.Utilities;
-using HMUI;
+﻿using HMUI;
+using IPA.Utilities;
 using System;
 using System.Linq;
+using System.Reflection;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Events;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using VRUIControls;
+using Object = UnityEngine.Object;
 using Image = UnityEngine.UI.Image;
 using Logger = SongBrowser.Logging.Logger;
-
+using UnityEngine.Events;
+using BS_Utils.Utilities;
 
 namespace SongBrowser.Internals
 {
     public static class BeatSaberUI
     {
-        private static Button _backButtonInstance;
+        private static PhysicsRaycasterWithCache _physicsRaycaster;
+        public static PhysicsRaycasterWithCache PhysicsRaycasterWithCache
+        {
+            get
+            {
+                if (_physicsRaycaster == null)
+                    _physicsRaycaster = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First().GetComponent<VRGraphicRaycaster>().GetField<PhysicsRaycasterWithCache, VRGraphicRaycaster>("_physicsRaycaster");
+                return _physicsRaycaster;
+            }
+        }
 
         /// <summary>
         /// Creates a ViewController of type T, and marks it to not be destroyed.
         /// </summary>
         /// <typeparam name="T">The variation of ViewController you want to create.</typeparam>
         /// <returns>The newly created ViewController of type T.</returns>
-        public static T CreateViewController<T>(string name="CustomViewController") where T : ViewController
+        public static T CreateViewController<T>(string name) where T : ViewController
         {
-            T vc = new GameObject(name).AddComponent<T>();
-            UnityEngine.GameObject.DontDestroyOnLoad(vc.gameObject);
+            T vc = new GameObject(typeof(T).Name, typeof(VRGraphicRaycaster), typeof(CanvasGroup), typeof(T)).GetComponent<T>();
+            vc.GetComponent<VRGraphicRaycaster>().SetField("_physicsRaycaster", PhysicsRaycasterWithCache);
 
             vc.rectTransform.anchorMin = new Vector2(0f, 0f);
             vc.rectTransform.anchorMax = new Vector2(1f, 1f);
             vc.rectTransform.sizeDelta = new Vector2(0f, 0f);
             vc.rectTransform.anchoredPosition = new Vector2(0f, 0f);
+            vc.gameObject.SetActive(false);
+            return vc;
+        }
 
+        public static T CreateCurvedViewController<T>(string name, float curveRadius) where T : ViewController
+        {
+            T vc = new GameObject(typeof(T).Name, typeof(VRGraphicRaycaster), typeof(CurvedCanvasSettings), typeof(CanvasGroup), typeof(T)).GetComponent<T>();
+            vc.GetComponent<VRGraphicRaycaster>().SetField("_physicsRaycaster", PhysicsRaycasterWithCache);
+
+            vc.GetComponent<CurvedCanvasSettings>().SetRadius(curveRadius);
+
+            vc.rectTransform.anchorMin = new Vector2(0f, 0f);
+            vc.rectTransform.anchorMax = new Vector2(1f, 1f);
+            vc.rectTransform.sizeDelta = new Vector2(0f, 0f);
+            vc.rectTransform.anchoredPosition = new Vector2(0f, 0f);
+            vc.gameObject.SetActive(false);
             return vc;
         }
 
@@ -77,6 +105,10 @@ namespace SongBrowser.Internals
             (btn.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
             (btn.transform as RectTransform).anchoredPosition = anchoredPosition;
             (btn.transform as RectTransform).sizeDelta = sizeDelta;
+
+            btn.onClick.RemoveAllListeners();
+            if (onClick != null)
+                btn.onClick.AddListener(onClick);
 
             return btn;
         }
@@ -135,6 +167,7 @@ namespace SongBrowser.Internals
             (btn.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
             (btn.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
             (btn.transform as RectTransform).anchoredPosition = anchoredPosition;
+            //(btn.transform as RectTransform).localPosition = anchoredPosition;
             (btn.transform as RectTransform).sizeDelta = sizeDelta;
 
             btn.SetButtonText(buttonText);
