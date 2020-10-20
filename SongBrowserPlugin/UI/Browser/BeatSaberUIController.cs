@@ -124,12 +124,12 @@ namespace SongBrowser.DataAccess
         /// <returns></returns>
         private IBeatmapLevelPack GetCurrentSelectedLevelPack()
         {
-            if (LevelSelectionNavigationController == null)
+            if (LevelCollectionNavigationController == null)
             {
                 return null;
             }
 
-            var pack = LevelSelectionNavigationController.GetPrivateField<IBeatmapLevelPack>("_levelPack");
+            var pack = LevelCollectionNavigationController.GetPrivateField<IBeatmapLevelPack>("_levelPack");
             return pack;
         }
 
