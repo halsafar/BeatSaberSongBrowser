@@ -153,9 +153,7 @@ namespace SongBrowser.UI
                 CreateSortButtons();
                 CreateFilterButtons();
                 CreateDeleteButton();
-
-                // TODO v1.12.1 - Need to fix this entirely
-                //CreateFastPageButtons();
+                CreateFastPageButtons();
 
                 this.InstallHandlers();
 
@@ -364,30 +362,26 @@ namespace SongBrowser.UI
         private void CreateFastPageButtons()
         {
             Logger.Debug("Creating fast scroll button...");
+            _pageUpFastButton = BeatSaberUI.CreateIconButton("PageUpFast",
+                _beatUi.LevelCollectionTableViewTransform, "PracticeButton",
+                new Vector2(42f, 24f),
+                new Vector2(10f, 10f),
+                delegate ()
+                {
+                    this.JumpSongList(-1, SEGMENT_PERCENT);
+                }, Base64Sprites.DoubleArrow);
+            _pageUpFastButton.SetButtonBackgroundActive(false);
+            (_pageUpFastButton.transform as RectTransform).Rotate(new Vector3(0, 0, 180));
 
-            _pageUpFastButton = Instantiate(_beatUi.TableViewPageUpButton, _beatUi.LevelCollectionTableViewTransform, false);
-            (_pageUpFastButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 1f);
-            (_pageUpFastButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 1f);
-            (_pageUpFastButton.transform as RectTransform).anchoredPosition = new Vector2(-26f, 1f);
-            (_pageUpFastButton.transform as RectTransform).sizeDelta = new Vector2(8f, 6f);
-            _pageUpFastButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "BG").sizeDelta = new Vector2(8f, 6f);
-            _pageUpFastButton.GetComponentsInChildren<UnityEngine.UI.Image>().First(x => x.name == "Arrow").sprite = Base64Sprites.DoubleArrow;
-            _pageUpFastButton.onClick.AddListener(delegate ()
-            {
-                this.JumpSongList(-1, SEGMENT_PERCENT);
-            });
-
-            _pageDownFastButton = Instantiate(_beatUi.TableViewPageDownButton, _beatUi.LevelCollectionTableViewTransform, false);
-            (_pageDownFastButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0f);
-            (_pageDownFastButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0f);
-            (_pageDownFastButton.transform as RectTransform).anchoredPosition = new Vector2(-26f, -1f);
-            (_pageDownFastButton.transform as RectTransform).sizeDelta = new Vector2(8f, 6f);
-            _pageDownFastButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "BG").sizeDelta = new Vector2(8f, 6f);
-            _pageDownFastButton.GetComponentsInChildren<UnityEngine.UI.Image>().First(x => x.name == "Arrow").sprite = Base64Sprites.DoubleArrow;
-            _pageDownFastButton.onClick.AddListener(delegate ()
-            {
-                this.JumpSongList(1, SEGMENT_PERCENT);
-            });
+            _pageDownFastButton = BeatSaberUI.CreateIconButton("PageDownFast",
+                _beatUi.LevelCollectionTableViewTransform, "PracticeButton",
+                new Vector2(42f, -24f),
+                new Vector2(10f, 10f),
+                delegate ()
+                {
+                    this.JumpSongList(1, SEGMENT_PERCENT);
+                }, Base64Sprites.DoubleArrow);
+            _pageDownFastButton.SetButtonBackgroundActive(false);
         }
 
         /// <summary>
