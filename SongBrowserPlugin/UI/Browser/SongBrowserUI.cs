@@ -245,7 +245,7 @@ namespace SongBrowser.UI
             curX += outerButtonWidth;
 
             Logger.Debug("Creating Filter By Display...");
-            _filterByDisplay = _viewController.CreateUIButton("filterValue", "ActionButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
+            _filterByDisplay = _viewController.CreateUIButton("filterValue", "PracticeButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 _model.Settings.filterMode = SongFilterMode.None;
                 CancelFilter();
