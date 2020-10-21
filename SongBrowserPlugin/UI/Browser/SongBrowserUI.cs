@@ -1268,58 +1268,55 @@ namespace SongBrowser.UI
                 return;
             }
 
-            // v1.12.1 - None of this works until we add a border to these buttons
-            // So far all we need to refresh is the sort buttons.
-            /*foreach (SongSortButton sortButton in _sortButtonGroup)
+            foreach (SongSortButton sortButton in _sortButtonGroup)
             {
                 if (sortButton.SortMode.NeedsScoreSaberData() && !SongDataCore.Plugin.Songs.IsDataAvailable())
                 {
-                    sortButton.Button.SetButtonBorder(Color.gray);
+                    sortButton.Button.SetButtonUnderlineColor(Color.gray);
                 }
                 else
                 {
-                    sortButton.Button.SetButtonBorder(Color.white);
+                    sortButton.Button.SetButtonUnderlineColor(Color.white);
                 }
 
                 if (sortButton.SortMode == _model.Settings.sortMode)
                 {
                     if (this._model.Settings.invertSortResults)
                     {
-                        sortButton.Button.SetButtonBorder(Color.red);
+                        sortButton.Button.SetButtonUnderlineColor(Color.red);
                     }
                     else
                     {
-                        sortButton.Button.SetButtonBorder(Color.green);
+                        sortButton.Button.SetButtonUnderlineColor(Color.green);
                     }
                 }
             }
 
-            // refresh filter buttons
             foreach (SongFilterButton filterButton in _filterButtonGroup)
             {
-                filterButton.Button.SetButtonBorder(Color.white);
+                filterButton.Button.SetButtonUnderlineColor(Color.white);
                 if (filterButton.FilterMode == _model.Settings.filterMode)
                 {
-                    filterButton.Button.SetButtonBorder(Color.green);
+                    filterButton.Button.SetButtonUnderlineColor(Color.green);
                 }
-            }*/
+            }
 
             if (this._model.Settings.invertSortResults)
             {
-                _sortByDisplay.SetButtonBorder(Color.red);
+                _sortByDisplay.SetButtonUnderlineColor(Color.red);
             }
             else
             {
-                _sortByDisplay.SetButtonBorder(Color.green);
+                _sortByDisplay.SetButtonUnderlineColor(Color.green);
             }
 
             if (this._model.Settings.filterMode != SongFilterMode.None)
             {
-                _filterByDisplay.SetButtonBorder(Color.red);
+                _filterByDisplay.SetButtonUnderlineColor(Color.green);
             }
             else
             {
-                _filterByDisplay.SetButtonBorder(Color.white);
+                _filterByDisplay.SetButtonUnderlineColor(Color.white);
             }
         }
 

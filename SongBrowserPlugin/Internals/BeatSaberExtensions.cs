@@ -54,12 +54,12 @@ namespace SongBrowser.Internals
             }
         }
 
-        public static void SetButtonBorderActive(this Button parent, bool active)
+        public static void SetButtonUnderlineColor(this Button parent, Color color)
         {
-            HMUI.ImageView img = parent.GetComponentsInChildren<HMUI.ImageView>().FirstOrDefault(x => x.name == "Border");
+            HMUI.ImageView img = parent.GetComponentsInChildren<HMUI.ImageView>().FirstOrDefault(x => x.name == "Underline");
             if (img != null)
             {
-                img.gameObject.SetActive(active);
+                img.color = color;
             }
         }
 
