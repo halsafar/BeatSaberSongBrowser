@@ -227,12 +227,10 @@ namespace SongBrowser.Internals
         /// <param name="text"></param>
         public static void SetHoverHint(RectTransform button, string name, string text)
         {
-            HoverHintController hoverHintController = Resources.FindObjectsOfTypeAll<HoverHintController>().First();
-            DestroyHoverHint(button);
-            var newHoverHint = button.gameObject.AddComponent<HoverHint>();
-            newHoverHint.SetPrivateField("_hoverHintController", hoverHintController);
-            newHoverHint.text = text;
-            newHoverHint.name = name;
+            HoverHint hover = button.gameObject.AddComponent<HoverHint>();
+            hover.text = text;
+            hover.name = name;
+            hover.SetField("_hoverHintController", Resources.FindObjectsOfTypeAll<HoverHintController>().First());
         }
 
         /// <summary>

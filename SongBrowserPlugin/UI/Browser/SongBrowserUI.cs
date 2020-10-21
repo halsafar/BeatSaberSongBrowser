@@ -158,7 +158,7 @@ namespace SongBrowser.UI
                 this.InstallHandlers();
 
                 // TODO v1.12.1 - Just need to figure out the placement, size, etc
-                //this.ModifySongStatsPanel();
+                this.ModifySongStatsPanel();
                 //this.ResizeSongUI();
 
                 _uiCreated = true;
@@ -403,50 +403,29 @@ namespace SongBrowser.UI
         /// </summary>
         private void ModifySongStatsPanel()
         {
-            // modify details view
+            // modify stat panel, inject extra row of stats
             Logger.Debug("Resizing Stats Panel...");
 
             var statsPanel = _beatUi.StandardLevelDetailView.GetPrivateField<LevelParamsPanel>("_levelParamsPanel");
-            var statTransforms = statsPanel.GetComponentsInChildren<RectTransform>();
-            var valueTexts = statsPanel.GetComponentsInChildren<TextMeshProUGUI>().Where(x => x.name == "ValueText").ToList();
-            RectTransform panelRect = (statsPanel.transform as RectTransform);
-            panelRect.sizeDelta = new Vector2(panelRect.sizeDelta.x * 1.2f, panelRect.sizeDelta.y * 1.2f);
+            (statsPanel.transform as RectTransform).Translate(0, 0.05f, 0);
 
-            for (int i = 0; i < statTransforms.Length; i++)
-            {
-                var r = statTransforms[i];
-                if (r.name == "Separator")
-                {
-                    continue;
-                }
-                r.sizeDelta = new Vector2(r.sizeDelta.x * 0.9f, r.sizeDelta.y * 0.9f);
-            }
-
-            for (int i = 0; i < valueTexts.Count; i++)
-            {
-                var text = valueTexts[i];
-                text.fontSize -= 0.75f;
-            }
-
-            // inject our components
-            _ppStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
+            _ppStatButton = UnityEngine.Object.Instantiate(statsPanel.GetComponentsInChildren<RectTransform>().First(x => x.name == "NPS"), statsPanel.transform, false);
+            (_ppStatButton.transform as RectTransform).Translate(0, -0.1f, 0);
             BeatSaberUI.SetStatButtonIcon(_ppStatButton, Base64Sprites.GraphIcon);
             BeatSaberUI.DestroyHoverHint(_ppStatButton);
-            //BeatSaberUI.SetHoverHint(_ppStatButton, "songBrowser_ppValue", "PP Value");
+            BeatSaberUI.SetHoverHint(_ppStatButton, "songBrowser_ppValue", "PP Value");
 
-            _starStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
+            _starStatButton = UnityEngine.Object.Instantiate(statsPanel.GetComponentsInChildren<RectTransform>().First(x => x.name == "NotesCount"), statsPanel.transform, false);
+            (_starStatButton.transform as RectTransform).Translate(0, -0.1f, 0);
             BeatSaberUI.SetStatButtonIcon(_starStatButton, Base64Sprites.StarFullIcon);
             BeatSaberUI.DestroyHoverHint(_starStatButton);
-            //BeatSaberUI.SetHoverHint(_starStatButton, "songBrowser_starValue", "Star Difficulty Rating");
+            BeatSaberUI.SetHoverHint(_starStatButton, "songBrowser_starValue", "Star Difficulty Rating");
 
-            _njsStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
+            _njsStatButton = UnityEngine.Object.Instantiate(statsPanel.GetComponentsInChildren<RectTransform>().First(x => x.name == "ObstaclesCount"), statsPanel.transform, false);
+            (_njsStatButton.transform as RectTransform).Translate(0, -0.1f, 0);
             BeatSaberUI.SetStatButtonIcon(_njsStatButton, Base64Sprites.SpeedIcon);
             BeatSaberUI.DestroyHoverHint(_njsStatButton);
-            //BeatSaberUI.SetHoverHint(_njsStatButton, "songBrowser_njsValue", "Note Jump Speed");
-
-            // shrink title
-            var titleText = _beatUi.LevelDetailViewController.GetComponentsInChildren<TextMeshProUGUI>(true).First(x => x.name == "SongNameText");            
-            titleText.fontSize = 5.0f;
+            BeatSaberUI.SetHoverHint(_njsStatButton, "songBrowser_njsValue", "Note Jump Speed");
         }
 
         /// <summary>
