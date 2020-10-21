@@ -157,9 +157,8 @@ namespace SongBrowser.UI
 
                 this.InstallHandlers();
 
-                // TODO v1.12.1 - Just need to figure out the placement, size, etc
                 this.ModifySongStatsPanel();
-                //this.ResizeSongUI();
+                this.ResizeSongUI();
 
                 _uiCreated = true;
 
@@ -436,20 +435,9 @@ namespace SongBrowser.UI
         /// </summary>
         public void ResizeSongUI()
         {
-            // Reposition the table view a bit
-            _beatUi.LevelCollectionTableViewTransform.anchoredPosition = new Vector2(0f, -2.5f);
-
-            // Move the page up/down buttons a bit
-            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_beatUi.LevelCollectionTableView, "_tableView");
-            RectTransform pageUpButton = _beatUi.TableViewPageUpButton.transform as RectTransform;
-            RectTransform pageDownButton = _beatUi.TableViewPageDownButton.transform as RectTransform;
-            pageUpButton.anchoredPosition = new Vector2(pageUpButton.anchoredPosition.x, pageUpButton.anchoredPosition.y - 1f);
-            pageDownButton.anchoredPosition = new Vector2(pageDownButton.anchoredPosition.x, pageDownButton.anchoredPosition.y + 1f);
-
             // shrink play button container
-            RectTransform playContainerRect = _beatUi.StandardLevelDetailView.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayContainer");
-            RectTransform playButtonsRect = playContainerRect.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayButtons");
-            playButtonsRect.localScale = new Vector3(0.825f, 0.825f, 0.825f);
+            //RectTransform playButtonsRect = Resources.FindObjectsOfTypeAll<RectTransform>().First(x => x.name == "ActionButtons");
+            //playButtonsRect.localScale = new Vector3(0.825f, 0.825f, 0.825f);
         }
 
         /// <summary>
