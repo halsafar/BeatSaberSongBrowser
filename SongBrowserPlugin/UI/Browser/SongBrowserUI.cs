@@ -445,9 +445,6 @@ namespace SongBrowser.UI
         /// </summary>
         private void InstallHandlers()
         {
-            // TODO v1.12.1 - breaks
-            return; 
-
             // level collection, level, difficulty handlers, characteristics
             TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_beatUi.LevelCollectionTableView, "_tableView");
 
@@ -455,8 +452,8 @@ namespace SongBrowser.UI
             _beatUi.LevelCollectionViewController.didSelectLevelEvent -= OnDidSelectLevelEvent;
             _beatUi.LevelCollectionViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
 
-            //_beatUi.LevelDetailViewController.didPresentContentEvent -= OnDidPresentContentEvent;
-            //_beatUi.LevelDetailViewController.didPresentContentEvent += OnDidPresentContentEvent;
+            _beatUi.LevelDetailViewController.didChangeContentEvent -= OnDidPresentContentEvent;
+            _beatUi.LevelDetailViewController.didChangeContentEvent += OnDidPresentContentEvent;
 
             _beatUi.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDidChangeDifficultyEvent;
             _beatUi.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyEvent;
@@ -870,7 +867,10 @@ namespace SongBrowser.UI
                 return;
             }
 
-            _deleteButton.interactable = (view.selectedDifficultyBeatmap.level.levelID.Length >= 32);
+            if (_deleteButton != null)
+            {
+                _deleteButton.interactable = (view.selectedDifficultyBeatmap.level.levelID.Length >= 32);
+            }
 
             RefreshScoreSaberData(view.selectedDifficultyBeatmap.level);
             RefreshNoteJumpSpeed(beatmap.noteJumpMovementSpeed);
@@ -885,12 +885,21 @@ namespace SongBrowser.UI
         {
             Logger.Trace("OnDidPresentContentEvent()");
 
+            // v1.12.2 - TODO - is this safe to prevent us from trying to lookup empty/dead content?
+            if (type != StandardLevelDetailViewController.ContentType.OwnedAndReady)
+            {
+                return;
+            }
+
             if (view.selectedDifficultyBeatmap == null)
             {
                 return;
             }
 
-            _deleteButton.interactable = (_beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID.Length >= 32);
+            if (_deleteButton != null)
+            {
+                _deleteButton.interactable = (_beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID.Length >= 32);
+            }
 
             RefreshScoreSaberData(view.selectedDifficultyBeatmap.level);
             RefreshNoteJumpSpeed(view.selectedDifficultyBeatmap.noteJumpMovementSpeed);
@@ -904,7 +913,10 @@ namespace SongBrowser.UI
         {
             Logger.Trace("HandleDidSelectLevelRow({0})", level);
 
-            _deleteButton.interactable = (level.levelID.Length >= 32);
+            if (_deleteButton != null)
+            {
+                _deleteButton.interactable = (level.levelID.Length >= 32);
+            }
 
             RefreshQuickScrollButtons();
         }
