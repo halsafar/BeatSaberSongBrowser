@@ -410,18 +410,21 @@ namespace SongBrowser.UI
             (statsPanel.transform as RectTransform).Translate(0, 0.05f, 0);
 
             _ppStatButton = UnityEngine.Object.Instantiate(statsPanel.GetComponentsInChildren<RectTransform>().First(x => x.name == "NPS"), statsPanel.transform, false);
+            _ppStatButton.name = "PPStatLabel";
             (_ppStatButton.transform as RectTransform).Translate(0, -0.1f, 0);
             BeatSaberUI.SetStatButtonIcon(_ppStatButton, Base64Sprites.GraphIcon);
             BeatSaberUI.DestroyHoverHint(_ppStatButton);
             BeatSaberUI.SetHoverHint(_ppStatButton, "songBrowser_ppValue", "PP Value");
 
             _starStatButton = UnityEngine.Object.Instantiate(statsPanel.GetComponentsInChildren<RectTransform>().First(x => x.name == "NotesCount"), statsPanel.transform, false);
+            _starStatButton.name = "StarStatLabel";
             (_starStatButton.transform as RectTransform).Translate(0, -0.1f, 0);
             BeatSaberUI.SetStatButtonIcon(_starStatButton, Base64Sprites.StarFullIcon);
             BeatSaberUI.DestroyHoverHint(_starStatButton);
             BeatSaberUI.SetHoverHint(_starStatButton, "songBrowser_starValue", "Star Difficulty Rating");
 
             _njsStatButton = UnityEngine.Object.Instantiate(statsPanel.GetComponentsInChildren<RectTransform>().First(x => x.name == "ObstaclesCount"), statsPanel.transform, false);
+            _njsStatButton.name = "NoteJumpSpeedLabel";
             (_njsStatButton.transform as RectTransform).Translate(0, -0.1f, 0);
             BeatSaberUI.SetStatButtonIcon(_njsStatButton, Base64Sprites.SpeedIcon);
             BeatSaberUI.DestroyHoverHint(_njsStatButton);
