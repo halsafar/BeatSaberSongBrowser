@@ -24,17 +24,19 @@ namespace SongBrowser.Internals
 
         public static void SetButtonTextSize(this Button _button, float _fontSize)
         {
-            if (_button.GetComponentInChildren<TextMeshProUGUI>() != null)
+            var txtMesh = _button.GetComponentInChildren<HMUI.CurvedTextMeshPro>();
+            if (txtMesh != null)
             {
-                _button.GetComponentInChildren<TextMeshProUGUI>().fontSize = _fontSize;
+                txtMesh.fontSize = _fontSize;
             }
         }
 
         public static void ToggleWordWrapping(this Button _button, bool enableWordWrapping)
         {
-            if (_button.GetComponentInChildren<TextMeshProUGUI>() != null)
+            var txtMesh = _button.GetComponentInChildren<HMUI.CurvedTextMeshPro>();
+            if (txtMesh != null)
             {
-                _button.GetComponentInChildren<TextMeshProUGUI>().enableWordWrapping = enableWordWrapping;
+                txtMesh.enableWordWrapping = enableWordWrapping;
             }
         }
 

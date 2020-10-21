@@ -272,7 +272,7 @@ namespace SongBrowser.UI
         {
             Logger.Debug("Create sort buttons...");
 
-            float sortButtonFontSize = 2.15f;
+            float sortButtonFontSize = 2.0f;
             float sortButtonX = -63.0f;
             float sortButtonWidth = 12.0f;
             float buttonSpacing = 0.25f;
@@ -281,7 +281,7 @@ namespace SongBrowser.UI
 
             string[] sortButtonNames = new string[]
             {
-                    "Title", "Author", "Newest", "YourPlays", "PP", "Stars", "UpVotes", "Rating", "Heat"
+                    "Title", "Author", "Newest", "#Plays", "PP", "Stars", "UpVotes", "Rating", "Heat"
             };
 
             SongSortMode[] sortModes = new SongSortMode[]

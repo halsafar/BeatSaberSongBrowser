@@ -142,10 +142,10 @@ namespace SongBrowser.Internals
             textMesh.richText = true;
             externalComponents.components.Add(textMesh);
 
-            var f = btn.transform.Find("Content").GetComponent<LayoutElement>();
-            if (f != null)
+            var contentTransform = btn.transform.Find("Content").GetComponent<LayoutElement>();
+            if (contentTransform != null)
             {
-                GameObject.Destroy(f);
+                GameObject.Destroy(contentTransform);
             }
 
             ContentSizeFitter buttonSizeFitter = btn.gameObject.AddComponent<ContentSizeFitter>();
@@ -158,16 +158,15 @@ namespace SongBrowser.Internals
                 externalComponents.components.Add(stackLayoutGroup);
             }
 
-            //btn.onClick = new Button.ButtonClickedEvent();
             btn.onClick.RemoveAllListeners();
             if (onClick != null)
+            {
                 btn.onClick.AddListener(onClick);
-            
+            }
 
             (btn.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
             (btn.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
             (btn.transform as RectTransform).anchoredPosition = anchoredPosition;
-            //(btn.transform as RectTransform).localPosition = anchoredPosition;
             (btn.transform as RectTransform).sizeDelta = sizeDelta;
 
             btn.SetButtonText(buttonText);
