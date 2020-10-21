@@ -327,12 +327,28 @@ namespace SongBrowser
             }
             BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsCollectionName, packName, selectedBeatmapCollection.collectionName, selectedBeatmapCollection.coverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
 
-            GameObject _noDataGO = levelCollectionViewController.GetPrivateField<GameObject>("_noDataInfoGO");
-            bool _showPlayerStatsInDetailView = navController.GetPrivateField<bool>("_showPlayerStatsInDetailView");
-            bool _showPracticeButtonInDetailView = navController.GetPrivateField<bool>("_showPracticeButtonInDetailView");
+            /*
+             public virtual void SetData(
+                IAnnotatedBeatmapLevelCollection annotatedBeatmapLevelCollection, 
+                bool showPackHeader, bool showPlayerStats, bool showPracticeButton, 
+                string actionButtonText, 
+                GameObject noDataInfoPrefab, BeatmapDifficultyMask allowedBeatmapDifficultyMask, BeatmapCharacteristicSO[] notAllowedCharacteristics);
+            */
+            LevelCollectionNavigationController lcnvc = navController.GetPrivateField<LevelCollectionNavigationController>("_levelCollectionNavigationController");
+            var _showPlayerStatsInDetailView = navController.GetPrivateField<bool>("_showPlayerStatsInDetailView");
+            var _hidePracticeButton = navController.GetPrivateField<bool>("_hidePracticeButton");
+            var _actionButtonText = navController.GetPrivateField<string>("_actionButtonText");
+            var _allowedBeatmapDifficultyMask = navController.GetPrivateField<BeatmapDifficultyMask>("_allowedBeatmapDifficultyMask");
+            var _notAllowedCharacteristics = navController.GetPrivateField<BeatmapCharacteristicSO[]>("_notAllowedCharacteristics");
 
-            // TODO v1.12.1 - Support overwriting level pack
-            //navController.SetData(levelPack, true, _showPlayerStatsInDetailView, _showPracticeButtonInDetailView, _noDataGO);
+            lcnvc.SetData(levelPack, 
+                true,
+                _showPlayerStatsInDetailView, 
+                !_hidePracticeButton,
+                _actionButtonText, 
+                null,
+                _allowedBeatmapDifficultyMask,
+                _notAllowedCharacteristics);
 
             //_sortedSongs.ForEach(x => Logger.Debug(x.levelID));
         }

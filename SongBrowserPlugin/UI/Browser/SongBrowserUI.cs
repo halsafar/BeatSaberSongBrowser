@@ -1364,9 +1364,6 @@ namespace SongBrowser.UI
         /// </summary>
         public bool UpdateLevelCollectionSelection()
         {
-            // TODO v1.12.1 - breaks
-            return false;
-
             if (_uiCreated)
             {
                 IAnnotatedBeatmapLevelCollection currentSelected = _beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection();
