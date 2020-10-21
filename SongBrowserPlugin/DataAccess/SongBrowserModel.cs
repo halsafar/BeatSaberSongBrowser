@@ -1,6 +1,7 @@
 ﻿using SongBrowser.DataAccess;
 using SongCore.Utilities;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -33,7 +34,7 @@ namespace SongBrowser
 
         public static Func<IAnnotatedBeatmapLevelCollection, List<IPreviewBeatmapLevel>> CustomFilterHandler;
         public static Func<List<IPreviewBeatmapLevel>, List<IPreviewBeatmapLevel>> CustomSortHandler;
-        public static Action<Dictionary<string, CustomPreviewBeatmapLevel>> didFinishProcessingSongs;
+        public static Action<ConcurrentDictionary<string, CustomPreviewBeatmapLevel>> didFinishProcessingSongs;
 
         public bool SortWasMissingData { get; private set; } = false;
 

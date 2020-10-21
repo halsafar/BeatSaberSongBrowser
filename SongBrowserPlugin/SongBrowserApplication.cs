@@ -2,6 +2,7 @@
 using SongBrowser.UI;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -100,7 +101,7 @@ namespace SongBrowser
         /// </summary>
         /// <param name="loader"></param>
         /// <param name="levels"></param>
-        private void OnSongLoaderLoadedSongs(SongCore.Loader loader, Dictionary<string, CustomPreviewBeatmapLevel> levels)
+        private void OnSongLoaderLoadedSongs(SongCore.Loader loader, ConcurrentDictionary<string, CustomPreviewBeatmapLevel> levels)
         {
             Logger.Trace("OnSongLoaderLoadedSongs-SongBrowserApplication()");
             try

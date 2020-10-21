@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using SongCore.Utilities;
-
+using System.Collections.Concurrent;
 
 namespace SongBrowser.UI
 {
@@ -95,7 +95,7 @@ namespace SongBrowser.UI
             }
         }
 
-        private void SongBrowserFinishedProcessingSongs(Dictionary<string, CustomPreviewBeatmapLevel> arg2)
+        private void SongBrowserFinishedProcessingSongs(ConcurrentDictionary<string, CustomPreviewBeatmapLevel> arg2)
         {
             StopAllCoroutines();
             _showingMessage = false;
