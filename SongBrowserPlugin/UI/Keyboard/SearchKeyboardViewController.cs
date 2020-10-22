@@ -24,7 +24,7 @@ namespace SongBrowser.UI
         {
             if (addedToHierarchy && firstActivation)
             {
-                _searchKeyboardGO = Instantiate(Resources.FindObjectsOfTypeAll<UIKeyboard>().First(x => x.name != "CustomUIKeyboard"), rectTransform, false).gameObject;
+                _searchKeyboardGO = Instantiate(Resources.FindObjectsOfTypeAll<HMUI.UIKeyboard>().First(x => x.name != "CustomUIKeyboard"), rectTransform, false).gameObject;
 
                 Destroy(_searchKeyboardGO.GetComponent<UIKeyboard>());
                 _searchKeyboard = _searchKeyboardGO.AddComponent<CustomUIKeyboard>();

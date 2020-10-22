@@ -5,12 +5,12 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using HMUI;
 using SongBrowser.DataAccess;
-using TMPro;
 using Logger = SongBrowser.Logging.Logger;
 using System.Collections;
 using SongCore.Utilities;
 using SongBrowser.Internals;
 using SongDataCore.BeatStar;
+
 
 namespace SongBrowser.UI
 {
@@ -331,7 +331,7 @@ namespace SongBrowser.UI
 
             SongFilterMode[] filterModes = new SongFilterMode[]
             {
-                    SongFilterMode.Favorites, SongFilterMode.Search, SongFilterMode.Ranked, SongFilterMode.Unranked
+                    SongFilterMode.Search, SongFilterMode.Ranked, SongFilterMode.Unranked
             };
 
             _filterButtonGroup = new List<SongFilterButton>();
@@ -991,7 +991,7 @@ namespace SongBrowser.UI
             }
 
             Logger.Debug("Presenting search keyboard");
-            _beatUi.LevelSelectionFlowCoordinator.InvokePrivateMethod("PresentViewController", new object[] { _searchViewController, null, false });
+            _beatUi.LevelSelectionFlowCoordinator.InvokePrivateMethod("PresentViewController", new object[] { _searchViewController, null, ViewController.AnimationDirection.Horizontal, false });
         }
 
         /// <summary>
