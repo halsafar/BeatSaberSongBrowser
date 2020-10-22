@@ -25,7 +25,7 @@ namespace SongBrowser
         private SongBrowserSettings _settings;
 
         // song list management
-        private double _customSongDirLastWriteTime = 0;        
+        private double _customSongDirLastWriteTime = 0;
         private Dictionary<String, double> _cachedLastWriteTimes;
         private Dictionary<string, int> _levelIdToPlayCount;
 
@@ -224,7 +224,7 @@ namespace SongBrowser
                 Logger.Debug("Cannot process songs yet, no level collection selected...");
                 return;
             }
-            
+
             Logger.Debug($"Using songs from level collection: {selectedBeatmapCollection.collectionName} [num={selectedBeatmapCollection.beatmapLevelCollection.beatmapLevels.Length}");
             unsortedSongs = selectedBeatmapCollection.beatmapLevelCollection.beatmapLevels.ToList();
 
@@ -357,11 +357,11 @@ namespace SongBrowser
             var _notAllowedCharacteristics = navController.GetPrivateField<BeatmapCharacteristicSO[]>("_notAllowedCharacteristics");
 
             Logger.Debug("Calling lcnvc.SetData...");
-            lcnvc.SetData(levelPack, 
+            lcnvc.SetData(levelPack,
                 true,
-                _showPlayerStatsInDetailView, 
+                _showPlayerStatsInDetailView,
                 !_hidePracticeButton,
-                _actionButtonText, 
+                _actionButtonText,
                 null,
                 _allowedBeatmapDifficultyMask,
                 _notAllowedCharacteristics);
@@ -433,7 +433,7 @@ namespace SongBrowser
                 double maxPP = 0.0;
                 if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
                 {
-                     maxPP = SongDataCore.Plugin.Songs.Data.Songs[hash].diffs.Max(y => y.pp);
+                    maxPP = SongDataCore.Plugin.Songs.Data.Songs[hash].diffs.Max(y => y.pp);
                 }
 
                 if (maxPP > 0f)
@@ -552,7 +552,7 @@ namespace SongBrowser
                     var stars = 0.0;
                     if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
                     {
-                        var diffs = SongDataCore.Plugin.Songs.Data.Songs[hash].diffs;   
+                        var diffs = SongDataCore.Plugin.Songs.Data.Songs[hash].diffs;
                         stars = diffs.Max(y => y.star);
                     }
 
@@ -622,7 +622,8 @@ namespace SongBrowser
             }
 
             return levelIds
-                .OrderByDescending(x => {
+                .OrderByDescending(x =>
+                {
                     var hash = SongBrowserModel.GetSongHash(x.levelID);
                     if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
                     {
@@ -684,7 +685,8 @@ namespace SongBrowser
             }
 
             return levelIds
-                .OrderByDescending(x => {
+                .OrderByDescending(x =>
+                {
                     var hash = SongBrowserModel.GetSongHash(x.levelID);
                     if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
                     {
@@ -715,7 +717,8 @@ namespace SongBrowser
             }
 
             return levelIds
-                .OrderByDescending(x => {
+                .OrderByDescending(x =>
+                {
                     var hash = SongBrowserModel.GetSongHash(x.levelID);
                     if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
                     {

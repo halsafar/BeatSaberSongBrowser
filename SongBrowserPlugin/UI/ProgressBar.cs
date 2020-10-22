@@ -1,10 +1,10 @@
-﻿using System.Collections;
+﻿using SongCore.Utilities;
+using System.Collections;
+using System.Collections.Concurrent;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using SongCore.Utilities;
-using System.Collections.Concurrent;
 
 namespace SongBrowser.UI
 {

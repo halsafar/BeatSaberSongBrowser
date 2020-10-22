@@ -1,6 +1,5 @@
 ﻿using BS_Utils.Utilities;
 using HMUI;
-using IPA.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -211,7 +210,7 @@ namespace SongBrowser.DataAccess
                 Logger.Debug("Current selected level collection is null for some reason...");
                 return null;
             }
-            
+
             return levelCollection.beatmapLevelCollection.beatmapLevels;
         }
 
@@ -235,7 +234,8 @@ namespace SongBrowser.DataAccess
                 try
                 {
                     category = (SelectLevelCategoryViewController.LevelCategory)Enum.Parse(typeof(SelectLevelCategoryViewController.LevelCategory), levelCategoryName, true);
-                } catch (Exception)
+                }
+                catch (Exception)
                 {
                     // invalid input
                     return;
@@ -250,7 +250,7 @@ namespace SongBrowser.DataAccess
                 }
 
                 Logger.Info("Selecting level collection: {0}", collection.collectionName);
-                
+
                 var selectLeveCategoryViewController = LevelFilteringNavigationController.GetComponentInChildren<SelectLevelCategoryViewController>();
                 var iconSegementController = selectLeveCategoryViewController.GetComponentInChildren<IconSegmentedControl>();
 
@@ -258,9 +258,9 @@ namespace SongBrowser.DataAccess
                                         select x.levelCategory).ToList().IndexOf(category);
 
                 iconSegementController.SelectCellWithNumber(selectCellNumber);
-                LevelFilteringNavigationController.SelectAnnotatedBeatmapLevelCollection(collection as IBeatmapLevelPack);                
+                LevelFilteringNavigationController.SelectAnnotatedBeatmapLevelCollection(collection as IBeatmapLevelPack);
                 LevelFilteringNavigationController.UpdateSecondChildControllerContent(category);
-                
+
                 Logger.Debug("Done selecting level collection!");
             }
             catch (Exception e)
@@ -340,7 +340,7 @@ namespace SongBrowser.DataAccess
                 LevelCollectionTableView.HandleDidSelectRowEvent(tableView, selectedIndex);
             }
             tableView.ScrollToCellWithIdx(selectedIndex, TableViewScroller.ScrollPositionType.Beginning, true);
-            tableView.SelectCellWithIdx(selectedIndex);            
+            tableView.SelectCellWithIdx(selectedIndex);
         }
 
         /// <summary>

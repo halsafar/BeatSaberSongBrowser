@@ -1,8 +1,8 @@
-﻿using SongBrowser.UI;
-using Logger = SongBrowser.Logging.Logger;
-using System;
+﻿using BS_Utils.Utilities;
 using IPA;
-using BS_Utils.Utilities;
+using SongBrowser.UI;
+using System;
+using Logger = SongBrowser.Logging.Logger;
 
 namespace SongBrowser
 {
@@ -32,7 +32,7 @@ namespace SongBrowser
 
         [OnExit]
         public void OnApplicationQuit()
-        {            
+        {
         }
 
         private void OnMenuSceneLoadedFresh(ScenesTransitionSetupDataSO data)

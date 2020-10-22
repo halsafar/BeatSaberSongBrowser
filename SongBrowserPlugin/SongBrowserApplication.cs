@@ -1,9 +1,7 @@
-﻿using SongBrowser.DataAccess;
-using SongBrowser.UI;
+﻿using SongBrowser.UI;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -33,7 +31,7 @@ namespace SongBrowser
         /// Load the main song browser app.
         /// </summary>
         internal static void OnLoad()
-        {            
+        {
             if (Instance != null)
             {
                 return;
@@ -41,7 +39,7 @@ namespace SongBrowser
 
             new GameObject("Beat Saber SongBrowser Plugin").AddComponent<SongBrowserApplication>();
 
-            SongBrowserApplication.MainProgressBar = SongBrowser.UI.ProgressBar.Create();            
+            SongBrowserApplication.MainProgressBar = SongBrowser.UI.ProgressBar.Create();
 
             Console.WriteLine("SongBrowser Plugin Loaded()");
         }

@@ -3,7 +3,6 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using Image = UnityEngine.UI.Image;
-using Logger = SongBrowser.Logging.Logger;
 
 namespace SongBrowser.Internals
 {

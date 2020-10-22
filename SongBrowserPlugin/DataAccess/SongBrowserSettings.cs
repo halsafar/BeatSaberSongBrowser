@@ -16,7 +16,7 @@ namespace SongBrowser.DataAccess
         Default,
         Author,
         Original,
-        Newest,        
+        Newest,
         YourPlayCount,
         Difficulty,
         Random,
