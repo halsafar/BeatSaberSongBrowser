@@ -2,18 +2,14 @@
 using IPA.Utilities;
 using System;
 using System.Linq;
-using System.Reflection;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using VRUIControls;
 using Object = UnityEngine.Object;
 using Image = UnityEngine.UI.Image;
 using Logger = SongBrowser.Logging.Logger;
 using UnityEngine.Events;
-using BS_Utils.Utilities;
-using BeatSaberMarkupLanguage;
 
 namespace SongBrowser.Internals
 {

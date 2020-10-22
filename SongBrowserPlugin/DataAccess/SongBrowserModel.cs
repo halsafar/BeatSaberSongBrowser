@@ -1,5 +1,4 @@
 ﻿using SongBrowser.DataAccess;
-using SongBrowser.UI;
 using SongCore.Utilities;
 using System;
 using System.Collections.Concurrent;
@@ -8,7 +7,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using TMPro;
 using UnityEngine;
 using Logger = SongBrowser.Logging.Logger;
 

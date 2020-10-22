@@ -1,5 +1,4 @@
-﻿using UnityEngine.SceneManagement;
-using SongBrowser.UI;
+﻿using SongBrowser.UI;
 using Logger = SongBrowser.Logging.Logger;
 using System;
 using IPA;
