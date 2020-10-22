@@ -337,7 +337,7 @@ namespace SongBrowser
             var coverImage = selectedBeatmapCollection.coverImage;
             if (coverImage == null)
             {
-                coverImage = Base64Sprites.DeleteIcon;
+                coverImage = BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite;
             }
 
             Logger.Debug("Creating filtered level pack...");
