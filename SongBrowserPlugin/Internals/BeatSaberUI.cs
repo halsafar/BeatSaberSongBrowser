@@ -124,7 +124,7 @@ namespace SongBrowser.Internals
         /// <param name="buttonText">The text that should be shown on the button.</param>
         /// <param name="icon">The icon that should be shown on the button.</param>
         /// <returns>The newly created button.</returns>
-        public static Button CreateUIButton(String name, RectTransform parent, string buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick = null, string buttonText = "BUTTON", Sprite icon = null)
+        public static Button CreateUIButton(String name, RectTransform parent, string buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick = null, string buttonText = "BUTTON")
         {
             Logger.Debug("CreateUIButton({0}, {1}, {2}, {3}, {4}", name, parent, buttonTemplate, anchoredPosition, sizeDelta);
             Button btn = UnityEngine.Object.Instantiate(Resources.FindObjectsOfTypeAll<Button>().Last(x => (x.name == buttonTemplate)), parent, false);
@@ -171,9 +171,6 @@ namespace SongBrowser.Internals
 
             btn.SetButtonText(buttonText);
 
-            if (icon != null)
-                btn.SetButtonIcon(icon);
-            
             return btn;
         }
 

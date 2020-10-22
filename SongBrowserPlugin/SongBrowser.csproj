@@ -142,7 +142,6 @@
   <ItemGroup>
     <Compile Include="Internals\BeatSaberUI.cs" />
     <Compile Include="Internals\BeatSaberExtensions.cs" />
-    <Compile Include="Internals\ReflectionUtils.cs" />
     <Compile Include="UI\Browser\BeatSaberUIController.cs" />
     <Compile Include="DataAccess\Playlist.cs" />
     <Compile Include="Internals\SimpleJSON.cs" />

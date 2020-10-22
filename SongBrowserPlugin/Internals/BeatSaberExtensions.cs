@@ -40,11 +40,6 @@ namespace SongBrowser.Internals
             }
         }
 
-        public static void SetButtonIcon(this Button _button, Sprite _icon)
-        {
-            _button.GetComponentsInChildren<ImageView>().First().sprite = _icon;
-        }
-
         public static void SetButtonBackgroundActive(this Button parent, bool active)
         {
             HMUI.ImageView img = parent.GetComponentsInChildren<HMUI.ImageView>().Last(x => x.name == "BG");
