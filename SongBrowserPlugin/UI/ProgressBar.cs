@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections;
+﻿using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -20,7 +19,7 @@ namespace SongBrowser.UI
         private TMP_Text _headerText;
         internal Image _loadingBackg;
 
-        private static readonly Vector3 Position = new Vector3(0, -0.85f, 2.5f);
+        private static readonly Vector3 Position = new Vector3(0, 0.0f, 2.5f);
         private static readonly Vector3 Rotation = new Vector3(0, 0, 0);
         private static readonly Vector3 Scale = new Vector3(0.01f, 0.01f, 0.01f);
 
