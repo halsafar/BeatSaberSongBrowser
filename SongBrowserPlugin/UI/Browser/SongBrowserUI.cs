@@ -10,7 +10,7 @@ using System.Collections;
 using SongCore.Utilities;
 using SongBrowser.Internals;
 using SongDataCore.BeatStar;
-
+using BeatSaberMarkupLanguage.Components;
 
 namespace SongBrowser.UI
 {
@@ -62,8 +62,6 @@ namespace SongBrowser.UI
 
         private Button _pageUpFastButton;
         private Button _pageDownFastButton;
-
-        private SearchKeyboardViewController _searchViewController;
 
         private RectTransform _ppStatButton;
         private RectTransform _starStatButton;
@@ -983,28 +981,13 @@ namespace SongBrowser.UI
         /// </summary>
         void ShowSearchKeyboard()
         {
-            if (_searchViewController == null)
-            {
-                _searchViewController = BeatSaberUI.CreateViewController<SearchKeyboardViewController>("SearchKeyboardViewController");
-                _searchViewController.searchButtonPressed += SearchViewControllerSearchButtonPressed;
-                _searchViewController.backButtonPressed += SearchViewControllerbackButtonPressed;
-            }
-
-            Logger.Debug("Presenting search keyboard");
-            _beatUi.LevelSelectionFlowCoordinator.InvokePrivateMethod("PresentViewController", new object[] { _searchViewController, null, ViewController.AnimationDirection.Horizontal, false });
-        }
-
-        /// <summary>
-        /// Handle back button event from search keyboard.
-        /// </summary>
-        private void SearchViewControllerbackButtonPressed()
-        {
-            _beatUi.LevelSelectionFlowCoordinator.InvokePrivateMethod("DismissViewController", new object[] { _searchViewController, null, false });
-
-            this._model.Settings.filterMode = SongFilterMode.None;
-            this._model.Settings.Save();
-
-            RefreshSongUI();
+            var modalKbTag = new BeatSaberMarkupLanguage.Tags.ModalKeyboardTag();
+            var modalKbView = modalKbTag.CreateObject(_beatUi.LevelSelectionNavigationController.rectTransform);
+            modalKbView.gameObject.SetActive(true);
+            var modalKb = modalKbView.GetComponent<ModalKeyboard>();
+            modalKb.gameObject.SetActive(true);
+            modalKb.keyboard.EnterPressed += SearchViewControllerSearchButtonPressed;
+            modalKb.modalView.Show(true, true);
         }
 
         /// <summary>
@@ -1013,8 +996,6 @@ namespace SongBrowser.UI
         /// <param name="searchFor"></param>
         private void SearchViewControllerSearchButtonPressed(string searchFor)
         {
-            _beatUi.LevelSelectionFlowCoordinator.InvokePrivateMethod("DismissViewController", new object[] { _searchViewController, null, false });
-
             Logger.Debug("Searching for \"{0}\"...", searchFor);
 
             _model.Settings.filterMode = SongFilterMode.Search;

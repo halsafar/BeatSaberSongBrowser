@@ -153,8 +153,6 @@
     <Compile Include="DataAccess\SongBrowserModel.cs" />
     <Compile Include="DataAccess\SongBrowserSettings.cs" />
     <Compile Include="UI\Base64Sprites.cs" />
-    <Compile Include="UI\Keyboard\CustomUIKeyboard.cs" />
-    <Compile Include="UI\Keyboard\SearchKeyboardViewController.cs" />
     <Compile Include="UI\Browser\SongBrowserUI.cs" />
     <Compile Include="UI\Browser\SongFilterButton.cs" />
     <Compile Include="UI\Browser\SongSortButton.cs" />

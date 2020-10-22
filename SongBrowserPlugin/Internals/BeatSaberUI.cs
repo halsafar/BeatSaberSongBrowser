@@ -13,6 +13,7 @@ using Image = UnityEngine.UI.Image;
 using Logger = SongBrowser.Logging.Logger;
 using UnityEngine.Events;
 using BS_Utils.Utilities;
+using BeatSaberMarkupLanguage;
 
 namespace SongBrowser.Internals
 {
