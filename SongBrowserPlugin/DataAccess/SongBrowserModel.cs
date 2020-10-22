@@ -1,4 +1,5 @@
 ﻿using SongBrowser.DataAccess;
+using SongBrowser.UI;
 using SongCore.Utilities;
 using System;
 using System.Collections.Concurrent;
@@ -226,7 +227,7 @@ namespace SongBrowser
                 return;
             }
             
-            Logger.Debug("Using songs from level collection: {0}", selectedBeatmapCollection.collectionName);
+            Logger.Debug($"Using songs from level collection: {selectedBeatmapCollection.collectionName} [num={selectedBeatmapCollection.beatmapLevelCollection.beatmapLevels.Length}");
             unsortedSongs = selectedBeatmapCollection.beatmapLevelCollection.beatmapLevels.ToList();
 
             // filter
@@ -262,7 +263,7 @@ namespace SongBrowser
             Logger.Info("Filtering songs took {0}ms", stopwatch.ElapsedMilliseconds);
 
             // sort
-            Logger.Debug("Starting to sort songs...");
+            Logger.Debug($"Starting to sort songs by {_settings.sortMode}");
             stopwatch = Stopwatch.StartNew();
 
             SortWasMissingData = false;
@@ -322,11 +323,25 @@ namespace SongBrowser
             // Still hacking in a custom level pack
             // Asterisk the pack name so it is identifable as filtered.
             var packName = selectedBeatmapCollection.collectionName;
+            if (packName == null)
+            {
+                packName = "";
+            }
+
             if (!packName.EndsWith("*") && _settings.filterMode != SongFilterMode.None)
             {
                 packName += "*";
             }
-            BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsCollectionName, packName, selectedBeatmapCollection.collectionName, selectedBeatmapCollection.coverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
+
+            // Some level categories have a null cover image, supply something, it won't show it anyway
+            var coverImage = selectedBeatmapCollection.coverImage;
+            if (coverImage == null)
+            {
+                coverImage = Base64Sprites.DeleteIcon;
+            }
+
+            Logger.Debug("Creating filtered level pack...");
+            BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsCollectionName, packName, selectedBeatmapCollection.collectionName, coverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
 
             /*
              public virtual void SetData(
@@ -335,6 +350,7 @@ namespace SongBrowser
                 string actionButtonText, 
                 GameObject noDataInfoPrefab, BeatmapDifficultyMask allowedBeatmapDifficultyMask, BeatmapCharacteristicSO[] notAllowedCharacteristics);
             */
+            Logger.Debug("Acquiring necessary fields to call SetData(pack)...");
             LevelCollectionNavigationController lcnvc = navController.GetPrivateField<LevelCollectionNavigationController>("_levelCollectionNavigationController");
             var _showPlayerStatsInDetailView = navController.GetPrivateField<bool>("_showPlayerStatsInDetailView");
             var _hidePracticeButton = navController.GetPrivateField<bool>("_hidePracticeButton");
@@ -342,6 +358,7 @@ namespace SongBrowser
             var _allowedBeatmapDifficultyMask = navController.GetPrivateField<BeatmapDifficultyMask>("_allowedBeatmapDifficultyMask");
             var _notAllowedCharacteristics = navController.GetPrivateField<BeatmapCharacteristicSO[]>("_notAllowedCharacteristics");
 
+            Logger.Debug("Calling lcnvc.SetData...");
             lcnvc.SetData(levelPack, 
                 true,
                 _showPlayerStatsInDetailView, 
