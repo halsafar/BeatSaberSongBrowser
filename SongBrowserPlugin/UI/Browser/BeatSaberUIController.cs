@@ -219,14 +219,30 @@ namespace SongBrowser.DataAccess
         /// Select a level collection.
         /// </summary>
         /// <param name="levelCollectionName"></param>
-        public void SelectLevelCollection(String levelCollectionName)
+        public void SelectLevelCollection(String levelCategoryName, String levelCollectionName)
         {
             Logger.Trace("SelectLevelCollection({0})", levelCollectionName);
 
             try
             {
-                IAnnotatedBeatmapLevelCollection collection = GetLevelCollectionByName(levelCollectionName);
+                if (String.IsNullOrEmpty(levelCategoryName))
+                {
+                    // hack for now, just assume custom levels if a user has an old settings file, corrects itself first time they change level packs.
+                    levelCategoryName = SelectLevelCategoryViewController.LevelCategory.CustomSongs.ToString();
+                }
 
+                SelectLevelCategoryViewController.LevelCategory category;
+                try
+                {
+                    category = (SelectLevelCategoryViewController.LevelCategory)Enum.Parse(typeof(SelectLevelCategoryViewController.LevelCategory), levelCategoryName, true);
+                } catch (Exception)
+                {
+                    // invalid input
+                    return;
+                }
+
+
+                IAnnotatedBeatmapLevelCollection collection = GetLevelCollectionByName(levelCollectionName);
                 if (collection == null)
                 {
                     Logger.Debug("Could not locate requested level collection...");
@@ -234,11 +250,17 @@ namespace SongBrowser.DataAccess
                 }
 
                 Logger.Info("Selecting level collection: {0}", collection.collectionName);
+                
+                var selectLeveCategoryViewController = LevelFilteringNavigationController.GetComponentInChildren<SelectLevelCategoryViewController>();
+                var iconSegementController = selectLeveCategoryViewController.GetComponentInChildren<IconSegmentedControl>();
 
-                // TODO v1.12.1 - Equivalent if necessary
-                //LevelFilteringNavigationController.SelectBeatmapLevelPackOrPlayList(collection as IBeatmapLevelPack, collection as IPlaylist);
-                //LevelFilteringNavigationController.TabBarDidSwitch();
-               
+                int selectCellNumber = (from x in selectLeveCategoryViewController.GetPrivateField<SelectLevelCategoryViewController.LevelCategoryInfo[]>("_levelCategoryInfos")
+                                        select x.levelCategory).ToList().IndexOf(category);
+
+                iconSegementController.SelectCellWithNumber(selectCellNumber);
+                LevelFilteringNavigationController.SelectAnnotatedBeatmapLevelCollection(collection as IBeatmapLevelPack);                
+                LevelFilteringNavigationController.UpdateSecondChildControllerContent(category);
+                
                 Logger.Debug("Done selecting level collection!");
             }
             catch (Exception e)

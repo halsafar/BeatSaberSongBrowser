@@ -581,6 +581,8 @@ namespace SongBrowser.UI
         {
             Logger.Trace("handleDidSelectAnnotatedBeatmapLevelCollection()");
             _lastLevelCollection = annotatedBeatmapLevelCollection;
+            Model.Settings.currentLevelCategoryName = _beatUi.LevelFilteringNavigationController.selectedLevelCategory.ToString();
+            Model.Settings.Save();
             Logger.Debug("Selected Level Collection={0}", _lastLevelCollection);
         }
 
@@ -652,6 +654,7 @@ namespace SongBrowser.UI
                 {
                     Logger.Debug("Recording levelCollection: {0}", levelCollection.collectionName);
                     _lastLevelCollection = levelCollection;
+                    Model.Settings.currentLevelCategoryName = _beatUi.LevelFilteringNavigationController.selectedLevelCategory.ToString();
                 }
 
                 // reset level selection
@@ -753,7 +756,7 @@ namespace SongBrowser.UI
 
             if (mode == SongFilterMode.Favorites)
             {
-                _beatUi.SelectLevelCollection(SongBrowserSettings.CUSTOM_SONGS_LEVEL_COLLECTION_NAME);
+                _beatUi.SelectLevelCollection(SelectLevelCategoryViewController.LevelCategory.Favorites.ToString(), SongBrowserSettings.CUSTOM_SONGS_LEVEL_COLLECTION_NAME);
             }
             else
             {
@@ -1384,7 +1387,7 @@ namespace SongBrowser.UI
                     {
                         Hide();
                     }
-                    _beatUi.SelectLevelCollection(_model.Settings.currentLevelCollectionName);
+                    _beatUi.SelectLevelCollection(_model.Settings.currentLevelCategoryName, _model.Settings.currentLevelCollectionName);
                     _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += _levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
                 }
 
