@@ -14,8 +14,9 @@ namespace SongBrowser.UI
         public static Sprite GraphIcon;
         public static Sprite DeleteIcon;
         public static Sprite XIcon;
-        public static Sprite RandomIcon;
         public static Sprite DoubleArrow;
+        public static Sprite RandomIcon;
+        public static Sprite NoteStartOffsetIcon;        
 
         public static void Init()
         {
@@ -26,6 +27,7 @@ namespace SongBrowser.UI
             DeleteIcon = Base64Sprites.LoadSpriteFromResources("SongBrowser.Assets.DeleteIcon.png");
             DoubleArrow = Base64Sprites.LoadSpriteFromResources("SongBrowser.Assets.DoubleArrow.png");
             RandomIcon = Base64Sprites.LoadSpriteFromResources("SongBrowser.Assets.RandomIcon.png");
+            NoteStartOffsetIcon = Base64Sprites.LoadSpriteFromResources("SongBrowser.Assets.NoteStartOffset.png");
         }
 
         public static string SpriteToBase64(Sprite input)

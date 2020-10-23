@@ -167,6 +167,7 @@
     <EmbeddedResource Include="Assets\Search.png" />
     <EmbeddedResource Include="Assets\Speed.png" />
     <EmbeddedResource Include="Assets\X.png" />
+    <EmbeddedResource Include="Assets\NoteStartOffset.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -174,7 +175,6 @@
   <ItemGroup>
     <EmbeddedResource Include="manifest.json" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>IF EXIST "C:\Program Files\Oculus\Software\Software\hyperbolic-magnetism-beat-saber\Plugins" xcopy "$(TargetDir)$(TargetFileName)" "C:\Program Files\Oculus\Software\Software\hyperbolic-magnetism-beat-saber\Plugins" /Y
