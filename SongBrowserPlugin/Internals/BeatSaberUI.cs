@@ -40,6 +40,7 @@ namespace SongBrowser.Internals
             vc.rectTransform.sizeDelta = new Vector2(0f, 0f);
             vc.rectTransform.anchoredPosition = new Vector2(0f, 0f);
             vc.gameObject.SetActive(false);
+            vc.name = name;
             return vc;
         }
 

@@ -97,7 +97,7 @@ namespace SongBrowser.UI
             Logger.Trace("CreateUI()");
 
             // Determine the flow controller to use
-            FlowCoordinator flowCoordinator = null;
+            FlowCoordinator flowCoordinator;
             if (mode == MainMenuViewController.MenuButton.SoloFreePlay)
             {
                 Logger.Debug("Entering SOLO mode...");
@@ -110,8 +110,7 @@ namespace SongBrowser.UI
             }
             else
             {
-                Logger.Debug("Entering SOLO CAMPAIGN mode...");
-                flowCoordinator = Resources.FindObjectsOfTypeAll<CampaignFlowCoordinator>().First();
+                Logger.Info("Entering Unsupported mode...");                
                 return;
             }
 
@@ -552,7 +551,7 @@ namespace SongBrowser.UI
                 return;
             }
 
-            this._model.ProcessSongList(_lastLevelCollection, _beatUi.LevelCollectionViewController, _beatUi.LevelSelectionNavigationController);
+            this._model.ProcessSongList(_lastLevelCollection, _beatUi.LevelSelectionNavigationController);
         }
 
         /// <summary>
@@ -1029,7 +1028,6 @@ namespace SongBrowser.UI
                 segmentSize = LIST_ITEMS_VISIBLE_AT_ONCE;
             }
 
-            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_beatUi.LevelCollectionTableView, "_tableView");
             int currentRow = _beatUi.LevelCollectionTableView.GetPrivateField<int>("_selectedRow");
             int jumpDirection = Math.Sign(numJumps);
             int newRow = currentRow + (jumpDirection * segmentSize);
@@ -1225,7 +1223,7 @@ namespace SongBrowser.UI
         /// </summary>
         private void RefreshCurrentSelectionDisplay()
         {
-            string sortByDisplay = null;
+            string sortByDisplay;
             if (_model.Settings.sortMode == SongSortMode.Default)
             {
                 sortByDisplay = "Title";

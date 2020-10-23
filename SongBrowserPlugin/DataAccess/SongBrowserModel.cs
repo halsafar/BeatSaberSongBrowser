@@ -26,7 +26,7 @@ namespace SongBrowser
 
         // song list management
         private double _customSongDirLastWriteTime = 0;
-        private Dictionary<String, double> _cachedLastWriteTimes;
+        private readonly Dictionary<String, double> _cachedLastWriteTimes;
         private Dictionary<string, int> _levelIdToPlayCount;
 
         public BeatmapCharacteristicSO CurrentBeatmapCharacteristicSO;
@@ -159,7 +159,7 @@ namespace SongBrowser
         private double GetSongUserDate(CustomPreviewBeatmapLevel level)
         {
             var coverPath = Path.Combine(level.customLevelPath, level.standardLevelInfoSaveData.coverImageFilename);
-            var lastTime = EPOCH;
+            DateTime lastTime;
             if (File.Exists(coverPath))
             {
                 var lastWriteTime = File.GetLastWriteTimeUtc(coverPath);
@@ -210,7 +210,7 @@ namespace SongBrowser
         /// <summary>
         /// Sort the song list based on the settings.
         /// </summary>
-        public void ProcessSongList(IAnnotatedBeatmapLevelCollection selectedBeatmapCollection, LevelCollectionViewController levelCollectionViewController, LevelSelectionNavigationController navController)
+        public void ProcessSongList(IAnnotatedBeatmapLevelCollection selectedBeatmapCollection, LevelSelectionNavigationController navController)
         {
             Logger.Trace("ProcessSongList()");
 
