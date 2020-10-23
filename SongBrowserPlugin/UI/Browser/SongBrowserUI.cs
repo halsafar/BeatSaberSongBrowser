@@ -66,6 +66,7 @@ namespace SongBrowser.UI
         private RectTransform _ppStatButton;
         private RectTransform _starStatButton;
         private RectTransform _njsStatButton;
+        private RectTransform _noteJumpStartBeatOffsetLabel;
 
         private IAnnotatedBeatmapLevelCollection _lastLevelCollection;
 
@@ -405,26 +406,29 @@ namespace SongBrowser.UI
             var statsPanel = _beatUi.StandardLevelDetailView.GetPrivateField<LevelParamsPanel>("_levelParamsPanel");
             (statsPanel.transform as RectTransform).Translate(0, 0.05f, 0);
 
-            _ppStatButton = UnityEngine.Object.Instantiate(statsPanel.GetComponentsInChildren<RectTransform>().First(x => x.name == "NPS"), statsPanel.transform, false);
-            _ppStatButton.name = "PPStatLabel";
-            (_ppStatButton.transform as RectTransform).Translate(0, -0.1f, 0);
-            BeatSaberUI.SetStatButtonIcon(_ppStatButton, Base64Sprites.GraphIcon);
-            BeatSaberUI.DestroyHoverHint(_ppStatButton);
-            BeatSaberUI.SetHoverHint(_ppStatButton, "songBrowser_ppValue", "PP Value");
+            _ppStatButton = BeatSaberUI.CreateStatIcon("PPStatLabel",
+                statsPanel.GetComponentsInChildren<RectTransform>().First(x => x.name == "NPS"), 
+                statsPanel.transform,
+                Base64Sprites.GraphIcon,
+                "PP Value");
 
-            _starStatButton = UnityEngine.Object.Instantiate(statsPanel.GetComponentsInChildren<RectTransform>().First(x => x.name == "NotesCount"), statsPanel.transform, false);
-            _starStatButton.name = "StarStatLabel";
-            (_starStatButton.transform as RectTransform).Translate(0, -0.1f, 0);
-            BeatSaberUI.SetStatButtonIcon(_starStatButton, Base64Sprites.StarFullIcon);
-            BeatSaberUI.DestroyHoverHint(_starStatButton);
-            BeatSaberUI.SetHoverHint(_starStatButton, "songBrowser_starValue", "Star Difficulty Rating");
+            _starStatButton = BeatSaberUI.CreateStatIcon("StarStatLabel",
+                statsPanel.GetComponentsInChildren<RectTransform>().First(x => x.name == "NotesCount"),
+                statsPanel.transform,
+                Base64Sprites.StarFullIcon,
+                "Star Difficulty Rating");
 
-            _njsStatButton = UnityEngine.Object.Instantiate(statsPanel.GetComponentsInChildren<RectTransform>().First(x => x.name == "ObstaclesCount"), statsPanel.transform, false);
-            _njsStatButton.name = "NoteJumpSpeedLabel";
-            (_njsStatButton.transform as RectTransform).Translate(0, -0.1f, 0);
-            BeatSaberUI.SetStatButtonIcon(_njsStatButton, Base64Sprites.SpeedIcon);
-            BeatSaberUI.DestroyHoverHint(_njsStatButton);
-            BeatSaberUI.SetHoverHint(_njsStatButton, "songBrowser_njsValue", "Note Jump Speed");
+            _njsStatButton = BeatSaberUI.CreateStatIcon("NoteJumpSpeedLabel",
+                statsPanel.GetComponentsInChildren<RectTransform>().First(x => x.name == "ObstaclesCount"),
+                statsPanel.transform,
+                Base64Sprites.SpeedIcon,
+                "Note Jump Speed");
+
+            _noteJumpStartBeatOffsetLabel = BeatSaberUI.CreateStatIcon("NoteJumpStartBeatOffsetLabel",
+                statsPanel.GetComponentsInChildren<RectTransform>().First(x => x.name == "BombsCount"),
+                statsPanel.transform,
+                Base64Sprites.NoteStartOffsetIcon,
+                "Note Jump Start Beat Offset");
         }
 
         /// <summary>
@@ -846,7 +850,8 @@ namespace SongBrowser.UI
                 if (_beatUi.StandardLevelDetailView != null)
                 {
                     RefreshScoreSaberData(_beatUi.StandardLevelDetailView.selectedDifficultyBeatmap.level);
-                    RefreshNoteJumpSpeed(_beatUi.StandardLevelDetailView.selectedDifficultyBeatmap.noteJumpMovementSpeed);
+                    RefreshNoteJumpSpeed(_beatUi.StandardLevelDetailView.selectedDifficultyBeatmap.noteJumpMovementSpeed,
+                        _beatUi.StandardLevelDetailView.selectedDifficultyBeatmap.noteJumpStartBeatOffset);
                 }
             }
             catch (Exception e)
@@ -873,7 +878,7 @@ namespace SongBrowser.UI
             }
 
             RefreshScoreSaberData(view.selectedDifficultyBeatmap.level);
-            RefreshNoteJumpSpeed(beatmap.noteJumpMovementSpeed);
+            RefreshNoteJumpSpeed(beatmap.noteJumpMovementSpeed, beatmap.noteJumpStartBeatOffset);
         }
 
         /// <summary>
@@ -902,7 +907,7 @@ namespace SongBrowser.UI
             }
 
             RefreshScoreSaberData(view.selectedDifficultyBeatmap.level);
-            RefreshNoteJumpSpeed(view.selectedDifficultyBeatmap.noteJumpMovementSpeed);
+            RefreshNoteJumpSpeed(view.selectedDifficultyBeatmap.noteJumpMovementSpeed, view.selectedDifficultyBeatmap.noteJumpStartBeatOffset);
         }
 
         /// <summary>
@@ -1101,9 +1106,10 @@ namespace SongBrowser.UI
         /// Helper to refresh the NJS widget.
         /// </summary>
         /// <param name="noteJumpMovementSpeed"></param>
-        private void RefreshNoteJumpSpeed(float noteJumpMovementSpeed)
+        private void RefreshNoteJumpSpeed(float noteJumpMovementSpeed, float noteJumpStartBeatOffset)
         {
             BeatSaberUI.SetStatButtonText(_njsStatButton, String.Format("{0}", noteJumpMovementSpeed));
+            BeatSaberUI.SetStatButtonText(_noteJumpStartBeatOffsetLabel, String.Format("{0}", noteJumpStartBeatOffset));
         }
 
         /// <summary>
