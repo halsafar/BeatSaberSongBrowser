@@ -1,54 +1,62 @@
-﻿using BS_Utils.Utilities;
-using HMUI;
+﻿using HMUI;
+using IPA.Utilities;
 using System;
 using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using VRUIControls;
 using Image = UnityEngine.UI.Image;
 using Logger = SongBrowser.Logging.Logger;
-
 
 namespace SongBrowser.Internals
 {
     public static class BeatSaberUI
     {
-        private static Button _backButtonInstance;
+        private static PhysicsRaycasterWithCache _physicsRaycaster;
+        public static PhysicsRaycasterWithCache PhysicsRaycasterWithCache
+        {
+            get
+            {
+                if (_physicsRaycaster == null)
+                    _physicsRaycaster = Resources.FindObjectsOfTypeAll<MainMenuViewController>().First().GetComponent<VRGraphicRaycaster>().GetField<PhysicsRaycasterWithCache, VRGraphicRaycaster>("_physicsRaycaster");
+                return _physicsRaycaster;
+            }
+        }
 
         /// <summary>
         /// Creates a ViewController of type T, and marks it to not be destroyed.
         /// </summary>
         /// <typeparam name="T">The variation of ViewController you want to create.</typeparam>
         /// <returns>The newly created ViewController of type T.</returns>
-        public static T CreateViewController<T>(string name="CustomViewController") where T : ViewController
+        public static T CreateViewController<T>(string name) where T : ViewController
         {
-            T vc = new GameObject(name).AddComponent<T>();
-            UnityEngine.GameObject.DontDestroyOnLoad(vc.gameObject);
+            T vc = new GameObject(typeof(T).Name, typeof(VRGraphicRaycaster), typeof(CanvasGroup), typeof(T)).GetComponent<T>();
+            vc.GetComponent<VRGraphicRaycaster>().SetField("_physicsRaycaster", PhysicsRaycasterWithCache);
 
             vc.rectTransform.anchorMin = new Vector2(0f, 0f);
             vc.rectTransform.anchorMax = new Vector2(1f, 1f);
             vc.rectTransform.sizeDelta = new Vector2(0f, 0f);
             vc.rectTransform.anchoredPosition = new Vector2(0f, 0f);
-
+            vc.gameObject.SetActive(false);
+            vc.name = name;
             return vc;
         }
 
-        /// <summary>
-        /// Clone a Unity Button into a Button we control.
-        /// </summary>
-        /// <param name="parent"></param>
-        /// <param name="buttonTemplate"></param>
-        /// <param name="buttonInstance"></param>
-        /// <returns></returns>
-        static public Button CreateUIButton(RectTransform parent, Button buttonTemplate)
+        public static T CreateCurvedViewController<T>(string name, float curveRadius) where T : ViewController
         {
-            Button btn = UnityEngine.Object.Instantiate(buttonTemplate, parent, false);
-            UnityEngine.Object.DestroyImmediate(btn.GetComponent<SignalOnUIButtonClick>());
-            btn.onClick = new Button.ButtonClickedEvent();
-            btn.name = "CustomUIButton";
+            T vc = new GameObject(typeof(T).Name, typeof(VRGraphicRaycaster), typeof(CurvedCanvasSettings), typeof(CanvasGroup), typeof(T)).GetComponent<T>();
+            vc.GetComponent<VRGraphicRaycaster>().SetField("_physicsRaycaster", PhysicsRaycasterWithCache);
 
-            return btn;
+            vc.GetComponent<CurvedCanvasSettings>().SetRadius(curveRadius);
+
+            vc.rectTransform.anchorMin = new Vector2(0f, 0f);
+            vc.rectTransform.anchorMax = new Vector2(1f, 1f);
+            vc.rectTransform.sizeDelta = new Vector2(0f, 0f);
+            vc.rectTransform.anchoredPosition = new Vector2(0f, 0f);
+            vc.gameObject.SetActive(false);
+            return vc;
         }
 
         /// <summary>
@@ -58,21 +66,48 @@ namespace SongBrowser.Internals
         /// <param name="buttonTemplate"></param>
         /// <param name="iconSprite"></param>
         /// <returns></returns>
-        public static Button CreateIconButton(RectTransform parent, Button buttonTemplate, Sprite iconSprite)
+        public static Button CreateIconButton(String name, RectTransform parent, String buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick, Sprite icon)
         {
-            Button newButton = BeatSaberUI.CreateUIButton(parent, buttonTemplate);
-            newButton.interactable = true;
+            Logger.Debug("CreateIconButton({0}, {1}, {2}, {3}, {4}", name, parent, buttonTemplate, anchoredPosition, sizeDelta);
+            Button btn = UnityEngine.Object.Instantiate(Resources.FindObjectsOfTypeAll<Button>().Last(x => (x.name == buttonTemplate)), parent, false);
+            btn.name = name;
+            btn.interactable = true;
 
-            RectTransform textRect = newButton.GetComponentsInChildren<RectTransform>(true).FirstOrDefault(c => c.name == "Text");
-            if (textRect != null)
+            UnityEngine.Object.Destroy(btn.GetComponent<HoverHint>());
+            GameObject.Destroy(btn.GetComponent<LocalizedHoverHint>());
+            btn.gameObject.AddComponent<BeatSaberMarkupLanguage.Components.ExternalComponents>().components.Add(btn.GetComponentsInChildren<LayoutGroup>().First(x => x.name == "Content"));
+
+            Transform contentTransform = btn.transform.Find("Content");
+            GameObject.Destroy(contentTransform.Find("Text").gameObject);
+            Image iconImage = new GameObject("Icon").AddComponent<ImageView>();
+            iconImage.material = BeatSaberMarkupLanguage.Utilities.ImageResources.NoGlowMat;
+            iconImage.rectTransform.SetParent(contentTransform, false);
+            iconImage.rectTransform.sizeDelta = new Vector2(10f, 10f);
+            iconImage.sprite = icon;
+            iconImage.preserveAspect = true;
+            if (iconImage != null)
             {
-                UnityEngine.Object.Destroy(textRect.gameObject);
+                BeatSaberMarkupLanguage.Components.ButtonIconImage btnIcon = btn.gameObject.AddComponent<BeatSaberMarkupLanguage.Components.ButtonIconImage>();
+                btnIcon.image = iconImage;
             }
 
-            newButton.SetButtonIcon(iconSprite);
-            newButton.onClick.RemoveAllListeners();
+            GameObject.Destroy(btn.transform.Find("Content").GetComponent<LayoutElement>());
+            btn.GetComponentsInChildren<RectTransform>().First(x => x.name == "Underline").gameObject.SetActive(false);
 
-            return newButton;
+            ContentSizeFitter buttonSizeFitter = btn.gameObject.AddComponent<ContentSizeFitter>();
+            buttonSizeFitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+            buttonSizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+            (btn.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
+            (btn.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
+            (btn.transform as RectTransform).anchoredPosition = anchoredPosition;
+            (btn.transform as RectTransform).sizeDelta = sizeDelta;
+
+            btn.onClick.RemoveAllListeners();
+            if (onClick != null)
+                btn.onClick.AddListener(onClick);
+
+            return btn;
         }
 
         /// <summary>
@@ -86,13 +121,45 @@ namespace SongBrowser.Internals
         /// <param name="buttonText">The text that should be shown on the button.</param>
         /// <param name="icon">The icon that should be shown on the button.</param>
         /// <returns>The newly created button.</returns>
-        public static Button CreateUIButton(RectTransform parent, string buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick = null, string buttonText = "BUTTON", Sprite icon = null)
+        public static Button CreateUIButton(String name, RectTransform parent, string buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick = null, string buttonText = "BUTTON")
         {
+            Logger.Debug("CreateUIButton({0}, {1}, {2}, {3}, {4}", name, parent, buttonTemplate, anchoredPosition, sizeDelta);
             Button btn = UnityEngine.Object.Instantiate(Resources.FindObjectsOfTypeAll<Button>().Last(x => (x.name == buttonTemplate)), parent, false);
-            btn.onClick = new Button.ButtonClickedEvent();
+            btn.gameObject.SetActive(true);
+            btn.name = name;
+            btn.interactable = true;
+
+            Polyglot.LocalizedTextMeshProUGUI localizer = btn.GetComponentInChildren<Polyglot.LocalizedTextMeshProUGUI>();
+            if (localizer != null)
+            {
+                GameObject.Destroy(localizer);
+            }
+            BeatSaberMarkupLanguage.Components.ExternalComponents externalComponents = btn.gameObject.AddComponent<BeatSaberMarkupLanguage.Components.ExternalComponents>();
+            TextMeshProUGUI textMesh = btn.GetComponentInChildren<TextMeshProUGUI>();
+            textMesh.richText = true;
+            externalComponents.components.Add(textMesh);
+
+            var contentTransform = btn.transform.Find("Content").GetComponent<LayoutElement>();
+            if (contentTransform != null)
+            {
+                GameObject.Destroy(contentTransform);
+            }
+
+            ContentSizeFitter buttonSizeFitter = btn.gameObject.AddComponent<ContentSizeFitter>();
+            buttonSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            buttonSizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+            LayoutGroup stackLayoutGroup = btn.GetComponentInChildren<LayoutGroup>();
+            if (stackLayoutGroup != null)
+            {
+                externalComponents.components.Add(stackLayoutGroup);
+            }
+
+            btn.onClick.RemoveAllListeners();
             if (onClick != null)
+            {
                 btn.onClick.AddListener(onClick);
-            btn.name = "CustomUIButton";
+            }
 
             (btn.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
             (btn.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
@@ -100,92 +167,6 @@ namespace SongBrowser.Internals
             (btn.transform as RectTransform).sizeDelta = sizeDelta;
 
             btn.SetButtonText(buttonText);
-            if (icon != null)
-                btn.SetButtonIcon(icon);
-
-            return btn;
-        }
-
-        /// <summary>
-        /// Creates a copy of a template button and returns it.
-        /// </summary>
-        /// <param name="parent">The transform to parent the button to.</param>
-        /// <param name="buttonTemplate">The name of the button to make a copy of. Example: "QuitButton", "PlayButton", etc.</param>
-        /// <param name="anchoredPosition">The position the button should be anchored to.</param>
-        /// <param name="onClick">Callback for when the button is pressed.</param>
-        /// <param name="buttonText">The text that should be shown on the button.</param>
-        /// <param name="icon">The icon that should be shown on the button.</param>
-        /// <returns>The newly created button.</returns>
-        public static Button CreateUIButton(RectTransform parent, string buttonTemplate, Vector2 anchoredPosition, UnityAction onClick = null, string buttonText = "BUTTON", Sprite icon = null)
-        {
-            Button btn = UnityEngine.Object.Instantiate(Resources.FindObjectsOfTypeAll<Button>().Last(x => (x.name == buttonTemplate)), parent, false);
-            btn.onClick = new Button.ButtonClickedEvent();
-            if (onClick != null)
-                btn.onClick.AddListener(onClick);
-            btn.name = "CustomUIButton";
-
-            (btn.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
-            (btn.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
-            (btn.transform as RectTransform).anchoredPosition = anchoredPosition;
-
-            btn.SetButtonText(buttonText);
-            if (icon != null)
-                btn.SetButtonIcon(icon);
-
-            return btn;
-        }
-
-
-        /// <summary>
-        /// Creates a copy of a template button and returns it.
-        /// </summary>
-        /// <param name="parent">The transform to parent the button to.</param>
-        /// <param name="buttonTemplate">The name of the button to make a copy of. Example: "QuitButton", "PlayButton", etc.</param>
-        /// <param name="onClick">Callback for when the button is pressed.</param>
-        /// <param name="buttonText">The text that should be shown on the button.</param>
-        /// <param name="icon">The icon that should be shown on the button.</param>
-        /// <returns>The newly created button.</returns>
-        public static Button CreateUIButton(RectTransform parent, string buttonTemplate, UnityAction onClick = null, string buttonText = "BUTTON", Sprite icon = null)
-        {
-            Button btn = UnityEngine.Object.Instantiate(Resources.FindObjectsOfTypeAll<Button>().Last(x => (x.name == buttonTemplate)), parent, false);
-            btn.onClick = new Button.ButtonClickedEvent();
-            if (onClick != null)
-                btn.onClick.AddListener(onClick);
-            btn.name = "CustomUIButton";
-
-            (btn.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
-            (btn.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
-            btn.SetButtonText(buttonText);
-            if (icon != null)
-                btn.SetButtonIcon(icon);
-            return btn;
-        }
-
-        /// <summary>
-        /// Creates a copy of a back button.
-        /// </summary>
-        /// <param name="parent">The transform to parent the new button to.</param>
-        /// <param name="onClick">Callback for when the button is pressed.</param>
-        /// <returns>The newly created back button.</returns>
-        public static Button CreateBackButton(RectTransform parent, UnityAction onClick = null)
-        {
-            if (_backButtonInstance == null)
-            {
-                try
-                {
-                    _backButtonInstance = Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "BackArrowButton"));
-                }
-                catch
-                {
-                    return null;
-                }
-            }
-
-            Button btn = UnityEngine.GameObject.Instantiate(_backButtonInstance, parent, false);
-            btn.onClick = new Button.ButtonClickedEvent();
-            if (onClick != null)
-                btn.onClick.AddListener(onClick);
-            btn.name = "CustomUIButton";
 
             return btn;
         }
@@ -239,12 +220,10 @@ namespace SongBrowser.Internals
         /// <param name="text"></param>
         public static void SetHoverHint(RectTransform button, string name, string text)
         {
-            HoverHintController hoverHintController = Resources.FindObjectsOfTypeAll<HoverHintController>().First();
-            DestroyHoverHint(button);
-            var newHoverHint = button.gameObject.AddComponent<HoverHint>();
-            newHoverHint.SetPrivateField("_hoverHintController", hoverHintController);
-            newHoverHint.text = text;
-            newHoverHint.name = name;
+            HoverHint hover = button.gameObject.AddComponent<HoverHint>();
+            hover.text = text;
+            hover.name = name;
+            hover.SetField("_hoverHintController", Resources.FindObjectsOfTypeAll<HoverHintController>().First());
         }
 
         /// <summary>
@@ -271,34 +250,6 @@ namespace SongBrowser.Internals
             if (txt != null)
             {
                 txt.color = color;
-            }
-        }
-
-        /// <summary>
-        /// Adjust button border.
-        /// </summary>
-        /// <param name="button"></param>
-        /// <param name="color"></param>
-        static public void SetButtonBorder(Button button, Color color)
-        {
-            Image img = button.GetComponentsInChildren<Image>().FirstOrDefault(x => x.name == "Stroke");
-            if (img != null)
-            {
-                img.color = color;
-            }
-        }
-
-        /// <summary>
-        /// Adjust button border.
-        /// </summary>
-        /// <param name="button"></param>
-        /// <param name="color"></param>
-        static public void SetButtonBorderActive(Button button, bool active)
-        {
-            Image img = button.GetComponentsInChildren<Image>().FirstOrDefault(x => x.name == "Stroke");
-            if (img != null)
-            {
-                img.gameObject.SetActive(active);
             }
         }
 

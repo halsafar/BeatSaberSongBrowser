@@ -1,8 +1,7 @@
-﻿using SongBrowser.DataAccess;
-using SongBrowser.UI;
+﻿using SongBrowser.UI;
 using System;
 using System.Collections;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -32,7 +31,7 @@ namespace SongBrowser
         /// Load the main song browser app.
         /// </summary>
         internal static void OnLoad()
-        {            
+        {
             if (Instance != null)
             {
                 return;
@@ -40,7 +39,7 @@ namespace SongBrowser
 
             new GameObject("Beat Saber SongBrowser Plugin").AddComponent<SongBrowserApplication>();
 
-            SongBrowserApplication.MainProgressBar = SongBrowser.UI.ProgressBar.Create();            
+            SongBrowserApplication.MainProgressBar = SongBrowser.UI.ProgressBar.Create();
 
             Console.WriteLine("SongBrowser Plugin Loaded()");
         }
@@ -100,7 +99,7 @@ namespace SongBrowser
         /// </summary>
         /// <param name="loader"></param>
         /// <param name="levels"></param>
-        private void OnSongLoaderLoadedSongs(SongCore.Loader loader, Dictionary<string, CustomPreviewBeatmapLevel> levels)
+        private void OnSongLoaderLoadedSongs(SongCore.Loader loader, ConcurrentDictionary<string, CustomPreviewBeatmapLevel> levels)
         {
             Logger.Trace("OnSongLoaderLoadedSongs-SongBrowserApplication()");
             try
@@ -139,8 +138,8 @@ namespace SongBrowser
         {
             // Append our own event to appropriate events so we can refresh the song list before the user sees it.
             MainFlowCoordinator mainFlow = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-            Button soloFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloFreePlayButton");
-            Button partyFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PartyFreePlayButton");
+            Button soloFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloButton");
+            Button partyFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PartyButton");
             Button campaignButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "CampaignButton");
 
             soloFreePlayButton.onClick.AddListener(HandleSoloModeSelection);

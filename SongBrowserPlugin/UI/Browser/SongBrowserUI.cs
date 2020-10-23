@@ -1,16 +1,16 @@
-﻿using UnityEngine;
-using System.Linq;
-using System;
-using System.Collections.Generic;
-using UnityEngine.UI;
+﻿using BeatSaberMarkupLanguage.Components;
 using HMUI;
 using SongBrowser.DataAccess;
-using TMPro;
-using Logger = SongBrowser.Logging.Logger;
-using System.Collections;
-using SongCore.Utilities;
 using SongBrowser.Internals;
+using SongCore.Utilities;
 using SongDataCore.BeatStar;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+using UnityEngine.UI;
+using Logger = SongBrowser.Logging.Logger;
 
 namespace SongBrowser.UI
 {
@@ -20,6 +20,11 @@ namespace SongBrowser.UI
         Main,
         SortBy,
         FilterBy
+    }
+
+    public class SongBrowserViewController : ViewController
+    {
+        // Named instance
     }
 
     /// <summary>
@@ -32,11 +37,15 @@ namespace SongBrowser.UI
 
         private const float SEGMENT_PERCENT = 0.1f;
         private const int LIST_ITEMS_VISIBLE_AT_ONCE = 6;
+        private const float CLEAR_BUTTON_Y = -32.5f;
+        private const float BUTTON_ROW_Y = -32.5f;
 
         // BeatSaber Internal UI structures
         DataAccess.BeatSaberUIController _beatUi;
 
         // New UI Elements
+        private SongBrowserViewController _viewController;
+
         private List<SongSortButton> _sortButtonGroup;
         private List<SongFilterButton> _filterButtonGroup;
 
@@ -49,12 +58,10 @@ namespace SongBrowser.UI
         private Button _clearSortFilterButton;
 
         private SimpleDialogPromptViewController _deleteDialog;
-        private Button _deleteButton;        
+        private Button _deleteButton;
 
         private Button _pageUpFastButton;
         private Button _pageDownFastButton;
-
-        private SearchKeyboardViewController _searchViewController;
 
         private RectTransform _ppStatButton;
         private RectTransform _starStatButton;
@@ -77,7 +84,7 @@ namespace SongBrowser.UI
         }
 
         private bool _uiCreated = false;
-        
+
         private UIState _currentUiState = UIState.Disabled;
 
         private bool _asyncUpdating = false;
@@ -90,7 +97,7 @@ namespace SongBrowser.UI
             Logger.Trace("CreateUI()");
 
             // Determine the flow controller to use
-            FlowCoordinator flowCoordinator = null;
+            FlowCoordinator flowCoordinator;
             if (mode == MainMenuViewController.MenuButton.SoloFreePlay)
             {
                 Logger.Debug("Entering SOLO mode...");
@@ -103,8 +110,7 @@ namespace SongBrowser.UI
             }
             else
             {
-                Logger.Debug("Entering SOLO CAMPAIGN mode...");
-                flowCoordinator = Resources.FindObjectsOfTypeAll<CampaignFlowCoordinator>().First();
+                Logger.Info("Entering Unsupported mode...");                
                 return;
             }
 
@@ -120,7 +126,20 @@ namespace SongBrowser.UI
             }
 
             try
-            {                
+            {
+                // Create a view controller to store all SongBrowser elements
+                if (_viewController)
+                {
+                    UnityEngine.GameObject.Destroy(_viewController);
+                }
+                _viewController = BeatSaberUI.CreateCurvedViewController<SongBrowserViewController>("SongBrowserViewController", 125.0f);
+                _viewController.rectTransform.SetParent(_beatUi.LevelCollectionNavigationController.rectTransform, false);
+                _viewController.rectTransform.anchorMin = new Vector2(0f, 0f);
+                _viewController.rectTransform.anchorMax = new Vector2(1f, 1f);
+                _viewController.rectTransform.anchoredPosition = new Vector2(0, 0);
+                _viewController.rectTransform.sizeDelta = new Vector2(125, 25);
+                _viewController.gameObject.SetActive(true);
+
                 // delete dialog
                 this._deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(_beatUi.SimpleDialogPromptViewControllerPrefab);
                 this._deleteDialog.name = "DeleteDialogPromptViewController";
@@ -157,32 +176,41 @@ namespace SongBrowser.UI
         {
             Logger.Debug("Creating outer UI...");
 
-            float clearButtonX = -32.5f;
-            float clearButtonY = 34.5f;
-            float buttonY = 37f;
+            float clearButtonX = -72.5f;
+            float clearButtonY = CLEAR_BUTTON_Y;
+            float buttonY = BUTTON_ROW_Y;
             float buttonHeight = 5.0f;
-            float sortByButtonX = -22.5f + buttonHeight;
+            float sortByButtonX = -62.5f + buttonHeight;
             float outerButtonFontSize = 3.0f;
             float displayButtonFontSize = 2.5f;
             float outerButtonWidth = 24.0f;
-            float randomButtonWidth = 8.0f;
+            float randomButtonWidth = 10.0f;
 
             // clear button
-            _clearSortFilterButton = CreateClearButton(clearButtonX, clearButtonY, buttonHeight, () =>
-            {                
-                if (_currentUiState == UIState.FilterBy || _currentUiState == UIState.SortBy)
+            _clearSortFilterButton = _viewController.CreateIconButton(
+                "ClearSortAndFilterButton",
+                "PracticeButton",
+                new Vector2(clearButtonX, clearButtonY),
+                new Vector2(randomButtonWidth, randomButtonWidth),
+                () =>
                 {
-                    RefreshOuterUIState(UIState.Main);
-                }
-                else
-                {
-                    OnClearButtonClickEvent();
-                }
-            });
+                    if (_currentUiState == UIState.FilterBy || _currentUiState == UIState.SortBy)
+                    {
+                        RefreshOuterUIState(UIState.Main);
+                    }
+                    else
+                    {
+                        OnClearButtonClickEvent();
+                    }
+                },
+                Base64Sprites.XIcon);
+            _clearSortFilterButton.SetButtonBackgroundActive(false);
 
             // create SortBy button and its display
             float curX = sortByButtonX;
-            _sortByButton = _beatUi.LevelCollectionViewController.CreateUIButton("ApplyButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
+
+            Logger.Debug("Creating Sort By...");
+            _sortByButton = _viewController.CreateUIButton("sortBy", "PracticeButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 RefreshOuterUIState(UIState.SortBy);
             }, "Sort By");
@@ -191,16 +219,20 @@ namespace SongBrowser.UI
 
             curX += outerButtonWidth;
 
-            _sortByDisplay = _beatUi.LevelCollectionViewController.CreateUIButton("ApplyButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
+            Logger.Debug("Creating Sort By Display...");
+            _sortByDisplay = _viewController.CreateUIButton("sortByValue", "PracticeButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 OnSortButtonClickEvent(_model.Settings.sortMode);
             }, "");
             _sortByDisplay.SetButtonTextSize(displayButtonFontSize);
             _sortByDisplay.ToggleWordWrapping(false);
+            _sortByDisplay.SetButtonBackgroundActive(false);
+
             curX += outerButtonWidth;
 
             // create FilterBy button and its display
-            _filterByButton = _beatUi.LevelCollectionViewController.CreateUIButton("ApplyButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
+            Logger.Debug("Creating Filter By...");
+            _filterByButton = _viewController.CreateUIButton("filterBy", "PracticeButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 RefreshOuterUIState(UIState.FilterBy);
             }, "Filter By");
@@ -209,7 +241,8 @@ namespace SongBrowser.UI
 
             curX += outerButtonWidth;
 
-            _filterByDisplay = _beatUi.LevelCollectionViewController.CreateUIButton("ApplyButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
+            Logger.Debug("Creating Filter By Display...");
+            _filterByDisplay = _viewController.CreateUIButton("filterValue", "PracticeButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 _model.Settings.filterMode = SongFilterMode.None;
                 CancelFilter();
@@ -218,38 +251,15 @@ namespace SongBrowser.UI
             }, "");
             _filterByDisplay.SetButtonTextSize(displayButtonFontSize);
             _filterByDisplay.ToggleWordWrapping(false);
+            _filterByDisplay.SetButtonBackgroundActive(false);
 
             // random button
-            _randomButton = _beatUi.LevelCollectionViewController.CreateUIButton("HowToPlayButton", new Vector2(curX + (outerButtonWidth / 2.0f) + (randomButtonWidth / 2.0f), clearButtonY), new Vector2(randomButtonWidth, buttonHeight), () =>
+            Logger.Debug("Creating Random Button...");
+            _randomButton = _viewController.CreateIconButton("randomButton", "PracticeButton", new Vector2(curX + (outerButtonWidth / 2.0f) + (randomButtonWidth / 2.0f), clearButtonY), new Vector2(randomButtonWidth, randomButtonWidth), () =>
             {
                 OnSortButtonClickEvent(SongSortMode.Random);
-            }, "",
-            Base64Sprites.RandomIcon);
-            _randomButton.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(0, 0, 0, 0);
-            var textRect = _randomButton.GetComponentsInChildren<RectTransform>(true).FirstOrDefault(c => c.name == "Text");
-            if (textRect != null)
-            {
-                UnityEngine.Object.Destroy(textRect.gameObject);
-            }
-            BeatSaberUI.SetButtonBorderActive(_randomButton, false);
-        }
-
-        /// <summary>
-        /// Create the back button
-        /// </summary>
-        /// <returns></returns>
-        private Button CreateClearButton(float x, float y, float h, UnityEngine.Events.UnityAction callback)
-        {
-            Button b = _beatUi.LevelCollectionViewController.CreateUIButton("HowToPlayButton", new Vector2(x, y), new Vector2(h, h), callback, "", Base64Sprites.XIcon);
-            b.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(1, 1, 0, 0);
-            RectTransform textRect = b.GetComponentsInChildren<RectTransform>(true).FirstOrDefault(c => c.name == "Text");
-            if (textRect != null)
-            {
-                UnityEngine.Object.Destroy(textRect.gameObject);
-            }
-            BeatSaberUI.SetButtonBorderActive(b, false);
-
-            return b;
+            }, Base64Sprites.RandomIcon);
+            _randomButton.SetButtonBackgroundActive(false);
         }
 
         /// <summary>
@@ -259,16 +269,16 @@ namespace SongBrowser.UI
         {
             Logger.Debug("Create sort buttons...");
 
-            float sortButtonFontSize = 2.15f;
-            float sortButtonX = -23.0f;
+            float sortButtonFontSize = 2.0f;
+            float sortButtonX = -63.0f;
             float sortButtonWidth = 12.0f;
             float buttonSpacing = 0.25f;
-            float buttonY = 37f;
+            float buttonY = BUTTON_ROW_Y;
             float buttonHeight = 5.0f;
 
             string[] sortButtonNames = new string[]
             {
-                    "Title", "Author", "Newest", "YourPlays", "PP", "Stars", "UpVotes", "Rating", "Heat"
+                    "Title", "Author", "Newest", "#Plays", "PP", "Stars", "UpVotes", "Rating", "Heat"
             };
 
             SongSortMode[] sortModes = new SongSortMode[]
@@ -282,7 +292,7 @@ namespace SongBrowser.UI
                 float curButtonX = sortButtonX + (sortButtonWidth * i) + (buttonSpacing * i);
                 SongSortButton sortButton = new SongSortButton();
                 sortButton.SortMode = sortModes[i];
-                sortButton.Button = _beatUi.LevelCollectionViewController.CreateUIButton("ApplyButton",
+                sortButton.Button = _viewController.CreateUIButton(String.Format("Sort{0}Button", sortButton.SortMode), "PracticeButton",
                     new Vector2(curButtonX, buttonY), new Vector2(sortButtonWidth, buttonHeight),
                     () =>
                     {
@@ -291,9 +301,7 @@ namespace SongBrowser.UI
                     },
                     sortButtonNames[i]);
                 sortButton.Button.SetButtonTextSize(sortButtonFontSize);
-                sortButton.Button.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(4, 4, 2, 2);                
                 sortButton.Button.ToggleWordWrapping(false);
-                sortButton.Button.name = "Sort" + sortModes[i].ToString() + "Button";
 
                 _sortButtonGroup.Add(sortButton);
             }
@@ -307,20 +315,20 @@ namespace SongBrowser.UI
             Logger.Debug("Creating filter buttons...");
 
             float filterButtonFontSize = 2.25f;
-            float filterButtonX = -23.0f;
+            float filterButtonX = -63.0f;
             float filterButtonWidth = 12.25f;
             float buttonSpacing = 0.5f;
-            float buttonY = 37f;
+            float buttonY = BUTTON_ROW_Y;
             float buttonHeight = 5.0f;
 
             string[] filterButtonNames = new string[]
             {
-                    "Favorites", "Search", "Ranked", "Unranked"
+                    "Search", "Ranked", "Unranked"
             };
 
             SongFilterMode[] filterModes = new SongFilterMode[]
             {
-                    SongFilterMode.Favorites, SongFilterMode.Search, SongFilterMode.Ranked, SongFilterMode.Unranked
+                    SongFilterMode.Search, SongFilterMode.Ranked, SongFilterMode.Unranked
             };
 
             _filterButtonGroup = new List<SongFilterButton>();
@@ -329,7 +337,7 @@ namespace SongBrowser.UI
                 float curButtonX = filterButtonX + (filterButtonWidth * i) + (buttonSpacing * i);
                 SongFilterButton filterButton = new SongFilterButton();
                 filterButton.FilterMode = filterModes[i];
-                filterButton.Button = _beatUi.LevelCollectionViewController.CreateUIButton("ApplyButton",
+                filterButton.Button = _viewController.CreateUIButton(String.Format("Filter{0}Button", filterButton.FilterMode), "PracticeButton",
                     new Vector2(curButtonX, buttonY), new Vector2(filterButtonWidth, buttonHeight),
                     () =>
                     {
@@ -338,9 +346,7 @@ namespace SongBrowser.UI
                     },
                     filterButtonNames[i]);
                 filterButton.Button.SetButtonTextSize(filterButtonFontSize);
-                filterButton.Button.GetComponentsInChildren<HorizontalLayoutGroup>().First(btn => btn.name == "Content").padding = new RectOffset(4, 4, 2, 2);
                 filterButton.Button.ToggleWordWrapping(false);
-                filterButton.Button.name = "Filter" + filterButtonNames[i] + "Button";
 
                 _filterButtonGroup.Add(filterButton);
             }
@@ -352,30 +358,26 @@ namespace SongBrowser.UI
         private void CreateFastPageButtons()
         {
             Logger.Debug("Creating fast scroll button...");
+            _pageUpFastButton = BeatSaberUI.CreateIconButton("PageUpFast",
+                _beatUi.LevelCollectionTableViewTransform, "PracticeButton",
+                new Vector2(42f, 24f),
+                new Vector2(10f, 10f),
+                delegate ()
+                {
+                    this.JumpSongList(-1, SEGMENT_PERCENT);
+                }, Base64Sprites.DoubleArrow);
+            _pageUpFastButton.SetButtonBackgroundActive(false);
+            (_pageUpFastButton.transform as RectTransform).Rotate(new Vector3(0, 0, 180));
 
-            _pageUpFastButton = Instantiate(_beatUi.TableViewPageUpButton, _beatUi.LevelCollectionTableViewTransform, false);
-            (_pageUpFastButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 1f);
-            (_pageUpFastButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 1f);
-            (_pageUpFastButton.transform as RectTransform).anchoredPosition = new Vector2(-26f, 1f);
-            (_pageUpFastButton.transform as RectTransform).sizeDelta = new Vector2(8f, 6f);
-            _pageUpFastButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "BG").sizeDelta = new Vector2(8f, 6f);
-            _pageUpFastButton.GetComponentsInChildren<UnityEngine.UI.Image>().First(x => x.name == "Arrow").sprite = Base64Sprites.DoubleArrow;
-            _pageUpFastButton.onClick.AddListener(delegate ()
-            {
-                this.JumpSongList(-1, SEGMENT_PERCENT);
-            });
-
-            _pageDownFastButton = Instantiate(_beatUi.TableViewPageDownButton, _beatUi.LevelCollectionTableViewTransform, false);
-            (_pageDownFastButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0f);
-            (_pageDownFastButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0f);
-            (_pageDownFastButton.transform as RectTransform).anchoredPosition = new Vector2(-26f, -1f);
-            (_pageDownFastButton.transform as RectTransform).sizeDelta = new Vector2(8f, 6f);
-            _pageDownFastButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "BG").sizeDelta = new Vector2(8f, 6f);
-            _pageDownFastButton.GetComponentsInChildren<UnityEngine.UI.Image>().First(x => x.name == "Arrow").sprite = Base64Sprites.DoubleArrow;
-            _pageDownFastButton.onClick.AddListener(delegate ()
-            {
-                this.JumpSongList(1, SEGMENT_PERCENT);
-            });
+            _pageDownFastButton = BeatSaberUI.CreateIconButton("PageDownFast",
+                _beatUi.LevelCollectionTableViewTransform, "PracticeButton",
+                new Vector2(42f, -24f),
+                new Vector2(10f, 10f),
+                delegate ()
+                {
+                    this.JumpSongList(1, SEGMENT_PERCENT);
+                }, Base64Sprites.DoubleArrow);
+            _pageDownFastButton.SetButtonBackgroundActive(false);
         }
 
         /// <summary>
@@ -384,12 +386,12 @@ namespace SongBrowser.UI
         private void CreateDeleteButton()
         {
             // Create delete button
-            Logger.Debug("Creating delete button...");
+            /*Logger.Debug("Creating delete button...");
             _deleteButton = BeatSaberUI.CreateIconButton(_beatUi.PlayButtons, _beatUi.PracticeButton, Base64Sprites.DeleteIcon);
             _deleteButton.onClick.AddListener(delegate () {
                 HandleDeleteSelectedLevel();
             });
-            BeatSaberUI.DestroyHoverHint(_deleteButton.transform as RectTransform);
+            BeatSaberUI.DestroyHoverHint(_deleteButton.transform as RectTransform);*/
         }
 
         /// <summary>
@@ -397,50 +399,32 @@ namespace SongBrowser.UI
         /// </summary>
         private void ModifySongStatsPanel()
         {
-            // modify details view
+            // modify stat panel, inject extra row of stats
             Logger.Debug("Resizing Stats Panel...");
 
             var statsPanel = _beatUi.StandardLevelDetailView.GetPrivateField<LevelParamsPanel>("_levelParamsPanel");
-            var statTransforms = statsPanel.GetComponentsInChildren<RectTransform>();
-            var valueTexts = statsPanel.GetComponentsInChildren<TextMeshProUGUI>().Where(x => x.name == "ValueText").ToList();
-            RectTransform panelRect = (statsPanel.transform as RectTransform);
-            panelRect.sizeDelta = new Vector2(panelRect.sizeDelta.x * 1.2f, panelRect.sizeDelta.y * 1.2f);
+            (statsPanel.transform as RectTransform).Translate(0, 0.05f, 0);
 
-            for (int i = 0; i < statTransforms.Length; i++)
-            {
-                var r = statTransforms[i];
-                if (r.name == "Separator")
-                {
-                    continue;
-                }
-                r.sizeDelta = new Vector2(r.sizeDelta.x * 0.9f, r.sizeDelta.y * 0.9f);
-            }
-
-            for (int i = 0; i < valueTexts.Count; i++)
-            {
-                var text = valueTexts[i];
-                text.fontSize -= 0.75f;
-            }
-
-            // inject our components
-            _ppStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
+            _ppStatButton = UnityEngine.Object.Instantiate(statsPanel.GetComponentsInChildren<RectTransform>().First(x => x.name == "NPS"), statsPanel.transform, false);
+            _ppStatButton.name = "PPStatLabel";
+            (_ppStatButton.transform as RectTransform).Translate(0, -0.1f, 0);
             BeatSaberUI.SetStatButtonIcon(_ppStatButton, Base64Sprites.GraphIcon);
             BeatSaberUI.DestroyHoverHint(_ppStatButton);
-            //BeatSaberUI.SetHoverHint(_ppStatButton, "songBrowser_ppValue", "PP Value");
+            BeatSaberUI.SetHoverHint(_ppStatButton, "songBrowser_ppValue", "PP Value");
 
-            _starStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
+            _starStatButton = UnityEngine.Object.Instantiate(statsPanel.GetComponentsInChildren<RectTransform>().First(x => x.name == "NotesCount"), statsPanel.transform, false);
+            _starStatButton.name = "StarStatLabel";
+            (_starStatButton.transform as RectTransform).Translate(0, -0.1f, 0);
             BeatSaberUI.SetStatButtonIcon(_starStatButton, Base64Sprites.StarFullIcon);
             BeatSaberUI.DestroyHoverHint(_starStatButton);
-            //BeatSaberUI.SetHoverHint(_starStatButton, "songBrowser_starValue", "Star Difficulty Rating");
+            BeatSaberUI.SetHoverHint(_starStatButton, "songBrowser_starValue", "Star Difficulty Rating");
 
-            _njsStatButton = UnityEngine.Object.Instantiate(statTransforms[1], statsPanel.transform, false);
+            _njsStatButton = UnityEngine.Object.Instantiate(statsPanel.GetComponentsInChildren<RectTransform>().First(x => x.name == "ObstaclesCount"), statsPanel.transform, false);
+            _njsStatButton.name = "NoteJumpSpeedLabel";
+            (_njsStatButton.transform as RectTransform).Translate(0, -0.1f, 0);
             BeatSaberUI.SetStatButtonIcon(_njsStatButton, Base64Sprites.SpeedIcon);
             BeatSaberUI.DestroyHoverHint(_njsStatButton);
-            //BeatSaberUI.SetHoverHint(_njsStatButton, "songBrowser_njsValue", "Note Jump Speed");
-
-            // shrink title
-            var titleText = _beatUi.LevelDetailViewController.GetComponentsInChildren<TextMeshProUGUI>(true).First(x => x.name == "SongNameText");            
-            titleText.fontSize = 5.0f;
+            BeatSaberUI.SetHoverHint(_njsStatButton, "songBrowser_njsValue", "Note Jump Speed");
         }
 
         /// <summary>
@@ -448,20 +432,9 @@ namespace SongBrowser.UI
         /// </summary>
         public void ResizeSongUI()
         {
-            // Reposition the table view a bit
-            _beatUi.LevelCollectionTableViewTransform.anchoredPosition = new Vector2(0f, -2.5f);
-
-            // Move the page up/down buttons a bit
-            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_beatUi.LevelCollectionTableView, "_tableView");
-            RectTransform pageUpButton = _beatUi.TableViewPageUpButton.transform as RectTransform;
-            RectTransform pageDownButton = _beatUi.TableViewPageDownButton.transform as RectTransform;
-            pageUpButton.anchoredPosition = new Vector2(pageUpButton.anchoredPosition.x, pageUpButton.anchoredPosition.y - 1f);
-            pageDownButton.anchoredPosition = new Vector2(pageDownButton.anchoredPosition.x, pageDownButton.anchoredPosition.y + 1f);
-
             // shrink play button container
-            RectTransform playContainerRect = _beatUi.StandardLevelDetailView.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayContainer");
-            RectTransform playButtonsRect = playContainerRect.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayButtons");
-            playButtonsRect.localScale = new Vector3(0.825f, 0.825f, 0.825f);
+            //RectTransform playButtonsRect = Resources.FindObjectsOfTypeAll<RectTransform>().First(x => x.name == "ActionButtons");
+            //playButtonsRect.localScale = new Vector3(0.825f, 0.825f, 0.825f);
         }
 
         /// <summary>
@@ -476,8 +449,8 @@ namespace SongBrowser.UI
             _beatUi.LevelCollectionViewController.didSelectLevelEvent -= OnDidSelectLevelEvent;
             _beatUi.LevelCollectionViewController.didSelectLevelEvent += OnDidSelectLevelEvent;
 
-            _beatUi.LevelDetailViewController.didPresentContentEvent -= OnDidPresentContentEvent;
-            _beatUi.LevelDetailViewController.didPresentContentEvent += OnDidPresentContentEvent;
+            _beatUi.LevelDetailViewController.didChangeContentEvent -= OnDidPresentContentEvent;
+            _beatUi.LevelDetailViewController.didChangeContentEvent += OnDidPresentContentEvent;
 
             _beatUi.LevelDetailViewController.didChangeDifficultyBeatmapEvent -= OnDidChangeDifficultyEvent;
             _beatUi.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyEvent;
@@ -551,7 +524,7 @@ namespace SongBrowser.UI
         /// <summary>
         /// Helper to reduce code duplication...
         /// </summary>
-        public void RefreshSongUI(bool scrollToLevel=true)
+        public void RefreshSongUI(bool scrollToLevel = true)
         {
             if (!_uiCreated)
             {
@@ -578,7 +551,7 @@ namespace SongBrowser.UI
                 return;
             }
 
-            this._model.ProcessSongList(_lastLevelCollection, _beatUi.LevelCollectionViewController, _beatUi.LevelSelectionNavigationController);
+            this._model.ProcessSongList(_lastLevelCollection, _beatUi.LevelSelectionNavigationController);
         }
 
         /// <summary>
@@ -605,6 +578,8 @@ namespace SongBrowser.UI
         {
             Logger.Trace("handleDidSelectAnnotatedBeatmapLevelCollection()");
             _lastLevelCollection = annotatedBeatmapLevelCollection;
+            Model.Settings.currentLevelCategoryName = _beatUi.LevelFilteringNavigationController.selectedLevelCategory.ToString();
+            Model.Settings.Save();
             Logger.Debug("Selected Level Collection={0}", _lastLevelCollection);
         }
 
@@ -616,7 +591,7 @@ namespace SongBrowser.UI
         /// <param name="arg2"></param>
         /// <param name="arg3"></param>
         /// <param name="arg4"></param>
-        private void _levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent(LevelFilteringNavigationController arg1, IAnnotatedBeatmapLevelCollection arg2, 
+        private void _levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent(LevelFilteringNavigationController arg1, IAnnotatedBeatmapLevelCollection arg2,
             GameObject arg3, BeatmapCharacteristicSO arg4)
         {
             Logger.Trace("_levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent(levelCollection={0})", arg2);
@@ -676,6 +651,7 @@ namespace SongBrowser.UI
                 {
                     Logger.Debug("Recording levelCollection: {0}", levelCollection.collectionName);
                     _lastLevelCollection = levelCollection;
+                    Model.Settings.currentLevelCategoryName = _beatUi.LevelFilteringNavigationController.selectedLevelCategory.ToString();
                 }
 
                 // reset level selection
@@ -767,7 +743,7 @@ namespace SongBrowser.UI
             Logger.Debug($"FilterButton {mode} clicked.");
 
             var curCollection = _beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection();
-            if (_lastLevelCollection == null || 
+            if (_lastLevelCollection == null ||
                 (curCollection != null &&
                 curCollection.collectionName != SongBrowserModel.FilteredSongsCollectionName &&
                 curCollection.collectionName != SongBrowserModel.PlaylistSongsCollectionName))
@@ -777,7 +753,7 @@ namespace SongBrowser.UI
 
             if (mode == SongFilterMode.Favorites)
             {
-                _beatUi.SelectLevelCollection(SongBrowserSettings.CUSTOM_SONGS_LEVEL_COLLECTION_NAME);
+                _beatUi.SelectLevelCollection(SelectLevelCategoryViewController.LevelCategory.Favorites.ToString(), SongBrowserSettings.CUSTOM_SONGS_LEVEL_COLLECTION_NAME);
             }
             else
             {
@@ -891,7 +867,10 @@ namespace SongBrowser.UI
                 return;
             }
 
-            _deleteButton.interactable = (view.selectedDifficultyBeatmap.level.levelID.Length >= 32);
+            if (_deleteButton != null)
+            {
+                _deleteButton.interactable = (view.selectedDifficultyBeatmap.level.levelID.Length >= 32);
+            }
 
             RefreshScoreSaberData(view.selectedDifficultyBeatmap.level);
             RefreshNoteJumpSpeed(beatmap.noteJumpMovementSpeed);
@@ -906,12 +885,21 @@ namespace SongBrowser.UI
         {
             Logger.Trace("OnDidPresentContentEvent()");
 
+            // v1.12.2 - TODO - is this safe to prevent us from trying to lookup empty/dead content?
+            if (type != StandardLevelDetailViewController.ContentType.OwnedAndReady)
+            {
+                return;
+            }
+
             if (view.selectedDifficultyBeatmap == null)
             {
                 return;
             }
 
-            _deleteButton.interactable = (_beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID.Length >= 32);
+            if (_deleteButton != null)
+            {
+                _deleteButton.interactable = (_beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID.Length >= 32);
+            }
 
             RefreshScoreSaberData(view.selectedDifficultyBeatmap.level);
             RefreshNoteJumpSpeed(view.selectedDifficultyBeatmap.noteJumpMovementSpeed);
@@ -925,7 +913,10 @@ namespace SongBrowser.UI
         {
             Logger.Trace("HandleDidSelectLevelRow({0})", level);
 
-            _deleteButton.interactable = (level.levelID.Length >= 32);
+            if (_deleteButton != null)
+            {
+                _deleteButton.interactable = (level.levelID.Length >= 32);
+            }
 
             RefreshQuickScrollButtons();
         }
@@ -982,35 +973,20 @@ namespace SongBrowser.UI
                     }
                 });
             _beatUi.LevelSelectionFlowCoordinator.InvokePrivateMethod("PresentViewController", new object[] { _deleteDialog, null, false });
-        }        
+        }
 
         /// <summary>
         /// Display the search keyboard
         /// </summary>
         void ShowSearchKeyboard()
         {
-            if (_searchViewController == null)
-            {
-                _searchViewController = BeatSaberUI.CreateViewController<SearchKeyboardViewController>("SearchKeyboardViewController");
-                _searchViewController.searchButtonPressed += SearchViewControllerSearchButtonPressed;
-                _searchViewController.backButtonPressed += SearchViewControllerbackButtonPressed;
-            }
-
-            Logger.Debug("Presenting search keyboard");
-            _beatUi.LevelSelectionFlowCoordinator.InvokePrivateMethod("PresentViewController", new object[] { _searchViewController, null, false });
-        }
-
-        /// <summary>
-        /// Handle back button event from search keyboard.
-        /// </summary>
-        private void SearchViewControllerbackButtonPressed()
-        {
-            _beatUi.LevelSelectionFlowCoordinator.InvokePrivateMethod("DismissViewController", new object[] { _searchViewController, null, false });
-
-            this._model.Settings.filterMode = SongFilterMode.None;
-            this._model.Settings.Save();
-
-            RefreshSongUI();
+            var modalKbTag = new BeatSaberMarkupLanguage.Tags.ModalKeyboardTag();
+            var modalKbView = modalKbTag.CreateObject(_beatUi.LevelSelectionNavigationController.rectTransform);
+            modalKbView.gameObject.SetActive(true);
+            var modalKb = modalKbView.GetComponent<ModalKeyboard>();
+            modalKb.gameObject.SetActive(true);
+            modalKb.keyboard.EnterPressed += SearchViewControllerSearchButtonPressed;
+            modalKb.modalView.Show(true, true);
         }
 
         /// <summary>
@@ -1019,8 +995,6 @@ namespace SongBrowser.UI
         /// <param name="searchFor"></param>
         private void SearchViewControllerSearchButtonPressed(string searchFor)
         {
-            _beatUi.LevelSelectionFlowCoordinator.InvokePrivateMethod("DismissViewController", new object[] { _searchViewController, null, false });
-
             Logger.Debug("Searching for \"{0}\"...", searchFor);
 
             _model.Settings.filterMode = SongFilterMode.Search;
@@ -1054,7 +1028,6 @@ namespace SongBrowser.UI
                 segmentSize = LIST_ITEMS_VISIBLE_AT_ONCE;
             }
 
-            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_beatUi.LevelCollectionTableView, "_tableView");
             int currentRow = _beatUi.LevelCollectionTableView.GetPrivateField<int>("_selectedRow");
             int jumpDirection = Math.Sign(numJumps);
             int newRow = currentRow + (jumpDirection * segmentSize);
@@ -1066,12 +1039,12 @@ namespace SongBrowser.UI
             {
                 newRow = totalSize - 1;
             }
-            
+
             Logger.Debug("jumpDirection: {0}, newRow: {1}", jumpDirection, newRow);
             _beatUi.SelectAndScrollToLevel(levels[newRow].levelID);
             RefreshQuickScrollButtons();
         }
-        
+
         /// <summary>
         /// Update GUI elements that show score saber data.
         /// </summary>
@@ -1119,7 +1092,7 @@ namespace SongBrowser.UI
             {
                 BeatSaberUI.SetStatButtonText(_ppStatButton, "NA");
                 BeatSaberUI.SetStatButtonText(_starStatButton, "NA");
-            }                
+            }
 
             Logger.Debug("Done refreshing score saber stats.");
         }
@@ -1137,7 +1110,7 @@ namespace SongBrowser.UI
         /// Update interactive state of the quick scroll buttons.
         /// </summary>
         private void RefreshQuickScrollButtons()
-        {         
+        {
             if (!_uiCreated)
             {
                 return;
@@ -1192,16 +1165,16 @@ namespace SongBrowser.UI
                 return;
             }
 
-            _ppStatButton.gameObject.SetActive(visible);
-            _starStatButton.gameObject.SetActive(visible);
-            _njsStatButton.gameObject.SetActive(visible);
+            _ppStatButton?.gameObject.SetActive(visible);
+            _starStatButton?.gameObject.SetActive(visible);
+            _njsStatButton?.gameObject.SetActive(visible);
 
             RefreshOuterUIState(visible == true ? UIState.Main : UIState.Disabled);
 
-            _deleteButton.gameObject.SetActive(visible);
+            _deleteButton?.gameObject.SetActive(visible);
 
-            _pageUpFastButton.gameObject.SetActive(visible);
-            _pageDownFastButton.gameObject.SetActive(visible);
+            _pageUpFastButton?.gameObject.SetActive(visible);
+            _pageDownFastButton?.gameObject.SetActive(visible);
         }
 
         /// <summary>
@@ -1234,12 +1207,12 @@ namespace SongBrowser.UI
             _sortButtonGroup.ForEach(x => x.Button.gameObject.SetActive(sortButtons));
             _filterButtonGroup.ForEach(x => x.Button.gameObject.SetActive(filterButtons));
 
-            _sortByButton.gameObject.SetActive(outerButtons);
-            _sortByDisplay.gameObject.SetActive(outerButtons);
-            _filterByButton.gameObject.SetActive(outerButtons);
-            _filterByDisplay.gameObject.SetActive(outerButtons);
-            _clearSortFilterButton.gameObject.SetActive(clearButton);
-            _randomButton.gameObject.SetActive(outerButtons);
+            _sortByButton?.gameObject.SetActive(outerButtons);
+            _sortByDisplay?.gameObject.SetActive(outerButtons);
+            _filterByButton?.gameObject.SetActive(outerButtons);
+            _filterByDisplay?.gameObject.SetActive(outerButtons);
+            _clearSortFilterButton?.gameObject.SetActive(clearButton);
+            _randomButton?.gameObject.SetActive(outerButtons);
 
             RefreshCurrentSelectionDisplay();
             _currentUiState = state;
@@ -1250,7 +1223,7 @@ namespace SongBrowser.UI
         /// </summary>
         private void RefreshCurrentSelectionDisplay()
         {
-            string sortByDisplay = null;
+            string sortByDisplay;
             if (_model.Settings.sortMode == SongSortMode.Default)
             {
                 sortByDisplay = "Title";
@@ -1277,57 +1250,55 @@ namespace SongBrowser.UI
                 return;
             }
 
-            // So far all we need to refresh is the sort buttons.
             foreach (SongSortButton sortButton in _sortButtonGroup)
             {
                 if (sortButton.SortMode.NeedsScoreSaberData() && !SongDataCore.Plugin.Songs.IsDataAvailable())
                 {
-                    BeatSaberUI.SetButtonBorder(sortButton.Button, Color.gray);
+                    sortButton.Button.SetButtonUnderlineColor(Color.gray);
                 }
                 else
                 {
-                    BeatSaberUI.SetButtonBorder(sortButton.Button, Color.white);
+                    sortButton.Button.SetButtonUnderlineColor(Color.white);
                 }
 
                 if (sortButton.SortMode == _model.Settings.sortMode)
                 {
                     if (this._model.Settings.invertSortResults)
                     {
-                        BeatSaberUI.SetButtonBorder(sortButton.Button, Color.red);
+                        sortButton.Button.SetButtonUnderlineColor(Color.red);
                     }
                     else
                     {
-                        BeatSaberUI.SetButtonBorder(sortButton.Button, Color.green);
+                        sortButton.Button.SetButtonUnderlineColor(Color.green);
                     }
                 }
             }
 
-            // refresh filter buttons
             foreach (SongFilterButton filterButton in _filterButtonGroup)
             {
-                BeatSaberUI.SetButtonBorder(filterButton.Button, Color.white);
+                filterButton.Button.SetButtonUnderlineColor(Color.white);
                 if (filterButton.FilterMode == _model.Settings.filterMode)
                 {
-                    BeatSaberUI.SetButtonBorder(filterButton.Button, Color.green);
+                    filterButton.Button.SetButtonUnderlineColor(Color.green);
                 }
             }
 
             if (this._model.Settings.invertSortResults)
             {
-                BeatSaberUI.SetButtonBorder(_sortByDisplay, Color.red);
+                _sortByDisplay.SetButtonUnderlineColor(Color.red);
             }
             else
             {
-                BeatSaberUI.SetButtonBorder(_sortByDisplay, Color.green);
+                _sortByDisplay.SetButtonUnderlineColor(Color.green);
             }
 
             if (this._model.Settings.filterMode != SongFilterMode.None)
             {
-                BeatSaberUI.SetButtonBorder(_filterByDisplay, Color.green);
+                _filterByDisplay.SetButtonUnderlineColor(Color.green);
             }
             else
             {
-                BeatSaberUI.SetButtonBorder(_filterByDisplay, Color.white);
+                _filterByDisplay.SetButtonUnderlineColor(Color.white);
             }
         }
 
@@ -1395,7 +1366,7 @@ namespace SongBrowser.UI
                     {
                         Hide();
                     }
-                    _beatUi.SelectLevelCollection(_model.Settings.currentLevelCollectionName);
+                    _beatUi.SelectLevelCollection(_model.Settings.currentLevelCategoryName, _model.Settings.currentLevelCollectionName);
                     _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += _levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
                 }
 
@@ -1415,4 +1386,3 @@ namespace SongBrowser.UI
         }
     }
 }
- 

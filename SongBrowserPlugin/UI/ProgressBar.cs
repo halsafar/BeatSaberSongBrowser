@@ -1,11 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using SongCore.Utilities;
 using System.Collections;
+using System.Collections.Concurrent;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using SongCore.Utilities;
-
 
 namespace SongBrowser.UI
 {
@@ -20,7 +19,7 @@ namespace SongBrowser.UI
         private TMP_Text _headerText;
         internal Image _loadingBackg;
 
-        private static readonly Vector3 Position = new Vector3(0, -0.85f, 2.5f);
+        private static readonly Vector3 Position = new Vector3(0, 0.0f, 2.5f);
         private static readonly Vector3 Rotation = new Vector3(0, 0, 0);
         private static readonly Vector3 Scale = new Vector3(0.01f, 0.01f, 0.01f);
 
@@ -95,7 +94,7 @@ namespace SongBrowser.UI
             }
         }
 
-        private void SongBrowserFinishedProcessingSongs(Dictionary<string, CustomPreviewBeatmapLevel> arg2)
+        private void SongBrowserFinishedProcessingSongs(ConcurrentDictionary<string, CustomPreviewBeatmapLevel> arg2)
         {
             StopAllCoroutines();
             _showingMessage = false;

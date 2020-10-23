@@ -1,16 +1,15 @@
-﻿using UnityEngine.SceneManagement;
-using SongBrowser.UI;
-using Logger = SongBrowser.Logging.Logger;
-using System;
+﻿using BS_Utils.Utilities;
 using IPA;
-using BS_Utils.Utilities;
+using SongBrowser.UI;
+using System;
+using Logger = SongBrowser.Logging.Logger;
 
 namespace SongBrowser
 {
     [Plugin(RuntimeOptions.SingleStartInit)]
     public class Plugin
     {
-        public const string VERSION_NUMBER = "6.0.7";
+        public const string VERSION_NUMBER = "6.1.0";
         public static Plugin Instance;
         public static IPA.Logging.Logger Log;
 
@@ -33,7 +32,7 @@ namespace SongBrowser
 
         [OnExit]
         public void OnApplicationQuit()
-        {            
+        {
         }
 
         private void OnMenuSceneLoadedFresh(ScenesTransitionSetupDataSO data)

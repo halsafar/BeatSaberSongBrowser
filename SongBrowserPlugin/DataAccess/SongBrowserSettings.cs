@@ -16,7 +16,7 @@ namespace SongBrowser.DataAccess
         Default,
         Author,
         Original,
-        Newest,        
+        Newest,
         YourPlayCount,
         Difficulty,
         Random,
@@ -86,6 +86,7 @@ namespace SongBrowser.DataAccess
         public String currentLevelId = default(String);
         public String currentDirectory = default(String);
         public String currentLevelCollectionName = default(String);
+        public String currentLevelCategoryName = default(String);
 
         public bool randomInstantQueue = false;
         public bool deleteNumberedSongFolder = true;

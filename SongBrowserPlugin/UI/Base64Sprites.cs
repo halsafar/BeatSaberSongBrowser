@@ -37,7 +37,7 @@ namespace SongBrowser.UI
         {
             // prune base64 encoded image header
             Regex r = new Regex(@"data:image.*base64,");
-            base64 = r.Replace(base64, "");            
+            base64 = r.Replace(base64, "");
 
             Sprite s = null;
             try

@@ -1,6 +1,5 @@
 ﻿using BS_Utils.Utilities;
 using HMUI;
-using IPA.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +16,7 @@ namespace SongBrowser.DataAccess
         public LevelSelectionNavigationController LevelSelectionNavigationController;
 
         public LevelFilteringNavigationController LevelFilteringNavigationController;
+        public LevelCollectionNavigationController LevelCollectionNavigationController;
 
         public LevelCollectionViewController LevelCollectionViewController;
         public LevelCollectionTableView LevelCollectionTableView;
@@ -61,16 +61,20 @@ namespace SongBrowser.DataAccess
             LevelSelectionFlowCoordinator = flowCoordinator;
 
             // gather flow coordinator elements
-            LevelSelectionNavigationController = LevelSelectionFlowCoordinator.GetPrivateField<LevelSelectionNavigationController>("_levelSelectionNavigationController");
+            LevelSelectionNavigationController = LevelSelectionFlowCoordinator.GetPrivateField<LevelSelectionNavigationController>("levelSelectionNavigationController");
             Logger.Debug("Acquired LevelSelectionNavigationController [{0}]", LevelSelectionNavigationController.GetInstanceID());
 
-            LevelFilteringNavigationController = Resources.FindObjectsOfTypeAll<LevelFilteringNavigationController>().First();
+            //LevelFilteringNavigationController = Resources.FindObjectsOfTypeAll<LevelFilteringNavigationController>().First();
+            LevelFilteringNavigationController = LevelSelectionNavigationController.GetPrivateField<LevelFilteringNavigationController>("_levelFilteringNavigationController");
             Logger.Debug("Acquired LevelFilteringNavigationController [{0}]", LevelFilteringNavigationController.GetInstanceID());
 
-            LevelCollectionViewController = LevelSelectionNavigationController.GetPrivateField<LevelCollectionViewController>("_levelCollectionViewController");
+            LevelCollectionNavigationController = LevelSelectionNavigationController.GetPrivateField<LevelCollectionNavigationController>("_levelCollectionNavigationController");
+            Logger.Debug("Acquired LevelCollectionNavigationController [{0}]", LevelCollectionNavigationController.GetInstanceID());
+
+            LevelCollectionViewController = LevelCollectionNavigationController.GetPrivateField<LevelCollectionViewController>("_levelCollectionViewController");
             Logger.Debug("Acquired LevelPackLevelsViewController [{0}]", LevelCollectionViewController.GetInstanceID());
 
-            LevelDetailViewController = LevelSelectionNavigationController.GetPrivateField<StandardLevelDetailViewController>("_levelDetailViewController");
+            LevelDetailViewController = LevelCollectionNavigationController.GetPrivateField<StandardLevelDetailViewController>("_levelDetailViewController");
             Logger.Debug("Acquired StandardLevelDetailViewController [{0}]", LevelDetailViewController.GetInstanceID());
 
             LevelCollectionTableView = this.LevelCollectionViewController.GetPrivateField<LevelCollectionTableView>("_levelCollectionTableView");
@@ -95,15 +99,22 @@ namespace SongBrowser.DataAccess
             TableViewPageDownButton = tableView.GetPrivateField<Button>("_pageDownButton");
             Logger.Debug("Acquired Page Up and Down buttons...");
 
-            PlayContainer = StandardLevelDetailView.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayContainer");
-            PlayButtons = PlayContainer.GetComponentsInChildren<RectTransform>().First(x => x.name == "PlayButtons");
+            PlayButtons = Resources.FindObjectsOfTypeAll<RectTransform>().First(x => x.name == "ActionButtons");
+            Logger.Debug("Acquired ActionButtons [{0}]", PlayButtons);
+
+            PlayContainer = PlayButtons.parent as RectTransform;
+            Logger.Debug("Acquired ActionButtons parent [{0}]", PlayContainer);
 
             PlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
+            Logger.Debug("Acquired PlayButton [{0}]", PlayButton);
             PracticeButton = PlayButtons.GetComponentsInChildren<Button>().First(x => x.name == "PracticeButton");
+            Logger.Debug("Acquired PracticeButton [{0}]", PracticeButton);
 
             SimpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
+            Logger.Debug("Acquired SimpleDialogPromptViewControllerPrefab [{0}]", SimpleDialogPromptViewControllerPrefab);
 
             BeatmapLevelsModel = Resources.FindObjectsOfTypeAll<BeatmapLevelsModel>().First();
+            Logger.Debug("Acquired BeatmapLevelsModel [{0}]", BeatmapLevelsModel);
         }
 
         /// <summary>
@@ -112,12 +123,12 @@ namespace SongBrowser.DataAccess
         /// <returns></returns>
         private IBeatmapLevelPack GetCurrentSelectedLevelPack()
         {
-            if (LevelSelectionNavigationController == null)
+            if (LevelCollectionNavigationController == null)
             {
                 return null;
             }
 
-            var pack = LevelSelectionNavigationController.GetPrivateField<IBeatmapLevelPack>("_levelPack");
+            var pack = LevelCollectionNavigationController.GetPrivateField<IBeatmapLevelPack>("_levelPack");
             return pack;
         }
 
@@ -199,7 +210,7 @@ namespace SongBrowser.DataAccess
                 Logger.Debug("Current selected level collection is null for some reason...");
                 return null;
             }
-            
+
             return levelCollection.beatmapLevelCollection.beatmapLevels;
         }
 
@@ -207,14 +218,31 @@ namespace SongBrowser.DataAccess
         /// Select a level collection.
         /// </summary>
         /// <param name="levelCollectionName"></param>
-        public void SelectLevelCollection(String levelCollectionName)
+        public void SelectLevelCollection(String levelCategoryName, String levelCollectionName)
         {
             Logger.Trace("SelectLevelCollection({0})", levelCollectionName);
 
             try
             {
-                IAnnotatedBeatmapLevelCollection collection = GetLevelCollectionByName(levelCollectionName);
+                if (String.IsNullOrEmpty(levelCategoryName))
+                {
+                    // hack for now, just assume custom levels if a user has an old settings file, corrects itself first time they change level packs.
+                    levelCategoryName = SelectLevelCategoryViewController.LevelCategory.CustomSongs.ToString();
+                }
 
+                SelectLevelCategoryViewController.LevelCategory category;
+                try
+                {
+                    category = (SelectLevelCategoryViewController.LevelCategory)Enum.Parse(typeof(SelectLevelCategoryViewController.LevelCategory), levelCategoryName, true);
+                }
+                catch (Exception)
+                {
+                    // invalid input
+                    return;
+                }
+
+
+                IAnnotatedBeatmapLevelCollection collection = GetLevelCollectionByName(levelCollectionName);
                 if (collection == null)
                 {
                     Logger.Debug("Could not locate requested level collection...");
@@ -223,9 +251,16 @@ namespace SongBrowser.DataAccess
 
                 Logger.Info("Selecting level collection: {0}", collection.collectionName);
 
-                LevelFilteringNavigationController.SelectBeatmapLevelPackOrPlayList(collection as IBeatmapLevelPack, collection as IPlaylist);
-                LevelFilteringNavigationController.TabBarDidSwitch();
-               
+                var selectLeveCategoryViewController = LevelFilteringNavigationController.GetComponentInChildren<SelectLevelCategoryViewController>();
+                var iconSegementController = selectLeveCategoryViewController.GetComponentInChildren<IconSegmentedControl>();
+
+                int selectCellNumber = (from x in selectLeveCategoryViewController.GetPrivateField<SelectLevelCategoryViewController.LevelCategoryInfo[]>("_levelCategoryInfos")
+                                        select x.levelCategory).ToList().IndexOf(category);
+
+                iconSegementController.SelectCellWithNumber(selectCellNumber);
+                LevelFilteringNavigationController.SelectAnnotatedBeatmapLevelCollection(collection as IBeatmapLevelPack);
+                LevelFilteringNavigationController.UpdateSecondChildControllerContent(category);
+
                 Logger.Debug("Done selecting level collection!");
             }
             catch (Exception e)
@@ -305,7 +340,7 @@ namespace SongBrowser.DataAccess
                 LevelCollectionTableView.HandleDidSelectRowEvent(tableView, selectedIndex);
             }
             tableView.ScrollToCellWithIdx(selectedIndex, TableViewScroller.ScrollPositionType.Beginning, true);
-            tableView.SelectCellWithIdx(selectedIndex);            
+            tableView.SelectCellWithIdx(selectedIndex);
         }
 
         /// <summary>

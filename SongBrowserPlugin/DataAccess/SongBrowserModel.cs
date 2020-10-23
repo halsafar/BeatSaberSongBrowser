@@ -1,12 +1,12 @@
 ﻿using SongBrowser.DataAccess;
 using SongCore.Utilities;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using TMPro;
 using UnityEngine;
 using Logger = SongBrowser.Logging.Logger;
 
@@ -25,15 +25,15 @@ namespace SongBrowser
         private SongBrowserSettings _settings;
 
         // song list management
-        private double _customSongDirLastWriteTime = 0;        
-        private Dictionary<String, double> _cachedLastWriteTimes;
+        private double _customSongDirLastWriteTime = 0;
+        private readonly Dictionary<String, double> _cachedLastWriteTimes;
         private Dictionary<string, int> _levelIdToPlayCount;
 
         public BeatmapCharacteristicSO CurrentBeatmapCharacteristicSO;
 
         public static Func<IAnnotatedBeatmapLevelCollection, List<IPreviewBeatmapLevel>> CustomFilterHandler;
         public static Func<List<IPreviewBeatmapLevel>, List<IPreviewBeatmapLevel>> CustomSortHandler;
-        public static Action<Dictionary<string, CustomPreviewBeatmapLevel>> didFinishProcessingSongs;
+        public static Action<ConcurrentDictionary<string, CustomPreviewBeatmapLevel>> didFinishProcessingSongs;
 
         public bool SortWasMissingData { get; private set; } = false;
 
@@ -159,7 +159,7 @@ namespace SongBrowser
         private double GetSongUserDate(CustomPreviewBeatmapLevel level)
         {
             var coverPath = Path.Combine(level.customLevelPath, level.standardLevelInfoSaveData.coverImageFilename);
-            var lastTime = EPOCH;
+            DateTime lastTime;
             if (File.Exists(coverPath))
             {
                 var lastWriteTime = File.GetLastWriteTimeUtc(coverPath);
@@ -210,7 +210,7 @@ namespace SongBrowser
         /// <summary>
         /// Sort the song list based on the settings.
         /// </summary>
-        public void ProcessSongList(IAnnotatedBeatmapLevelCollection selectedBeatmapCollection, LevelCollectionViewController levelCollectionViewController, LevelSelectionNavigationController navController)
+        public void ProcessSongList(IAnnotatedBeatmapLevelCollection selectedBeatmapCollection, LevelSelectionNavigationController navController)
         {
             Logger.Trace("ProcessSongList()");
 
@@ -224,8 +224,8 @@ namespace SongBrowser
                 Logger.Debug("Cannot process songs yet, no level collection selected...");
                 return;
             }
-            
-            Logger.Debug("Using songs from level collection: {0}", selectedBeatmapCollection.collectionName);
+
+            Logger.Debug($"Using songs from level collection: {selectedBeatmapCollection.collectionName} [num={selectedBeatmapCollection.beatmapLevelCollection.beatmapLevels.Length}");
             unsortedSongs = selectedBeatmapCollection.beatmapLevelCollection.beatmapLevels.ToList();
 
             // filter
@@ -261,7 +261,7 @@ namespace SongBrowser
             Logger.Info("Filtering songs took {0}ms", stopwatch.ElapsedMilliseconds);
 
             // sort
-            Logger.Debug("Starting to sort songs...");
+            Logger.Debug($"Starting to sort songs by {_settings.sortMode}");
             stopwatch = Stopwatch.StartNew();
 
             SortWasMissingData = false;
@@ -321,17 +321,50 @@ namespace SongBrowser
             // Still hacking in a custom level pack
             // Asterisk the pack name so it is identifable as filtered.
             var packName = selectedBeatmapCollection.collectionName;
+            if (packName == null)
+            {
+                packName = "";
+            }
+
             if (!packName.EndsWith("*") && _settings.filterMode != SongFilterMode.None)
             {
                 packName += "*";
             }
-            BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsCollectionName, packName, selectedBeatmapCollection.collectionName, selectedBeatmapCollection.coverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
 
-            GameObject _noDataGO = levelCollectionViewController.GetPrivateField<GameObject>("_noDataInfoGO");
-            bool _showPlayerStatsInDetailView = navController.GetPrivateField<bool>("_showPlayerStatsInDetailView");
-            bool _showPracticeButtonInDetailView = navController.GetPrivateField<bool>("_showPracticeButtonInDetailView");
+            // Some level categories have a null cover image, supply something, it won't show it anyway
+            var coverImage = selectedBeatmapCollection.coverImage;
+            if (coverImage == null)
+            {
+                coverImage = BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite;
+            }
 
-            navController.SetData(levelPack, true, _showPlayerStatsInDetailView, _showPracticeButtonInDetailView, _noDataGO);
+            Logger.Debug("Creating filtered level pack...");
+            BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsCollectionName, packName, selectedBeatmapCollection.collectionName, coverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
+
+            /*
+             public virtual void SetData(
+                IAnnotatedBeatmapLevelCollection annotatedBeatmapLevelCollection, 
+                bool showPackHeader, bool showPlayerStats, bool showPracticeButton, 
+                string actionButtonText, 
+                GameObject noDataInfoPrefab, BeatmapDifficultyMask allowedBeatmapDifficultyMask, BeatmapCharacteristicSO[] notAllowedCharacteristics);
+            */
+            Logger.Debug("Acquiring necessary fields to call SetData(pack)...");
+            LevelCollectionNavigationController lcnvc = navController.GetPrivateField<LevelCollectionNavigationController>("_levelCollectionNavigationController");
+            var _showPlayerStatsInDetailView = navController.GetPrivateField<bool>("_showPlayerStatsInDetailView");
+            var _hidePracticeButton = navController.GetPrivateField<bool>("_hidePracticeButton");
+            var _actionButtonText = navController.GetPrivateField<string>("_actionButtonText");
+            var _allowedBeatmapDifficultyMask = navController.GetPrivateField<BeatmapDifficultyMask>("_allowedBeatmapDifficultyMask");
+            var _notAllowedCharacteristics = navController.GetPrivateField<BeatmapCharacteristicSO[]>("_notAllowedCharacteristics");
+
+            Logger.Debug("Calling lcnvc.SetData...");
+            lcnvc.SetData(levelPack,
+                true,
+                _showPlayerStatsInDetailView,
+                !_hidePracticeButton,
+                _actionButtonText,
+                null,
+                _allowedBeatmapDifficultyMask,
+                _notAllowedCharacteristics);
 
             //_sortedSongs.ForEach(x => Logger.Debug(x.levelID));
         }
@@ -400,7 +433,7 @@ namespace SongBrowser
                 double maxPP = 0.0;
                 if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
                 {
-                     maxPP = SongDataCore.Plugin.Songs.Data.Songs[hash].diffs.Max(y => y.pp);
+                    maxPP = SongDataCore.Plugin.Songs.Data.Songs[hash].diffs.Max(y => y.pp);
                 }
 
                 if (maxPP > 0f)
@@ -519,7 +552,7 @@ namespace SongBrowser
                     var stars = 0.0;
                     if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
                     {
-                        var diffs = SongDataCore.Plugin.Songs.Data.Songs[hash].diffs;   
+                        var diffs = SongDataCore.Plugin.Songs.Data.Songs[hash].diffs;
                         stars = diffs.Max(y => y.star);
                     }
 
@@ -589,7 +622,8 @@ namespace SongBrowser
             }
 
             return levelIds
-                .OrderByDescending(x => {
+                .OrderByDescending(x =>
+                {
                     var hash = SongBrowserModel.GetSongHash(x.levelID);
                     if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
                     {
@@ -651,7 +685,8 @@ namespace SongBrowser
             }
 
             return levelIds
-                .OrderByDescending(x => {
+                .OrderByDescending(x =>
+                {
                     var hash = SongBrowserModel.GetSongHash(x.levelID);
                     if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
                     {
@@ -682,7 +717,8 @@ namespace SongBrowser
             }
 
             return levelIds
-                .OrderByDescending(x => {
+                .OrderByDescending(x =>
+                {
                     var hash = SongBrowserModel.GetSongHash(x.levelID);
                     if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
                     {
