@@ -227,7 +227,6 @@ namespace SongBrowser.UI
             }, "");
             _sortByDisplay.SetButtonTextSize(displayButtonFontSize);
             _sortByDisplay.ToggleWordWrapping(false);
-            _sortByDisplay.SetButtonBackgroundActive(false);
 
             curX += outerButtonWidth;
 
@@ -252,11 +251,10 @@ namespace SongBrowser.UI
             }, "");
             _filterByDisplay.SetButtonTextSize(displayButtonFontSize);
             _filterByDisplay.ToggleWordWrapping(false);
-            _filterByDisplay.SetButtonBackgroundActive(false);
 
             // random button
             Logger.Debug("Creating Random Button...");
-            _randomButton = _viewController.CreateIconButton("randomButton", "PracticeButton", new Vector2(curX + (outerButtonWidth / 2.0f) + (randomButtonWidth / 2.0f), clearButtonY), new Vector2(randomButtonWidth, randomButtonWidth), () =>
+            _randomButton = _viewController.CreateIconButton("randomButton", "PracticeButton", new Vector2(curX + (outerButtonWidth / 2.0f) + (randomButtonWidth / 4.0f), clearButtonY), new Vector2(randomButtonWidth, randomButtonWidth), () =>
             {
                 OnSortButtonClickEvent(SongSortMode.Random);
             }, Base64Sprites.RandomIcon);
@@ -317,7 +315,7 @@ namespace SongBrowser.UI
 
             float filterButtonFontSize = 2.25f;
             float filterButtonX = -63.0f;
-            float filterButtonWidth = 12.25f;
+            float filterButtonWidth = 14.25f;
             float buttonSpacing = 0.5f;
             float buttonY = BUTTON_ROW_Y;
             float buttonHeight = 5.0f;
