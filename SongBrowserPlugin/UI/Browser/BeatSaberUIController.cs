@@ -33,11 +33,7 @@ namespace SongBrowser.DataAccess
         public Button TableViewPageUpButton;
         public Button TableViewPageDownButton;
 
-        public RectTransform PlayContainer;
-        public RectTransform PlayButtons;
-
-        public Button PlayButton;
-        public Button PracticeButton;
+        public RectTransform ActionButtons;
 
         public SimpleDialogPromptViewController SimpleDialogPromptViewControllerPrefab;
 
@@ -83,7 +79,7 @@ namespace SongBrowser.DataAccess
             StandardLevelDetailView = LevelDetailViewController.GetPrivateField<StandardLevelDetailView>("_standardLevelDetailView");
             Logger.Debug("Acquired StandardLevelDetailView [{0}]", StandardLevelDetailView.GetInstanceID());
 
-            BeatmapCharacteristicSelectionViewController = Resources.FindObjectsOfTypeAll<BeatmapCharacteristicSegmentedControlController>().First();
+            BeatmapCharacteristicSelectionViewController = LevelDetailViewController.GetComponentInChildren<BeatmapCharacteristicSegmentedControlController>();
             Logger.Debug("Acquired BeatmapCharacteristicSegmentedControlController [{0}]", BeatmapCharacteristicSelectionViewController.GetInstanceID());
 
             LevelDifficultyViewController = StandardLevelDetailView.GetPrivateField<BeatmapDifficultySegmentedControlController>("_beatmapDifficultySegmentedControlController");
@@ -99,21 +95,13 @@ namespace SongBrowser.DataAccess
             TableViewPageDownButton = tableView.GetPrivateField<Button>("_pageDownButton");
             Logger.Debug("Acquired Page Up and Down buttons...");
 
-            PlayButtons = Resources.FindObjectsOfTypeAll<RectTransform>().First(x => x.name == "ActionButtons");
-            Logger.Debug("Acquired ActionButtons [{0}]", PlayButtons);
-
-            PlayContainer = PlayButtons.parent as RectTransform;
-            Logger.Debug("Acquired ActionButtons parent [{0}]", PlayContainer);
-
-            PlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PlayButton");
-            Logger.Debug("Acquired PlayButton [{0}]", PlayButton);
-            PracticeButton = PlayButtons.GetComponentsInChildren<Button>().First(x => x.name == "PracticeButton");
-            Logger.Debug("Acquired PracticeButton [{0}]", PracticeButton);
+            ActionButtons = LevelDetailViewController.GetComponentsInChildren<RectTransform>().First(x => x.name == "ActionButtons");
+            Logger.Debug("Acquired ActionButtons [{0}]", ActionButtons.GetInstanceID());
 
             SimpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
-            Logger.Debug("Acquired SimpleDialogPromptViewControllerPrefab [{0}]", SimpleDialogPromptViewControllerPrefab);
+            Logger.Debug("Acquired SimpleDialogPromptViewControllerPrefab [{0}]", SimpleDialogPromptViewControllerPrefab.GetInstanceID());
 
-            BeatmapLevelsModel = Resources.FindObjectsOfTypeAll<BeatmapLevelsModel>().First();
+            BeatmapLevelsModel = Resources.FindObjectsOfTypeAll<BeatmapLevelsModel>().Last();
             Logger.Debug("Acquired BeatmapLevelsModel [{0}]", BeatmapLevelsModel);
         }
 
