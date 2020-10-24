@@ -69,6 +69,7 @@ namespace SongBrowser.UI
         private RectTransform _noteJumpStartBeatOffsetLabel;
 
         private IAnnotatedBeatmapLevelCollection _lastLevelCollection;
+        bool _selectingCategory = false;
 
         private SongBrowserModel _model;
         public SongBrowserModel Model
@@ -582,7 +583,7 @@ namespace SongBrowser.UI
             _lastLevelCollection = annotatedBeatmapLevelCollection;
             Model.Settings.currentLevelCategoryName = _beatUi.LevelFilteringNavigationController.selectedLevelCategory.ToString();
             Model.Settings.Save();
-            Logger.Debug("Selected Level Collection={0}", _lastLevelCollection);
+            Logger.Debug("AnnotatedBeatmapLevelCollection, Selected Level Collection={0}", _lastLevelCollection);
         }
 
         /// <summary>
@@ -615,17 +616,22 @@ namespace SongBrowser.UI
             if (arg2 as PreviewBeatmapLevelPackSO)
             {
                 Logger.Info("Hiding SongBrowser, previewing a song pack.");
-                //CancelFilter();
                 Hide();
                 return;
             }
-            else
+
+            Show();
+
+            // category transition, just record the new collection
+            if (_selectingCategory)
             {
-                Show();
+                Logger.Info("Transitioning level category");
+                _lastLevelCollection = arg2;
+                StartCoroutine(RefreshSongListEndOfFrame());
+                return;
             }
 
-            // Skip the first time - Effectively ignores BeatSaber forcing OST1 on us on first load.
-            // Skip when we have a playlist
+            // Skip the first time - prevents a bunch of reload content spam
             if (_lastLevelCollection == null)
             {
                 return;
@@ -681,6 +687,12 @@ namespace SongBrowser.UI
             yield return new WaitForEndOfFrame();
 
             ProcessSongList();
+            RefreshSongUI();
+        }
+
+        public IEnumerator RefreshSongListEndOfFrame()
+        {
+            yield return new WaitForEndOfFrame();
             RefreshSongUI();
         }
 
@@ -755,7 +767,7 @@ namespace SongBrowser.UI
 
             if (mode == SongFilterMode.Favorites)
             {
-                _beatUi.SelectLevelCollection(SelectLevelCategoryViewController.LevelCategory.Favorites.ToString(), SongBrowserSettings.CUSTOM_SONGS_LEVEL_COLLECTION_NAME);
+                _beatUi.SelectLevelCategory(SelectLevelCategoryViewController.LevelCategory.Favorites.ToString());
             }
             else
             {
@@ -1350,11 +1362,20 @@ namespace SongBrowser.UI
             if (_uiCreated)
             {
                 IAnnotatedBeatmapLevelCollection currentSelected = _beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection();
-                Logger.Debug("Current selected level collection: {0}", currentSelected);
+                Logger.Debug("Updating level collection, current selected level collection: {0}", currentSelected);
 
+                // select category
+                if (!String.IsNullOrEmpty(_model.Settings.currentLevelCategoryName))
+                {
+                    _selectingCategory = true;
+                    _beatUi.SelectLevelCategory(_model.Settings.currentLevelCategoryName);
+                    _selectingCategory = false;
+                }
+
+                // select collection
                 if (String.IsNullOrEmpty(_model.Settings.currentLevelCollectionName))
                 {
-                    if (currentSelected == null)
+                    if (currentSelected == null && String.IsNullOrEmpty(_model.Settings.currentLevelCategoryName))
                     {
                         Logger.Debug("No level collection selected, acquiring the first available, likely OST1...");
                         currentSelected = _beatUi.BeatmapLevelsModel.allLoadedBeatmapLevelPackCollection.beatmapLevelPacks[0];
@@ -1370,13 +1391,13 @@ namespace SongBrowser.UI
                     {
                         Hide();
                     }
-                    _beatUi.SelectLevelCollection(_model.Settings.currentLevelCategoryName, _model.Settings.currentLevelCollectionName);
+                    _beatUi.SelectLevelCollection(_model.Settings.currentLevelCollectionName);
                     _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += _levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
                 }
 
                 if (_lastLevelCollection == null)
                 {
-                    if (currentSelected.collectionName != SongBrowserModel.FilteredSongsCollectionName && currentSelected.collectionName != SongBrowserModel.PlaylistSongsCollectionName)
+                    if (currentSelected != null && currentSelected.collectionName != SongBrowserModel.FilteredSongsCollectionName && currentSelected.collectionName != SongBrowserModel.PlaylistSongsCollectionName)
                     {
                         _lastLevelCollection = currentSelected;
                     }

@@ -160,7 +160,7 @@ namespace SongBrowser.DataAccess
             IAnnotatedBeatmapLevelCollection levelCollection = null;
 
             // search level packs
-            foreach (IBeatmapLevelPack o in BeatmapLevelsModel.allLoadedBeatmapLevelPackCollection.beatmapLevelPacks)
+            foreach (IBeatmapLevelPack o in this.LevelFilteringNavigationController.GetPrivateField<IBeatmapLevelPack[]>("_allBeatmapLevelPacks"))
             {
                 if (String.Equals(o.collectionName, levelCollectionName))
                 {
@@ -202,13 +202,9 @@ namespace SongBrowser.DataAccess
             return levelCollection.beatmapLevelCollection.beatmapLevels;
         }
 
-        /// <summary>
-        /// Select a level collection.
-        /// </summary>
-        /// <param name="levelCollectionName"></param>
-        public void SelectLevelCollection(String levelCategoryName, String levelCollectionName)
+        public bool SelectLevelCategory(String levelCategoryName)
         {
-            Logger.Trace("SelectLevelCollection({0})", levelCollectionName);
+            Logger.Trace("SelectLevelCategory({0})", levelCategoryName);
 
             try
             {
@@ -226,10 +222,50 @@ namespace SongBrowser.DataAccess
                 catch (Exception)
                 {
                     // invalid input
-                    return;
+                    return false;
                 }
 
+                if (category == LevelFilteringNavigationController.selectedLevelCategory)
+                {
+                    Logger.Debug($"Level category [{category}] is already selected");
+                    return false;
+                }
 
+                Logger.Info("Selecting level category: {0}", levelCategoryName);
+
+                var selectLeveCategoryViewController = LevelFilteringNavigationController.GetComponentInChildren<SelectLevelCategoryViewController>();
+                var iconSegementController = selectLeveCategoryViewController.GetComponentInChildren<IconSegmentedControl>();
+
+                int selectCellNumber = (from x in selectLeveCategoryViewController.GetPrivateField<SelectLevelCategoryViewController.LevelCategoryInfo[]>("_levelCategoryInfos")
+                                        select x.levelCategory).ToList().IndexOf(category);
+
+                iconSegementController.SelectCellWithNumber(selectCellNumber);
+                //selectLeveCategoryViewController.LevelFilterCategoryIconSegmentedControlDidSelectCell(iconSegementController, selectCellNumber);
+                LevelFilteringNavigationController.UpdateSecondChildControllerContent(category);
+                //AnnotatedBeatmapLevelCollectionsViewController.RefreshAvailability();
+
+                Logger.Debug("Done selecting level category.");
+
+                return true;
+
+            } catch (Exception e)
+            {
+                Logger.Exception(e);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Select a level collection.
+        /// </summary>
+        /// <param name="levelCollectionName"></param>
+        public void SelectLevelCollection(String levelCollectionName)
+        {
+            Logger.Trace("SelectLevelCollection({0})", levelCollectionName);
+
+            try
+            {
                 IAnnotatedBeatmapLevelCollection collection = GetLevelCollectionByName(levelCollectionName);
                 if (collection == null)
                 {
@@ -239,15 +275,7 @@ namespace SongBrowser.DataAccess
 
                 Logger.Info("Selecting level collection: {0}", collection.collectionName);
 
-                var selectLeveCategoryViewController = LevelFilteringNavigationController.GetComponentInChildren<SelectLevelCategoryViewController>();
-                var iconSegementController = selectLeveCategoryViewController.GetComponentInChildren<IconSegmentedControl>();
-
-                int selectCellNumber = (from x in selectLeveCategoryViewController.GetPrivateField<SelectLevelCategoryViewController.LevelCategoryInfo[]>("_levelCategoryInfos")
-                                        select x.levelCategory).ToList().IndexOf(category);
-
-                iconSegementController.SelectCellWithNumber(selectCellNumber);
-                LevelFilteringNavigationController.SelectAnnotatedBeatmapLevelCollection(collection as IBeatmapLevelPack);
-                LevelFilteringNavigationController.UpdateSecondChildControllerContent(category);
+                LevelFilteringNavigationController.SelectAnnotatedBeatmapLevelCollection(collection as IBeatmapLevelPack);                
 
                 Logger.Debug("Done selecting level collection!");
             }
@@ -304,7 +332,7 @@ namespace SongBrowser.DataAccess
                 Logger.Debug("Song is not in the level pack, cannot scroll to it...  Using last known row {0}/{1}", selectedRow, maxCount);
                 selectedIndex = Math.Min(maxCount, selectedRow);
             }
-            else
+            else if (LevelCollectionViewController.GetPrivateField<bool>("_showHeader"))
             {
                 // the header counts as an index, so if the index came from the level array we have to add 1.
                 selectedIndex += 1;
