@@ -1,7 +1,5 @@
 # Beat Saber SongBrowser
 
-*BROKEN IN LATEST UPDATE - FIX COMING*
-
 A plugin for customizing the in-game song browser.
 
 *This mod works on both the Steam and Oculus Store versions.*
@@ -36,6 +34,6 @@ A plugin for customizing the in-game song browser.
   - Filters can be cancelled by selecting them again.
 
 ## Status
-- Working with BeatSaber 1.6.0
+- Working with BeatSaber 1.12.2
 
 
