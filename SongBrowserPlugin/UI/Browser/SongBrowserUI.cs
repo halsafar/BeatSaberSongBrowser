@@ -503,7 +503,7 @@ namespace SongBrowser.UI
 
             _asyncUpdating = true;
 
-            while (_beatUi.LevelSelectionNavigationController.GetPrivateField<bool>("_isInTransition") ||
+            while (_beatUi != null && (_beatUi.LevelSelectionNavigationController.GetPrivateField<bool>("_isInTransition") ||
                    _beatUi.LevelDetailViewController.GetPrivateField<bool>("_isInTransition") ||
                    !_beatUi.LevelSelectionNavigationController.isInViewControllerHierarchy ||
                    !_beatUi.LevelDetailViewController.isInViewControllerHierarchy ||
