@@ -187,6 +187,27 @@ namespace SongBrowser.Internals
             return statIcon;
         }
 
+        public static TextMeshProUGUI CreateText(RectTransform parent, string text, float fontSize, Vector2 anchoredPosition, Vector2 sizeDelta)
+        {
+            GameObject gameObj = new GameObject("CustomUIText");
+            gameObj.SetActive(false);
+
+            TextMeshProUGUI textMesh = gameObj.AddComponent<CurvedTextMeshPro>();
+            textMesh.font = UnityEngine.Object.Instantiate(Resources.FindObjectsOfTypeAll<TMP_FontAsset>().First(t => t.name == "Teko-Medium SDF No Glow"));
+            textMesh.rectTransform.SetParent(parent, false);
+            textMesh.text = text;
+            textMesh.fontSize = fontSize;
+            textMesh.color = Color.white;
+
+            textMesh.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            textMesh.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            textMesh.rectTransform.sizeDelta = sizeDelta;
+            textMesh.rectTransform.anchoredPosition = anchoredPosition;
+
+            gameObj.SetActive(true);
+            return textMesh;
+        }
+
         /// <summary>
         /// Replace existing HoverHint on stat panel icons.
         /// </summary>

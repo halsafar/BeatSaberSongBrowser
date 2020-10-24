@@ -1,4 +1,4 @@
-﻿using SongCore.Utilities;
+﻿using SongBrowser.Internals;
 using System.Collections;
 using System.Collections.Concurrent;
 using TMPro;
@@ -19,7 +19,7 @@ namespace SongBrowser.UI
         private TMP_Text _headerText;
         internal Image _loadingBackg;
 
-        private static readonly Vector3 Position = new Vector3(0, 0.0f, 2.5f);
+        private static readonly Vector3 Position = new Vector3(0, 0.0f, 2.6f);
         private static readonly Vector3 Rotation = new Vector3(0, 0, 0);
         private static readonly Vector3 Scale = new Vector3(0.01f, 0.01f, 0.01f);
 
@@ -45,7 +45,7 @@ namespace SongBrowser.UI
 
         public static ProgressBar Create()
         {
-            return new GameObject("Progress Bar").AddComponent<ProgressBar>();
+            return new GameObject("SongBrowserLoadingStatus").AddComponent<ProgressBar>();
         }
 
         public void ShowMessage(string message, float time)
@@ -115,36 +115,18 @@ namespace SongBrowser.UI
             gameObject.transform.position = Position;
             gameObject.transform.eulerAngles = Rotation;
             gameObject.transform.localScale = Scale;
-
+            
             _canvas = gameObject.AddComponent<Canvas>();
             _canvas.renderMode = RenderMode.WorldSpace;
             _canvas.enabled = false;
             var rectTransform = _canvas.transform as RectTransform;
             rectTransform.sizeDelta = CanvasSize;
 
-            _authorNameText = Utils.CreateText(_canvas.transform as RectTransform, AuthorNameText, AuthorNamePosition);
-            rectTransform = _authorNameText.transform as RectTransform;
-            rectTransform.SetParent(_canvas.transform, false);
-            rectTransform.anchoredPosition = AuthorNamePosition;
-            rectTransform.sizeDelta = HeaderSize;
-            _authorNameText.text = AuthorNameText;
-            _authorNameText.fontSize = AuthorNameFontSize;
+            _authorNameText = BeatSaberUI.CreateText(_canvas.transform as RectTransform, AuthorNameText, AuthorNameFontSize, AuthorNamePosition, HeaderSize);
 
-            _pluginNameText = Utils.CreateText(_canvas.transform as RectTransform, PluginNameText, PluginNamePosition);
-            rectTransform = _pluginNameText.transform as RectTransform;
-            rectTransform.SetParent(_canvas.transform, false);
-            rectTransform.sizeDelta = HeaderSize;
-            rectTransform.anchoredPosition = PluginNamePosition;
-            _pluginNameText.text = PluginNameText;
-            _pluginNameText.fontSize = PluginNameFontSize;
+            _pluginNameText = BeatSaberUI.CreateText(_canvas.transform as RectTransform, PluginNameText, PluginNameFontSize, PluginNamePosition, HeaderSize);
 
-            _headerText = Utils.CreateText(_canvas.transform as RectTransform, HeaderText, HeaderPosition);
-            rectTransform = _headerText.transform as RectTransform;
-            rectTransform.SetParent(_canvas.transform, false);
-            rectTransform.anchoredPosition = HeaderPosition;
-            rectTransform.sizeDelta = HeaderSize;
-            _headerText.text = HeaderText;
-            _headerText.fontSize = HeaderFontSize;
+            _headerText = BeatSaberUI.CreateText(_canvas.transform as RectTransform, HeaderText, HeaderFontSize, HeaderPosition, HeaderSize);
 
             _loadingBackg = new GameObject("Background").AddComponent<Image>();
             rectTransform = _loadingBackg.transform as RectTransform;
