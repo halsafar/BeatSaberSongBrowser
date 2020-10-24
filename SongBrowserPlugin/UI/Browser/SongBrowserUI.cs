@@ -508,7 +508,7 @@ namespace SongBrowser.UI
                    !_beatUi.LevelSelectionNavigationController.isInViewControllerHierarchy ||
                    !_beatUi.LevelDetailViewController.isInViewControllerHierarchy ||
                    !_beatUi.LevelSelectionNavigationController.isActiveAndEnabled ||
-                   !_beatUi.LevelDetailViewController.isActiveAndEnabled)
+                   !_beatUi.LevelDetailViewController.isActiveAndEnabled))
             {
                 yield return null;
             }
