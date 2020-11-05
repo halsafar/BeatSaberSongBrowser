@@ -60,7 +60,6 @@ namespace SongBrowser.DataAccess
             LevelSelectionNavigationController = LevelSelectionFlowCoordinator.GetPrivateField<LevelSelectionNavigationController>("levelSelectionNavigationController");
             Logger.Debug("Acquired LevelSelectionNavigationController [{0}]", LevelSelectionNavigationController.GetInstanceID());
 
-            //LevelFilteringNavigationController = Resources.FindObjectsOfTypeAll<LevelFilteringNavigationController>().First();
             LevelFilteringNavigationController = LevelSelectionNavigationController.GetPrivateField<LevelFilteringNavigationController>("_levelFilteringNavigationController");
             Logger.Debug("Acquired LevelFilteringNavigationController [{0}]", LevelFilteringNavigationController.GetInstanceID());
 
@@ -89,6 +88,7 @@ namespace SongBrowser.DataAccess
             Logger.Debug("Acquired TableViewRectTransform from LevelPackLevelsTableView [{0}]", LevelCollectionTableViewTransform.GetInstanceID());
 
             AnnotatedBeatmapLevelCollectionsViewController = LevelFilteringNavigationController.GetPrivateField<AnnotatedBeatmapLevelCollectionsViewController>("_annotatedBeatmapLevelCollectionsViewController");
+            Logger.Debug("Acquired AnnotatedBeatmapLevelCollectionsViewController from LevelFilteringNavigationController [{0}]", AnnotatedBeatmapLevelCollectionsViewController.GetInstanceID());
 
             TableView tableView = LevelCollectionTableView.GetPrivateField<TableView>("_tableView");
             TableViewPageUpButton = tableView.GetPrivateField<Button>("_pageUpButton");
@@ -160,7 +160,9 @@ namespace SongBrowser.DataAccess
             IAnnotatedBeatmapLevelCollection levelCollection = null;
 
             // search level packs
-            foreach (IBeatmapLevelPack o in this.LevelFilteringNavigationController.GetPrivateField<IBeatmapLevelPack[]>("_allBeatmapLevelPacks"))
+            BeatmapLevelPackCollectionSO beatMapLevelPackCollection = Resources.FindObjectsOfTypeAll<BeatmapLevelPackCollectionSO>().Last();
+            IBeatmapLevelPack[] levelPacks = beatMapLevelPackCollection.GetPrivateField<IBeatmapLevelPack[]>("_allBeatmapLevelPacks");
+            foreach (IBeatmapLevelPack o in levelPacks)
             {
                 if (String.Equals(o.collectionName, levelCollectionName))
                 {
