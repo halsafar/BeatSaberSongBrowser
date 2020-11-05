@@ -19,6 +19,9 @@ namespace SongBrowser
 
         public static SongBrowser.UI.ProgressBar MainProgressBar;
 
+        private bool _hasShownProgressBar = false;
+
+
         public SongBrowserModel Model
         {
             get
@@ -192,7 +195,13 @@ namespace SongBrowser
         {
             Logger.Trace("HandleModeSelection()");
             _songBrowserUI.CreateUI(mode);
-            SongBrowserApplication.MainProgressBar.ShowMessage("");
+
+            if (!_hasShownProgressBar)
+            {
+                SongBrowserApplication.MainProgressBar.ShowMessage("");
+                _hasShownProgressBar = true;
+            }
+
             StartCoroutine(UpdateBrowserUI());
         }
 
