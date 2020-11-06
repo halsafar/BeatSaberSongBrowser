@@ -85,7 +85,7 @@ namespace SongBrowser.UI
         {
             if (file.Count() > 0)
             {
-                Texture2D Tex2D = new Texture2D(2, 2);
+                Texture2D Tex2D = new Texture2D(2, 2, TextureFormat.RGBA32, false, false);
                 if (Tex2D.LoadImage(file))
                     return Tex2D;
             }
