@@ -360,7 +360,7 @@ namespace SongBrowser.UI
             Logger.Debug("Creating fast scroll button...");
             _pageUpFastButton = BeatSaberUI.CreateIconButton("PageUpFast",
                 _beatUi.LevelCollectionNavigationController.transform as RectTransform, "PracticeButton",
-                new Vector2(0.75f, 24f),
+                new Vector2(1f, 24f),
                 new Vector2(10f, 10f),
                 delegate ()
                 {
@@ -371,7 +371,7 @@ namespace SongBrowser.UI
 
             _pageDownFastButton = BeatSaberUI.CreateIconButton("PageDownFast",
                 _beatUi.LevelCollectionNavigationController.transform as RectTransform, "PracticeButton",
-                new Vector2(0.75f, -24f),
+                new Vector2(1f, -24f),
                 new Vector2(10f, 10f),
                 delegate ()
                 {
@@ -1056,7 +1056,7 @@ namespace SongBrowser.UI
             }
 
             Logger.Debug("jumpDirection: {0}, newRow: {1}", jumpDirection, newRow);
-            _beatUi.SelectAndScrollToLevel(levels[newRow].levelID);
+            _beatUi.ScrollToLevelByRow(newRow);
             RefreshQuickScrollButtons();
         }
 
