@@ -126,6 +126,12 @@ namespace SongBrowser
             Logger.Trace("OnScoreSaberDataDownloaded");
             try
             {
+                // It is okay if SongDataCore beats us to initialization
+                if (_songBrowserUI == null)
+                {
+                    return;
+                }
+
                 StartCoroutine(_songBrowserUI.AsyncWaitForSongUIUpdate());
             }
             catch (Exception e)
