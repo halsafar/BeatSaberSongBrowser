@@ -1,4 +1,5 @@
-﻿using HMUI;
+﻿using BeatSaberMarkupLanguage.Components;
+using HMUI;
 using IPA.Utilities;
 using System;
 using System.Linq;
@@ -102,6 +103,30 @@ namespace SongBrowser.Internals
             (btn.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
             (btn.transform as RectTransform).anchoredPosition = anchoredPosition;
             (btn.transform as RectTransform).sizeDelta = sizeDelta;
+
+            btn.onClick.RemoveAllListeners();
+            if (onClick != null)
+                btn.onClick.AddListener(onClick);
+
+            return btn;
+        }
+
+        public static Button CreatePageButton(String name, RectTransform parent, String buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick, Sprite icon)
+        {
+            Logger.Debug("CreatePageButton({0}, {1}, {2}, {3}, {4}", name, parent, buttonTemplate, anchoredPosition, sizeDelta);
+            Button btn = UnityEngine.Object.Instantiate(Resources.FindObjectsOfTypeAll<Button>().Last(x => (x.name == buttonTemplate)), parent, false);
+            btn.name = name;
+            btn.interactable = true;
+
+            (btn.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
+            (btn.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
+            (btn.transform as RectTransform).anchoredPosition = anchoredPosition;
+            (btn.transform as RectTransform).sizeDelta = sizeDelta;
+            (btn.transform as RectTransform).pivot = new Vector2(0.5f, 0.5f);
+
+            ButtonIconImage btnIcon = btn.gameObject.AddComponent<ButtonIconImage>();
+            btnIcon.image = btn.gameObject.GetComponentsInChildren<Image>(true).Where(x => x.gameObject.name == "Icon").FirstOrDefault();
+            btnIcon.image.sprite = icon;
 
             btn.onClick.RemoveAllListeners();
             if (onClick != null)

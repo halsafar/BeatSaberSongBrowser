@@ -358,26 +358,23 @@ namespace SongBrowser.UI
         private void CreateFastPageButtons()
         {
             Logger.Debug("Creating fast scroll button...");
-            _pageUpFastButton = BeatSaberUI.CreateIconButton("PageUpFast",
-                _beatUi.LevelCollectionNavigationController.transform as RectTransform, "PracticeButton",
-                new Vector2(1f, 24f),
-                new Vector2(10f, 10f),
+            _pageUpFastButton = BeatSaberUI.CreatePageButton("PageUpFast",
+                _beatUi.LevelCollectionNavigationController.transform as RectTransform, "UpButton",
+                new Vector2(2.0f, 24f),
+                new Vector2(8f, 8f),
                 delegate ()
                 {
                     this.JumpSongList(-1, SEGMENT_PERCENT);
                 }, Base64Sprites.DoubleArrow);
-            _pageUpFastButton.SetButtonBackgroundActive(false);
-            (_pageUpFastButton.transform as RectTransform).Rotate(new Vector3(0, 0, 180));
 
-            _pageDownFastButton = BeatSaberUI.CreateIconButton("PageDownFast",
-                _beatUi.LevelCollectionNavigationController.transform as RectTransform, "PracticeButton",
-                new Vector2(1f, -24f),
-                new Vector2(10f, 10f),
+            _pageDownFastButton = BeatSaberUI.CreatePageButton("PageDownFast",
+                _beatUi.LevelCollectionNavigationController.transform as RectTransform, "DownButton",
+                new Vector2(2.0f, -24f),
+                new Vector2(8f, 8f),
                 delegate ()
                 {
                     this.JumpSongList(1, SEGMENT_PERCENT);
                 }, Base64Sprites.DoubleArrow);
-            _pageDownFastButton.SetButtonBackgroundActive(false);
         }
 
         /// <summary>
