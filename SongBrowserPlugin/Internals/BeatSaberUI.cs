@@ -61,22 +61,34 @@ namespace SongBrowser.Internals
         }
 
         /// <summary>
-        /// Create an icon button, simple.
+        /// Create Base button
         /// </summary>
+        /// <param name="name"></param>
         /// <param name="parent"></param>
         /// <param name="buttonTemplate"></param>
-        /// <param name="iconSprite"></param>
         /// <returns></returns>
-        public static Button CreateIconButton(String name, RectTransform parent, String buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick, Sprite icon)
+        public static Button CreateBaseButton(String name, RectTransform parent, String buttonTemplate)
         {
-            Logger.Debug("CreateIconButton({0}, {1}, {2}, {3}, {4}", name, parent, buttonTemplate, anchoredPosition, sizeDelta);
             Button btn = UnityEngine.Object.Instantiate(Resources.FindObjectsOfTypeAll<Button>().Last(x => (x.name == buttonTemplate)), parent, false);
             btn.name = name;
             btn.interactable = true;
+            return btn;
+        }
+
+        /// <summary>
+        /// Create basic icon button.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="parent"></param>
+        /// <param name="buttonTemplate"></param>
+        /// <returns></returns>
+        public static Button CreateIconButton(String name, RectTransform parent, String buttonTemplate, Sprite icon)
+        {
+            Button btn = CreateBaseButton(name, parent, buttonTemplate);
 
             UnityEngine.Object.Destroy(btn.GetComponent<HoverHint>());
             GameObject.Destroy(btn.GetComponent<LocalizedHoverHint>());
-            btn.gameObject.AddComponent<BeatSaberMarkupLanguage.Components.ExternalComponents>().components.Add(btn.GetComponentsInChildren<LayoutGroup>().First(x => x.name == "Content"));
+            btn.gameObject.AddComponent<ExternalComponents>().components.Add(btn.GetComponentsInChildren<LayoutGroup>().First(x => x.name == "Content"));
 
             Transform contentTransform = btn.transform.Find("Content");
             GameObject.Destroy(contentTransform.Find("Text").gameObject);
@@ -88,7 +100,7 @@ namespace SongBrowser.Internals
             iconImage.preserveAspect = true;
             if (iconImage != null)
             {
-                BeatSaberMarkupLanguage.Components.ButtonIconImage btnIcon = btn.gameObject.AddComponent<BeatSaberMarkupLanguage.Components.ButtonIconImage>();
+                ButtonIconImage btnIcon = btn.gameObject.AddComponent<ButtonIconImage>();
                 btnIcon.image = iconImage;
             }
 
@@ -98,6 +110,23 @@ namespace SongBrowser.Internals
             ContentSizeFitter buttonSizeFitter = btn.gameObject.AddComponent<ContentSizeFitter>();
             buttonSizeFitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
             buttonSizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+            btn.onClick.RemoveAllListeners();
+
+            return btn;
+        }
+
+        /// <summary>
+        /// Create an icon button, simple.
+        /// </summary>
+        /// <param name="parent"></param>
+        /// <param name="buttonTemplate"></param>
+        /// <param name="iconSprite"></param>
+        /// <returns></returns>
+        public static Button CreateIconButton(String name, RectTransform parent, String buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick, Sprite icon)
+        {
+            Logger.Debug("CreateIconButton({0}, {1}, {2}, {3}, {4}", name, parent, buttonTemplate, anchoredPosition, sizeDelta);
+            Button btn = CreateIconButton(name, parent, buttonTemplate, icon);
 
             (btn.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
             (btn.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
@@ -114,9 +143,7 @@ namespace SongBrowser.Internals
         public static Button CreatePageButton(String name, RectTransform parent, String buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick, Sprite icon)
         {
             Logger.Debug("CreatePageButton({0}, {1}, {2}, {3}, {4}", name, parent, buttonTemplate, anchoredPosition, sizeDelta);
-            Button btn = UnityEngine.Object.Instantiate(Resources.FindObjectsOfTypeAll<Button>().Last(x => (x.name == buttonTemplate)), parent, false);
-            btn.name = name;
-            btn.interactable = true;
+            Button btn = CreateBaseButton(name, parent, buttonTemplate);
 
             (btn.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
             (btn.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
@@ -149,10 +176,8 @@ namespace SongBrowser.Internals
         public static Button CreateUIButton(String name, RectTransform parent, string buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick = null, string buttonText = "BUTTON")
         {
             Logger.Debug("CreateUIButton({0}, {1}, {2}, {3}, {4}", name, parent, buttonTemplate, anchoredPosition, sizeDelta);
-            Button btn = UnityEngine.Object.Instantiate(Resources.FindObjectsOfTypeAll<Button>().Last(x => (x.name == buttonTemplate)), parent, false);
+            Button btn = CreateBaseButton(name, parent, buttonTemplate);
             btn.gameObject.SetActive(true);
-            btn.name = name;
-            btn.interactable = true;
 
             Polyglot.LocalizedTextMeshProUGUI localizer = btn.GetComponentInChildren<Polyglot.LocalizedTextMeshProUGUI>();
             if (localizer != null)

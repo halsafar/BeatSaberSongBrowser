@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using VRUIControls;
 using Logger = SongBrowser.Logging.Logger;
 
 namespace SongBrowser.UI
@@ -142,16 +143,11 @@ namespace SongBrowser.UI
                 _viewController.rectTransform.sizeDelta = new Vector2(125, 25);
                 _viewController.gameObject.SetActive(true);
 
-                // delete dialog
-                this._deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(_beatUi.SimpleDialogPromptViewControllerPrefab);
-                this._deleteDialog.name = "DeleteDialogPromptViewController";
-                this._deleteDialog.gameObject.SetActive(false);
-
                 // create song browser main ui
                 CreateOuterUi();
                 CreateSortButtons();
                 CreateFilterButtons();
-                CreateDeleteButton();
+                CreateDeleteUI();
                 CreateFastPageButtons();
 
                 this.InstallHandlers();
@@ -380,15 +376,20 @@ namespace SongBrowser.UI
         /// <summary>
         /// Create the delete button in the play button container
         /// </summary>
-        private void CreateDeleteButton()
+        private void CreateDeleteUI()
         {
-            // Create delete button
-            /*Logger.Debug("Creating delete button...");
-            _deleteButton = BeatSaberUI.CreateIconButton(_beatUi.PlayButtons, _beatUi.PracticeButton, Base64Sprites.DeleteIcon);
+            Logger.Debug("Creating delete dialog...");
+            _deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(_beatUi.SimpleDialogPromptViewControllerPrefab);
+            _deleteDialog.GetComponent<VRGraphicRaycaster>().SetField("_physicsRaycaster", BeatSaberUI.PhysicsRaycasterWithCache);
+            _deleteDialog.name = "DeleteDialogPromptViewController";
+            _deleteDialog.gameObject.SetActive(false);
+
+            Logger.Debug("Creating delete button...");
+            _deleteButton = BeatSaberUI.CreateIconButton("DeleteLevelButton", _beatUi.ActionButtons, "PracticeButton", Base64Sprites.DeleteIcon);
+            _deleteButton.transform.SetAsFirstSibling();
             _deleteButton.onClick.AddListener(delegate () {
                 HandleDeleteSelectedLevel();
             });
-            BeatSaberUI.DestroyHoverHint(_deleteButton.transform as RectTransform);*/
         }
 
         /// <summary>
@@ -433,8 +434,7 @@ namespace SongBrowser.UI
         public void ResizeSongUI()
         {
             // shrink play button container
-            //RectTransform playButtonsRect = Resources.FindObjectsOfTypeAll<RectTransform>().First(x => x.name == "ActionButtons");
-            //playButtonsRect.localScale = new Vector3(0.825f, 0.825f, 0.825f);
+            _beatUi.ActionButtons.localScale = new Vector3(0.875f, 0.875f, 0.875f);
         }
 
         /// <summary>
@@ -879,11 +879,7 @@ namespace SongBrowser.UI
                 return;
             }
 
-            if (_deleteButton != null)
-            {
-                _deleteButton.interactable = (view.selectedDifficultyBeatmap.level.levelID.Length >= 32);
-            }
-
+            UpdateDeleteButtonState(view.selectedDifficultyBeatmap.level.levelID);
             RefreshScoreSaberData(view.selectedDifficultyBeatmap.level);
             RefreshNoteJumpSpeed(beatmap.noteJumpMovementSpeed, beatmap.noteJumpStartBeatOffset);
         }
@@ -897,7 +893,6 @@ namespace SongBrowser.UI
         {
             Logger.Trace("OnDidPresentContentEvent()");
 
-            // v1.12.2 - TODO - is this safe to prevent us from trying to lookup empty/dead content?
             if (type != StandardLevelDetailViewController.ContentType.OwnedAndReady)
             {
                 return;
@@ -908,11 +903,7 @@ namespace SongBrowser.UI
                 return;
             }
 
-            if (_deleteButton != null)
-            {
-                _deleteButton.interactable = (_beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID.Length >= 32);
-            }
-
+            UpdateDeleteButtonState(_beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID);
             RefreshScoreSaberData(view.selectedDifficultyBeatmap.level);
             RefreshNoteJumpSpeed(view.selectedDifficultyBeatmap.noteJumpMovementSpeed, view.selectedDifficultyBeatmap.noteJumpStartBeatOffset);
         }
@@ -925,11 +916,7 @@ namespace SongBrowser.UI
         {
             Logger.Trace("HandleDidSelectLevelRow({0})", level);
 
-            if (_deleteButton != null)
-            {
-                _deleteButton.interactable = (level.levelID.Length >= 32);
-            }
-
+            UpdateDeleteButtonState(level.levelID);
             RefreshQuickScrollButtons();
         }
 
@@ -942,14 +929,11 @@ namespace SongBrowser.UI
             _deleteDialog.Init("Delete song", $"Do you really want to delete \"{ level.songName} {level.songSubName}\"?", "Delete", "Cancel",
                 (selectedButton) =>
                 {
-                    _beatUi.LevelSelectionFlowCoordinator.InvokePrivateMethod("DismissViewController", new object[] { _deleteDialog, null, false });
+                    _deleteDialog.__DismissViewController(null);
                     if (selectedButton == 0)
                     {
                         try
                         {
-                            // determine the index we are deleting so we can keep the cursor near the same spot after
-                            // the header counts as an index, so if the index came from the level array we have to add 1.
-                            var levelsTableView = _beatUi.LevelCollectionTableView;
                             List<IPreviewBeatmapLevel> levels = _beatUi.GetCurrentLevelCollectionLevels().ToList();
                             int selectedIndex = levels.FindIndex(x => x.levelID == _beatUi.StandardLevelDetailView.selectedDifficultyBeatmap.level.levelID);
 
@@ -958,11 +942,11 @@ namespace SongBrowser.UI
                                 var song = SongCore.Loader.CustomLevels.First(x => x.Value.levelID == _beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID).Value;
 
                                 Logger.Info($"Deleting song: {song.customLevelPath}");
+
                                 SongCore.Loader.Instance.DeleteSong(song.customLevelPath);
-                                this._model.RemoveSongFromLevelCollection(_beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection(), _beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID);
 
                                 int removedLevels = levels.RemoveAll(x => x.levelID == _beatUi.StandardLevelDetailView.selectedDifficultyBeatmap.level.levelID);
-                                Logger.Info("Removed " + removedLevels + " level(s) from song list!");
+                                Logger.Info($"Removed [{removedLevels}] level(s) from song list!");
 
                                 this.UpdateLevelDataModel();
 
@@ -984,7 +968,7 @@ namespace SongBrowser.UI
                         }
                     }
                 });
-            _beatUi.LevelSelectionFlowCoordinator.InvokePrivateMethod("PresentViewController", new object[] { _deleteDialog, null, false });
+            _beatUi.LevelSelectionNavigationController.__PresentViewController(_deleteDialog, null);
         }
 
         /// <summary>
@@ -1144,6 +1128,20 @@ namespace SongBrowser.UI
             yield return new WaitForEndOfFrame();
 
             RefreshQuickScrollButtons();
+        }
+
+        /// <summary>
+        /// Update delete button state.  Enable for custom levels, disable for all else.
+        /// </summary>
+        /// <param name="levelId"></param>
+        public void UpdateDeleteButtonState(String levelId)
+        {
+            if (_deleteButton == null)
+            {
+                return;
+            }
+
+            _deleteButton.gameObject.SetActive(levelId.Length >= 32);
         }
 
         /// <summary>

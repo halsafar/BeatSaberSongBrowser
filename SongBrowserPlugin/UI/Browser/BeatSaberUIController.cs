@@ -98,7 +98,7 @@ namespace SongBrowser.DataAccess
             ActionButtons = LevelDetailViewController.GetComponentsInChildren<RectTransform>().First(x => x.name == "ActionButtons");
             Logger.Debug("Acquired ActionButtons [{0}]", ActionButtons.GetInstanceID());
 
-            SimpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
+            SimpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().Last();
             Logger.Debug("Acquired SimpleDialogPromptViewControllerPrefab [{0}]", SimpleDialogPromptViewControllerPrefab.GetInstanceID());
 
             BeatmapLevelsModel = Resources.FindObjectsOfTypeAll<BeatmapLevelsModel>().Last();
