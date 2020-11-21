@@ -35,6 +35,8 @@ namespace SongBrowser.DataAccess
 
         public RectTransform ActionButtons;
 
+        public ScreenSystem ScreenSystem;
+
         public SimpleDialogPromptViewController SimpleDialogPromptViewControllerPrefab;
 
         /// <summary>
@@ -97,6 +99,9 @@ namespace SongBrowser.DataAccess
 
             ActionButtons = LevelDetailViewController.GetComponentsInChildren<RectTransform>().First(x => x.name == "ActionButtons");
             Logger.Debug("Acquired ActionButtons [{0}]", ActionButtons.GetInstanceID());
+
+            ScreenSystem = Resources.FindObjectsOfTypeAll<ScreenSystem>().Last();
+            Logger.Debug("Acquired ScreenSystem [{0}]", ScreenSystem.GetInstanceID());
 
             SimpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().Last();
             Logger.Debug("Acquired SimpleDialogPromptViewControllerPrefab [{0}]", SimpleDialogPromptViewControllerPrefab.GetInstanceID());

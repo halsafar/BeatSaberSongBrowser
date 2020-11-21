@@ -930,6 +930,8 @@ namespace SongBrowser.UI
                 (selectedButton) =>
                 {
                     _deleteDialog.__DismissViewController(null);
+                    _beatUi.ScreenSystem.titleViewController.gameObject.SetActive(true);
+
                     if (selectedButton == 0)
                     {
                         try
@@ -968,6 +970,8 @@ namespace SongBrowser.UI
                         }
                     }
                 });
+
+            _beatUi.ScreenSystem.titleViewController.gameObject.SetActive(false);
             _beatUi.LevelSelectionNavigationController.__PresentViewController(_deleteDialog, null);
         }
 
