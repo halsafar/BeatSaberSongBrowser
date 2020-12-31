@@ -1,6 +1,7 @@
-﻿using SongBrowser.Internals;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Concurrent;
+using HMUI;
+using SongBrowser.Internals;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -20,7 +21,7 @@ namespace SongBrowser.UI
         internal Image _loadingBackg;
 
         private static readonly Vector3 Position = new Vector3(0, 0.0f, 2.6f);
-        private static readonly Vector3 Rotation = new Vector3(0, 0, 0);
+        private static readonly Vector3 Rotation = Vector3.zero;
         private static readonly Vector3 Scale = new Vector3(0.01f, 0.01f, 0.01f);
 
         private static readonly Vector2 CanvasSize = new Vector2(200, 50);
@@ -54,7 +55,7 @@ namespace SongBrowser.UI
             _showingMessage = true;
             _headerText.text = message;
             _loadingBackg.enabled = false;
-            _canvas.enabled = true;
+            gameObject.SetActive(true);
             StartCoroutine(DisableCanvasRoutine(time));
         }
 
@@ -64,7 +65,7 @@ namespace SongBrowser.UI
             _showingMessage = true;
             _headerText.text = message;
             _loadingBackg.enabled = false;
-            _canvas.enabled = true;
+            gameObject.SetActive(true);
         }
 
         private void OnEnable()
@@ -85,12 +86,12 @@ namespace SongBrowser.UI
             {
                 if (_showingMessage)
                 {
-                    _canvas.enabled = true;
+                    gameObject.SetActive(true);
                 }
             }
             else
             {
-                _canvas.enabled = false;
+                gameObject.SetActive(false);
             }
         }
 
@@ -100,41 +101,48 @@ namespace SongBrowser.UI
             _showingMessage = false;
             _headerText.text = arg2.Count + " songs processed";
             _loadingBackg.enabled = false;
-            StartCoroutine(DisableCanvasRoutine(8f));
+            StartCoroutine(DisableCanvasRoutine(20f));
         }
 
         private IEnumerator DisableCanvasRoutine(float time)
         {
             yield return new WaitForSecondsRealtime(time);
-            _canvas.enabled = false;
             _showingMessage = false;
+            gameObject.SetActive(false);
         }
 
         private void Awake()
         {
-            gameObject.transform.position = Position;
-            gameObject.transform.eulerAngles = Rotation;
-            gameObject.transform.localScale = Scale;
-            
             _canvas = gameObject.AddComponent<Canvas>();
             _canvas.renderMode = RenderMode.WorldSpace;
-            _canvas.enabled = false;
-            var rectTransform = _canvas.transform as RectTransform;
-            rectTransform.sizeDelta = CanvasSize;
+            
+            gameObject.AddComponent<CurvedCanvasSettings>().SetRadius(0f);
 
-            _authorNameText = BeatSaberUI.CreateText(_canvas.transform as RectTransform, AuthorNameText, AuthorNameFontSize, AuthorNamePosition, HeaderSize);
+            var ct = _canvas.transform;
+            ct.position = Position;
+            ct.localScale = Scale;
 
-            _pluginNameText = BeatSaberUI.CreateText(_canvas.transform as RectTransform, PluginNameText, PluginNameFontSize, PluginNamePosition, HeaderSize);
+            if (ct is RectTransform crt)
+            {
+                crt.sizeDelta = CanvasSize;
 
-            _headerText = BeatSaberUI.CreateText(_canvas.transform as RectTransform, HeaderText, HeaderFontSize, HeaderPosition, HeaderSize);
+                _authorNameText = BeatSaberUI.CreateText(crt, AuthorNameText, AuthorNameFontSize, AuthorNamePosition, HeaderSize);
 
-            _loadingBackg = new GameObject("Background").AddComponent<Image>();
-            rectTransform = _loadingBackg.transform as RectTransform;
-            rectTransform.SetParent(_canvas.transform, false);
-            rectTransform.sizeDelta = LoadingBarSize;
+                _pluginNameText = BeatSaberUI.CreateText(crt, PluginNameText, PluginNameFontSize, PluginNamePosition, HeaderSize);
+
+                _headerText = BeatSaberUI.CreateText(crt, HeaderText, HeaderFontSize, HeaderPosition, HeaderSize);
+            }
+
+            _loadingBackg = new GameObject("Background").AddComponent<ImageView>();
+            if (_loadingBackg.transform is RectTransform lbrt)
+            {
+                lbrt.SetParent(_canvas.transform, false);
+                lbrt.sizeDelta = LoadingBarSize;
+            }
+
             _loadingBackg.color = BackgroundColor;
 
-            DontDestroyOnLoad(gameObject);
+            gameObject.SetActive(false);
         }
 
         private void Update()
