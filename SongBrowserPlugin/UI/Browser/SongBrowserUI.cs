@@ -937,11 +937,37 @@ namespace SongBrowser.UI
                         try
                         {
                             List<IPreviewBeatmapLevel> levels = _beatUi.GetCurrentLevelCollectionLevels().ToList();
+                            String collection = _beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection().collectionName;
                             int selectedIndex = levels.FindIndex(x => x.levelID == _beatUi.StandardLevelDetailView.selectedDifficultyBeatmap.level.levelID);
 
                             if (selectedIndex > -1)
                             {
-                                var song = SongCore.Loader.CustomLevels.First(x => x.Value.levelID == _beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID).Value;
+                                CustomPreviewBeatmapLevel song;
+
+                                if (collection.Equals("Custom Levels"))
+                                {
+                                    song = SongCore.Loader.CustomLevels.First(x => x.Value.levelID == _beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID).Value;
+                                }
+                                else if (collection.Equals("WIP Levels"))
+                                {
+                                    song = SongCore.Loader.CustomWIPLevels.First(x => x.Value.levelID == _beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID).Value;
+                                }
+                                else if (collection.Equals("Cached WIP Levels"))
+                                {
+                                    return;
+                                }
+                                else
+                                {
+                                    var names = SongCore.Loader.SeperateSongFolders.Select(x => x.SongFolderEntry.Name);
+                                    var separateFolders = SongCore.Loader.SeperateSongFolders; 
+                                    if (names.Contains(collection))
+                                    {
+                                        int folder_index = separateFolders.FindIndex(x => x.SongFolderEntry.Name.Equals(collection));
+                                        song = separateFolders[folder_index].Levels.First(x => x.Value.levelID == _beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID).Value;
+                                    }
+                                    else
+                                        throw new Exception("Could not find level path. Is the selected collection a playlist?");
+                                }
 
                                 Logger.Info($"Deleting song: {song.customLevelPath}");
 
