@@ -944,29 +944,29 @@ namespace SongBrowser.UI
                             if (selectedIndex > -1)
                             {
                                 CustomPreviewBeatmapLevel song;
-                                if (collection.Equals("Custom Levels"))
+
+                                switch (collection)
                                 {
-                                    song = SongCore.Loader.CustomLevels.First(x => x.Value.levelID == selectedLevelID).Value;
-                                }
-                                else if (collection.Equals("WIP Levels"))
-                                {
-                                    song = SongCore.Loader.CustomWIPLevels.First(x => x.Value.levelID == selectedLevelID).Value;
-                                }
-                                else if (collection.Equals("Cached WIP Levels"))
-                                {
-                                    return;
-                                }
-                                else
-                                {
-                                    var names = SongCore.Loader.SeperateSongFolders.Select(x => x.SongFolderEntry.Name);
-                                    var separateFolders = SongCore.Loader.SeperateSongFolders; 
-                                    if (names.Contains(collection))
-                                    {
-                                        int folder_index = separateFolders.FindIndex(x => x.SongFolderEntry.Name.Equals(collection));
-                                        song = separateFolders[folder_index].Levels.First(x => x.Value.levelID == selectedLevelID).Value;
-                                    }
-                                    else
-                                        throw new Exception("Could not find level path. Is the selected collection a playlist?");
+                                    case "Custom Levels":
+                                        song = SongCore.Loader.CustomLevels.First(x => x.Value.levelID == selectedLevelID).Value;
+                                        break;
+                                    case "WIP Levels":
+                                        song = SongCore.Loader.CustomWIPLevels.First(x => x.Value.levelID == selectedLevelID).Value;
+                                        break;
+                                    case "Cached WIP Levels":
+                                        throw new Exception("Cannot delete cached levels.");
+                                    default:
+                                        var names = SongCore.Loader.SeperateSongFolders.Select(x => x.SongFolderEntry.Name);
+                                        var separateFolders = SongCore.Loader.SeperateSongFolders;
+
+                                        if (names.Contains(collection))
+                                        {
+                                            int folder_index = separateFolders.FindIndex(x => x.SongFolderEntry.Name.Equals(collection));
+                                            song = separateFolders[folder_index].Levels.First(x => x.Value.levelID == selectedLevelID).Value;
+                                        }
+                                        else
+                                            throw new Exception("Could not find level path. Is the selected collection a playlist?");
+                                        break;
                                 }
 
                                 Logger.Info($"Deleting song: {song.customLevelPath}");
