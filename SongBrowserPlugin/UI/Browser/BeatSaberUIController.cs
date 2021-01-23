@@ -179,7 +179,7 @@ namespace SongBrowser.DataAccess
             // search playlists
             if (levelCollection == null)
             {
-                IAnnotatedBeatmapLevelCollection[] _annotatedBeatmapLevelCollections = AnnotatedBeatmapLevelCollectionsViewController.GetField<IAnnotatedBeatmapLevelCollection[], AnnotatedBeatmapLevelCollectionsViewController>("_annotatedBeatmapLevelCollections");
+                IReadOnlyList<IAnnotatedBeatmapLevelCollection> _annotatedBeatmapLevelCollections = AnnotatedBeatmapLevelCollectionsViewController.GetField<IReadOnlyList<IAnnotatedBeatmapLevelCollection>, AnnotatedBeatmapLevelCollectionsViewController>("_annotatedBeatmapLevelCollections");
                 foreach (IAnnotatedBeatmapLevelCollection c in _annotatedBeatmapLevelCollections)
                 {
                     if (String.Equals(c.collectionName, levelCollectionName))
