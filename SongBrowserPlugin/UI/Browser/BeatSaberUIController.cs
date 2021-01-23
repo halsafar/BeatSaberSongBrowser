@@ -12,7 +12,7 @@ namespace SongBrowser.DataAccess
     public class BeatSaberUIController
     {
         // Beat Saber UI Elements
-        public FlowCoordinator LevelSelectionFlowCoordinator;
+        public LevelSelectionFlowCoordinator LevelSelectionFlowCoordinator;
         public LevelSelectionNavigationController LevelSelectionNavigationController;
 
         public LevelFilteringNavigationController LevelFilteringNavigationController;
@@ -52,14 +52,14 @@ namespace SongBrowser.DataAccess
         /// Constructor.  Acquire all necessary BeatSaberUi elements.
         /// </summary>
         /// <param name="flowCoordinator"></param>
-        public BeatSaberUIController(FlowCoordinator flowCoordinator)
+        public BeatSaberUIController(LevelSelectionFlowCoordinator flowCoordinator)
         {
             Logger.Debug("Collecting all BeatSaberUI Elements...");
 
             LevelSelectionFlowCoordinator = flowCoordinator;
 
             // gather flow coordinator elements
-            LevelSelectionNavigationController = LevelSelectionFlowCoordinator.GetField<LevelSelectionNavigationController, FlowCoordinator>("levelSelectionNavigationController");
+            LevelSelectionNavigationController = LevelSelectionFlowCoordinator.GetField<LevelSelectionNavigationController, LevelSelectionFlowCoordinator>("levelSelectionNavigationController");
             Logger.Debug("Acquired LevelSelectionNavigationController [{0}]", LevelSelectionNavigationController.GetInstanceID());
 
             LevelFilteringNavigationController = LevelSelectionNavigationController.GetField<LevelFilteringNavigationController, LevelSelectionNavigationController>("_levelFilteringNavigationController");

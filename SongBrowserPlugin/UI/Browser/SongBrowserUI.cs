@@ -101,7 +101,7 @@ namespace SongBrowser.UI
             Logger.Trace("CreateUI()");
 
             // Determine the flow controller to use
-            FlowCoordinator flowCoordinator;
+            LevelSelectionFlowCoordinator flowCoordinator;
             if (mode == MainMenuViewController.MenuButton.SoloFreePlay)
             {
                 Logger.Debug("Entering SOLO mode...");
