@@ -351,12 +351,12 @@ namespace SongBrowser
                 GameObject noDataInfoPrefab, BeatmapDifficultyMask allowedBeatmapDifficultyMask, BeatmapCharacteristicSO[] notAllowedCharacteristics);
             */
             Logger.Debug("Acquiring necessary fields to call SetData(pack)...");
-            LevelCollectionNavigationController lcnvc = navController.GetField<LevelCollectionNavigationController, NavigationController>("_levelCollectionNavigationController");
-            var _showPlayerStatsInDetailView = navController.GetField<bool, NavigationController>("_showPlayerStatsInDetailView");
-            var _hidePracticeButton = navController.GetField<bool, NavigationController>("_hidePracticeButton");
-            var _actionButtonText = navController.GetField<string, NavigationController>("_actionButtonText");
-            var _allowedBeatmapDifficultyMask = navController.GetField<BeatmapDifficultyMask, NavigationController>("_allowedBeatmapDifficultyMask");
-            var _notAllowedCharacteristics = navController.GetField<BeatmapCharacteristicSO[], NavigationController>("_notAllowedCharacteristics");
+            LevelCollectionNavigationController lcnvc = navController.GetField<LevelCollectionNavigationController, LevelSelectionNavigationController>("_levelCollectionNavigationController");
+            var _showPlayerStatsInDetailView = navController.GetField<bool, LevelSelectionNavigationController>("_showPlayerStatsInDetailView");
+            var _hidePracticeButton = navController.GetField<bool, LevelSelectionNavigationController>("_hidePracticeButton");
+            var _actionButtonText = navController.GetField<string, LevelSelectionNavigationController>("_actionButtonText");
+            var _allowedBeatmapDifficultyMask = navController.GetField<BeatmapDifficultyMask, LevelSelectionNavigationController>("_allowedBeatmapDifficultyMask");
+            var _notAllowedCharacteristics = navController.GetField<BeatmapCharacteristicSO[], LevelSelectionNavigationController>("_notAllowedCharacteristics");
 
             Logger.Debug("Calling lcnvc.SetData...");
             lcnvc.SetData(levelPack,
