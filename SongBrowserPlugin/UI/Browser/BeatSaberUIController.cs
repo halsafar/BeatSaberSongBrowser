@@ -80,7 +80,7 @@ namespace SongBrowser.DataAccess
             StandardLevelDetailView = LevelDetailViewController.GetPrivateField<StandardLevelDetailView>("_standardLevelDetailView");
             Logger.Debug("Acquired StandardLevelDetailView [{0}]", StandardLevelDetailView.GetInstanceID());
 
-            BeatmapCharacteristicSelectionViewController = LevelDetailViewController.GetComponentInChildren<BeatmapCharacteristicSegmentedControlController>();
+            BeatmapCharacteristicSelectionViewController = StandardLevelDetailView.GetPrivateField<BeatmapCharacteristicSegmentedControlController>("_beatmapCharacteristicSegmentedControlController");
             Logger.Debug("Acquired BeatmapCharacteristicSegmentedControlController [{0}]", BeatmapCharacteristicSelectionViewController.GetInstanceID());
 
             LevelDifficultyViewController = StandardLevelDetailView.GetPrivateField<BeatmapDifficultySegmentedControlController>("_beatmapDifficultySegmentedControlController");
@@ -97,7 +97,7 @@ namespace SongBrowser.DataAccess
             TableViewPageDownButton = tableView.GetPrivateField<Button>("_pageDownButton");
             Logger.Debug("Acquired Page Up and Down buttons...");
 
-            ActionButtons = LevelDetailViewController.GetComponentsInChildren<RectTransform>().First(x => x.name == "ActionButtons");
+            ActionButtons = StandardLevelDetailView.GetComponentsInChildren<RectTransform>().First(x => x.name == "ActionButtons");
             Logger.Debug("Acquired ActionButtons [{0}]", ActionButtons.GetInstanceID());
 
             ScreenSystem = Resources.FindObjectsOfTypeAll<ScreenSystem>().Last();
