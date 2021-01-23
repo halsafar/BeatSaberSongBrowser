@@ -78,6 +78,10 @@
             <HintPath>$(BeatSaberDir)\Libs\Newtonsoft.Json.dll</HintPath>
             <Private>False</Private>
         </Reference>
+        <Reference Include="SemVer">
+            <HintPath>$(BeatSaberDir)\Libs\SemVer.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
         <Reference Include="IPA.Loader">
             <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\IPA.Loader.dll</HintPath>
             <Private>False</Private>

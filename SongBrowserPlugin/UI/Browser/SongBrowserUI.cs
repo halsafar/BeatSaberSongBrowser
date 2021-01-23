@@ -8,6 +8,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using IPA.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
 using VRUIControls;
@@ -100,7 +101,7 @@ namespace SongBrowser.UI
             Logger.Trace("CreateUI()");
 
             // Determine the flow controller to use
-            FlowCoordinator flowCoordinator;
+            LevelSelectionFlowCoordinator flowCoordinator;
             if (mode == MainMenuViewController.MenuButton.SoloFreePlay)
             {
                 Logger.Debug("Entering SOLO mode...");
@@ -400,7 +401,7 @@ namespace SongBrowser.UI
             // modify stat panel, inject extra row of stats
             Logger.Debug("Resizing Stats Panel...");
 
-            var statsPanel = _beatUi.StandardLevelDetailView.GetPrivateField<LevelParamsPanel>("_levelParamsPanel");
+            var statsPanel = _beatUi.StandardLevelDetailView.GetField<LevelParamsPanel, StandardLevelDetailView>("_levelParamsPanel");
             (statsPanel.transform as RectTransform).Translate(0, 0.05f, 0);
 
             _ppStatButton = BeatSaberUI.CreateStatIcon("PPStatLabel",
@@ -443,7 +444,7 @@ namespace SongBrowser.UI
         private void InstallHandlers()
         {
             // level collection, level, difficulty handlers, characteristics
-            TableView tableView = ReflectionUtil.GetPrivateField<TableView>(_beatUi.LevelCollectionTableView, "_tableView");
+            _beatUi.LevelCollectionTableView.GetField<TableView, LevelCollectionTableView>("_tableView");
 
             // update stats
             _beatUi.LevelCollectionViewController.didSelectLevelEvent -= OnDidSelectLevelEvent;
@@ -500,8 +501,8 @@ namespace SongBrowser.UI
 
             _asyncUpdating = true;
 
-            while (_beatUi != null && (_beatUi.LevelSelectionNavigationController.GetPrivateField<bool>("_isInTransition") ||
-                   _beatUi.LevelDetailViewController.GetPrivateField<bool>("_isInTransition") ||
+            while (_beatUi != null && (_beatUi.LevelSelectionNavigationController.GetField<bool, LevelSelectionNavigationController>("_isInTransition") ||
+                   _beatUi.LevelDetailViewController.GetField<bool, StandardLevelDetailViewController>("_isInTransition") ||
                    !_beatUi.LevelSelectionNavigationController.isInViewControllerHierarchy ||
                    !_beatUi.LevelDetailViewController.isInViewControllerHierarchy ||
                    !_beatUi.LevelSelectionNavigationController.isActiveAndEnabled ||
@@ -562,9 +563,9 @@ namespace SongBrowser.UI
             Logger.Debug($"Cancelling filter, levelCollection {_lastLevelCollection}");
             _model.Settings.filterMode = SongFilterMode.None;
 
-            GameObject _noDataGO = _beatUi.LevelCollectionViewController.GetPrivateField<GameObject>("_noDataInfoGO");
-            string _headerText = _beatUi.LevelCollectionTableView.GetPrivateField<string>("_headerText");
-            Sprite _headerSprite = _beatUi.LevelCollectionTableView.GetPrivateField<Sprite>("_headerSprite");
+            GameObject _noDataGO = _beatUi.LevelCollectionViewController.GetField<GameObject, LevelCollectionViewController>("_noDataInfoGO");
+            string _headerText = _beatUi.LevelCollectionTableView.GetField<string, LevelCollectionTableView>("_headerText");
+            Sprite _headerSprite = _beatUi.LevelCollectionTableView.GetField<Sprite, LevelCollectionTableView>("_headerSprite");
 
             IBeatmapLevelCollection levelCollection = _beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection().beatmapLevelCollection;
             _beatUi.LevelCollectionViewController.SetData(levelCollection, _headerText, _headerSprite, false, _noDataGO);
@@ -768,9 +769,9 @@ namespace SongBrowser.UI
             }
             else
             {
-                GameObject _noDataGO = _beatUi.LevelCollectionViewController.GetPrivateField<GameObject>("_noDataInfoGO");
-                string _headerText = _beatUi.LevelCollectionTableView.GetPrivateField<string>("_headerText");
-                Sprite _headerSprite = _beatUi.LevelCollectionTableView.GetPrivateField<Sprite>("_headerSprite");
+                GameObject _noDataGO = _beatUi.LevelCollectionViewController.GetField<GameObject, LevelCollectionViewController>("_noDataInfoGO");
+                string _headerText = _beatUi.LevelCollectionTableView.GetField<string, LevelCollectionTableView>("_headerText");
+                Sprite _headerSprite = _beatUi.LevelCollectionTableView.GetField<Sprite, LevelCollectionTableView>("_headerSprite");
 
                 IBeatmapLevelCollection levelCollection = _beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection().beatmapLevelCollection;
                 _beatUi.LevelCollectionViewController.SetData(levelCollection, _headerText, _headerSprite, false, _noDataGO);
@@ -1054,7 +1055,7 @@ namespace SongBrowser.UI
                 segmentSize = LIST_ITEMS_VISIBLE_AT_ONCE;
             }
 
-            int currentRow = _beatUi.LevelCollectionTableView.GetPrivateField<int>("_selectedRow");
+            int currentRow = _beatUi.LevelCollectionTableView.GetField<int, LevelCollectionTableView>("_selectedRow");
             int jumpDirection = Math.Sign(numJumps);
             int newRow = currentRow + (jumpDirection * segmentSize);
             if (newRow <= 0)
@@ -1368,7 +1369,7 @@ namespace SongBrowser.UI
                 // get a current beatmap characteristic...
                 if (_model.CurrentBeatmapCharacteristicSO == null && _uiCreated)
                 {
-                    _model.CurrentBeatmapCharacteristicSO = _beatUi.BeatmapCharacteristicSelectionViewController.GetPrivateField<BeatmapCharacteristicSO>("_selectedBeatmapCharacteristic");
+                    _model.CurrentBeatmapCharacteristicSO = _beatUi.BeatmapCharacteristicSelectionViewController.GetField<BeatmapCharacteristicSO, BeatmapCharacteristicSegmentedControlController>("_selectedBeatmapCharacteristic");
                 }
 
                 _model.UpdateLevelRecords();

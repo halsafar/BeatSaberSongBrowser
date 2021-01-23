@@ -7,6 +7,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using HMUI;
+using IPA.Utilities;
 using UnityEngine;
 using Logger = SongBrowser.Logging.Logger;
 
@@ -349,12 +351,12 @@ namespace SongBrowser
                 GameObject noDataInfoPrefab, BeatmapDifficultyMask allowedBeatmapDifficultyMask, BeatmapCharacteristicSO[] notAllowedCharacteristics);
             */
             Logger.Debug("Acquiring necessary fields to call SetData(pack)...");
-            LevelCollectionNavigationController lcnvc = navController.GetPrivateField<LevelCollectionNavigationController>("_levelCollectionNavigationController");
-            var _showPlayerStatsInDetailView = navController.GetPrivateField<bool>("_showPlayerStatsInDetailView");
-            var _hidePracticeButton = navController.GetPrivateField<bool>("_hidePracticeButton");
-            var _actionButtonText = navController.GetPrivateField<string>("_actionButtonText");
-            var _allowedBeatmapDifficultyMask = navController.GetPrivateField<BeatmapDifficultyMask>("_allowedBeatmapDifficultyMask");
-            var _notAllowedCharacteristics = navController.GetPrivateField<BeatmapCharacteristicSO[]>("_notAllowedCharacteristics");
+            LevelCollectionNavigationController lcnvc = navController.GetField<LevelCollectionNavigationController, LevelSelectionNavigationController>("_levelCollectionNavigationController");
+            var _showPlayerStatsInDetailView = navController.GetField<bool, LevelSelectionNavigationController>("_showPlayerStatsInDetailView");
+            var _hidePracticeButton = navController.GetField<bool, LevelSelectionNavigationController>("_hidePracticeButton");
+            var _actionButtonText = navController.GetField<string, LevelSelectionNavigationController>("_actionButtonText");
+            var _allowedBeatmapDifficultyMask = navController.GetField<BeatmapDifficultyMask, LevelSelectionNavigationController>("_allowedBeatmapDifficultyMask");
+            var _notAllowedCharacteristics = navController.GetField<BeatmapCharacteristicSO[], LevelSelectionNavigationController>("_notAllowedCharacteristics");
 
             Logger.Debug("Calling lcnvc.SetData...");
             lcnvc.SetData(levelPack,

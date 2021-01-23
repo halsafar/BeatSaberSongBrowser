@@ -30,7 +30,7 @@ namespace SongBrowser.UI
         private const float AuthorNameFontSize = 7f;
         private static readonly Vector2 AuthorNamePosition = new Vector2(10, 31);
 
-        private const string PluginNameText = "Song Browser - v<size=100%>" + Plugin.VERSION_NUMBER + "</size>";
+        private string PluginNameText => $"Song Browser - v<size=100%>{Plugin.VersionNumber}</size>";
         private const float PluginNameFontSize = 9f;
         private static readonly Vector2 PluginNamePosition = new Vector2(10, 23);
 
