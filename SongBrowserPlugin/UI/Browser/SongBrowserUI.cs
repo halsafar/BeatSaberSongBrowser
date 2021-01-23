@@ -38,8 +38,8 @@ namespace SongBrowser.UI
 
         private const float SEGMENT_PERCENT = 0.1f;
         private const int LIST_ITEMS_VISIBLE_AT_ONCE = 6;
-        private const float CLEAR_BUTTON_Y = -32.5f;
-        private const float BUTTON_ROW_Y = -32.5f;
+        private const float CLEAR_BUTTON_Y = -31.5f;
+        private const float BUTTON_ROW_Y = -31.5f;
 
         // BeatSaber Internal UI structures
         DataAccess.BeatSaberUIController _beatUi;
