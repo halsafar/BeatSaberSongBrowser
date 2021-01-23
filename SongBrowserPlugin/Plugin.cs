@@ -2,6 +2,8 @@
 using IPA;
 using SongBrowser.UI;
 using System;
+using System.Reflection;
+using IPA.Loader;
 using Logger = SongBrowser.Logging.Logger;
 
 namespace SongBrowser
@@ -9,14 +11,15 @@ namespace SongBrowser
     [Plugin(RuntimeOptions.SingleStartInit)]
     public class Plugin
     {
-        public const string VERSION_NUMBER = "6.1.3";
-        public static Plugin Instance;
-        public static IPA.Logging.Logger Log;
+        public static string VersionNumber { get; private set; }
+        public static Plugin Instance { get; private set; }
+        public static IPA.Logging.Logger Log { get; private set; }
 
         [Init]
-        public void Init(IPA.Logging.Logger logger)
+        public void Init(IPA.Logging.Logger logger, PluginMetadata metadata)
         {
             Log = logger;
+            VersionNumber = metadata.Version?.ToString() ?? Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
         }
 
         [OnStart]
