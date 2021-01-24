@@ -1,6 +1,6 @@
 SongBrowser
 
-6.1.3
+6.1.4
 
 SongCore@3.0.0,SongDataCore@1.3.5
 
