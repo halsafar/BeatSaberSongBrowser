@@ -29,7 +29,7 @@ namespace SongBrowser.Logging
                 return;
             }
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("[" + LoggerName + " @ " + DateTime.Now.ToString("HH:mm") + " - Trace] " + String.Format(format, args));
+            Plugin.Log.Trace("[" + LoggerName + " @ " + DateTime.Now.ToString("HH:mm") + " - Trace] " + String.Format(format, args));
             ResetForegroundColor();
         }
 

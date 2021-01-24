@@ -49,7 +49,7 @@ namespace SongBrowser.UI
             }
             catch (Exception)
             {
-                Console.WriteLine("Exception loading texture from base64 data.");
+                Plugin.Log.Critical("Exception loading texture from base64 data.");
                 s = null;
             }
 

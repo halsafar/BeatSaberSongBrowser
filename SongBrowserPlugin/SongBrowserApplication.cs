@@ -44,7 +44,7 @@ namespace SongBrowser
 
             SongBrowserApplication.MainProgressBar = SongBrowser.UI.ProgressBar.Create();
 
-            Console.WriteLine("SongBrowser Plugin Loaded()");
+            Plugin.Log.Info("SongBrowser Plugin OnLoad Complete");
         }
 
         /// <summary>
