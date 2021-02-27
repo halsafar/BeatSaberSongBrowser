@@ -154,6 +154,11 @@ namespace SongBrowser
             soloFreePlayButton.onClick.AddListener(HandleSoloModeSelection);
             partyFreePlayButton.onClick.AddListener(HandlePartyModeSelection);
             campaignButton.onClick.AddListener(HandleCampaignModeSelection);
+
+            // Append to the 'EditButton' in the host lobby setup, this lets us seperate out Multiplayer easily.
+            var hostLobbyVc = Resources.FindObjectsOfTypeAll<HostLobbySetupViewController>().First();
+            var editButton = hostLobbyVc.GetComponentsInChildren<Button>().First(x => x.name == "EditButton");
+            editButton.onClick.AddListener(HandleMultiplayerModeSelection);
         }
 
         /// <summary>
@@ -189,6 +194,19 @@ namespace SongBrowser
         {
             Logger.Trace("HandleCampaignModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.SoloCampaign);
+            _songBrowserUI.Hide();
+        }
+
+        /// <summary>
+        /// Handle Multiplayer Mode.
+        /// Triggers when level select is clicked inside a host lobby.
+        /// </summary>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
+        private void HandleMultiplayerModeSelection()
+        {
+            Logger.Trace("HandleCampaignModeSelection()");
+            HandleModeSelection(MainMenuViewController.MenuButton.Multiplayer);
             _songBrowserUI.Hide();
         }
 

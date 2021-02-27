@@ -112,6 +112,11 @@ namespace SongBrowser.UI
                 Logger.Debug("Entering PARTY mode...");
                 flowCoordinator = Resources.FindObjectsOfTypeAll<PartyFreePlayFlowCoordinator>().Last();
             }
+            else if (mode == MainMenuViewController.MenuButton.Multiplayer)
+            {
+                Logger.Debug("Entering Multiplayer mode...");
+                flowCoordinator = Resources.FindObjectsOfTypeAll<MultiplayerLevelSelectionFlowCoordinator>().Last();
+            }
             else
             {
                 Logger.Info("Entering Unsupported mode...");                
@@ -126,6 +131,12 @@ namespace SongBrowser.UI
             // returning to the menu and switching modes could trigger this.
             if (_uiCreated)
             {
+                var screenContainer = Resources.FindObjectsOfTypeAll<Transform>().First(x => x.name == "ScreenContainer");
+                var curvedCanvasSettings = screenContainer.GetComponents<CurvedCanvasSettings>().First();
+                Plugin.Log.Debug($"CurvedCanvasRadius: {curvedCanvasSettings.radius}");
+
+                var vcCanvasSettings = _viewController.GetComponent<CurvedCanvasSettings>();
+                vcCanvasSettings.SetRadius(curvedCanvasSettings.radius);
                 return;
             }
 
@@ -136,12 +147,17 @@ namespace SongBrowser.UI
                 {
                     UnityEngine.GameObject.Destroy(_viewController);
                 }
-                _viewController = BeatSaberUI.CreateCurvedViewController<SongBrowserViewController>("SongBrowserViewController", 125.0f);
+
+                var screenContainer = Resources.FindObjectsOfTypeAll<Transform>().First(x => x.name == "ScreenContainer");
+                var curvedCanvasSettings = screenContainer.GetComponents<CurvedCanvasSettings>().First();
+                Plugin.Log.Debug($"CurvedCanvasRadius: {curvedCanvasSettings.radius}");
+
+                _viewController = BeatSaberUI.CreateCurvedViewController<SongBrowserViewController>("SongBrowserViewController", curvedCanvasSettings.radius);
                 _viewController.rectTransform.SetParent(_beatUi.LevelCollectionNavigationController.rectTransform, false);
                 _viewController.rectTransform.anchorMin = new Vector2(0f, 0f);
                 _viewController.rectTransform.anchorMax = new Vector2(1f, 1f);
                 _viewController.rectTransform.anchoredPosition = new Vector2(0, 0);
-                _viewController.rectTransform.sizeDelta = new Vector2(125, 25);
+                _viewController.rectTransform.sizeDelta = new Vector2(curvedCanvasSettings.radius, 25);
                 _viewController.gameObject.SetActive(true);
 
                 // create song browser main ui
