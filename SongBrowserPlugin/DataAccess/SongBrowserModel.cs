@@ -11,6 +11,7 @@ using HMUI;
 using IPA.Utilities;
 using UnityEngine;
 using Logger = SongBrowser.Logging.Logger;
+using CustomJSONData.CustomLevelInfo;
 
 namespace SongBrowser
 {
@@ -248,6 +249,9 @@ namespace SongBrowser
                 case SongFilterMode.Unranked:
                     filteredSongs = FilterRanked(unsortedSongs, false, true);
                     break;
+                case SongFilterMode.Mods:
+                    filteredSongs = FilterMods(unsortedSongs);
+                    break;
                 case SongFilterMode.Custom:
                     Logger.Info("Song filter mode set to custom. Deferring filter behaviour to another mod.");
                     filteredSongs = CustomFilterHandler != null ? CustomFilterHandler.Invoke(selectedBeatmapCollection) : unsortedSongs;
@@ -447,6 +451,34 @@ namespace SongBrowser
                     return includeUnranked;
                 }
             }).ToList();
+        }
+
+        /// <summary>
+        /// Filter songs based on mods requirements.
+        /// </summary>
+        /// <param name="levels"></param>
+        /// <returns></returns>
+        private List<IPreviewBeatmapLevel> FilterMods(List<IPreviewBeatmapLevel> levels)
+        {
+          return levels.Where(x =>
+          {
+            if (x is CustomPreviewBeatmapLevel customLevel)
+            {
+              var saveData = customLevel.standardLevelInfoSaveData as CustomLevelInfoSaveData;
+
+              foreach (CustomLevelInfoSaveData.DifficultyBeatmapSet difficulties in saveData.difficultyBeatmapSets)
+              {
+                foreach (CustomLevelInfoSaveData.DifficultyBeatmap difficulty in difficulties.difficultyBeatmaps)
+                {
+                  List<object> requirements = CustomJSONData.Trees.at(difficulty.customData, "_requirements");
+
+                  return requirements != null && requirements.Count > 0;
+                }
+              }
+            }
+
+            return false;
+          }).ToList();
         }
 
         /// <summary>
