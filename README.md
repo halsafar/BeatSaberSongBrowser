@@ -29,6 +29,7 @@ A plugin for customizing the in-game song browser.
 - UI Enhancements:
   - Display PP, STARS, and NJS.
   - Fast scroll buttons (jumps 10% of your song list in each press).
+  - Delete button for custom songs.
 - Tips:
   - Sort buttons can be pressed a second time to invert the sorting.
   - Filters can be cancelled by selecting them again.
