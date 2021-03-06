@@ -36,4 +36,21 @@ A plugin for customizing the in-game song browser.
 ## Status
 - Working with BeatSaber 1.12.2
 
+## Building on Windows
+To compile BeatSaberSongBrowser from source:
+
+1. Install Beat Saber and Microsoft Visual Studio.
+2. Download and extract the BeatSaberSongBrowser source code.
+3. Create a new file `/SongBrowserPlugin/SongBrower.csproj.user` with the following. (Make sure to replace BeatSaberDir with your real Beat Saber installation folder)
+```
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectView>ProjectFiles</ProjectView>
+    <BeatSaberDir>C:\Program Files (x86)\Steam\steamapps\common\Beat Saber</BeatSaberDir>
+  </PropertyGroup>
+</Project>
+```
+4. Open `/BeatSaberSongBrowser/SongBrowser.sln` in Microsoft Visual Studio.
+5. Build the project with *Build -> Build Solution*.
 
