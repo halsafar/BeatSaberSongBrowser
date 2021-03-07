@@ -460,25 +460,25 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> FilterMods(List<IPreviewBeatmapLevel> levels)
         {
-          return levels.Where(x =>
-          {
-            if (x is CustomPreviewBeatmapLevel customLevel)
+            return levels.Where(x =>
             {
-              var saveData = customLevel.standardLevelInfoSaveData as CustomLevelInfoSaveData;
-
-              foreach (CustomLevelInfoSaveData.DifficultyBeatmapSet difficulties in saveData.difficultyBeatmapSets)
-              {
-                foreach (CustomLevelInfoSaveData.DifficultyBeatmap difficulty in difficulties.difficultyBeatmaps)
+                if (x is CustomPreviewBeatmapLevel customLevel)
                 {
-                  List<object> requirements = CustomJSONData.Trees.at(difficulty.customData, "_requirements");
+                    var saveData = customLevel.standardLevelInfoSaveData as CustomLevelInfoSaveData;
 
-                  return requirements != null && requirements.Count > 0;
+                    foreach (CustomLevelInfoSaveData.DifficultyBeatmapSet difficulties in saveData.difficultyBeatmapSets)
+                    {
+                        foreach (CustomLevelInfoSaveData.DifficultyBeatmap difficulty in difficulties.difficultyBeatmaps)
+                        {
+                            List<object> requirements = CustomJSONData.Trees.at(difficulty.customData, "_requirements");
+
+                            return requirements != null && requirements.Count > 0;
+                        }
+                    }
                 }
-              }
-            }
 
-            return false;
-          }).ToList();
+                return false;
+            }).ToList();
         }
 
         /// <summary>
