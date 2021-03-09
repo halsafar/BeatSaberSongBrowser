@@ -93,8 +93,9 @@ namespace SongBrowser.DataAccess
             Logger.Debug("Acquired AnnotatedBeatmapLevelCollectionsViewController from LevelFilteringNavigationController [{0}]", AnnotatedBeatmapLevelCollectionsViewController.GetInstanceID());
 
             TableView tableView = LevelCollectionTableView.GetField<TableView, LevelCollectionTableView>("_tableView");
-            TableViewPageUpButton = tableView.GetField<Button, TableView>("_pageUpButton");
-            TableViewPageDownButton = tableView.GetField<Button, TableView>("_pageDownButton");
+            ScrollView scrollView = tableView.GetField<ScrollView, TableView>("_scrollView");
+            TableViewPageUpButton = scrollView.GetField<Button, ScrollView>("_pageUpButton");
+            TableViewPageDownButton = scrollView.GetField<Button, ScrollView>("_pageDownButton");
             Logger.Debug("Acquired Page Up and Down buttons...");
 
             ActionButtons = StandardLevelDetailView.GetComponentsInChildren<RectTransform>().First(x => x.name == "ActionButtons");
