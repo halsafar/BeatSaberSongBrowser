@@ -362,7 +362,7 @@ namespace SongBrowser.DataAccess
             {
                 LevelCollectionTableView.HandleDidSelectRowEvent(tableView, selectedIndex);
             }
-            tableView.ScrollToCellWithIdx(selectedIndex, TableViewScroller.ScrollPositionType.Beginning, true);
+            tableView.ScrollToCellWithIdx(selectedIndex, TableView.ScrollPositionType.Beginning, true);
             tableView.SelectCellWithIdx(selectedIndex);
         }
 
