@@ -8,9 +8,9 @@
   "version": "6.1.5",
   "dependsOn": {
     "SongCore": "^3.2.0",
-    "SongDataCore": "^1.3.5",
+    "SongDataCore": "^1.3.7",
     "BSIPA": "^4.1.3",
-    "BeatSaberMarkupLanguage": "^1.4.5"
+    "BeatSaberMarkupLanguage": "^1.5.1"
   },
   "misc": {
     "plugin-hint": "SongBrowser.Plugin"
