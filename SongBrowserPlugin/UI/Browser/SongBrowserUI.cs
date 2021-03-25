@@ -336,12 +336,12 @@ namespace SongBrowser.UI
 
             string[] filterButtonNames = new string[]
             {
-                    "Search", "Ranked", "Unranked", "Mods"
+                    "Search", "Ranked", "Unranked", "Requirements"
             };
 
             SongFilterMode[] filterModes = new SongFilterMode[]
             {
-                    SongFilterMode.Search, SongFilterMode.Ranked, SongFilterMode.Unranked, SongFilterMode.Mods
+                    SongFilterMode.Search, SongFilterMode.Ranked, SongFilterMode.Unranked, SongFilterMode.Requirements
             };
 
             _filterButtonGroup = new List<SongFilterButton>();

@@ -249,8 +249,8 @@ namespace SongBrowser
                 case SongFilterMode.Unranked:
                     filteredSongs = FilterRanked(unsortedSongs, false, true);
                     break;
-                case SongFilterMode.Mods:
-                    filteredSongs = FilterMods(unsortedSongs);
+                case SongFilterMode.Requirements:
+                    filteredSongs = FilterRequirements(unsortedSongs);
                     break;
                 case SongFilterMode.Custom:
                     Logger.Info("Song filter mode set to custom. Deferring filter behaviour to another mod.");
@@ -458,7 +458,7 @@ namespace SongBrowser
         /// </summary>
         /// <param name="levels"></param>
         /// <returns></returns>
-        private List<IPreviewBeatmapLevel> FilterMods(List<IPreviewBeatmapLevel> levels)
+        private List<IPreviewBeatmapLevel> FilterRequirements(List<IPreviewBeatmapLevel> levels)
         {
             return levels.Where(x =>
             {

@@ -64,7 +64,7 @@ namespace SongBrowser.DataAccess
         Search,
         Ranked,
         Unranked,
-        Mods,
+        Requirements,
 
         // For other mods that extend SongBrowser
         Custom
