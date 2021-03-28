@@ -517,8 +517,9 @@ namespace SongBrowser.UI
 
             _asyncUpdating = true;
 
-            while (_beatUi != null && (_beatUi.LevelSelectionNavigationController.GetField<bool, LevelSelectionNavigationController>("_isInTransition") ||
-                   _beatUi.LevelDetailViewController.GetField<bool, StandardLevelDetailViewController>("_isInTransition") ||
+            while (_beatUi != null && (
+                   _beatUi.LevelSelectionNavigationController.isInTransition ||
+                   _beatUi.LevelDetailViewController.isInTransition ||
                    !_beatUi.LevelSelectionNavigationController.isInViewControllerHierarchy ||
                    !_beatUi.LevelDetailViewController.isInViewControllerHierarchy ||
                    !_beatUi.LevelSelectionNavigationController.isActiveAndEnabled ||
