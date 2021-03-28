@@ -57,7 +57,7 @@ namespace SongBrowser.UI
             _headerText.text = message;
             _loadingBar.enabled = false;
             _loadingBackg.enabled = false;
-            _canvas.enabled = true;
+            gameObject.SetActive(true);
             StartCoroutine(DisableCanvasRoutine(time));
         }
 
@@ -68,7 +68,7 @@ namespace SongBrowser.UI
             _headerText.text = message;
             _loadingBar.enabled = false;
             _loadingBackg.enabled = false;
-            _canvas.enabled = true;
+            gameObject.SetActive(true);
         }
 
         private void OnEnable()
@@ -89,12 +89,12 @@ namespace SongBrowser.UI
             {
                 if (_showingMessage)
                 {
-                    _canvas.enabled = true;
+                    gameObject.SetActive(true);
                 }
             }
             else
             {
-                _canvas.enabled = false;
+                gameObject.SetActive(false);
             }
         }
 
@@ -105,7 +105,7 @@ namespace SongBrowser.UI
             _headerText.text = HeaderText;
             _loadingBar.enabled = true;
             _loadingBackg.enabled = true;
-            _canvas.enabled = true;
+            gameObject.SetActive(true);
         }
 
         private void SongBrowserFinishedProcessingSongs(ConcurrentDictionary<string, CustomPreviewBeatmapLevel> customLevels)
@@ -120,7 +120,7 @@ namespace SongBrowser.UI
         private IEnumerator DisableCanvasRoutine(float time)
         {
             yield return new WaitForSecondsRealtime(time);
-            _canvas.enabled = false;
+            gameObject.SetActive(false);
             _showingMessage = false;
         }
 
@@ -132,7 +132,13 @@ namespace SongBrowser.UI
 
             _canvas = gameObject.AddComponent<Canvas>();
             _canvas.renderMode = RenderMode.WorldSpace;
-            _canvas.enabled = false;
+            gameObject.AddComponent<HMUI.CurvedCanvasSettings>().SetRadius(0f);
+            gameObject.SetActive(false);
+
+            var ct = _canvas.transform;
+            ct.position = Position;
+            ct.localScale = Scale;
+
             var rectTransform = _canvas.transform as RectTransform;
             rectTransform.sizeDelta = CanvasSize;
 
