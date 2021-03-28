@@ -284,27 +284,31 @@ namespace SongBrowser.UI
 
             float sortButtonFontSize = 2.0f;
             float sortButtonX = -63.0f;
-            float sortButtonWidth = 12.0f;
+            float sortButtonWidth = 11.75f;
             float buttonSpacing = 0.25f;
             float buttonY = BUTTON_ROW_Y;
             float buttonHeight = 5.0f;
 
-            string[] sortButtonNames = new string[]
+            List<KeyValuePair<string, SongSortMode>> sortModes = new List<KeyValuePair<string, SongSortMode>>()
             {
-                    "Title", "Author", "Newest", "#Plays", "PP", "Stars", "UpVotes", "Rating", "Heat"
-            };
-
-            SongSortMode[] sortModes = new SongSortMode[]
-            {
-                    SongSortMode.Default, SongSortMode.Author, SongSortMode.Newest, SongSortMode.YourPlayCount, SongSortMode.PP, SongSortMode.Stars,  SongSortMode.UpVotes, SongSortMode.Rating, SongSortMode.Heat
+                new KeyValuePair<string, SongSortMode>("Title", SongSortMode.Default),
+                new KeyValuePair<string, SongSortMode>("Author", SongSortMode.Author),
+                new KeyValuePair<string, SongSortMode>("Newest", SongSortMode.Newest),
+                new KeyValuePair<string, SongSortMode>("#Plays", SongSortMode.YourPlayCount),
+                new KeyValuePair<string, SongSortMode>("BPM", SongSortMode.Bpm),
+                new KeyValuePair<string, SongSortMode>("PP", SongSortMode.PP),
+                new KeyValuePair<string, SongSortMode>("Stars", SongSortMode.Stars),
+                new KeyValuePair<string, SongSortMode>("UpVotes", SongSortMode.UpVotes),
+                new KeyValuePair<string, SongSortMode>("Rating", SongSortMode.Rating),
+                new KeyValuePair<string, SongSortMode>("Heat", SongSortMode.Heat),
             };
 
             _sortButtonGroup = new List<SongSortButton>();
-            for (int i = 0; i < sortButtonNames.Length; i++)
+            for (int i = 0; i < sortModes.Count; i++)
             {
                 float curButtonX = sortButtonX + (sortButtonWidth * i) + (buttonSpacing * i);
                 SongSortButton sortButton = new SongSortButton();
-                sortButton.SortMode = sortModes[i];
+                sortButton.SortMode = sortModes[i].Value;
                 sortButton.Button = _viewController.CreateUIButton(String.Format("Sort{0}Button", sortButton.SortMode), "PracticeButton",
                     new Vector2(curButtonX, buttonY), new Vector2(sortButtonWidth, buttonHeight),
                     () =>
@@ -312,7 +316,7 @@ namespace SongBrowser.UI
                         OnSortButtonClickEvent(sortButton.SortMode);
                         RefreshOuterUIState(UIState.Main);
                     },
-                    sortButtonNames[i]);
+                    sortModes[i].Key);
                 sortButton.Button.SetButtonTextSize(sortButtonFontSize);
                 sortButton.Button.ToggleWordWrapping(false);
 
@@ -851,7 +855,6 @@ namespace SongBrowser.UI
                 }
 
                 _model.LastSelectedLevelId = level.levelID;
-
                 HandleDidSelectLevelRow(level);
             }
             catch (Exception e)
