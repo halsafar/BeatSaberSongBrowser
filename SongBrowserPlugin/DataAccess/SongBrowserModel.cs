@@ -306,6 +306,9 @@ namespace SongBrowser
                 case SongSortMode.Bpm:
                     sortedSongs = SortSongBpm(filteredSongs);
                     break;
+                case SongSortMode.Length:
+                    sortedSongs = SortSongLength(filteredSongs);
+                    break;
                 case SongSortMode.Custom:
                     sortedSongs = CustomSortHandler != null ? CustomSortHandler.Invoke(filteredSongs) : filteredSongs;
                     break;
@@ -620,6 +623,20 @@ namespace SongBrowser
             Logger.Info("Sorting song list by beatsPerMinute/songName");
             return levels
                 .OrderBy(x => x.beatsPerMinute)
+                .ThenBy(x => x.songName)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Sorting by the song name.
+        /// </summary>
+        /// <param name="levels"></param>
+        /// <returns></returns>
+        private List<IPreviewBeatmapLevel> SortSongLength(List<IPreviewBeatmapLevel> levels)
+        {
+            Logger.Info("Sorting song list by songDuration/songName");
+            return levels
+                .OrderBy(x => x.songDuration)
                 .ThenBy(x => x.songName)
                 .ToList();
         }

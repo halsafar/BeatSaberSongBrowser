@@ -27,6 +27,7 @@ namespace SongBrowser.DataAccess
         PlayCount,
         Stars,
         Bpm,
+        Length,
 
         // Allow mods to extend functionality.
         Custom,
