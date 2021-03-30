@@ -706,8 +706,17 @@ namespace SongBrowser.UI
         {
             yield return new WaitForEndOfFrame();
 
+            bool scrollToLevel = true;
+            if (_lastLevelCollection != null && _lastLevelCollection as IPlaylist != null)
+            {
+                scrollToLevel = false;
+                _model.Settings.sortMode = SongSortMode.Original;
+                RefreshSortButtonUI();
+            }
+
             ProcessSongList();
-            RefreshSongUI();
+
+            RefreshSongUI(scrollToLevel: scrollToLevel);
         }
 
         public IEnumerator RefreshSongListEndOfFrame()
