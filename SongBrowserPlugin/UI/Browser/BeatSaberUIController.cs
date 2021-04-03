@@ -248,7 +248,7 @@ namespace SongBrowser.DataAccess
                                         select x.levelCategory).ToList().IndexOf(category);
 
                 iconSegementController.SelectCellWithNumber(selectCellNumber);
-                //selectLeveCategoryViewController.LevelFilterCategoryIconSegmentedControlDidSelectCell(iconSegementController, selectCellNumber);
+                selectLeveCategoryViewController.LevelFilterCategoryIconSegmentedControlDidSelectCell(iconSegementController, selectCellNumber);
                 LevelFilteringNavigationController.UpdateSecondChildControllerContent(category);
                 //AnnotatedBeatmapLevelCollectionsViewController.RefreshAvailability();
 
@@ -283,7 +283,8 @@ namespace SongBrowser.DataAccess
 
                 Logger.Info("Selecting level collection: {0}", collection.collectionName);
 
-                LevelFilteringNavigationController.SelectAnnotatedBeatmapLevelCollection(collection as IBeatmapLevelPack);                
+                LevelFilteringNavigationController.SelectAnnotatedBeatmapLevelCollection(collection as IBeatmapLevelPack);
+                LevelFilteringNavigationController.HandleAnnotatedBeatmapLevelCollectionsViewControllerDidSelectAnnotatedBeatmapLevelCollection(collection);
 
                 Logger.Debug("Done selecting level collection!");
             }
