@@ -30,6 +30,11 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Reference Include="CustomJSONData">
+          <HintPath>$(BeatSaberDir)\Plugins\CustomJSONData.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="Microsoft.CSharp" />
         <Reference Include="Unity.TextMeshPro">
             <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\Unity.TextMeshPro.dll</HintPath>
             <Private>False</Private>
