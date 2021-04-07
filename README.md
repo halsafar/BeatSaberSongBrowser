@@ -15,6 +15,8 @@ A plugin for customizing the in-game song browser.
   - Original: Match the original sorting you would normally get after SongLoaderPlugin.
   - Newest: Sort by the date you downloaded the custom song.
   - YourPlays: Sort by your most played.
+  - BPM: Beats Per Minute.
+  - Time: Song duration/length.
   - PP: Performance points!  Using @WesVleuten (Westar#0001) score saber data.  
   - Star: Sort by ScoreSaber's Stars difficulty rating.
   - UpVotes: BeatSaver's upvote count.
@@ -35,7 +37,7 @@ A plugin for customizing the in-game song browser.
   - Filters can be cancelled by selecting them again.
 
 ## Status
-- Working with BeatSaber 1.12.2
+- Working with BeatSaber 1.13.5
 
 ## Building on Windows
 To compile BeatSaberSongBrowser from source:
