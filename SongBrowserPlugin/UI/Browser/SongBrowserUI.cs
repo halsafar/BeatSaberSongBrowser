@@ -998,10 +998,15 @@ namespace SongBrowser.UI
                                     var names = SongCore.Loader.SeperateSongFolders.Select(x => x.SongFolderEntry.Name);
                                     var separateFolders = SongCore.Loader.SeperateSongFolders;
 
-                                    if (names.Contains(collection))
+                                    if (names.Count() > 0 && names.Contains(collection))
                                     {
                                         int folder_index = separateFolders.FindIndex(x => x.SongFolderEntry.Name.Equals(collection));
                                         song = separateFolders[folder_index].Levels.First(x => x.Value.levelID == selectedLevelID).Value;
+                                    }
+                                    else
+                                    {
+                                        // final guess - playlist
+                                        song = SongCore.Loader.CustomLevels.First(x => x.Value.levelID == selectedLevelID).Value;
                                     }
                                 }
 
