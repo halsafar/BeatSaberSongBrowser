@@ -68,6 +68,8 @@ namespace SongBrowser
             }
         }
 
+        public float LastScrollIndex;
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -75,6 +77,8 @@ namespace SongBrowser
         {
             _cachedLastWriteTimes = new Dictionary<String, double>();
             _levelIdToPlayCount = new Dictionary<string, int>();
+
+            LastScrollIndex = 0;
         }
 
         /// <summary>

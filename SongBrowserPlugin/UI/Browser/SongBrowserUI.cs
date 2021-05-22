@@ -497,6 +497,44 @@ namespace SongBrowser.UI
             {
                 StartCoroutine(RefreshQuickScrollButtonsAsync());
             });
+
+            // stop add favorites from scrolling to the top
+            _beatUi.StandardLevelDetailView.didFavoriteToggleChangeEvent += OnDidFavoriteToggleChangeEvent;
+        }
+
+        /// <summary>
+        /// Handle favorite toggle event.
+        /// </summary>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
+        private void OnDidFavoriteToggleChangeEvent(StandardLevelDetailView arg1, Toggle arg2)
+        {
+            if (_model.Settings.currentLevelCategoryName == "Favorites")
+            {
+                // TODO - still scrolls to top in this view
+            }
+            else
+            {
+                StartCoroutine(AsyncForceScrollToPosition(_model.LastScrollIndex));
+            }
+        }
+
+        /// <summary>
+        /// Fix internal Beat Saber bug, tableview.reloadData() always resets position and Beat Saber does restore position.
+        /// Wait until end of frame and forcefully set the scroll position.
+        /// </summary>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        public IEnumerator AsyncForceScrollToPosition(float position)
+        {
+            Logger.Debug($"Will attempt force scrolling to position [{_model.LastScrollIndex}] at end of frame.");
+
+            yield return new WaitForEndOfFrame();
+
+            var tv = _beatUi.LevelCollectionTableView.GetField<TableView>("_tableView");
+            var sv = tv.GetField<ScrollView>("_scrollView");
+            Logger.Debug($"Force scrolling to {position}");
+            sv.ScrollTo(position, false);
         }
 
         /// <summary>
@@ -933,6 +971,11 @@ namespace SongBrowser.UI
             {
                 return;
             }
+
+            // stash the scroll index
+            var tv = _beatUi.LevelCollectionTableView.GetField<TableView>("_tableView");
+            var sv = tv.GetField<ScrollView>("_scrollView");
+            _model.LastScrollIndex = sv.position;
 
             UpdateDeleteButtonState(_beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID);
             RefreshScoreSaberData(view.selectedDifficultyBeatmap.level);
