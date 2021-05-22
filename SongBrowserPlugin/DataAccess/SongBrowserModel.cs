@@ -421,7 +421,15 @@ namespace SongBrowser
             {
                 levels = levels.Intersect(
                     levels
-                        .Where(x => $"{x.songName} {x.songSubName} {x.songAuthorName} {x.levelAuthorName}".ToLower().Contains(term.ToLower()))
+                        .Where(x => {
+                            var hash = SongBrowserModel.GetSongHash(x.levelID);
+                            var songKey = "";
+                            if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
+                            {
+                                songKey = SongDataCore.Plugin.Songs.Data.Songs[hash].key;
+                            }
+                            return $"{songKey} {x.songName} {x.songSubName} {x.songAuthorName} {x.levelAuthorName}".ToLower().Contains(term.ToLower());
+                        })
                         .ToList(
                     )
                 ).ToList();
