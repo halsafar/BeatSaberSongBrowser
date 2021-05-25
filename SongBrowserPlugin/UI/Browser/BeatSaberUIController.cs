@@ -132,13 +132,7 @@ namespace SongBrowser.DataAccess
         /// <returns></returns>
         public IAnnotatedBeatmapLevelCollection GetCurrentSelectedAnnotatedBeatmapLevelCollection()
         {
-            IAnnotatedBeatmapLevelCollection collection = GetCurrentSelectedLevelPack();
-            if (collection == null)
-            {
-                collection = GetCurrentSelectedPlaylist();
-            }
-
-            return collection;
+            return AnnotatedBeatmapLevelCollectionsViewController.selectedAnnotatedBeatmapLevelCollection;
         }
 
         /// <summary>
@@ -206,8 +200,7 @@ namespace SongBrowser.DataAccess
                 Logger.Debug("Current selected level collection is null for some reason...");
                 return null;
             }
-
-            return levelCollection.beatmapLevelCollection.beatmapLevels;
+            return SongBrowserModel.GetLevelsForLevelCollection(levelCollection);
         }
 
         public bool SelectLevelCategory(String levelCategoryName)
