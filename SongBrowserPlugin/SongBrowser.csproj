@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net472</TargetFramework>
+        <TargetFramework>net48</TargetFramework>
         <OutputType>Library</OutputType>
         <LangVersion>8</LangVersion>
         <Nullable>enable</Nullable>
@@ -30,6 +30,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Reference Include="BeatSaberPlaylistsLib">
+          <HintPath>$(BeatSaberDir)\Libs\BeatSaberPlaylistsLib.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
         <Reference Include="CustomJSONData">
           <HintPath>$(BeatSaberDir)\Plugins\CustomJSONData.dll</HintPath>
           <Private>False</Private>

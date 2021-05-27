@@ -233,7 +233,7 @@ namespace SongBrowser
             }
 
             Logger.Debug($"Using songs from level collection: {selectedBeatmapCollection.collectionName} [num={selectedBeatmapCollection.beatmapLevelCollection.beatmapLevels.Length}");
-            unsortedSongs = selectedBeatmapCollection.beatmapLevelCollection.beatmapLevels.ToList();
+            unsortedSongs = GetLevelsForLevelCollection(selectedBeatmapCollection).ToList();
 
             // filter
             Logger.Debug($"Starting filtering songs by {_settings.filterMode}");
@@ -822,6 +822,19 @@ namespace SongBrowser
         {
             var split = levelId.Split('_');
             return split.Length > 2 ? split[2] : levelId;
+        }
+
+        public static IPreviewBeatmapLevel[] GetLevelsForLevelCollection(IAnnotatedBeatmapLevelCollection levelCollection)
+        {
+            if (levelCollection is BeatSaberPlaylistsLib.Legacy.LegacyPlaylist legacyPlaylist)
+            {
+                return legacyPlaylist.BeatmapLevels;
+            }
+            if (levelCollection is BeatSaberPlaylistsLib.Blist.BlistPlaylist blistPlaylist)
+            {
+                return blistPlaylist.BeatmapLevels;
+            }
+            return levelCollection.beatmapLevelCollection.beatmapLevels;
         }
         #endregion
     }
