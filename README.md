@@ -37,7 +37,7 @@ A plugin for customizing the in-game song browser.
   - Filters can be cancelled by selecting them again.
 
 ## Status
-- Working with BeatSaber 1.13.5
+- Working with BeatSaber 1.16.0
 
 ## Building on Windows
 To compile BeatSaberSongBrowser from source:
