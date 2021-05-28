@@ -220,7 +220,8 @@ namespace SongBrowser.UI
                         OnClearButtonClickEvent();
                     }
                 },
-                Base64Sprites.XIcon);
+                Base64Sprites.XIcon,
+                "Clear");
             _clearSortFilterButton.SetButtonBackgroundActive(false);
 
             // create SortBy button and its display
@@ -275,7 +276,7 @@ namespace SongBrowser.UI
             _randomButton = _viewController.CreateIconButton("randomButton", "PracticeButton", new Vector2(curX + (randomButtonWidth / 4.0f), clearButtonY), new Vector2(randomButtonWidth, randomButtonWidth), () =>
             {
                 OnSortButtonClickEvent(SongSortMode.Random);
-            }, Base64Sprites.RandomIcon);
+            }, Base64Sprites.RandomIcon, "Random");
             _randomButton.SetButtonBackgroundActive(false);
 
             curX += (randomButtonWidth / 4.0f) * 2.0f;
@@ -285,7 +286,7 @@ namespace SongBrowser.UI
             _playlistExportButton = _viewController.CreateIconButton("playlistExportButton", "PracticeButton", new Vector2(curX + (randomButtonWidth / 4.0f), clearButtonY), new Vector2(randomButtonWidth, randomButtonWidth), () =>
             {
                 ShowInputKeyboard(CreatePlaylistButtonPressed);
-            }, Base64Sprites.PlaylistIcon);
+            }, Base64Sprites.PlaylistIcon, "Export Playlist");
             _playlistExportButton.SetButtonBackgroundActive(false);
         }
 
@@ -421,7 +422,7 @@ namespace SongBrowser.UI
             _deleteDialog.gameObject.SetActive(false);
 
             Logger.Debug("Creating delete button...");
-            _deleteButton = BeatSaberUI.CreateIconButton("DeleteLevelButton", _beatUi.ActionButtons, "PracticeButton", Base64Sprites.DeleteIcon);
+            _deleteButton = BeatSaberUI.CreateIconButton("DeleteLevelButton", _beatUi.ActionButtons, "PracticeButton", Base64Sprites.DeleteIcon, "Delete Level");
             _deleteButton.transform.SetAsFirstSibling();
             _deleteButton.onClick.AddListener(delegate () {
                 HandleDeleteSelectedLevel();
@@ -1158,7 +1159,7 @@ namespace SongBrowser.UI
             }
             BeatSaberPlaylistsLib.Types.IPlaylist playlist = Playlist.CreateNew(playlistName, _beatUi.GetCurrentLevelCollectionLevels());
             BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.RequestRefresh(Assembly.GetExecutingAssembly().FullName);
-            SongBrowserApplication.MainProgressBar.ShowMessage("Saved to: " + "Playlists\\SongBrowser\\" + playlist.Filename + "." + playlist.SuggestedExtension);
+            SongBrowserApplication.MainProgressBar.ShowMessage("Successfully Exported Playlist");
         }
 
         /// <summary>

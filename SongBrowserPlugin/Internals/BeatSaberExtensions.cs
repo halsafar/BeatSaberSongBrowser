@@ -74,9 +74,9 @@ namespace SongBrowser.Internals
             Button btn = BeatSaberUI.CreateUIButton(name, parent.rectTransform, buttonTemplate, anchoredPosition, sizeDelta, onClick, buttonText);
             return btn;
         }
-        public static Button CreateIconButton(this HMUI.ViewController parent, string name, string buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick, Sprite icon)
+        public static Button CreateIconButton(this HMUI.ViewController parent, string name, string buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick, Sprite icon, string hint)
         {
-            Button btn = BeatSaberUI.CreateIconButton(name, parent.rectTransform, buttonTemplate, anchoredPosition, sizeDelta, onClick, icon);
+            Button btn = BeatSaberUI.CreateIconButton(name, parent.rectTransform, buttonTemplate, anchoredPosition, sizeDelta, onClick, icon, hint);
             return btn;
         }
         #endregion

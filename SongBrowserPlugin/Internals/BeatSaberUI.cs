@@ -82,12 +82,11 @@ namespace SongBrowser.Internals
         /// <param name="parent"></param>
         /// <param name="buttonTemplate"></param>
         /// <returns></returns>
-        public static Button CreateIconButton(String name, RectTransform parent, String buttonTemplate, Sprite icon)
+        public static Button CreateIconButton(String name, RectTransform parent, String buttonTemplate, Sprite icon, String hint)
         {
             Button btn = CreateBaseButton(name, parent, buttonTemplate);
 
-            UnityEngine.Object.Destroy(btn.GetComponent<HoverHint>());
-            GameObject.Destroy(btn.GetComponent<LocalizedHoverHint>());
+            BeatSaberUI.SetHoverHint(btn.transform as RectTransform, $"{name}_hoverHintText", hint);
             btn.gameObject.AddComponent<ExternalComponents>().components.Add(btn.GetComponentsInChildren<LayoutGroup>().First(x => x.name == "Content"));
 
             Transform contentTransform = btn.transform.Find("Content");
@@ -123,10 +122,10 @@ namespace SongBrowser.Internals
         /// <param name="buttonTemplate"></param>
         /// <param name="iconSprite"></param>
         /// <returns></returns>
-        public static Button CreateIconButton(String name, RectTransform parent, String buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick, Sprite icon)
+        public static Button CreateIconButton(String name, RectTransform parent, String buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick, Sprite icon, String hint)
         {
             Logger.Debug("CreateIconButton({0}, {1}, {2}, {3}, {4}", name, parent, buttonTemplate, anchoredPosition, sizeDelta);
-            Button btn = CreateIconButton(name, parent, buttonTemplate, icon);
+            Button btn = CreateIconButton(name, parent, buttonTemplate, icon, hint);
 
             (btn.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
             (btn.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
