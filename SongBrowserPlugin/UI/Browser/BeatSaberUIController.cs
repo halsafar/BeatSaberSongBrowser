@@ -132,7 +132,13 @@ namespace SongBrowser.DataAccess
         /// <returns></returns>
         public IAnnotatedBeatmapLevelCollection GetCurrentSelectedAnnotatedBeatmapLevelCollection()
         {
-            return AnnotatedBeatmapLevelCollectionsViewController.selectedAnnotatedBeatmapLevelCollection;
+            IAnnotatedBeatmapLevelCollection collection = GetCurrentSelectedLevelPack();
+            if (collection == null)
+            {
+                collection = GetCurrentSelectedPlaylist();
+            }
+
+            return collection;
         }
 
         /// <summary>
