@@ -13,6 +13,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using VRUIControls;
 using Logger = SongBrowser.Logging.Logger;
+using System.Reflection;
 
 namespace SongBrowser.UI
 {
@@ -283,7 +284,7 @@ namespace SongBrowser.UI
             Logger.Debug("Creating playlist export button...");
             _playlistExportButton = _viewController.CreateIconButton("playlistExportButton", "PracticeButton", new Vector2(curX + (randomButtonWidth / 4.0f), clearButtonY), new Vector2(randomButtonWidth, randomButtonWidth), () =>
             {
-                // TODO
+                ShowInputKeyboard(CreatePlaylistButtonPressed);
             }, Base64Sprites.PlaylistIcon);
             _playlistExportButton.SetButtonBackgroundActive(false);
         }
@@ -1143,6 +1144,21 @@ namespace SongBrowser.UI
             ProcessSongList();
 
             RefreshSongUI();
+        }
+
+        /// <summary>
+        /// Handle playlist creation.
+        /// </summary>
+        /// <param name="searchFor"></param>
+        private void CreatePlaylistButtonPressed(string playlistName)
+        {
+            if (string.IsNullOrWhiteSpace(playlistName))
+            {
+                return;
+            }
+            BeatSaberPlaylistsLib.Types.IPlaylist playlist = Playlist.CreateNew(playlistName, _beatUi.GetCurrentLevelCollectionLevels());
+            BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.RequestRefresh(Assembly.GetExecutingAssembly().FullName);
+            SongBrowserApplication.MainProgressBar.ShowMessage("Saved to: " + "Playlists\\SongBrowser\\" + playlist.Filename + "." + playlist.SuggestedExtension);
         }
 
         /// <summary>
