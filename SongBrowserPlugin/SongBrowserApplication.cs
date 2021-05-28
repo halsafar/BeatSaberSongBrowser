@@ -30,6 +30,14 @@ namespace SongBrowser
             }
         }
 
+        public SongBrowserUI Ui
+        {
+            get
+            {
+                return _songBrowserUI;
+            }
+        }
+
         /// <summary>
         /// Load the main song browser app.
         /// </summary>
