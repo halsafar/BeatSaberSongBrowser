@@ -1,8 +1,12 @@
-﻿using Newtonsoft.Json;
+﻿using BeatSaberPlaylistsLib;
+using BeatSaberPlaylistsLib.Legacy;
+using Newtonsoft.Json;
 using SimpleJSON;
+using SongBrowser.UI;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using UnityEngine;
 using Logger = SongBrowser.Logging.Logger;
 using Sprites = SongBrowser.UI.Base64Sprites;
@@ -31,6 +35,8 @@ namespace SongBrowser.DataAccess
 
     public class Playlist
     {
+        internal static PlaylistManager defaultManager = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.CreateChildManager("SongBrowser");
+
         public string playlistTitle { get; set; }
         public string playlistAuthor { get; set; }
         public string image { get; set; }
@@ -131,9 +137,32 @@ namespace SongBrowser.DataAccess
                    songCountThis == songCountObj;
         }
 
-        public void CreateNew(String fileLoc)
+        public static BeatSaberPlaylistsLib.Types.IPlaylist CreateNew(string playlistName, IPreviewBeatmapLevel[] beatmapLevels)
         {
-            File.WriteAllText(fileLoc, JsonConvert.SerializeObject(this, Formatting.Indented));
+            string playlistFolderPath = defaultManager.PlaylistPath;
+            string playlistFileName = string.Join("_", playlistName.Replace("/", "").Replace("\\", "").Replace(".", "").Split(' '));
+            if (string.IsNullOrEmpty(playlistFileName))
+            {
+                playlistFileName = "playlist";
+            }
+            string playlistPath = Path.Combine(playlistFolderPath, playlistFileName + ".blist");
+            string originalPlaylistPath = Path.Combine(playlistFolderPath, playlistFileName);
+            int dupNum = 0;
+            while (File.Exists(playlistPath))
+            {
+                dupNum++;
+                playlistPath = originalPlaylistPath + string.Format("({0}).blist", dupNum);
+                playlistFileName += string.Format("({0})", dupNum);
+            }
+
+            BeatSaberPlaylistsLib.Types.IPlaylist playlist = defaultManager.CreatePlaylist(playlistFileName, playlistName, "SongBrowser", "");
+            foreach (var beatmapLevel in beatmapLevels)
+            {
+                playlist.Add(beatmapLevel);
+            }
+            defaultManager.StorePlaylist(playlist);
+            playlist.SuggestedExtension = defaultManager.DefaultHandler?.DefaultExtension;
+            return playlist;
         }
     }
 }

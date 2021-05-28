@@ -21,7 +21,7 @@ namespace SongBrowser.UI
         internal Image _loadingBackg;
         internal Image _loadingBar;
 
-        private static readonly Vector3 Position = new Vector3(0, 0, 2.5f);
+        private static readonly Vector3 Position = new Vector3(0, 0, 3f);
         private static readonly Vector3 Rotation = Vector3.zero;
         private static readonly Vector3 Scale = new Vector3(0.01f, 0.01f, 0.01f);
 
