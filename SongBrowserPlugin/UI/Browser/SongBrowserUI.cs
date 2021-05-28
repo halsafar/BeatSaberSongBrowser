@@ -1104,16 +1104,26 @@ namespace SongBrowser.UI
         }
 
         /// <summary>
-        /// Display the search keyboard
+        /// Show Search Keyboard
         /// </summary>
         void ShowSearchKeyboard()
+        {
+            ShowInputKeyboard(SearchViewControllerSearchButtonPressed);
+        }
+
+
+        /// <summary>
+        /// Display the onscreen keyboard
+        /// </summary>
+        /// <param name="enterPressedHandler">Handler for keyboard form submission.</param>
+        void ShowInputKeyboard(Action<string> enterPressedHandler)
         {
             var modalKbTag = new BeatSaberMarkupLanguage.Tags.ModalKeyboardTag();
             var modalKbView = modalKbTag.CreateObject(_beatUi.LevelSelectionNavigationController.rectTransform);
             modalKbView.gameObject.SetActive(true);
             var modalKb = modalKbView.GetComponent<ModalKeyboard>();
             modalKb.gameObject.SetActive(true);
-            modalKb.keyboard.EnterPressed += SearchViewControllerSearchButtonPressed;
+            modalKb.keyboard.EnterPressed += enterPressedHandler;
             modalKb.modalView.Show(true, true);
         }
 
