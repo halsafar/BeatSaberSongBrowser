@@ -56,6 +56,7 @@ namespace SongBrowser.UI
         private Button _filterByButton;
         private Button _filterByDisplay;
         private Button _randomButton;
+        private Button _playlistExportButton;
 
         private Button _clearSortFilterButton;
 
@@ -266,13 +267,25 @@ namespace SongBrowser.UI
             _filterByDisplay.SetButtonTextSize(displayButtonFontSize);
             _filterByDisplay.ToggleWordWrapping(false);
 
+            curX += (outerButtonWidth / 2.0f);
+
             // random button
             Logger.Debug("Creating Random Button...");
-            _randomButton = _viewController.CreateIconButton("randomButton", "PracticeButton", new Vector2(curX + (outerButtonWidth / 2.0f) + (randomButtonWidth / 4.0f), clearButtonY), new Vector2(randomButtonWidth, randomButtonWidth), () =>
+            _randomButton = _viewController.CreateIconButton("randomButton", "PracticeButton", new Vector2(curX + (randomButtonWidth / 4.0f), clearButtonY), new Vector2(randomButtonWidth, randomButtonWidth), () =>
             {
                 OnSortButtonClickEvent(SongSortMode.Random);
             }, Base64Sprites.RandomIcon);
             _randomButton.SetButtonBackgroundActive(false);
+
+            curX += (randomButtonWidth / 4.0f) * 2.0f;
+
+            // playlist export
+            Logger.Debug("Creating playlist export button...");
+            _playlistExportButton = _viewController.CreateIconButton("playlistExportButton", "PracticeButton", new Vector2(curX + (randomButtonWidth / 4.0f), clearButtonY), new Vector2(randomButtonWidth, randomButtonWidth), () =>
+            {
+                // TODO
+            }, Base64Sprites.PlaylistIcon);
+            _playlistExportButton.SetButtonBackgroundActive(false);
         }
 
         /// <summary>
@@ -1343,6 +1356,7 @@ namespace SongBrowser.UI
             _filterByDisplay?.gameObject.SetActive(outerButtons);
             _clearSortFilterButton?.gameObject.SetActive(clearButton);
             _randomButton?.gameObject.SetActive(outerButtons);
+            _playlistExportButton?.gameObject.SetActive(outerButtons);
 
             RefreshCurrentSelectionDisplay();
             _currentUiState = state;
