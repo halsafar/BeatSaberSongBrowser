@@ -2,7 +2,6 @@
 using HMUI;
 using SongBrowser.DataAccess;
 using SongBrowser.Internals;
-using SongCore.Utilities;
 using SongDataCore.BeatStar;
 using System;
 using System.Collections;
@@ -546,8 +545,8 @@ namespace SongBrowser.UI
 
             yield return new WaitForEndOfFrame();
 
-            var tv = _beatUi.LevelCollectionTableView.GetField<TableView>("_tableView");
-            var sv = tv.GetField<ScrollView>("_scrollView");
+            var tv = _beatUi.LevelCollectionTableView.GetField<TableView, LevelCollectionTableView>("_tableView");
+            var sv = tv.GetField<ScrollView, TableView>("_scrollView");
             Logger.Debug($"Force scrolling to {position}");
             sv.ScrollTo(position, false);
         }
@@ -988,8 +987,8 @@ namespace SongBrowser.UI
             }
 
             // stash the scroll index
-            var tv = _beatUi.LevelCollectionTableView.GetField<TableView>("_tableView");
-            var sv = tv.GetField<ScrollView>("_scrollView");
+            var tv = _beatUi.LevelCollectionTableView.GetField<TableView, LevelCollectionTableView>("_tableView");
+            var sv = tv.GetField<ScrollView, TableView>("_scrollView");
             _model.LastScrollIndex = sv.position;
 
             UpdateDeleteButtonState(_beatUi.LevelDetailViewController.selectedDifficultyBeatmap.level.levelID);
