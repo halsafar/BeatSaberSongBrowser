@@ -239,6 +239,11 @@ namespace SongBrowser
             Logger.Debug($"Starting filtering songs by {_settings.filterMode}");
             Stopwatch stopwatch = Stopwatch.StartNew();
 
+            if (_settings.filterMode == SongFilterMode.Requirements && IPA.Loader.PluginManager.EnabledPlugins.All(p => p.Name != "CustomJSONData"))
+            {
+                _settings.filterMode = SongFilterMode.None;
+            }
+
             switch (_settings.filterMode)
             {
                 case SongFilterMode.Favorites:
@@ -359,9 +364,9 @@ namespace SongBrowser
 
             /*
              public virtual void SetData(
-                IAnnotatedBeatmapLevelCollection annotatedBeatmapLevelCollection, 
-                bool showPackHeader, bool showPlayerStats, bool showPracticeButton, 
-                string actionButtonText, 
+                IAnnotatedBeatmapLevelCollection annotatedBeatmapLevelCollection,
+                bool showPackHeader, bool showPlayerStats, bool showPracticeButton,
+                string actionButtonText,
                 GameObject noDataInfoPrefab, BeatmapDifficultyMask allowedBeatmapDifficultyMask, BeatmapCharacteristicSO[] notAllowedCharacteristics);
             */
             Logger.Debug("Acquiring necessary fields to call SetData(pack)...");
@@ -486,11 +491,16 @@ namespace SongBrowser
 
                     foreach (CustomLevelInfoSaveData.DifficultyBeatmapSet difficulties in saveData.difficultyBeatmapSets)
                     {
-                        foreach (CustomLevelInfoSaveData.DifficultyBeatmap difficulty in difficulties.difficultyBeatmaps)
+                        var hasRequirements = difficulties.difficultyBeatmaps.Any(d =>
                         {
-                            List<object> requirements = CustomJSONData.Trees.at(difficulty.customData, "_requirements");
+                            var difficulty = d as CustomLevelInfoSaveData.DifficultyBeatmap;
 
-                            return requirements != null && requirements.Count > 0;
+                            return CustomJSONData.Trees.at(difficulty.customData, "_requirements")?.Count > 0;
+                        });
+
+                        if (hasRequirements)
+                        {
+                            return true;
                         }
                     }
                 }

@@ -120,7 +120,7 @@ namespace SongBrowser.UI
             }
             else
             {
-                Logger.Info("Entering Unsupported mode...");                
+                Logger.Info("Entering Unsupported mode...");
                 return;
             }
 
@@ -380,6 +380,11 @@ namespace SongBrowser.UI
                 filterButton.Button.SetButtonTextSize(filterButtonFontSize);
                 filterButton.Button.ToggleWordWrapping(false);
 
+                if (i == 3 && IPA.Loader.PluginManager.EnabledPlugins.All(p => p.Name != "CustomJSONData"))
+                {
+                    filterButton.Button.interactable = false;
+                }
+
                 _filterButtonGroup.Add(filterButton);
             }
         }
@@ -440,7 +445,7 @@ namespace SongBrowser.UI
             (statsPanel.transform as RectTransform).Translate(0, 0.05f, 0);
 
             _ppStatButton = BeatSaberUI.CreateStatIcon("PPStatLabel",
-                statsPanel.GetComponentsInChildren<RectTransform>().First(x => x.name == "NPS"), 
+                statsPanel.GetComponentsInChildren<RectTransform>().First(x => x.name == "NPS"),
                 statsPanel.transform,
                 Base64Sprites.GraphIcon,
                 "PP Value");
@@ -1473,7 +1478,7 @@ namespace SongBrowser.UI
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public void RefreshSongList()
         {
