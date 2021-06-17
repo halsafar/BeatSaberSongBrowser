@@ -28,6 +28,7 @@ A plugin for customizing the in-game song browser.
   - Favorites (all songs you have marked as a favorite).
   - Ranked.
   - Unranked.
+  - Requirements (requires [CustomJSONData](https://github.com/Aeroluna/CustomJSONData) v2.0.0 or later).
 - UI Enhancements:
   - Display PP, STARS, and NJS.
   - Fast scroll buttons (jumps 10% of your song list in each press).

@@ -380,9 +380,9 @@ namespace SongBrowser.UI
                 filterButton.Button.SetButtonTextSize(filterButtonFontSize);
                 filterButton.Button.ToggleWordWrapping(false);
 
-                if (i == 3 && IPA.Loader.PluginManager.EnabledPlugins.All(p => p.Name != "CustomJSONData"))
+                if (i == 3)
                 {
-                    filterButton.Button.interactable = false;
+                    filterButton.Button.interactable = Plugin.IsCustomJsonDataEnabled;
                 }
 
                 _filterButtonGroup.Add(filterButton);
