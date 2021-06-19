@@ -14,9 +14,6 @@
     "BeatSaberMarkupLanguage": "^1.5.1",
     "BeatSaberPlaylistsLib": "^1.3.0"
   },
-  "loadAfter": [
-    "CustomJSONData"
-  ],
   "misc": {
     "plugin-hint": "SongBrowser.Plugin"
   }

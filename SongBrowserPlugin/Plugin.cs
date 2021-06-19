@@ -2,6 +2,7 @@
 using IPA;
 using SongBrowser.UI;
 using System;
+using System.Linq;
 using System.Reflection;
 using IPA.Loader;
 using Logger = SongBrowser.Logging.Logger;
@@ -12,6 +13,7 @@ namespace SongBrowser
     public class Plugin
     {
         public static string VersionNumber { get; private set; }
+        public static bool IsCustomJsonDataEnabled { get; private set; }
         public static Plugin Instance { get; private set; }
         public static IPA.Logging.Logger Log { get; private set; }
 
@@ -26,6 +28,7 @@ namespace SongBrowser
         public void OnApplicationStart()
         {
             Instance = this;
+            IsCustomJsonDataEnabled = PluginManager.EnabledPlugins.FirstOrDefault(p => p.Name == "CustomJSONData")?.Version >= new SemVer.Version("2.0.0");
 
             Base64Sprites.Init();
 

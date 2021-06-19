@@ -11,7 +11,8 @@ using HMUI;
 using IPA.Utilities;
 using UnityEngine;
 using Logger = SongBrowser.Logging.Logger;
-using CustomJSONData.CustomLevelInfo;
+using CustomJSONData;
+using CustomJSONData.CustomBeatmap;
 
 namespace SongBrowser
 {
@@ -239,7 +240,7 @@ namespace SongBrowser
             Logger.Debug($"Starting filtering songs by {_settings.filterMode}");
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            if (_settings.filterMode == SongFilterMode.Requirements && IPA.Loader.PluginManager.EnabledPlugins.All(p => p.Name != "CustomJSONData"))
+            if (_settings.filterMode == SongFilterMode.Requirements && !Plugin.IsCustomJsonDataEnabled)
             {
                 _settings.filterMode = SongFilterMode.None;
             }
@@ -495,7 +496,7 @@ namespace SongBrowser
                         {
                             var difficulty = d as CustomLevelInfoSaveData.DifficultyBeatmap;
 
-                            return CustomJSONData.Trees.at(difficulty.customData, "_requirements")?.Count > 0;
+                            return difficulty.customData.Get<List<object>>("_requirements")?.Count > 0;
                         });
 
                         if (hasRequirements)
