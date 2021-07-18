@@ -11,7 +11,6 @@ using HMUI;
 using IPA.Utilities;
 using UnityEngine;
 using Logger = SongBrowser.Logging.Logger;
-using CustomJSONData;
 using CustomJSONData.CustomBeatmap;
 
 namespace SongBrowser
@@ -496,7 +495,17 @@ namespace SongBrowser
                         {
                             var difficulty = d as CustomLevelInfoSaveData.DifficultyBeatmap;
 
-                            return difficulty.customData.Get<List<object>>("_requirements")?.Count > 0;
+                            if (difficulty == null)
+                            {
+                                return false;
+                            }
+
+                            if (difficulty.customData.ContainsKey("_requirements"))
+                            {
+                                return ((IList<object>)difficulty.customData["_requirements"]).Count > 0;
+                            }
+
+                            return false;
                         });
 
                         if (hasRequirements)
