@@ -80,8 +80,6 @@ namespace SongBrowser
         {
             Logger.Trace("Start-SongBrowserApplication()");
 
-            InstallHandlers();
-
             SongDataCore.Plugin.Songs.OnDataFinishedProcessing += OnScoreSaberDataDownloaded;
 
             if (SongCore.Loader.AreSongsLoaded)
@@ -149,32 +147,11 @@ namespace SongBrowser
         }
 
         /// <summary>
-        /// Install Our Handlers so we can react to ingame events.
-        /// </summary>
-        private void InstallHandlers()
-        {
-            // Append our own event to appropriate events so we can refresh the song list before the user sees it.
-            MainFlowCoordinator mainFlow = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First();
-            Button soloFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "SoloButton");
-            Button partyFreePlayButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "PartyButton");
-            Button campaignButton = Resources.FindObjectsOfTypeAll<Button>().First(x => x.name == "CampaignButton");
-
-            soloFreePlayButton.onClick.AddListener(HandleSoloModeSelection);
-            partyFreePlayButton.onClick.AddListener(HandlePartyModeSelection);
-            campaignButton.onClick.AddListener(HandleCampaignModeSelection);
-
-            // Append to the 'EditButton' in the host lobby setup, this lets us seperate out Multiplayer easily.
-            var hostLobbyVc = Resources.FindObjectsOfTypeAll<HostLobbySetupViewController>().First();
-            var editButton = hostLobbyVc.GetComponentsInChildren<Button>().First(x => x.name == "EditButton");
-            editButton.onClick.AddListener(HandleMultiplayerModeSelection);
-        }
-
-        /// <summary>
         /// Handle Solo Mode
         /// </summary>
         /// <param name="arg1"></param>
         /// <param name="arg2"></param>
-        private void HandleSoloModeSelection()
+        public void HandleSoloModeSelection()
         {
             Logger.Trace("HandleSoloModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.SoloFreePlay);
@@ -186,7 +163,7 @@ namespace SongBrowser
         /// </summary>
         /// <param name="arg1"></param>
         /// <param name="arg2"></param>
-        private void HandlePartyModeSelection()
+        public void HandlePartyModeSelection()
         {
             Logger.Trace("HandlePartyModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.Party);
@@ -198,7 +175,7 @@ namespace SongBrowser
         /// </summary>
         /// <param name="arg1"></param>
         /// <param name="arg2"></param>
-        private void HandleCampaignModeSelection()
+        public void HandleCampaignModeSelection()
         {
             Logger.Trace("HandleCampaignModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.SoloCampaign);
@@ -211,7 +188,7 @@ namespace SongBrowser
         /// </summary>
         /// <param name="arg1"></param>
         /// <param name="arg2"></param>
-        private void HandleMultiplayerModeSelection()
+        public void HandleMultiplayerModeSelection()
         {
             Logger.Trace("HandleCampaignModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.Multiplayer);
