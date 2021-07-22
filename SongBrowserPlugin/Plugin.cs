@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using IPA.Loader;
 using Logger = SongBrowser.Logging.Logger;
+using HarmonyLib;
 
 namespace SongBrowser
 {
@@ -17,11 +18,15 @@ namespace SongBrowser
         public static Plugin Instance { get; private set; }
         public static IPA.Logging.Logger Log { get; private set; }
 
+        public const string HarmonyId = "com.halsafar.BeatSaber.SongBrowserPlugin";
+        internal static Harmony harmony;
+
         [Init]
         public void Init(IPA.Logging.Logger logger, PluginMetadata metadata)
         {
             Log = logger;
             VersionNumber = metadata.Version?.ToString() ?? Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
+            harmony = new Harmony(HarmonyId);
         }
 
         [OnStart]
@@ -51,6 +56,18 @@ namespace SongBrowser
             {
                 Logger.Exception("Exception on fresh menu scene change: " + e);
             }
+        }
+
+        [OnEnable]
+        public void OnEnable()
+        {
+            harmony.PatchAll(Assembly.GetExecutingAssembly());
+        }
+
+        [OnDisable]
+        public void OnDisable()
+        {
+            harmony.UnpatchAll(HarmonyId);
         }
     }
 }

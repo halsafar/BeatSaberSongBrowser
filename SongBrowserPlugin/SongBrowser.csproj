@@ -30,6 +30,9 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Reference Include="0Harmony">
+          <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Libs\0Harmony.dll</HintPath>
+        </Reference>
         <Reference Include="BeatSaberPlaylistsLib">
           <HintPath>$(BeatSaberDir)\Libs\BeatSaberPlaylistsLib.dll</HintPath>
           <Private>False</Private>

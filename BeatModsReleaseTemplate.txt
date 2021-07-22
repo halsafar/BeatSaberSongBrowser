@@ -1,8 +1,8 @@
 SongBrowser
 
-6.1.7
+6.2.1
 
-SongCore@3.4.0,SongDataCore@1.3.8
+BeatSaberMarkupLanguage@1.5.3,SongCore@3.4.0, SongDataCore@1.3.8,BeatSaberPlaylistsLib@1.3.0,BS Utils@1.10.0
 
 Adds various sorting and filtering methods to the UI. Search, favorites, ranked, and unranked filters. Sort by BeatSaver and ScoreSaber statistics. Adds PP and other extra stats to the stat panel.
 
@@ -12,9 +12,11 @@ https://github.com/halsafar/BeatSaberSongBrowser
 **Mod**: SongBrowser v6.1.6
 **Dependencies**: SongCore, BSLM, SongDataCore
 **Changelog**:
-- Compatibility with PlaylistManager!
-- Add new sort methods: BPM, Duration.
-- Fix a few rare causes of exceptions.
-**Looking For**:
-- We are hoping to shake out any compatiblity issues PlaylistManager.
+- Improved support with PlaylistManager and BeatSaberPlaylistLib (Thanks PixelBoom).
+- BeatSaver song key is now checked against search terms.
+- Prevent scrolling to top of list when adding/removing favorites in all level categories except Favorites.
+- Fix deleting a song when viewing a Playlist.
+- Filter by mod requirements (thanks @Meivyn )
+**Download**:
+- https://github.com/halsafar/BeatSaberSongBrowser/releases/tag/6.2.0
 
