@@ -1,4 +1,4 @@
-﻿using SongBrowser.DataAccess;
+using SongBrowser.DataAccess;
 using SongCore.Utilities;
 using System;
 using System.Collections.Concurrent;
@@ -64,6 +64,10 @@ namespace SongBrowser
             set
             {
                 _settings.currentLevelId = value;
+                if (_settings.currentLevelCollectionName != null && value != null)
+                {
+                    this.SaveLastSelectedLevelId(_settings.currentLevelCollectionName, value);
+                }
                 _settings.Save();
             }
         }
@@ -190,6 +194,58 @@ namespace SongBrowser
         public void RemoveSongFromLevelCollection(IAnnotatedBeatmapLevelCollection levelCollection, String levelId)
         {
             levelCollection.beatmapLevelCollection.beatmapLevels.ToList().RemoveAll(x => x.levelID == levelId);
+        }
+
+        /// <summary>
+        /// Save last selected levelId separately for each collection.
+        /// </summary>
+        /// <param name="collectionName"></param>
+        /// <param name="levelId"></param>
+        public void SaveLastSelectedLevelId(String collectionName, String levelId)
+        {
+            var lastIds = _settings.lastSelectedLevelIds;
+            var found = false;
+
+            if (lastIds.Count > 0)
+            {
+                foreach (var collection in lastIds)
+                {
+                    if (collection.name == collectionName)
+                    {
+                        collection.levelId = levelId;
+                        found = true;
+                    }
+                }
+            }
+
+            if (lastIds.Count == 0 || !found)
+            {
+                _settings.lastSelectedLevelIds.Add(
+                    new Collection() { name = collectionName, levelId = levelId }
+                );
+            }
+        }
+
+        /// <summary>
+        /// Find last selected levelId for specific collection.
+        /// </summary>
+        /// <param name="collectionName"></param>
+        public string FindLastSelectedLevelId(String collectionName)
+        {
+            var lastIds = _settings.lastSelectedLevelIds;
+
+            if (lastIds.Count > 0)
+            {
+                foreach (var collection in lastIds)
+                {
+                    if (collection.name == collectionName)
+                    {
+                        return collection.levelId;
+                    }
+                }
+            }
+
+            return "";
         }
 
         /// <summary>
