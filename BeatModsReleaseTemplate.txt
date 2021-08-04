@@ -1,6 +1,6 @@
 SongBrowser
 
-6.2.1
+6.2.2
 
 BeatSaberMarkupLanguage@1.5.3,SongCore@3.4.0, SongDataCore@1.3.8,BeatSaberPlaylistsLib@1.3.0,BS Utils@1.10.0
 
