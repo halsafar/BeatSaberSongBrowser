@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -73,6 +73,16 @@ namespace SongBrowser.DataAccess
     }
 
     [Serializable]
+    public class Collection
+    {
+        [XmlAttribute]
+        public string name;
+
+        [XmlText]
+        public string levelId;
+    }
+
+    [Serializable]
     public class SongBrowserSettings
     {
         public static readonly Encoding Utf8Encoding = Encoding.UTF8;
@@ -96,6 +106,8 @@ namespace SongBrowser.DataAccess
         public int randomSongSeed;
         public bool invertSortResults = false;
 
+        public List<Collection> lastSelectedLevelIds = default(List<Collection>);
+
         [XmlIgnore]
         [NonSerialized]
         public bool DisableSavingSettings = false;
@@ -106,6 +118,7 @@ namespace SongBrowser.DataAccess
         public SongBrowserSettings()
         {
             searchTerms = new List<string>();
+            lastSelectedLevelIds = new List<Collection>();
         }
 
         /// <summary>
@@ -277,7 +290,7 @@ namespace SongBrowser.DataAccess
             {
                 OmitXmlDeclaration = false,
                 Indent = true,
-                NewLineOnAttributes = true,
+                NewLineOnAttributes = false,
                 NewLineHandling = System.Xml.NewLineHandling.Entitize
             };
 

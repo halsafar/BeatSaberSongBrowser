@@ -1,4 +1,4 @@
-﻿using BeatSaberMarkupLanguage.Components;
+using BeatSaberMarkupLanguage.Components;
 using HMUI;
 using SongBrowser.DataAccess;
 using SongBrowser.Internals;
@@ -739,11 +739,21 @@ namespace SongBrowser.UI
                     Model.Settings.currentLevelCategoryName = _beatUi.LevelFilteringNavigationController.selectedLevelCategory.ToString();
                 }
 
-                // reset level selection
-                _model.LastSelectedLevelId = null;
-
                 // save level collection
                 this._model.Settings.currentLevelCollectionName = levelCollection.collectionName;
+
+                // set/reset level selection
+                var lastId = _model.FindLastSelectedLevelId(levelCollection.collectionName);
+                if (lastId != "")
+                {
+                    _model.LastSelectedLevelId = lastId;
+                }
+                else
+                {
+                    _model.LastSelectedLevelId = null;
+                }
+
+                // save xml settings file
                 this._model.Settings.Save();
 
                 StartCoroutine(ProcessSongListEndOfFrame());
@@ -764,7 +774,7 @@ namespace SongBrowser.UI
             yield return new WaitForEndOfFrame();
 
             bool scrollToLevel = true;
-            if (_lastLevelCollection != null && _lastLevelCollection as IPlaylist != null)
+            if (_model.LastSelectedLevelId == null)
             {
                 scrollToLevel = false;
                 _model.Settings.sortMode = SongSortMode.Original;
