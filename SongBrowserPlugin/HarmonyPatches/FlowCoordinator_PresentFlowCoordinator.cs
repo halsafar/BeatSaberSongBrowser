@@ -10,7 +10,7 @@ namespace SongBrowser.HarmonyPatches
     [HarmonyPatch("PresentFlowCoordinator", MethodType.Normal)]
     class FlowCoordinator_PresentFlowCoordinator
     {
-        static void Postfix(FlowCoordinator flowCoordinator, Action finishedCallback = null, ViewController.AnimationDirection animationDirection = ViewController.AnimationDirection.Horizontal, bool immediately = false, bool replaceTopViewController = false)
+        static void Prefix(FlowCoordinator flowCoordinator, Action finishedCallback = null, ViewController.AnimationDirection animationDirection = ViewController.AnimationDirection.Horizontal, bool immediately = false, bool replaceTopViewController = false)
         {
             var flowType = flowCoordinator.GetType();
             if (flowType == typeof(SoloFreePlayFlowCoordinator))
