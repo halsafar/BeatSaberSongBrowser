@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -73,13 +74,16 @@ namespace SongBrowser.DataAccess
     }
 
     [Serializable]
-    public class Collection
+    public class LevelIdCollectionMap
     {
-        [XmlAttribute]
-        public string name;
+        [XmlElement(IsNullable = false)]
+        public string? CategoryName;
 
-        [XmlText]
-        public string levelId;
+        [XmlElement(IsNullable = false)]
+        public string? CollectionName;
+
+        [XmlElement(IsNullable = false)]
+        public string? LevelId;
     }
 
     [Serializable]
@@ -106,7 +110,7 @@ namespace SongBrowser.DataAccess
         public int randomSongSeed;
         public bool invertSortResults = false;
 
-        public List<Collection> lastSelectedLevelIds = default(List<Collection>);
+        public List<LevelIdCollectionMap> lastSelectedLevelIds = default(List<LevelIdCollectionMap>);
 
         [XmlIgnore]
         [NonSerialized]
@@ -118,7 +122,7 @@ namespace SongBrowser.DataAccess
         public SongBrowserSettings()
         {
             searchTerms = new List<string>();
-            lastSelectedLevelIds = new List<Collection>();
+            lastSelectedLevelIds = new List<LevelIdCollectionMap>();
         }
 
         /// <summary>

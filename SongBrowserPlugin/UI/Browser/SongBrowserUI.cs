@@ -743,14 +743,10 @@ namespace SongBrowser.UI
                 this._model.Settings.currentLevelCollectionName = levelCollection.collectionName;
 
                 // set/reset level selection
-                var lastId = _model.FindLastSelectedLevelId(levelCollection.collectionName);
-                if (lastId != "")
+                String lastLevelId = _model.FindLastSelectedLevelIdMap();
+                if (!String.IsNullOrEmpty(lastLevelId))
                 {
-                    _model.LastSelectedLevelId = lastId;
-                }
-                else
-                {
-                    _model.LastSelectedLevelId = null;
+                    _model.LastSelectedLevelId = lastLevelId;
                 }
 
                 // save xml settings file
@@ -931,7 +927,11 @@ namespace SongBrowser.UI
                     return;
                 }
 
+                // save collection -> level mapping
+                _model.SetLastSelectedLevelIdMap(level.levelID);
+
                 _model.LastSelectedLevelId = level.levelID;
+
                 HandleDidSelectLevelRow(level);
             }
             catch (Exception e)
