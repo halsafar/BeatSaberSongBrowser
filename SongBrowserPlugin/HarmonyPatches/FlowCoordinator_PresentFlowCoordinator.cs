@@ -10,7 +10,9 @@ namespace SongBrowser.HarmonyPatches
     [HarmonyPatch("PresentFlowCoordinator", MethodType.Normal)]
     class FlowCoordinator_PresentFlowCoordinator
     {
+#pragma warning disable IDE0051 // Remove unused private members
         static void Prefix(FlowCoordinator flowCoordinator, Action finishedCallback = null, ViewController.AnimationDirection animationDirection = ViewController.AnimationDirection.Horizontal, bool immediately = false, bool replaceTopViewController = false)
+#pragma warning restore IDE0051 // Remove unused private members
         {
             var flowType = flowCoordinator.GetType();
             if (flowType == typeof(SoloFreePlayFlowCoordinator))

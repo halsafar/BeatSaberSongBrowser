@@ -58,7 +58,7 @@ namespace SongBrowser
         /// <summary>
         /// It has awaken!
         /// </summary>
-        private void Awake()
+        protected void Awake()
         {
             Logger.Trace("Awake-SongBrowserApplication()");
 

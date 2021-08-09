@@ -4,7 +4,7 @@
         <TargetFramework>net48</TargetFramework>
         <OutputType>Library</OutputType>
         <LangVersion>8</LangVersion>
-        <Nullable>enable</Nullable>
+        <Nullable>disable</Nullable>
         <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
         <RootNamespace>SongBrowser</RootNamespace>
         <LocalRefsDir Condition="Exists('..\Refs')">..\Refs</LocalRefsDir>

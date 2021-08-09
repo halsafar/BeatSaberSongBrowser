@@ -323,8 +323,11 @@ namespace SongBrowser.UI
             for (int i = 0; i < sortModes.Count; i++)
             {
                 float curButtonX = sortButtonX + (sortButtonWidth * i) + (buttonSpacing * i);
-                SongSortButton sortButton = new SongSortButton();
-                sortButton.SortMode = sortModes[i].Value;
+                SongSortButton sortButton = new SongSortButton
+                {
+                    SortMode = sortModes[i].Value
+                };
+
                 sortButton.Button = _viewController.CreateUIButton(String.Format("Sort{0}Button", sortButton.SortMode), "PracticeButton",
                     new Vector2(curButtonX, buttonY), new Vector2(sortButtonWidth, buttonHeight),
                     () =>
@@ -368,8 +371,11 @@ namespace SongBrowser.UI
             for (int i = 0; i < filterButtonNames.Length; i++)
             {
                 float curButtonX = filterButtonX + (filterButtonWidth * i) + (buttonSpacing * i);
-                SongFilterButton filterButton = new SongFilterButton();
-                filterButton.FilterMode = filterModes[i];
+                SongFilterButton filterButton = new SongFilterButton
+                {
+                    FilterMode = filterModes[i]
+                };
+
                 filterButton.Button = _viewController.CreateUIButton(String.Format("Filter{0}Button", filterButton.FilterMode), "PracticeButton",
                     new Vector2(curButtonX, buttonY), new Vector2(filterButtonWidth, buttonHeight),
                     () =>
@@ -498,11 +504,11 @@ namespace SongBrowser.UI
             _beatUi.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyEvent;
 
             // update our view of the game state
-            _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent -= _levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
-            _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += _levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
+            _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent -= LevelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
+            _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += LevelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
 
-            _beatUi.AnnotatedBeatmapLevelCollectionsViewController.didSelectAnnotatedBeatmapLevelCollectionEvent -= handleDidSelectAnnotatedBeatmapLevelCollection;
-            _beatUi.AnnotatedBeatmapLevelCollectionsViewController.didSelectAnnotatedBeatmapLevelCollectionEvent += handleDidSelectAnnotatedBeatmapLevelCollection;
+            _beatUi.AnnotatedBeatmapLevelCollectionsViewController.didSelectAnnotatedBeatmapLevelCollectionEvent -= HandleDidSelectAnnotatedBeatmapLevelCollection;
+            _beatUi.AnnotatedBeatmapLevelCollectionsViewController.didSelectAnnotatedBeatmapLevelCollectionEvent += HandleDidSelectAnnotatedBeatmapLevelCollection;
 
             // Respond to characteristics changes
             _beatUi.BeatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent -= OnDidSelectBeatmapCharacteristic;
@@ -655,9 +661,9 @@ namespace SongBrowser.UI
         /// Playlists (fancy name for AnnotatedBeatmapLevelCollection)
         /// </summary>
         /// <param name="annotatedBeatmapLevelCollection"></param>
-        public virtual void handleDidSelectAnnotatedBeatmapLevelCollection(IAnnotatedBeatmapLevelCollection annotatedBeatmapLevelCollection)
+        public virtual void HandleDidSelectAnnotatedBeatmapLevelCollection(IAnnotatedBeatmapLevelCollection annotatedBeatmapLevelCollection)
         {
-            Logger.Trace("handleDidSelectAnnotatedBeatmapLevelCollection()");
+            Logger.Trace("HandleDidSelectAnnotatedBeatmapLevelCollection()");
             _lastLevelCollection = annotatedBeatmapLevelCollection;
             PluginConfig.Instance.CurrentLevelCategoryName = _beatUi.LevelFilteringNavigationController.selectedLevelCategory.ToString();
             Logger.Debug("AnnotatedBeatmapLevelCollection, Selected Level Collection={0}", _lastLevelCollection);
@@ -671,7 +677,7 @@ namespace SongBrowser.UI
         /// <param name="arg2"></param>
         /// <param name="arg3"></param>
         /// <param name="arg4"></param>
-        private void _levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent(LevelFilteringNavigationController arg1, IAnnotatedBeatmapLevelCollection arg2,
+        private void LevelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent(LevelFilteringNavigationController arg1, IAnnotatedBeatmapLevelCollection arg2,
             GameObject arg3, BeatmapCharacteristicSO arg4)
         {
             Logger.Trace("_levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent(levelCollection={0})", arg2);
@@ -1156,6 +1162,11 @@ namespace SongBrowser.UI
                 return;
             }
             BeatSaberPlaylistsLib.Types.IPlaylist playlist = Playlist.CreateNew(playlistName, _beatUi.GetCurrentLevelCollectionLevels());
+            if (playlist == null)
+            {
+                Plugin.Log.Error("Failed to create playlist.");
+            }
+
             BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.RequestRefresh(Assembly.GetExecutingAssembly().FullName);
             SongBrowserApplication.MainProgressBar.ShowMessage("Successfully Exported Playlist");
         }
@@ -1537,7 +1548,7 @@ namespace SongBrowser.UI
                 else if (currentSelected == null || (currentSelected.collectionName != PluginConfig.Instance.CurrentLevelCollectionName))
                 {
                     Logger.Debug("Automatically selecting level collection: {0}", PluginConfig.Instance.CurrentLevelCollectionName);
-                    _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent -= _levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
+                    _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent -= LevelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
 
                     _lastLevelCollection = _beatUi.GetLevelCollectionByName(PluginConfig.Instance.CurrentLevelCollectionName);
                     if (_lastLevelCollection as PreviewBeatmapLevelPackSO)
@@ -1545,7 +1556,7 @@ namespace SongBrowser.UI
                         Hide();
                     }
                     _beatUi.SelectLevelCollection(PluginConfig.Instance.CurrentLevelCollectionName);
-                    _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += _levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
+                    _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += LevelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
                 }
 
                 if (_lastLevelCollection == null)

@@ -478,9 +478,7 @@ namespace SongBrowser
                     {
                         var hasRequirements = difficulties.difficultyBeatmaps.Any(d =>
                         {
-                            var difficulty = d as CustomLevelInfoSaveData.DifficultyBeatmap;
-
-                            if (difficulty == null)
+                            if (!(d is CustomLevelInfoSaveData.DifficultyBeatmap difficulty))
                             {
                                 return false;
                             }
