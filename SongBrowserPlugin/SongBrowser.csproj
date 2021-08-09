@@ -4,7 +4,7 @@
         <TargetFramework>net48</TargetFramework>
         <OutputType>Library</OutputType>
         <LangVersion>8</LangVersion>
-        <Nullable>enable</Nullable>
+        <Nullable>disable</Nullable>
         <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
         <RootNamespace>SongBrowser</RootNamespace>
         <LocalRefsDir Condition="Exists('..\Refs')">..\Refs</LocalRefsDir>
@@ -42,6 +42,9 @@
           <Private>False</Private>
         </Reference>
         <Reference Include="Microsoft.CSharp" />
+        <Reference Include="SiraUtil">
+          <HintPath>$(BeatSaberDir)\Plugins\SiraUtil.dll</HintPath>
+        </Reference>
         <Reference Include="Unity.TextMeshPro">
             <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\Unity.TextMeshPro.dll</HintPath>
             <Private>False</Private>
@@ -113,6 +116,12 @@
             <HintPath>$(BeatSaberDir)\Plugins\SongDataCore.dll</HintPath>
             <Private>False</Private>
         </Reference>
+        <Reference Include="Zenject">
+          <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\Zenject.dll</HintPath>
+        </Reference>
+        <Reference Include="Zenject-usage">
+          <HintPath>$(BeatSaberDir)\Beat Saber_Data\Managed\Zenject-usage.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
     <ItemGroup>
@@ -124,6 +133,7 @@
     <ItemGroup>
         <EmbeddedResource Include="Assets\*.png" />
         <EmbeddedResource Include="manifest.json" />
+        <EmbeddedResource Include="UI\Views\*.bsml" />
     </ItemGroup>
 
     <ItemGroup>

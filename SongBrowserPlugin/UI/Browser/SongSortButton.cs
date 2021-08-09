@@ -1,4 +1,4 @@
-﻿using SongBrowser.DataAccess;
+﻿using SongBrowser.Configuration;
 using UnityEngine.UI;
 
 namespace SongBrowser.UI

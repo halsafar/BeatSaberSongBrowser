@@ -13,6 +13,7 @@ using UnityEngine.UI;
 using VRUIControls;
 using Logger = SongBrowser.Logging.Logger;
 using System.Reflection;
+using SongBrowser.Configuration;
 
 namespace SongBrowser.UI
 {
@@ -239,7 +240,7 @@ namespace SongBrowser.UI
             Logger.Debug("Creating Sort By Display...");
             _sortByDisplay = _viewController.CreateUIButton("sortByValue", "PracticeButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
-                OnSortButtonClickEvent(_model.Settings.sortMode);
+                OnSortButtonClickEvent(PluginConfig.Instance.SortMode);
             }, "");
             _sortByDisplay.SetButtonTextSize(displayButtonFontSize);
             _sortByDisplay.ToggleWordWrapping(false);
@@ -260,7 +261,7 @@ namespace SongBrowser.UI
             Logger.Debug("Creating Filter By Display...");
             _filterByDisplay = _viewController.CreateUIButton("filterValue", "PracticeButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
-                _model.Settings.filterMode = SongFilterMode.None;
+                PluginConfig.Instance.FilterMode = SongFilterMode.None;
                 CancelFilter();
                 ProcessSongList();
                 RefreshSongUI();
@@ -322,8 +323,11 @@ namespace SongBrowser.UI
             for (int i = 0; i < sortModes.Count; i++)
             {
                 float curButtonX = sortButtonX + (sortButtonWidth * i) + (buttonSpacing * i);
-                SongSortButton sortButton = new SongSortButton();
-                sortButton.SortMode = sortModes[i].Value;
+                SongSortButton sortButton = new SongSortButton
+                {
+                    SortMode = sortModes[i].Value
+                };
+
                 sortButton.Button = _viewController.CreateUIButton(String.Format("Sort{0}Button", sortButton.SortMode), "PracticeButton",
                     new Vector2(curButtonX, buttonY), new Vector2(sortButtonWidth, buttonHeight),
                     () =>
@@ -367,8 +371,11 @@ namespace SongBrowser.UI
             for (int i = 0; i < filterButtonNames.Length; i++)
             {
                 float curButtonX = filterButtonX + (filterButtonWidth * i) + (buttonSpacing * i);
-                SongFilterButton filterButton = new SongFilterButton();
-                filterButton.FilterMode = filterModes[i];
+                SongFilterButton filterButton = new SongFilterButton
+                {
+                    FilterMode = filterModes[i]
+                };
+
                 filterButton.Button = _viewController.CreateUIButton(String.Format("Filter{0}Button", filterButton.FilterMode), "PracticeButton",
                     new Vector2(curButtonX, buttonY), new Vector2(filterButtonWidth, buttonHeight),
                     () =>
@@ -497,11 +504,11 @@ namespace SongBrowser.UI
             _beatUi.LevelDetailViewController.didChangeDifficultyBeatmapEvent += OnDidChangeDifficultyEvent;
 
             // update our view of the game state
-            _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent -= _levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
-            _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += _levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
+            _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent -= LevelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
+            _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += LevelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
 
-            _beatUi.AnnotatedBeatmapLevelCollectionsViewController.didSelectAnnotatedBeatmapLevelCollectionEvent -= handleDidSelectAnnotatedBeatmapLevelCollection;
-            _beatUi.AnnotatedBeatmapLevelCollectionsViewController.didSelectAnnotatedBeatmapLevelCollectionEvent += handleDidSelectAnnotatedBeatmapLevelCollection;
+            _beatUi.AnnotatedBeatmapLevelCollectionsViewController.didSelectAnnotatedBeatmapLevelCollectionEvent -= HandleDidSelectAnnotatedBeatmapLevelCollection;
+            _beatUi.AnnotatedBeatmapLevelCollectionsViewController.didSelectAnnotatedBeatmapLevelCollectionEvent += HandleDidSelectAnnotatedBeatmapLevelCollection;
 
             // Respond to characteristics changes
             _beatUi.BeatmapCharacteristicSelectionViewController.didSelectBeatmapCharacteristicEvent -= OnDidSelectBeatmapCharacteristic;
@@ -528,7 +535,7 @@ namespace SongBrowser.UI
         /// <param name="arg2"></param>
         private void OnDidFavoriteToggleChangeEvent(StandardLevelDetailView arg1, Toggle arg2)
         {
-            if (_model.Settings.currentLevelCategoryName == "Favorites")
+            if (PluginConfig.Instance.CurrentLevelCategoryName == "Favorites")
             {
                 // TODO - still scrolls to top in this view
             }
@@ -592,7 +599,7 @@ namespace SongBrowser.UI
 
             //yield return new WaitForEndOfFrame();
 
-            if (_model.Settings.sortMode.NeedsScoreSaberData() && SongDataCore.Plugin.Songs.IsDataAvailable())
+            if (PluginConfig.Instance.SortMode.NeedsScoreSaberData() && SongDataCore.Plugin.Songs.IsDataAvailable())
             {
                 ProcessSongList();
                 RefreshSongUI();
@@ -640,7 +647,7 @@ namespace SongBrowser.UI
         public void CancelFilter()
         {
             Logger.Debug($"Cancelling filter, levelCollection {_lastLevelCollection}");
-            _model.Settings.filterMode = SongFilterMode.None;
+            PluginConfig.Instance.FilterMode = SongFilterMode.None;
 
             GameObject _noDataGO = _beatUi.LevelCollectionViewController.GetField<GameObject, LevelCollectionViewController>("_noDataInfoGO");
             string _headerText = _beatUi.LevelCollectionTableView.GetField<string, LevelCollectionTableView>("_headerText");
@@ -654,12 +661,11 @@ namespace SongBrowser.UI
         /// Playlists (fancy name for AnnotatedBeatmapLevelCollection)
         /// </summary>
         /// <param name="annotatedBeatmapLevelCollection"></param>
-        public virtual void handleDidSelectAnnotatedBeatmapLevelCollection(IAnnotatedBeatmapLevelCollection annotatedBeatmapLevelCollection)
+        public virtual void HandleDidSelectAnnotatedBeatmapLevelCollection(IAnnotatedBeatmapLevelCollection annotatedBeatmapLevelCollection)
         {
-            Logger.Trace("handleDidSelectAnnotatedBeatmapLevelCollection()");
+            Logger.Trace("HandleDidSelectAnnotatedBeatmapLevelCollection()");
             _lastLevelCollection = annotatedBeatmapLevelCollection;
-            Model.Settings.currentLevelCategoryName = _beatUi.LevelFilteringNavigationController.selectedLevelCategory.ToString();
-            Model.Settings.Save();
+            PluginConfig.Instance.CurrentLevelCategoryName = _beatUi.LevelFilteringNavigationController.selectedLevelCategory.ToString();
             Logger.Debug("AnnotatedBeatmapLevelCollection, Selected Level Collection={0}", _lastLevelCollection);
         }
 
@@ -671,7 +677,7 @@ namespace SongBrowser.UI
         /// <param name="arg2"></param>
         /// <param name="arg3"></param>
         /// <param name="arg4"></param>
-        private void _levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent(LevelFilteringNavigationController arg1, IAnnotatedBeatmapLevelCollection arg2,
+        private void LevelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent(LevelFilteringNavigationController arg1, IAnnotatedBeatmapLevelCollection arg2,
             GameObject arg3, BeatmapCharacteristicSO arg4)
         {
             Logger.Trace("_levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent(levelCollection={0})", arg2);
@@ -736,11 +742,11 @@ namespace SongBrowser.UI
                 {
                     Logger.Debug("Recording levelCollection: {0}", levelCollection.collectionName);
                     _lastLevelCollection = levelCollection;
-                    Model.Settings.currentLevelCategoryName = _beatUi.LevelFilteringNavigationController.selectedLevelCategory.ToString();
+                    PluginConfig.Instance.CurrentLevelCategoryName = _beatUi.LevelFilteringNavigationController.selectedLevelCategory.ToString();
                 }
 
                 // save level collection
-                this._model.Settings.currentLevelCollectionName = levelCollection.collectionName;
+                PluginConfig.Instance.CurrentLevelCollectionName = levelCollection.collectionName;
 
                 // set/reset level selection
                 String lastLevelId = _model.FindLastSelectedLevelIdMap();
@@ -748,9 +754,6 @@ namespace SongBrowser.UI
                 {
                     _model.LastSelectedLevelId = lastLevelId;
                 }
-
-                // save xml settings file
-                this._model.Settings.Save();
 
                 StartCoroutine(ProcessSongListEndOfFrame());
             }
@@ -773,7 +776,7 @@ namespace SongBrowser.UI
             if (_model.LastSelectedLevelId == null)
             {
                 scrollToLevel = false;
-                _model.Settings.sortMode = SongSortMode.Original;
+                PluginConfig.Instance.SortMode = SongSortMode.Original;
                 RefreshSortButtonUI();
             }
 
@@ -795,10 +798,9 @@ namespace SongBrowser.UI
         {
             Logger.Debug("Clearing all sorts and filters.");
 
-            _model.Settings.sortMode = SongSortMode.Original;
-            _model.Settings.invertSortResults = false;
-            _model.Settings.filterMode = SongFilterMode.None;
-            _model.Settings.Save();
+            PluginConfig.Instance.SortMode = SongSortMode.Original;
+            PluginConfig.Instance.InvertSortResults = false;
+            PluginConfig.Instance.FilterMode = SongFilterMode.None;
 
             CancelFilter();
             ProcessSongList();
@@ -821,20 +823,18 @@ namespace SongBrowser.UI
             // Clear current selected level id so our song list jumps to the start
             _model.LastSelectedLevelId = null;
 
-            if (_model.Settings.sortMode == sortMode)
+            if (PluginConfig.Instance.SortMode == sortMode)
             {
                 _model.ToggleInverting();
             }
 
-            _model.Settings.sortMode = sortMode;
+            PluginConfig.Instance.SortMode = sortMode;
 
             // update the seed
-            if (_model.Settings.sortMode == SongSortMode.Random)
+            if (PluginConfig.Instance.SortMode == SongSortMode.Random)
             {
-                _model.Settings.randomSongSeed = Guid.NewGuid().GetHashCode();
+                PluginConfig.Instance.RandomSongSeed = Guid.NewGuid().GetHashCode();
             }
-
-            _model.Settings.Save();
 
             ProcessSongList();
             RefreshSongUI();
@@ -872,13 +872,13 @@ namespace SongBrowser.UI
             }
 
             // If selecting the same filter, cancel
-            if (_model.Settings.filterMode == mode)
+            if (PluginConfig.Instance.FilterMode == mode)
             {
-                _model.Settings.filterMode = SongFilterMode.None;
+                PluginConfig.Instance.FilterMode = SongFilterMode.None;
             }
             else
             {
-                _model.Settings.filterMode = mode;
+                PluginConfig.Instance.FilterMode = mode;
             }
 
             switch (mode)
@@ -887,7 +887,6 @@ namespace SongBrowser.UI
                     OnSearchButtonClickEvent();
                     break;
                 default:
-                    _model.Settings.Save();
                     ProcessSongList();
                     RefreshSongUI();
                     break;
@@ -921,7 +920,7 @@ namespace SongBrowser.UI
                     return;
                 }
 
-                if (_model.Settings == null)
+                if (PluginConfig.Instance == null)
                 {
                     Logger.Debug("Settings not instantiated yet?");
                     return;
@@ -1151,9 +1150,8 @@ namespace SongBrowser.UI
         {
             Logger.Debug("Searching for \"{0}\"...", searchFor);
 
-            _model.Settings.filterMode = SongFilterMode.Search;
-            _model.Settings.searchTerms.Insert(0, searchFor);
-            _model.Settings.Save();
+            PluginConfig.Instance.FilterMode = SongFilterMode.Search;
+            PluginConfig.Instance.SearchTerms.Insert(0, searchFor);
             _model.LastSelectedLevelId = null;
 
             ProcessSongList();
@@ -1172,6 +1170,11 @@ namespace SongBrowser.UI
                 return;
             }
             BeatSaberPlaylistsLib.Types.IPlaylist playlist = Playlist.CreateNew(playlistName, _beatUi.GetCurrentLevelCollectionLevels());
+            if (playlist == null)
+            {
+                Plugin.Log.Error("Failed to create playlist.");
+            }
+
             BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.RequestRefresh(Assembly.GetExecutingAssembly().FullName);
             SongBrowserApplication.MainProgressBar.ShowMessage("Successfully Exported Playlist");
         }
@@ -1409,19 +1412,19 @@ namespace SongBrowser.UI
         private void RefreshCurrentSelectionDisplay()
         {
             string sortByDisplay;
-            if (_model.Settings.sortMode == SongSortMode.Default)
+            if (PluginConfig.Instance.SortMode == SongSortMode.Default)
             {
                 sortByDisplay = "Title";
             }
             else
             {
-                sortByDisplay = _model.Settings.sortMode.ToString();
+                sortByDisplay = PluginConfig.Instance.SortMode.ToString();
             }
             _sortByDisplay.SetButtonText(sortByDisplay);
-            if (_model.Settings.filterMode != SongFilterMode.Custom)
+            if (PluginConfig.Instance.FilterMode != SongFilterMode.Custom)
             {
                 // Custom SongFilterMod implies that another mod has modified the text of this button (do not overwrite)
-                _filterByDisplay.SetButtonText(_model.Settings.filterMode.ToString());
+                _filterByDisplay.SetButtonText(PluginConfig.Instance.FilterMode.ToString());
             }
         }
 
@@ -1446,9 +1449,9 @@ namespace SongBrowser.UI
                     sortButton.Button.SetButtonUnderlineColor(Color.white);
                 }
 
-                if (sortButton.SortMode == _model.Settings.sortMode)
+                if (sortButton.SortMode == PluginConfig.Instance.SortMode)
                 {
-                    if (this._model.Settings.invertSortResults)
+                    if (PluginConfig.Instance.InvertSortResults)
                     {
                         sortButton.Button.SetButtonUnderlineColor(Color.red);
                     }
@@ -1462,13 +1465,13 @@ namespace SongBrowser.UI
             foreach (SongFilterButton filterButton in _filterButtonGroup)
             {
                 filterButton.Button.SetButtonUnderlineColor(Color.white);
-                if (filterButton.FilterMode == _model.Settings.filterMode)
+                if (filterButton.FilterMode == PluginConfig.Instance.FilterMode)
                 {
                     filterButton.Button.SetButtonUnderlineColor(Color.green);
                 }
             }
 
-            if (this._model.Settings.invertSortResults)
+            if (PluginConfig.Instance.InvertSortResults)
             {
                 _sortByDisplay.SetButtonUnderlineColor(Color.red);
             }
@@ -1477,7 +1480,7 @@ namespace SongBrowser.UI
                 _sortByDisplay.SetButtonUnderlineColor(Color.green);
             }
 
-            if (this._model.Settings.filterMode != SongFilterMode.None)
+            if (PluginConfig.Instance.FilterMode != SongFilterMode.None)
             {
                 _filterByDisplay.SetButtonUnderlineColor(Color.green);
             }
@@ -1534,34 +1537,34 @@ namespace SongBrowser.UI
                 Logger.Debug("Updating level collection, current selected level collection: {0}", currentSelected);
 
                 // select category
-                if (!String.IsNullOrEmpty(_model.Settings.currentLevelCategoryName))
+                if (!String.IsNullOrEmpty(PluginConfig.Instance.CurrentLevelCategoryName))
                 {
                     _selectingCategory = true;
-                    _beatUi.SelectLevelCategory(_model.Settings.currentLevelCategoryName);
+                    _beatUi.SelectLevelCategory(PluginConfig.Instance.CurrentLevelCategoryName);
                     _selectingCategory = false;
                 }
 
                 // select collection
-                if (String.IsNullOrEmpty(_model.Settings.currentLevelCollectionName))
+                if (String.IsNullOrEmpty(PluginConfig.Instance.CurrentLevelCollectionName))
                 {
-                    if (currentSelected == null && String.IsNullOrEmpty(_model.Settings.currentLevelCategoryName))
+                    if (currentSelected == null && String.IsNullOrEmpty(PluginConfig.Instance.CurrentLevelCategoryName))
                     {
                         Logger.Debug("No level collection selected, acquiring the first available, likely OST1...");
                         currentSelected = _beatUi.BeatmapLevelsModel.allLoadedBeatmapLevelPackCollection.beatmapLevelPacks[0];
                     }
                 }
-                else if (currentSelected == null || (currentSelected.collectionName != _model.Settings.currentLevelCollectionName))
+                else if (currentSelected == null || (currentSelected.collectionName != PluginConfig.Instance.CurrentLevelCollectionName))
                 {
-                    Logger.Debug("Automatically selecting level collection: {0}", _model.Settings.currentLevelCollectionName);
-                    _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent -= _levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
+                    Logger.Debug("Automatically selecting level collection: {0}", PluginConfig.Instance.CurrentLevelCollectionName);
+                    _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent -= LevelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
 
-                    _lastLevelCollection = _beatUi.GetLevelCollectionByName(_model.Settings.currentLevelCollectionName);
+                    _lastLevelCollection = _beatUi.GetLevelCollectionByName(PluginConfig.Instance.CurrentLevelCollectionName);
                     if (_lastLevelCollection as PreviewBeatmapLevelPackSO)
                     {
                         Hide();
                     }
-                    _beatUi.SelectLevelCollection(_model.Settings.currentLevelCollectionName);
-                    _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += _levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
+                    _beatUi.SelectLevelCollection(PluginConfig.Instance.CurrentLevelCollectionName);
+                    _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += LevelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
                 }
 
                 if (_lastLevelCollection == null)

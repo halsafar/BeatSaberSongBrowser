@@ -43,7 +43,7 @@ namespace SongBrowser.UI
             Regex r = new Regex(@"data:image.*base64,");
             base64 = r.Replace(base64, "");
 
-            Sprite s = null;
+            Sprite s;
             try
             {
                 Texture2D tex = Base64ToTexture2D(base64);
@@ -65,9 +65,11 @@ namespace SongBrowser.UI
             int width, height;
             GetImageSize(imageData, out width, out height);
 
-            Texture2D texture = new Texture2D(width, height, TextureFormat.ARGB32, false, true);
-            texture.hideFlags = HideFlags.HideAndDontSave;
-            texture.filterMode = FilterMode.Trilinear;
+            Texture2D texture = new Texture2D(width, height, TextureFormat.ARGB32, false, true)
+            {
+                hideFlags = HideFlags.HideAndDontSave,
+                filterMode = FilterMode.Trilinear
+            };
             texture.LoadImage(imageData);
             return texture;
         }

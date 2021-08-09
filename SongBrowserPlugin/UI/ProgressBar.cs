@@ -31,7 +31,7 @@ namespace SongBrowser.UI
         private const float AuthorNameFontSize = 7f;
         private static readonly Vector2 AuthorNamePosition = new Vector2(10, 31);
 
-        private string PluginNameText = $"Song Browser - v<size=100%>{Plugin.VersionNumber}</size>";
+        private readonly string PluginNameText = $"Song Browser - v<size=100%>{Plugin.VersionNumber}</size>";
         private const float PluginNameFontSize = 9f;
         private static readonly Vector2 PluginNamePosition = new Vector2(10, 23);
 
@@ -71,13 +71,13 @@ namespace SongBrowser.UI
             gameObject.SetActive(true);
         }
 
-        private void OnEnable()
+        protected void OnEnable()
         {
             SceneManager.activeSceneChanged += SceneManagerOnActiveSceneChanged;
             SongBrowserModel.didFinishProcessingSongs += SongBrowserFinishedProcessingSongs;
         }
 
-        private void OnDisable()
+        protected void OnDisable()
         {
             SceneManager.activeSceneChanged -= SceneManagerOnActiveSceneChanged;
             SongBrowserModel.didFinishProcessingSongs -= SongBrowserFinishedProcessingSongs;               
@@ -98,16 +98,6 @@ namespace SongBrowser.UI
             }
         }
 
-        private void SongLoaderOnLoadingStartedEvent(Loader obj)
-        {
-            StopAllCoroutines();
-            _showingMessage = false;
-            _headerText.text = HeaderText;
-            _loadingBar.enabled = true;
-            _loadingBackg.enabled = true;
-            gameObject.SetActive(true);
-        }
-
         private void SongBrowserFinishedProcessingSongs(ConcurrentDictionary<string, CustomPreviewBeatmapLevel> customLevels)
         {
             _showingMessage = false;
@@ -124,7 +114,7 @@ namespace SongBrowser.UI
             _showingMessage = false;
         }
 
-        private void Awake()
+        protected void Awake()
         {
             gameObject.transform.position = Position;
             gameObject.transform.eulerAngles = Rotation;
@@ -186,7 +176,7 @@ namespace SongBrowser.UI
             DontDestroyOnLoad(gameObject);
         }
 
-        private void Update()
+        protected void Update()
         {
             if (!_canvas.enabled) return;
             _loadingBar.fillAmount = Loader.LoadingProgress;

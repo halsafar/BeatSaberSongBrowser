@@ -12,6 +12,7 @@ using IPA.Utilities;
 using UnityEngine;
 using Logger = SongBrowser.Logging.Logger;
 using CustomJSONData.CustomBeatmap;
+using SongBrowser.Configuration;
 
 namespace SongBrowser
 {
@@ -23,9 +24,6 @@ namespace SongBrowser
         private readonly String CUSTOM_SONGS_DIR = Path.Combine("Beat Saber_Data", "CustomLevels");
 
         private readonly DateTime EPOCH = new DateTime(1970, 1, 1);
-
-        // song_browser_settings.xml
-        private SongBrowserSettings _settings;
 
         // song list management
         private double _customSongDirLastWriteTime = 0;
@@ -41,30 +39,18 @@ namespace SongBrowser
         public bool SortWasMissingData { get; private set; } = false;
 
         /// <summary>
-        /// Get the settings the model is using.
-        /// </summary>
-        public SongBrowserSettings Settings
-        {
-            get
-            {
-                return _settings;
-            }
-        }
-
-        /// <summary>
         /// Get the last selected (stored in settings) level id.
         /// </summary>
         public String LastSelectedLevelId
         {
             get
             {
-                return _settings.currentLevelId;
+                return PluginConfig.Instance.CurrentLevelId;
             }
 
             set
             {
-                _settings.currentLevelId = value;
-                _settings.Save();
+                PluginConfig.Instance.CurrentLevelId = value;
             }
         }
 
@@ -88,8 +74,7 @@ namespace SongBrowser
         /// <param name="songListViewController"></param>
         public void Init()
         {
-            _settings = SongBrowserSettings.Load();
-            Logger.Info("Settings loaded, sorting mode is: {0}", _settings.sortMode);
+            Logger.Info($"Settings loaded, filter/sorting mode is: {PluginConfig.Instance.FilterMode}/{PluginConfig.Instance.SortMode}");
         }
 
         /// <summary>
@@ -97,7 +82,7 @@ namespace SongBrowser
         /// </summary>
         public void ToggleInverting()
         {
-            this.Settings.invertSortResults = !this.Settings.invertSortResults;
+            PluginConfig.Instance.InvertSortResults = !PluginConfig.Instance.InvertSortResults;
         }
 
         /// <summary>
@@ -265,9 +250,9 @@ namespace SongBrowser
         {
             Logger.Trace("ProcessSongList()");
 
-            List<IPreviewBeatmapLevel> unsortedSongs = null;
-            List<IPreviewBeatmapLevel> filteredSongs = null;
-            List<IPreviewBeatmapLevel> sortedSongs = null;
+            List<IPreviewBeatmapLevel> unsortedSongs;
+            List<IPreviewBeatmapLevel> filteredSongs;
+            List<IPreviewBeatmapLevel> sortedSongs;
 
             // Abort
             if (selectedBeatmapCollection == null)
@@ -280,15 +265,15 @@ namespace SongBrowser
             unsortedSongs = GetLevelsForLevelCollection(selectedBeatmapCollection).ToList();
 
             // filter
-            Logger.Debug($"Starting filtering songs by {_settings.filterMode}");
+            Logger.Debug($"Starting filtering songs by {PluginConfig.Instance.FilterMode}");
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            if (_settings.filterMode == SongFilterMode.Requirements && !Plugin.IsCustomJsonDataEnabled)
+            if (PluginConfig.Instance.FilterMode == SongFilterMode.Requirements && !Plugin.IsCustomJsonDataEnabled)
             {
-                _settings.filterMode = SongFilterMode.None;
+                PluginConfig.Instance.FilterMode = SongFilterMode.None;
             }
 
-            switch (_settings.filterMode)
+            switch (PluginConfig.Instance.FilterMode)
             {
                 case SongFilterMode.Favorites:
                     filteredSongs = FilterFavorites(unsortedSongs);
@@ -320,12 +305,12 @@ namespace SongBrowser
             Logger.Info("Filtering songs took {0}ms", stopwatch.ElapsedMilliseconds);
 
             // sort
-            Logger.Debug($"Starting to sort songs by {_settings.sortMode}");
+            Logger.Debug($"Starting to sort songs by {PluginConfig.Instance.SortMode}");
             stopwatch = Stopwatch.StartNew();
 
             SortWasMissingData = false;
 
-            switch (_settings.sortMode)
+            switch (PluginConfig.Instance.SortMode)
             {
                 case SongSortMode.Original:
                     sortedSongs = SortOriginal(filteredSongs);
@@ -375,7 +360,7 @@ namespace SongBrowser
                     break;
             }
 
-            if (this.Settings.invertSortResults && _settings.sortMode != SongSortMode.Random)
+            if (PluginConfig.Instance.InvertSortResults && PluginConfig.Instance.SortMode != SongSortMode.Random)
             {
                 sortedSongs.Reverse();
             }
@@ -391,7 +376,7 @@ namespace SongBrowser
                 packName = "";
             }
 
-            if (!packName.EndsWith("*") && _settings.filterMode != SongFilterMode.None)
+            if (!packName.EndsWith("*") && PluginConfig.Instance.FilterMode != SongFilterMode.None)
             {
                 packName += "*";
             }
@@ -453,13 +438,13 @@ namespace SongBrowser
         private List<IPreviewBeatmapLevel> FilterSearch(List<IPreviewBeatmapLevel> levels)
         {
             // Make sure we can actually search.
-            if (this._settings.searchTerms.Count <= 0)
+            if (PluginConfig.Instance.SearchTerms.Count <= 0)
             {
                 Logger.Error("Tried to search for a song with no valid search terms...");
                 SortSongName(levels);
                 return levels;
             }
-            string searchTerm = this._settings.searchTerms[0];
+            string searchTerm = PluginConfig.Instance.SearchTerms[0];
             if (String.IsNullOrEmpty(searchTerm))
             {
                 Logger.Error("Empty search term entered.");
@@ -537,9 +522,7 @@ namespace SongBrowser
                     {
                         var hasRequirements = difficulties.difficultyBeatmaps.Any(d =>
                         {
-                            var difficulty = d as CustomLevelInfoSaveData.DifficultyBeatmap;
-
-                            if (difficulty == null)
+                            if (!(d is CustomLevelInfoSaveData.DifficultyBeatmap difficulty))
                             {
                                 return false;
                             }
@@ -678,7 +661,7 @@ namespace SongBrowser
                         return stars;
                     }
 
-                    if (_settings.invertSortResults)
+                    if (PluginConfig.Instance.InvertSortResults)
                     {
                         return double.MaxValue;
                     }
@@ -697,9 +680,9 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortRandom(List<IPreviewBeatmapLevel> levelIds)
         {
-            Logger.Info("Sorting song list by random (seed={0})...", Settings.randomSongSeed);
+            Logger.Info("Sorting song list by random (seed={0})...", PluginConfig.Instance.RandomSongSeed);
 
-            System.Random rnd = new System.Random(Settings.randomSongSeed);
+            System.Random rnd = new System.Random(PluginConfig.Instance.RandomSongSeed);
 
             return levelIds
                 .OrderBy(x => x.songName)
