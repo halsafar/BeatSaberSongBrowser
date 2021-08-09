@@ -12,11 +12,18 @@ namespace SongBrowser.UI.ViewControllers
         public event PropertyChangedEventHandler PropertyChanged;   
 
         [UIValue("random-instant-queue")]
-        public bool DefaultAllowDuplicates
+        public bool RandomInstantQueue
         {
             get => PluginConfig.Instance.RandomInstantQueue;
             set => PluginConfig.Instance.RandomInstantQueue = value;
-        }      
+        }
+
+        [UIValue("save-levelid-per-collection")]
+        public bool SaveLevelIdPerCollection
+        {
+            get => PluginConfig.Instance.SaveLevelIdPerCollection;
+            set => PluginConfig.Instance.SaveLevelIdPerCollection = value;
+        }
 
         public void Initialize() => BSMLSettings.instance.AddSettingsMenu(nameof(SongBrowser), "SongBrowser.UI.Views.Settings.bsml", this);
         public void Dispose() => BSMLSettings.instance.RemoveSettingsMenu(this);

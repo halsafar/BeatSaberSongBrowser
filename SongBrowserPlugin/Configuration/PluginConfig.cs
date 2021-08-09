@@ -10,19 +10,36 @@ namespace SongBrowser.Configuration
     internal class PluginConfig
     {
         public static PluginConfig Instance { get; set; }
+
         public virtual SongSortMode SortMode { get; set; } = default;
+
         public virtual SongFilterMode FilterMode { get; set; } = default;
+
         [UseConverter(typeof(ListConverter<string>))]
         [NonNullable]
         public virtual List<string> SearchTerms { get; set; } = new List<string>();
+
         public virtual string CurrentLevelId { get; set; } = default;
+
         public virtual string CurrentLevelCollectionName { get; set; } = default;
+
         public virtual string CurrentLevelCategoryName { get; set; } = default;
+
         public virtual bool RandomInstantQueue { get; set; } = true;
+
         public virtual bool DeleteNumberedSongFolder { get; set; } = false;
+
         public virtual bool InvertSortResults { get; set; } = false;
+
         public virtual int RandomSongSeed { get; set; } = default;    
+
         public virtual int MaxSearchTerms { get; set; } = 10;
+
+        public virtual bool SaveLevelIdPerCollection { get; set; } = false;
+
+        [UseConverter(typeof(DictionaryConverter<Dictionary<string, string>>))]
+        [NonNullable]
+        public virtual Dictionary<string, Dictionary<string, string>> LastLevelIdMap { get; set; } = new Dictionary<string, Dictionary<string, string>>();
 
         /// <summary>
         /// Call this to force BSIPA to update the config file. This is also called by BSIPA if it detects the file was modified.

@@ -1,5 +1,3 @@
-using SongBrowser.DataAccess;
-using SongCore.Utilities;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -7,7 +5,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using HMUI;
 using IPA.Utilities;
 using UnityEngine;
 using Logger = SongBrowser.Logging.Logger;
@@ -183,24 +180,26 @@ namespace SongBrowser
         /// <param name="lastLevelId"></param>
         public void SetLastSelectedLevelIdMap(string lastLevelId)
         {
-            var categoryName = _settings.currentLevelCategoryName;
-            var collectionName = _settings.currentLevelCollectionName;
+            var categoryName = PluginConfig.Instance.CurrentLevelCategoryName;
+            var collectionName = PluginConfig.Instance.CurrentLevelCollectionName;
+            if (collectionName == null)
+            {
+                collectionName = "";
+            }
 
             Plugin.Log.Debug($"categoryName = {categoryName}, collectionName = {collectionName}");
-            var index = _settings.lastSelectedLevelIds.FindIndex(x => String.Equals(x.CategoryName, categoryName) && String.Equals(x.CollectionName, collectionName));
-            if (index == -1)
+            if (!PluginConfig.Instance.LastLevelIdMap.ContainsKey(categoryName))
             {
-                LevelIdCollectionMap item = new LevelIdCollectionMap()
-                {
-                    CategoryName = categoryName,
-                    CollectionName = collectionName,
-                    LevelId = lastLevelId
-                };
-                _settings.lastSelectedLevelIds.Add(item);
+                PluginConfig.Instance.LastLevelIdMap.Add(categoryName, new Dictionary<string, string>());
             }
+
+            if (!PluginConfig.Instance.LastLevelIdMap[categoryName].ContainsKey(collectionName))
+            {
+                PluginConfig.Instance.LastLevelIdMap[categoryName].Add(collectionName, lastLevelId);
+            } 
             else
             {
-                _settings.lastSelectedLevelIds[index].LevelId = lastLevelId;
+                PluginConfig.Instance.LastLevelIdMap[categoryName][collectionName] = lastLevelId;
             }
         }
 
@@ -208,14 +207,21 @@ namespace SongBrowser
         /// Find last selected levelId for specific collection.
         /// </summary>
         /// <param name="collectionName"></param>
-        public String? FindLastSelectedLevelIdMap()
+        public String FindLastSelectedLevelIdMap()
         {
-            var categoryName = _settings.currentLevelCategoryName;
-            var collectionName = _settings.currentLevelCollectionName;
-            var index = _settings.lastSelectedLevelIds.FindIndex(x => String.Equals(x.CategoryName, categoryName) && String.Equals(x.CollectionName, collectionName));
-            if (index >= 0)
+            var categoryName = PluginConfig.Instance.CurrentLevelCategoryName;
+            var collectionName = PluginConfig.Instance.CurrentLevelCollectionName;
+            if (collectionName == null)
             {
-                return _settings.lastSelectedLevelIds[index].LevelId;
+                collectionName = "";
+            }
+
+            if (PluginConfig.Instance.LastLevelIdMap.ContainsKey(categoryName))
+            {
+                if (PluginConfig.Instance.LastLevelIdMap[categoryName].ContainsKey(collectionName))
+                {
+                    return PluginConfig.Instance.LastLevelIdMap[categoryName][collectionName];
+                }
             }
 
             return null;

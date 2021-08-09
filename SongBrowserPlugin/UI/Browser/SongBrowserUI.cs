@@ -749,11 +749,15 @@ namespace SongBrowser.UI
                 PluginConfig.Instance.CurrentLevelCollectionName = levelCollection.collectionName;
 
                 // set/reset level selection
-                String lastLevelId = _model.FindLastSelectedLevelIdMap();
-                if (!String.IsNullOrEmpty(lastLevelId))
+                _model.LastSelectedLevelId = null;
+                if (PluginConfig.Instance.SaveLevelIdPerCollection)
                 {
-                    _model.LastSelectedLevelId = lastLevelId;
-                }
+                    String lastLevelId = _model.FindLastSelectedLevelIdMap();
+                    if (!String.IsNullOrEmpty(lastLevelId))
+                    {
+                        _model.LastSelectedLevelId = lastLevelId;
+                    }
+                } 
 
                 StartCoroutine(ProcessSongListEndOfFrame());
             }
@@ -927,7 +931,10 @@ namespace SongBrowser.UI
                 }
 
                 // save collection -> level mapping
-                _model.SetLastSelectedLevelIdMap(level.levelID);
+                if (PluginConfig.Instance.SaveLevelIdPerCollection)
+                {
+                    _model.SetLastSelectedLevelIdMap(level.levelID);
+                }
 
                 _model.LastSelectedLevelId = level.levelID;
 
