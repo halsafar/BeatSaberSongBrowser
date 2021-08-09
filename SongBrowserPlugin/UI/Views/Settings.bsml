@@ -1,0 +1,5 @@
+﻿<bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
+	<settings-container>
+		<checkbox value='random-instant-queue' text='Random - Instant Queue' hover-hint='Pressing random will instantly start a song.' />
+	</settings-container>
+</bg>
