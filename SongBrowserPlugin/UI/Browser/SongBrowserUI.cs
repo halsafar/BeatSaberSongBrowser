@@ -14,6 +14,7 @@ using VRUIControls;
 using Logger = SongBrowser.Logging.Logger;
 using System.Reflection;
 using SongBrowser.Configuration;
+using BS_Utils.Utilities;
 
 namespace SongBrowser.UI
 {
@@ -830,10 +831,25 @@ namespace SongBrowser.UI
             if (PluginConfig.Instance.SortMode == SongSortMode.Random)
             {
                 PluginConfig.Instance.RandomSongSeed = Guid.NewGuid().GetHashCode();
+
+                if (PluginConfig.Instance.RandomInstantQueue)
+                {
+                    StartCoroutine(ForceStartSongEndOfFrame());
+                }
             }
 
             ProcessSongList();
             RefreshSongUI();
+        }
+
+        /// <summary>
+        /// Force a song to start end of frame (doing it earlier causes a stack of tracebacks).
+        /// </summary>
+        /// <returns></returns>
+        private IEnumerator ForceStartSongEndOfFrame()
+        {
+            yield return new WaitForEndOfFrame();
+            _beatUi.LevelSelectionFlowCoordinator.InvokeMethod("ActionButtonWasPressed", new object[0]);
         }
 
         /// <summary>
