@@ -441,8 +441,19 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> FilterRanked(List<IPreviewBeatmapLevel> levels, bool includeRanked, bool includeUnranked)
         {
-            return levels.Where(x =>
+            var filteredLevels = levels.Where(x =>
             {
+                if (!SongDataCore.Plugin.Songs.IsDataAvailable())
+                {
+                    Plugin.Log.Warn("SDC Data is not available yet.");
+                    return false;
+                }
+
+                if (x == null)
+                {
+                    return false;
+                }
+
                 var hash = SongBrowserModel.GetSongHash(x.levelID);
                 double maxPP = 0.0;
                 if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
@@ -459,6 +470,13 @@ namespace SongBrowser
                     return includeUnranked;
                 }
             }).ToList();
+
+            if (filteredLevels.Count == 0)
+            {
+                Plugin.Log.Info("No ranked songs found after filtering.");
+            }
+
+            return filteredLevels;
         }
 
         /// <summary>
