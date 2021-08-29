@@ -243,6 +243,12 @@ namespace SongBrowser
                 case SongFilterMode.Unranked:
                     filteredSongs = FilterRanked(unsortedSongs, false, true);
                     break;
+                case SongFilterMode.Played:
+                    filteredSongs = FilterPlayed(unsortedSongs, true, false);
+                    break;
+                case SongFilterMode.Unplayed:
+                    filteredSongs = FilterPlayed(unsortedSongs, false, true);
+                    break;
                 case SongFilterMode.Requirements:
                     filteredSongs = FilterRequirements(unsortedSongs);
                     break;
@@ -518,6 +524,42 @@ namespace SongBrowser
 
                 return false;
             }).ToList();
+        }
+        
+        /// <summary>
+        /// Filter songs based on played or unplayed status.
+        /// </summary>
+        /// <param name="levels"></param>
+        /// <param name="includePlayed"></param>
+        /// <param name="includeUnplayed"></param>
+        /// <returns></returns>
+        private List<IPreviewBeatmapLevel> FilterPlayed(List<IPreviewBeatmapLevel> levels, bool includePlayed, bool includeUnplayed)
+        {
+            var filteredLevels = levels.Where(x =>
+            {
+                if (x == null)
+                {
+                    return false;
+                }
+                
+                var playCount = _levelIdToPlayCount.ContainsKey(x.levelID) ? _levelIdToPlayCount[x.levelID] : 0;
+
+                if (playCount > 0)
+                {
+                    return includePlayed;
+                }
+                else
+                {
+                    return includeUnplayed;
+                }
+            }).ToList();
+
+            if (filteredLevels.Count == 0)
+            {
+                Plugin.Log.Info("No played songs found after filtering.");
+            }
+
+            return filteredLevels;
         }
 
         /// <summary>

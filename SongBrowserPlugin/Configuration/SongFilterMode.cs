@@ -14,6 +14,8 @@ namespace SongBrowser.Configuration
         Search,
         Ranked,
         Unranked,
+        Played,
+        Unplayed,
         Requirements,
 
         // For other mods that extend SongBrowser
