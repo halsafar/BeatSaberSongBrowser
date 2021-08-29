@@ -654,8 +654,8 @@ namespace SongBrowser.UI
             string _headerText = _beatUi.LevelCollectionTableView.GetField<string, LevelCollectionTableView>("_headerText");
             Sprite _headerSprite = _beatUi.LevelCollectionTableView.GetField<Sprite, LevelCollectionTableView>("_headerSprite");
 
-            IBeatmapLevelCollection levelCollection = _beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection().beatmapLevelCollection;
-            _beatUi.LevelCollectionViewController.SetData(levelCollection, _headerText, _headerSprite, false, _noDataGO);
+
+            UpdateLevelCollectionSelection();
         }
 
         /// <summary>
@@ -860,11 +860,16 @@ namespace SongBrowser.UI
         {
             Logger.Debug($"FilterButton {mode} clicked.");
 
+            CancelFilter();
+
+            var isAllSongs = _beatUi.LevelFilteringNavigationController.selectedLevelCategory == SelectLevelCategoryViewController.LevelCategory.All;
+
             var curCollection = _beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection();
             if (_lastLevelCollection == null ||
                 (curCollection != null &&
                 curCollection.collectionName != SongBrowserModel.FilteredSongsCollectionName &&
-                curCollection.collectionName != SongBrowserModel.PlaylistSongsCollectionName))
+                curCollection.collectionName != SongBrowserModel.PlaylistSongsCollectionName &&
+                !isAllSongs))
             {
                 _lastLevelCollection = _beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection();
             }
@@ -879,7 +884,7 @@ namespace SongBrowser.UI
                 string _headerText = _beatUi.LevelCollectionTableView.GetField<string, LevelCollectionTableView>("_headerText");
                 Sprite _headerSprite = _beatUi.LevelCollectionTableView.GetField<Sprite, LevelCollectionTableView>("_headerSprite");
 
-                IBeatmapLevelCollection levelCollection = _beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection().beatmapLevelCollection;
+                IBeatmapLevelCollection levelCollection = _lastLevelCollection.beatmapLevelCollection;
                 _beatUi.LevelCollectionViewController.SetData(levelCollection, _headerText, _headerSprite, false, _noDataGO);
             }
 
