@@ -388,7 +388,7 @@ namespace SongBrowser.UI
                 filterButton.Button.SetButtonTextSize(filterButtonFontSize);
                 filterButton.Button.ToggleWordWrapping(false);
 
-                if (i == 3)
+                if (String.Equals(filterButtonNames[i], "Requirements"))
                 {
                     filterButton.Button.interactable = Plugin.IsCustomJsonDataEnabled;
                 }
