@@ -14,8 +14,8 @@ namespace SongBrowser.UI.ViewControllers
         [UIValue("random-instant-queue")]
         public bool DefaultAllowDuplicates
         {
-            get => PluginConfig.Instance.RandomInstantQueue;
-            set => PluginConfig.Instance.RandomInstantQueue = value;
+            get => PluginConfig.Instance.RandomInstantQueueSong;
+            set => PluginConfig.Instance.RandomInstantQueueSong = value;
         }      
 
         public void Initialize() => BSMLSettings.instance.AddSettingsMenu(nameof(SongBrowser), "SongBrowser.UI.Views.Settings.bsml", this);

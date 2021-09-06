@@ -832,7 +832,7 @@ namespace SongBrowser.UI
             {
                 PluginConfig.Instance.RandomSongSeed = Guid.NewGuid().GetHashCode();
 
-                if (PluginConfig.Instance.RandomInstantQueue)
+                if (PluginConfig.Instance.RandomInstantQueueSong)
                 {
                     StartCoroutine(ForceStartSongEndOfFrame());
                 }
@@ -849,6 +849,24 @@ namespace SongBrowser.UI
         private IEnumerator ForceStartSongEndOfFrame()
         {
             yield return new WaitForEndOfFrame();
+
+            // Level loading is done async.
+            // The level list might have been shuffled/reset.
+            // Need to wait for the ActionButton to be active and enabled.
+            var levelLoaded = false;
+            var maxIter = 5;
+            var i = 0;
+            for (i = 0; i < maxIter && !levelLoaded; i++)
+            {
+                yield return new WaitForSeconds(0.5f);
+
+                Button actionButton = _beatUi.ActionButtons.GetComponentsInChildren<Button>().FirstOrDefault(x => x.name == "ActionButton");
+                if (actionButton != null)
+                {
+                    levelLoaded = actionButton.isActiveAndEnabled;
+                }
+            }
+
             _beatUi.LevelSelectionFlowCoordinator.InvokeMethod("ActionButtonWasPressed", new object[0]);
         }
 
