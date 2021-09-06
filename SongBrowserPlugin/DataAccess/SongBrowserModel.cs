@@ -316,7 +316,7 @@ namespace SongBrowser
                     break;
             }
 
-            if (PluginConfig.Instance.InvertSortResults && PluginConfig.Instance.SortMode != SongSortMode.Random)
+            if (PluginConfig.Instance.InvertSortResults && PluginConfig.Instance.SortMode != SongSortMode.Random && PluginConfig.Instance.SortMode != SongSortMode.Stars)
             {
                 sortedSongs.Reverse();
             }
@@ -626,7 +626,9 @@ namespace SongBrowser
                     if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
                     {
                         var diffs = SongDataCore.Plugin.Songs.Data.Songs[hash].diffs;
-                        stars = diffs.Max(y => y.star);
+                        stars = diffs.Max(y => (PluginConfig.Instance.InvertSortResults)
+                            ? -y.star
+                            : y.star);
                     }
 
                     //Logger.Debug("Stars={0}", stars);
@@ -635,14 +637,7 @@ namespace SongBrowser
                         return stars;
                     }
 
-                    if (PluginConfig.Instance.InvertSortResults)
-                    {
-                        return double.MaxValue;
-                    }
-                    else
-                    {
-                        return double.MinValue;
-                    }
+                    return double.MinValue;
                 })
                 .ToList();
         }
