@@ -350,8 +350,14 @@ namespace SongBrowser
                 coverImage = BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite;
             }
 
+            var smallCoverImage = selectedBeatmapCollection.smallCoverImage;
+            if (smallCoverImage == null)
+            {
+                smallCoverImage = BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite;
+            }
+
             Logger.Debug("Creating filtered level pack...");
-            BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsCollectionName, packName, selectedBeatmapCollection.collectionName, coverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
+            BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsCollectionName, packName, selectedBeatmapCollection.collectionName, coverImage, smallCoverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
 
             /*
              public virtual void SetData(
