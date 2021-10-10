@@ -283,6 +283,9 @@ namespace SongBrowser
                 case SongSortMode.Author:
                     sortedSongs = SortAuthor(filteredSongs);
                     break;
+                case SongSortMode.Mapper:
+                    sortedSongs = SortMapper(filteredSongs);
+                    break;
                 case SongSortMode.UpVotes:
                     sortedSongs = SortUpVotes(filteredSongs);
                     break;
@@ -604,6 +607,20 @@ namespace SongBrowser
             Logger.Info("Sorting song list by author");
             return levelIds
                 .OrderBy(x => x.songAuthorName)
+                .ThenBy(x => x.songName)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Sorting by the level author (mapper).
+        /// </summary>
+        /// <param name="levelIds"></param>
+        /// <returns></returns>
+        private List<IPreviewBeatmapLevel> SortMapper(List<IPreviewBeatmapLevel> levelIds)
+        {
+            Logger.Info("Sorting song list by mapper");
+            return levelIds
+                .OrderBy(x => x.levelAuthorName)
                 .ThenBy(x => x.songName)
                 .ToList();
         }

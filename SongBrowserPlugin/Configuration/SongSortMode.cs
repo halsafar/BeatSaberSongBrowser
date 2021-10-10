@@ -10,6 +10,7 @@ namespace SongBrowser.Configuration
     {
         Default,
         Author,
+        Mapper,
         Original,
         Newest,
         YourPlayCount,
