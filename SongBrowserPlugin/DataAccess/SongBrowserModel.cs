@@ -382,7 +382,6 @@ namespace SongBrowser
             Logger.Debug("Calling lcnvc.SetData...");
             lcnvc.SetData(levelPack,
                 true,
-                _showPlayerStatsInDetailView,
                 !_hidePracticeButton,
                 _actionButtonText,
                 noDataPrefab,
