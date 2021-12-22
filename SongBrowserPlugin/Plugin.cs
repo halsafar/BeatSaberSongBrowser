@@ -31,7 +31,7 @@ namespace SongBrowser
             Log = logger;
             VersionNumber = metadata.Version?.ToString() ?? Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
             harmony = new Harmony(HarmonyId);
-            zenjector.OnMenu<SongBrowserMenuInstaller>();
+            zenjector.Install<SongBrowserMenuInstaller>(Location.Menu);
         }
 
         #region BSIPA Config
@@ -81,7 +81,7 @@ namespace SongBrowser
         [OnDisable]
         public void OnDisable()
         {
-            harmony.UnpatchAll(HarmonyId);
+            Harmony.UnpatchID(HarmonyId);
         }
     }
 }
