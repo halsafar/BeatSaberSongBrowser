@@ -2,7 +2,7 @@ SongBrowser
 
 6.3.3
 
-BeatSaberMarkupLanguage@1.6.0,SongCore@3.9.0, SongDataCore@1.4.6,BeatSaberPlaylistsLib@1.5.1,BS Utils@1.11.0,SiraUtil@3.0.1
+BeatSaberMarkupLanguage@1.6.0,SongCore@3.9.0, SongDataCore@1.4.6,BeatSaberPlaylistsLib@1.5.1,BS Utils@1.11.1,SiraUtil@3.0.1
 
 Adds various sorting and filtering methods to the UI. Search, favorites, ranked, and unranked filters. Sort by BeatSaver and ScoreSaber statistics. Adds PP and other extra stats to the stat panel.
 
