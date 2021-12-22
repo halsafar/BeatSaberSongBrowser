@@ -459,8 +459,7 @@ namespace SongBrowser
             var filteredLevels = levels.Where(x =>
             {
                 if (!SongDataCore.Plugin.Songs.IsDataAvailable())
-                {
-                    Plugin.Log.Warn("SDC Data is not available yet.");
+                {                    
                     return false;
                 }
 
