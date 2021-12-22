@@ -372,7 +372,6 @@ namespace SongBrowser
             Logger.Debug("Acquiring necessary fields to call SetData(pack)...");
             LevelCollectionNavigationController lcnvc = navController.GetField<LevelCollectionNavigationController, LevelSelectionNavigationController>("_levelCollectionNavigationController");
             LevelFilteringNavigationController lfnc = navController.GetField<LevelFilteringNavigationController, LevelSelectionNavigationController>("_levelFilteringNavigationController");
-            var _showPlayerStatsInDetailView = navController.GetField<bool, LevelSelectionNavigationController>("_showPlayerStatsInDetailView");
             var _hidePracticeButton = navController.GetField<bool, LevelSelectionNavigationController>("_hidePracticeButton");
             var _actionButtonText = navController.GetField<string, LevelSelectionNavigationController>("_actionButtonText");
             var _allowedBeatmapDifficultyMask = navController.GetField<BeatmapDifficultyMask, LevelSelectionNavigationController>("_allowedBeatmapDifficultyMask");
