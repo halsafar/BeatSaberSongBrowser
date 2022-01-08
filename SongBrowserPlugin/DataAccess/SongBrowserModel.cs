@@ -27,7 +27,7 @@ namespace SongBrowser
 
         // song list management
         private double _customSongDirLastWriteTime = 0;
-        private readonly Dictionary<String, double> _cachedLastWriteTimes;
+        private readonly Dictionary<String, DateTime> _cachedLastWriteTimes;
         private Dictionary<string, int> _levelIdToPlayCount;
 
         public BeatmapCharacteristicSO CurrentBeatmapCharacteristicSO;
@@ -61,7 +61,7 @@ namespace SongBrowser
         /// </summary>
         public SongBrowserModel()
         {
-            _cachedLastWriteTimes = new Dictionary<String, double>();
+            _cachedLastWriteTimes = new Dictionary<String, DateTime>();
             _levelIdToPlayCount = new Dictionary<string, int>();
 
             LastScrollIndex = 0;
@@ -120,7 +120,7 @@ namespace SongBrowser
                 // SongLoader should filter duplicates but in case of failure we don't want to crash
                 if (!_cachedLastWriteTimes.ContainsKey(level.Value.levelID) || customSongDirChanged)
                 {
-                    double lastWriteTime = GetSongUserDate(level.Value);
+                    DateTime lastWriteTime = GetSongUserDate(level.Value);
                     _cachedLastWriteTimes[level.Value.levelID] = lastWriteTime;
                 }
             }
@@ -143,12 +143,29 @@ namespace SongBrowser
         }
 
         /// <summary>
+        /// Song date is stored in SongMetadata config file to be preserved after moving files to a different location.
+        /// Initial date is loaded from file date.
+        /// </summary>
+        /// <param name="level"></param>
+        /// <returns></returns>
+        private DateTime GetSongUserDate(CustomPreviewBeatmapLevel level)
+        {
+            var metadata = SongMetadataStore.Instance.GetMetadataForLevelID(level.levelID);
+            if (metadata.AddedAt == null)
+            {
+                metadata.AddedAt = GetSongUserDateFromFilesystem(level);
+
+            }
+            return metadata.AddedAt.Value;
+        }
+
+        /// <summary>
         /// Try to get the date from the cover file, likely the most reliable.
         /// Fall back on the folders creation date.
         /// </summary>
         /// <param name="level"></param>
         /// <returns></returns>
-        private double GetSongUserDate(CustomPreviewBeatmapLevel level)
+        private DateTime GetSongUserDateFromFilesystem(CustomPreviewBeatmapLevel level)
         {
             var coverPath = Path.Combine(level.customLevelPath, level.standardLevelInfoSaveData.coverImageFilename);
             DateTime lastTime;
@@ -164,7 +181,7 @@ namespace SongBrowser
                 lastTime = lastCreateTime;
             }
 
-            return (lastTime - EPOCH).TotalMilliseconds;
+            return lastTime;
         }
 
         /// <summary>
@@ -590,7 +607,7 @@ namespace SongBrowser
         {
             Logger.Info("Sorting song list as newest.");
             return levels
-                .OrderByDescending(x => _cachedLastWriteTimes.ContainsKey(x.levelID) ? _cachedLastWriteTimes[x.levelID] : int.MinValue)
+                .OrderByDescending(x => _cachedLastWriteTimes.ContainsKey(x.levelID) ? _cachedLastWriteTimes[x.levelID] : DateTime.MinValue)
                 .ToList();
         }
 

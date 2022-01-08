@@ -39,6 +39,7 @@ namespace SongBrowser
         public void InitWithConfig(Config conf)
         {
             Configuration.PluginConfig.Instance = conf.Generated<Configuration.PluginConfig>();
+            Configuration.SongMetadataStore.Instance = Config.GetConfigFor(nameof(SongBrowser) + "SongMetadata").Generated<Configuration.SongMetadataStore>();
             Log.Debug("Config loaded");
         }
         #endregion
