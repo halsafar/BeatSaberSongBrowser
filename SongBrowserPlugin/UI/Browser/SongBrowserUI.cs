@@ -311,6 +311,7 @@ namespace SongBrowser.UI
                 new KeyValuePair<string, SongSortMode>("Author", SongSortMode.Author),
                 new KeyValuePair<string, SongSortMode>("Mapper", SongSortMode.Mapper),
                 new KeyValuePair<string, SongSortMode>("Newest", SongSortMode.Newest),
+                new KeyValuePair<string, SongSortMode>("Vanilla", SongSortMode.Vanilla),
                 new KeyValuePair<string, SongSortMode>("#Plays", SongSortMode.YourPlayCount),
                 new KeyValuePair<string, SongSortMode>("BPM", SongSortMode.Bpm),
                 new KeyValuePair<string, SongSortMode>("Time", SongSortMode.Length),

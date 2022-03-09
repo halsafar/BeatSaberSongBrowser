@@ -29,6 +29,7 @@ namespace SongBrowser
         private double _customSongDirLastWriteTime = 0;
         private readonly Dictionary<String, DateTime> _cachedLastWriteTimes;
         private Dictionary<string, int> _levelIdToPlayCount;
+        private Dictionary<string, int> _cachedFileSystemOrder;
 
         public BeatmapCharacteristicSO CurrentBeatmapCharacteristicSO;
 
@@ -62,6 +63,7 @@ namespace SongBrowser
         public SongBrowserModel()
         {
             _cachedLastWriteTimes = new Dictionary<String, DateTime>();
+            _cachedFileSystemOrder = new Dictionary<string, int>();
             _levelIdToPlayCount = new Dictionary<string, int>();
 
             LastScrollIndex = 0;
@@ -127,6 +129,17 @@ namespace SongBrowser
 
             lastWriteTimer.Stop();
             Logger.Info("Determining song download time and determining mappings took {0}ms", lastWriteTimer.ElapsedMilliseconds);
+
+            if (customSongDirChanged) {
+	            Stopwatch fileSystemTimer = new Stopwatch();
+	            fileSystemTimer.Start();
+	            _cachedFileSystemOrder = SongCore.Loader.CustomLevels
+			            .OrderBy(level => level.Value.customLevelPath)
+			            .Select((level, index) => new { Identifier = level.Value.levelID, Index = index })
+			            .ToDictionary(kvp => kvp.Identifier, kvp => kvp.Index);
+	            fileSystemTimer.Stop();
+	            Logger.Info("Determining filesystem song order took {0}ms", fileSystemTimer.ElapsedMilliseconds);
+            }
 
             // Update song Infos, directory tree, and sort
             this.UpdatePlayCounts();
@@ -303,6 +316,9 @@ namespace SongBrowser
                 case SongSortMode.Mapper:
                     sortedSongs = SortMapper(filteredSongs);
                     break;
+	            case SongSortMode.Vanilla:
+		            sortedSongs = SortVanilla(filteredSongs);
+		            break;
                 case SongSortMode.UpVotes:
                     sortedSongs = SortUpVotes(filteredSongs);
                     break;
@@ -596,6 +612,19 @@ namespace SongBrowser
         {
             Logger.Info("Sorting song list as original");
             return levels;
+        }
+        
+        /// <summary>
+        /// Sorting returns list sorted by alphabetical order of the directories they are contained in.
+        /// </summary>
+        /// <param name="levels"></param>
+        /// <returns></returns>
+        private List<IPreviewBeatmapLevel> SortVanilla(List<IPreviewBeatmapLevel> levels)
+        {
+	        Logger.Info("Sorting song list by vanilla ordering.");
+	        return levels
+			        .OrderBy(level => _cachedFileSystemOrder.TryGetValue(level.levelID, out int index) ? index : int.MaxValue)
+			        .ToList();
         }
 
         /// <summary>
