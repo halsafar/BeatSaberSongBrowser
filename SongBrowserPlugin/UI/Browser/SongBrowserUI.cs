@@ -1137,7 +1137,7 @@ namespace SongBrowser.UI
                                 {
                                     _model.LastSelectedLevelId = levels[selectedIndex].levelID;
                                 }
-                                else if (selectedIndex == levels.Count)
+                                else if (selectedIndex == levels.Count && selectedIndex >= 1)
                                 {
                                     _model.LastSelectedLevelId = levels[selectedIndex - 1].levelID;
                                 }
