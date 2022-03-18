@@ -38,7 +38,7 @@
           <Private>False</Private>
         </Reference>
         <Reference Include="CustomJSONData">
-          <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Plugins\CustomJSONData.dll</HintPath>
+          <HintPath>$(BeatSaberDir)\Plugins\CustomJSONData.dll</HintPath>
         </Reference>
         <Reference Include="Microsoft.CSharp" />
         <Reference Include="SiraUtil">
