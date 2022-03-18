@@ -234,7 +234,7 @@ namespace SongBrowser
                 return;
             }
 
-            Logger.Debug($"Using songs from level collection: {selectedBeatmapCollection.collectionName} [num={selectedBeatmapCollection.beatmapLevelCollection.beatmapLevels.Length}");
+            Logger.Debug($"Using songs from level collection: {selectedBeatmapCollection.collectionName} [num={selectedBeatmapCollection.beatmapLevelCollection.beatmapLevels.Count}");
             unsortedSongs = GetLevelsForLevelCollection(selectedBeatmapCollection).ToList();
 
             // filter
@@ -921,7 +921,7 @@ namespace SongBrowser
             return split.Length > 2 ? split[2] : levelId;
         }
 
-        public static IPreviewBeatmapLevel[] GetLevelsForLevelCollection(IAnnotatedBeatmapLevelCollection levelCollection)
+        public static IReadOnlyList<IPreviewBeatmapLevel> GetLevelsForLevelCollection(IAnnotatedBeatmapLevelCollection levelCollection)
         {
             if (levelCollection is BeatSaberPlaylistsLib.Legacy.LegacyPlaylist legacyPlaylist)
             {

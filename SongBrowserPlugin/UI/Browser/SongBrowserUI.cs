@@ -15,6 +15,7 @@ using Logger = SongBrowser.Logging.Logger;
 using System.Reflection;
 using SongBrowser.Configuration;
 using BS_Utils.Utilities;
+using BeatSaberPlaylistsLib.Types;
 
 namespace SongBrowser.UI
 {
@@ -868,7 +869,7 @@ namespace SongBrowser.UI
                 }
             }
 
-            _beatUi.LevelSelectionFlowCoordinator.InvokeMethod("ActionButtonWasPressed", new object[0]);
+            _beatUi.LevelSelectionFlowCoordinator.InvokeMethod<LevelSelectionFlowCoordinator, LevelSelectionFlowCoordinator>("ActionButtonWasPressed", new object[0]);
         }
 
         /// <summary>
@@ -1201,7 +1202,7 @@ namespace SongBrowser.UI
             {
                 return;
             }
-            BeatSaberPlaylistsLib.Types.IPlaylist playlist = Playlist.CreateNew(playlistName, _beatUi.GetCurrentLevelCollectionLevels());
+            IPlaylist playlist = DataAccess.Playlist.CreateNew(playlistName, _beatUi.GetCurrentLevelCollectionLevels());
             if (playlist == null)
             {
                 Plugin.Log.Error("Failed to create playlist.");
