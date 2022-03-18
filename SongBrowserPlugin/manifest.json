@@ -2,18 +2,18 @@
   "$schema": "https://raw.githubusercontent.com/bsmg/BSIPA-MetadataFileSchema/master/Schema.json",
   "author": "Halsafar",
   "description": "Adds sort and filter features to the level selection UI.",
-  "gameVersion": "1.19.0",
+  "gameVersion": "1.20.0",
   "id": "SongBrowser",
   "name": "Song Browser",
-  "version": "6.3.3",
+  "version": "6.3.4",
   "dependsOn": {
-    "SongCore": "^3.9.0",
-    "SongDataCore": "^1.4.6",
-    "BSIPA": "^4.2.1",
-    "BS Utils": "^1.11.1",
-    "BeatSaberMarkupLanguage": "^1.6.0",
-    "BeatSaberPlaylistsLib": "^1.5.1",
-    "SiraUtil": "^3.0.1"
+    "SongCore": "^3.9.5",
+    "SongDataCore": "^1.4.7",
+    "BSIPA": "^4.2.2",
+    "BS Utils": "^1.12.0",
+    "BeatSaberMarkupLanguage": "^1.6.3",
+    "BeatSaberPlaylistsLib": "^1.6.1",
+    "SiraUtil": "^3.0.5"
   },
   "misc": {
     "plugin-hint": "SongBrowser.Plugin"

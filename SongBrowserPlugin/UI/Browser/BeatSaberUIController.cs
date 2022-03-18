@@ -6,6 +6,7 @@ using IPA.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
 using Logger = SongBrowser.Logging.Logger;
+using BeatSaberPlaylistsLib.Types;
 
 namespace SongBrowser.DataAccess
 {
@@ -198,7 +199,7 @@ namespace SongBrowser.DataAccess
         /// Get Current levels from current level collection.
         /// </summary>
         /// <returns></returns>
-        public IPreviewBeatmapLevel[] GetCurrentLevelCollectionLevels()
+        public IReadOnlyList<IPreviewBeatmapLevel> GetCurrentLevelCollectionLevels()
         {
             var levelCollection = GetCurrentSelectedAnnotatedBeatmapLevelCollection();
             if (levelCollection == null)
@@ -397,7 +398,7 @@ namespace SongBrowser.DataAccess
                 }
                 else
                 {
-                    if (levels.Length > 0)
+                    if (levels.Count > 0)
                     {
                         Logger.Debug("Currently selected level ID does not exist, picking the first...");
                         selectedLevelID = levels.FirstOrDefault().levelID;

@@ -1,4 +1,5 @@
 ﻿using BeatSaberPlaylistsLib;
+using System.Collections.Generic;
 using System.IO;
 
 
@@ -8,7 +9,7 @@ namespace SongBrowser.DataAccess
     {
         internal static PlaylistManager defaultManager = BeatSaberPlaylistsLib.PlaylistManager.DefaultManager.CreateChildManager("SongBrowser");
 
-        public static BeatSaberPlaylistsLib.Types.IPlaylist CreateNew(string playlistName, IPreviewBeatmapLevel[] beatmapLevels)
+        public static BeatSaberPlaylistsLib.Types.IPlaylist CreateNew(string playlistName, IReadOnlyList<IPreviewBeatmapLevel> beatmapLevels)
         {
             BeatSaberPlaylistsLib.Types.IPlaylist playlist = defaultManager.CreatePlaylist("", playlistName, "SongBrowser", "");
             foreach (var beatmapLevel in beatmapLevels)

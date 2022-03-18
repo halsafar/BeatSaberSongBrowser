@@ -1,18 +1,18 @@
 SongBrowser
 
-6.3.3
+6.3.4
 
-BeatSaberMarkupLanguage@1.6.0,SongCore@3.9.0, SongDataCore@1.4.6,BeatSaberPlaylistsLib@1.5.1,BS Utils@1.11.1,SiraUtil@3.0.1
+BSIPA@4.2.2,BeatSaberMarkupLanguage@1.6.3,SongCore@3.9.5,SongDataCore@1.4.7,BeatSaberPlaylistsLib@1.6.1,BS Utils@1.12.0,SiraUtil@3.0.5
 
 Adds various sorting and filtering methods to the UI. Search, favorites, ranked, and unranked filters. Sort by BeatSaver and ScoreSaber statistics. Adds PP and other extra stats to the stat panel.
 
 https://github.com/halsafar/BeatSaberSongBrowser
 
 
-**Mod**: SongBrowser v6.3.3
+**Mod**: SongBrowser v6.3.4
 **Dependencies**: SongCore, BSLM, SongDataCore, SiraUtil, BeatSaberPlaylistsLib
 **Changelog**:
-- Working with BeatSaber 1.19.0
+- Working with BeatSaber 1.20.0
 **Download**:
-- https://github.com/halsafar/BeatSaberSongBrowser/releases/tag/6.3.3
+- https://github.com/halsafar/BeatSaberSongBrowser/releases/tag/6.3.4
 
