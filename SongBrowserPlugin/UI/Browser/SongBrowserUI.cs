@@ -869,8 +869,7 @@ namespace SongBrowser.UI
                 }
             }
 
-            ReflectionUtil.InvokeMethod<bool, LevelSelectionFlowCoordinator>(_beatUi.LevelSelectionFlowCoordinator, "ActionButtonWasPressed", new object[0]);
-            //_beatUi.LevelSelectionFlowCoordinator.InvokeMethod<bool>("ActionButtonWasPressed", new object[0]);
+            _beatUi.LevelSelectionFlowCoordinator.InvokeMethod<LevelSelectionFlowCoordinator, LevelSelectionFlowCoordinator>("ActionButtonWasPressed", new object[0]);
         }
 
         /// <summary>
