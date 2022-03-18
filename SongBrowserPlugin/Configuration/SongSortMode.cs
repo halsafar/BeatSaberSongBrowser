@@ -24,6 +24,7 @@ namespace SongBrowser.Configuration
         Stars,
         Bpm,
         Length,
+        Vanilla,
 
         // Allow mods to extend functionality.
         Custom,
