@@ -76,6 +76,7 @@ namespace SongBrowser.UI
 
         private IAnnotatedBeatmapLevelCollection _lastLevelCollection;
         bool _selectingCategory = false;
+        private bool _deletingSong = false;
 
         private SongBrowserModel _model;
         public SongBrowserModel Model
@@ -749,7 +750,9 @@ namespace SongBrowser.UI
                 }
 
                 // reset level selection
-                _model.LastSelectedLevelId = null;
+                if (!_deletingSong) {
+                    _model.LastSelectedLevelId = null;                    
+                }
 
                 // save level collection
                 PluginConfig.Instance.CurrentLevelCollectionName = levelCollection.collectionName;
@@ -1121,7 +1124,9 @@ namespace SongBrowser.UI
                                 }
 
                                 Logger.Info($"Deleting song: {song.customLevelPath}");
+                                _deletingSong = true;
                                 SongCore.Loader.Instance.DeleteSong(song.customLevelPath);
+                                StartCoroutine(ClearSongDeletionFlag());
 
                                 int removedLevels = levels.RemoveAll(x => x.levelID == selectedLevelID);
                                 Logger.Info($"Removed [{removedLevels}] level(s) from song list!");
@@ -1131,13 +1136,12 @@ namespace SongBrowser.UI
                                 // if we have a song to select at the same index, set the last selected level id, UI updates takes care of the rest.
                                 if (selectedIndex < levels.Count)
                                 {
-                                    if (levels[selectedIndex].levelID != null)
-                                    {
-                                        _model.LastSelectedLevelId = levels[selectedIndex].levelID;
-                                    }
+                                    _model.LastSelectedLevelId = levels[selectedIndex].levelID;
                                 }
-
-                                this.RefreshSongList();
+                                else if (selectedIndex == levels.Count && selectedIndex >= 1)
+                                {
+                                    _model.LastSelectedLevelId = levels[selectedIndex - 1].levelID;
+                                }
                             }
                         }
                         catch (Exception e)
@@ -1149,6 +1153,11 @@ namespace SongBrowser.UI
 
             _beatUi.ScreenSystem.titleViewController.gameObject.SetActive(false);
             _beatUi.LevelSelectionNavigationController.__PresentViewController(_deleteDialog, null);
+        }
+
+        private IEnumerator ClearSongDeletionFlag() {
+            yield return new WaitForEndOfFrame();
+            _deletingSong = false;
         }
 
         /// <summary>
