@@ -39,8 +39,11 @@ namespace SongBrowser
         public void InitWithConfig(Config conf)
         {
             Configuration.PluginConfig.Instance = conf.Generated<Configuration.PluginConfig>();
-            Configuration.SongMetadataStore.Instance = Config.GetConfigFor(nameof(SongBrowser) + "SongMetadata").Generated<Configuration.SongMetadataStore>();
-            Log.Debug("Config loaded");
+            if (Configuration.PluginConfig.Instance.ExperimentalScrapeSongMetaData)
+            {
+                Configuration.SongMetadataStore.Load();
+            }
+            Log.Debug("SongBrowser Configs loaded");
         }
         #endregion
 
@@ -59,6 +62,10 @@ namespace SongBrowser
         [OnExit]
         public void OnApplicationQuit()
         {
+            if (Configuration.PluginConfig.Instance.ExperimentalScrapeSongMetaData)
+            {
+                Configuration.SongMetadataStore.Instance.Save();
+            }
         }
 
         private void OnMenuSceneLoadedFresh(ScenesTransitionSetupDataSO data)
