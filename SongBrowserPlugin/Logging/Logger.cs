@@ -13,14 +13,7 @@ namespace SongBrowser.Logging
 
     public class Logger
     {
-        private static readonly string LoggerName = "SongBrowser";
         private static readonly LogLevel LogLevel = LogLevel.Info;
-        private static readonly ConsoleColor DefaultFgColor = ConsoleColor.Gray;
-
-        private static void ResetForegroundColor()
-        {
-            Console.ForegroundColor = DefaultFgColor;
-        }
 
         public static void Trace(string format, params object[] args)
         {
@@ -28,9 +21,7 @@ namespace SongBrowser.Logging
             {
                 return;
             }
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Plugin.Log.Trace("[" + LoggerName + " @ " + DateTime.Now.ToString("HH:mm") + " - Trace] " + String.Format(format, args));
-            ResetForegroundColor();
+            Plugin.Log.Debug(String.Format(format, args));
         }
 
         public static void Debug(string format, params object[] args)

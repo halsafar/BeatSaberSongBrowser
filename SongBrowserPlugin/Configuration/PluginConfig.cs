@@ -19,6 +19,7 @@ namespace SongBrowser.Configuration
         public virtual string CurrentLevelCollectionName { get; set; } = default;
         public virtual string CurrentLevelCategoryName { get; set; } = default;
         public virtual bool RandomInstantQueueSong { get; set; } = false;
+        public virtual bool ExperimentalScrapeSongMetaData { get; set; } = true;
         public virtual bool DeleteNumberedSongFolder { get; set; } = false;
         public virtual bool InvertSortResults { get; set; } = false;
         public virtual int RandomSongSeed { get; set; } = default;    

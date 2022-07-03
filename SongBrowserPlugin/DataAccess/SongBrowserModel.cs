@@ -163,13 +163,28 @@ namespace SongBrowser
         /// <returns></returns>
         private DateTime GetSongUserDate(CustomPreviewBeatmapLevel level)
         {
-            var metadata = SongMetadataStore.Instance.GetMetadataForLevelID(level.levelID);
-            if (metadata.AddedAt == null)
+            if (PluginConfig.Instance.ExperimentalScrapeSongMetaData)
             {
-                metadata.AddedAt = GetSongUserDateFromFilesystem(level);
+                try
+                {
+                    var metadata = SongMetadataStore.Instance.GetMetadataForLevelID(level.levelID);
+                    if (metadata.AddedAt == null)
+                    {
+                        metadata.AddedAt = GetSongUserDateFromFilesystem(level).Value;
+                    }
 
+                    return metadata.AddedAt.Value;
+                } 
+                catch (Exception e)
+                {
+                    Logger.Exception("Failure during song meta data scrape: {0}", e);
+                    return DateTime.MinValue;
+                }
+            } 
+            else
+            {
+                return GetSongUserDateFromFilesystem(level).Value;
             }
-            return metadata.AddedAt.Value;
         }
 
         /// <summary>
@@ -178,7 +193,7 @@ namespace SongBrowser
         /// </summary>
         /// <param name="level"></param>
         /// <returns></returns>
-        private DateTime GetSongUserDateFromFilesystem(CustomPreviewBeatmapLevel level)
+        private DateTime? GetSongUserDateFromFilesystem(CustomPreviewBeatmapLevel level)
         {
             var coverPath = Path.Combine(level.customLevelPath, level.standardLevelInfoSaveData.coverImageFilename);
             DateTime lastTime;
