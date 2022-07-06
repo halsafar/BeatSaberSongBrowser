@@ -275,6 +275,13 @@ namespace SongBrowser
 
             switch (PluginConfig.Instance.FilterMode)
             {
+                case SongFilterMode.Easy:
+                case SongFilterMode.Normal:
+                case SongFilterMode.Hard:
+                case SongFilterMode.Expert:
+                case SongFilterMode.ExpertPlus:
+                    filteredSongs = FilterDifficulty(unsortedSongs, (BeatmapDifficulty)Enum.Parse(typeof(BeatmapDifficulty), PluginConfig.Instance.FilterMode.ToString()));
+                    break;
                 case SongFilterMode.Favorites:
                     filteredSongs = FilterFavorites(unsortedSongs);
                     break;
@@ -627,6 +634,16 @@ namespace SongBrowser
             }
 
             return filteredLevels;
+        }
+        /// <summary>
+        /// Filter songs based on a difficulty.
+        /// </summary>
+        /// <param name="levels"></param>
+        /// <param name="beatmapDifficulty"></param>
+        /// <returns></returns>
+        private List<IPreviewBeatmapLevel> FilterDifficulty(List<IPreviewBeatmapLevel> levels, BeatmapDifficulty beatmapDifficulty)
+        {
+            return levels.Where(x => x.previewDifficultyBeatmapSets.Any(y => y.beatmapDifficulties.Any(z => z.Equals(beatmapDifficulty)))).ToList();
         }
 
         /// <summary>

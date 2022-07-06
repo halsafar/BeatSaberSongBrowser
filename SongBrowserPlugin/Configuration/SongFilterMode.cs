@@ -12,7 +12,11 @@ namespace SongBrowser.Configuration
         Played,
         Unplayed,
         Requirements,
-
+        Easy,
+        Normal,
+        Hard,
+        Expert,
+        ExpertPlus,
         // For other mods that extend SongBrowser
         Custom
     }
