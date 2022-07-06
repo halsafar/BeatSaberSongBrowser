@@ -1,6 +1,5 @@
 ﻿using BeatSaberMarkupLanguage.Components;
 using HMUI;
-using SongBrowser.DataAccess;
 using SongBrowser.Internals;
 using SongDataCore.BeatStar;
 using System;
@@ -14,7 +13,6 @@ using VRUIControls;
 using Logger = SongBrowser.Logging.Logger;
 using System.Reflection;
 using SongBrowser.Configuration;
-using BS_Utils.Utilities;
 using BeatSaberPlaylistsLib.Types;
 
 namespace SongBrowser.UI

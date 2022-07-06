@@ -1,13 +1,10 @@
-﻿using SongBrowser.DataAccess;
-using SongCore.Utilities;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using HMUI;
 using IPA.Utilities;
 using UnityEngine;
 using Logger = SongBrowser.Logging.Logger;

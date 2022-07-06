@@ -2,9 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
 using Logger = SongBrowser.Logging.Logger;
 
 namespace SongBrowser
