@@ -9,7 +9,6 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 using VRUIControls;
 using Image = UnityEngine.UI.Image;
-using Logger = SongBrowser.Logging.Logger;
 
 namespace SongBrowser.Internals
 {
@@ -124,7 +123,7 @@ namespace SongBrowser.Internals
         /// <returns></returns>
         public static Button CreateIconButton(String name, RectTransform parent, String buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick, Sprite icon, String hint)
         {
-            Logger.Debug("CreateIconButton({0}, {1}, {2}, {3}, {4}", name, parent, buttonTemplate, anchoredPosition, sizeDelta);
+            Plugin.Log.Debug($"CreateIconButton({name}, {parent}, {buttonTemplate}, {anchoredPosition}, {sizeDelta}");
             Button btn = CreateIconButton(name, parent, buttonTemplate, icon, hint);
 
             (btn.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
@@ -141,7 +140,7 @@ namespace SongBrowser.Internals
 
         public static Button CreatePageButton(String name, RectTransform parent, String buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick, Sprite icon)
         {
-            Logger.Debug("CreatePageButton({0}, {1}, {2}, {3}, {4}", name, parent, buttonTemplate, anchoredPosition, sizeDelta);
+            Plugin.Log.Debug($"CreatePageButton({name}, {parent}, {buttonTemplate}, {anchoredPosition}, {sizeDelta}");
             Button btn = CreateBaseButton(name, parent, buttonTemplate);
 
             (btn.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
@@ -174,7 +173,7 @@ namespace SongBrowser.Internals
         /// <returns>The newly created button.</returns>
         public static Button CreateUIButton(String name, RectTransform parent, string buttonTemplate, Vector2 anchoredPosition, Vector2 sizeDelta, UnityAction onClick = null, string buttonText = "BUTTON")
         {
-            Logger.Debug("CreateUIButton({0}, {1}, {2}, {3}, {4}", name, parent, buttonTemplate, anchoredPosition, sizeDelta);
+            Plugin.Log.Debug($"CreateUIButton({name}, {parent}, {buttonTemplate}, {anchoredPosition}, {sizeDelta}");
             Button btn = CreateBaseButton(name, parent, buttonTemplate);
             btn.gameObject.SetActive(true);
 

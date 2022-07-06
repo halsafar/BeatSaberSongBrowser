@@ -3,7 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using UnityEngine;
-using Logger = SongBrowser.Logging.Logger;
 
 namespace SongBrowser
 {
@@ -58,7 +57,7 @@ namespace SongBrowser
         /// </summary>
         protected void Awake()
         {
-            Logger.Trace("Awake-SongBrowserApplication()");
+            Plugin.Log.Trace("Awake-SongBrowserApplication()");
 
             Instance = this;
 
@@ -76,7 +75,7 @@ namespace SongBrowser
         /// </summary>
         public void Start()
         {
-            Logger.Trace("Start-SongBrowserApplication()");
+            Plugin.Log.Trace("Start-SongBrowserApplication()");
 
             SongDataCore.Plugin.Songs.OnDataFinishedProcessing += OnScoreSaberDataDownloaded;
 
@@ -92,12 +91,12 @@ namespace SongBrowser
             // Useful to dump game objects.
             /*foreach (RectTransform rect in Resources.FindObjectsOfTypeAll<RectTransform>())
             {
-                Logger.Debug("RectTransform: {0}", rect.name);
+                Plugin.Log.Debug($"RectTransform: {rect.name}");
             }*/
 
             /*foreach (Sprite sprite in Resources.FindObjectsOfTypeAll<Sprite>())
             {
-                Logger.Debug("Adding Icon: {0}", sprite.name);
+                Plugin.Log.Debug($"Adding Icon: {sprite.name}");
             }*/
         }
 
@@ -108,7 +107,7 @@ namespace SongBrowser
         /// <param name="levels"></param>
         private void OnSongLoaderLoadedSongs(SongCore.Loader loader, ConcurrentDictionary<string, CustomPreviewBeatmapLevel> levels)
         {
-            Logger.Trace("OnSongLoaderLoadedSongs-SongBrowserApplication()");
+            Plugin.Log.Trace("OnSongLoaderLoadedSongs-SongBrowserApplication()");
             try
             {
                 _songBrowserUI.UpdateLevelDataModel();
@@ -116,7 +115,7 @@ namespace SongBrowser
             }
             catch (Exception e)
             {
-                Logger.Exception("Exception during OnSongLoaderLoadedSongs: ", e);
+                Plugin.Log.Critical($"Exception during OnSongLoaderLoadedSongs: {e}");
             }
         }
 
@@ -127,7 +126,7 @@ namespace SongBrowser
         /// <param name="levels"></param>
         private void OnScoreSaberDataDownloaded()
         {
-            Logger.Trace("OnScoreSaberDataDownloaded");
+            Plugin.Log.Trace("OnScoreSaberDataDownloaded");
             try
             {
                 // It is okay if SongDataCore beats us to initialization
@@ -140,7 +139,7 @@ namespace SongBrowser
             }
             catch (Exception e)
             {
-                Logger.Exception("Exception during OnScoreSaberDataDownloaded: ", e);
+                Plugin.Log.Critical($"Exception during OnScoreSaberDataDownloaded: {e}");
             }
         }
 
@@ -151,7 +150,7 @@ namespace SongBrowser
         /// <param name="arg2"></param>
         public void HandleSoloModeSelection()
         {
-            Logger.Trace("HandleSoloModeSelection()");
+            Plugin.Log.Trace("HandleSoloModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.SoloFreePlay);
             _songBrowserUI.Show();
         }
@@ -163,7 +162,7 @@ namespace SongBrowser
         /// <param name="arg2"></param>
         public void HandlePartyModeSelection()
         {
-            Logger.Trace("HandlePartyModeSelection()");
+            Plugin.Log.Trace("HandlePartyModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.Party);
             _songBrowserUI.Show();
         }
@@ -175,7 +174,7 @@ namespace SongBrowser
         /// <param name="arg2"></param>
         public void HandleCampaignModeSelection()
         {
-            Logger.Trace("HandleCampaignModeSelection()");
+            Plugin.Log.Trace("HandleCampaignModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.SoloCampaign);
             _songBrowserUI.Hide();
         }
@@ -188,7 +187,7 @@ namespace SongBrowser
         /// <param name="arg2"></param>
         public void HandleMultiplayerModeSelection()
         {
-            Logger.Trace("HandleCampaignModeSelection()");
+            Plugin.Log.Trace("HandleCampaignModeSelection()");
             HandleModeSelection(MainMenuViewController.MenuButton.Multiplayer);
             _songBrowserUI.Hide();
         }
@@ -200,7 +199,7 @@ namespace SongBrowser
         /// <param name="arg2"></param>
         private void HandleModeSelection(MainMenuViewController.MenuButton mode)
         {
-            Logger.Trace("HandleModeSelection()");
+            Plugin.Log.Trace("HandleModeSelection()");
             _songBrowserUI.CreateUI(mode);
 
             if (!_hasShownProgressBar)

@@ -10,7 +10,6 @@ using IPA.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
 using VRUIControls;
-using Logger = SongBrowser.Logging.Logger;
 using System.Reflection;
 using SongBrowser.Configuration;
 using BeatSaberPlaylistsLib.Types;
@@ -101,32 +100,32 @@ namespace SongBrowser.UI
         /// </summary>
         public void CreateUI(MainMenuViewController.MenuButton mode)
         {
-            Logger.Trace("CreateUI()");
+            Plugin.Log.Trace("CreateUI()");
 
             // Determine the flow controller to use
             LevelSelectionFlowCoordinator flowCoordinator;
             if (mode == MainMenuViewController.MenuButton.SoloFreePlay)
             {
-                Logger.Debug("Entering SOLO mode...");
+                Plugin.Log.Debug("Entering SOLO mode...");
                 flowCoordinator = Resources.FindObjectsOfTypeAll<SoloFreePlayFlowCoordinator>().Last();
             }
             else if (mode == MainMenuViewController.MenuButton.Party)
             {
-                Logger.Debug("Entering PARTY mode...");
+                Plugin.Log.Debug("Entering PARTY mode...");
                 flowCoordinator = Resources.FindObjectsOfTypeAll<PartyFreePlayFlowCoordinator>().Last();
             }
             else if (mode == MainMenuViewController.MenuButton.Multiplayer)
             {
-                Logger.Debug("Entering Multiplayer mode...");
+                Plugin.Log.Debug("Entering Multiplayer mode...");
                 flowCoordinator = Resources.FindObjectsOfTypeAll<MultiplayerLevelSelectionFlowCoordinator>().Last();
             }
             else
             {
-                Logger.Info("Entering Unsupported mode...");
+                Plugin.Log.Info("Entering Unsupported mode...");
                 return;
             }
 
-            Logger.Debug("Done fetching Flow Coordinator for the appropriate mode...");
+            Plugin.Log.Debug("Done fetching Flow Coordinator for the appropriate mode...");
 
             _beatUi = new DataAccess.BeatSaberUIController(flowCoordinator);
             _lastLevelCollection = null;
@@ -179,11 +178,11 @@ namespace SongBrowser.UI
 
                 RefreshSortButtonUI();
 
-                Logger.Debug("Done Creating UI...");
+                Plugin.Log.Debug("Done Creating UI...");
             }
             catch (Exception e)
             {
-                Logger.Exception("Exception during CreateUI: ", e);
+                Plugin.Log.Critical($"Exception during CreateUI: {e}");
             }
         }
 
@@ -192,7 +191,7 @@ namespace SongBrowser.UI
         /// </summary>
         private void CreateOuterUi()
         {
-            Logger.Debug("Creating outer UI...");
+            Plugin.Log.Debug("Creating outer UI...");
 
             float clearButtonX = -72.5f;
             float clearButtonY = CLEAR_BUTTON_Y;
@@ -228,7 +227,7 @@ namespace SongBrowser.UI
             // create SortBy button and its display
             float curX = sortByButtonX;
 
-            Logger.Debug("Creating Sort By...");
+            Plugin.Log.Debug("Creating Sort By...");
             _sortByButton = _viewController.CreateUIButton("sortBy", "PracticeButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 RefreshOuterUIState(UIState.SortBy);
@@ -238,7 +237,7 @@ namespace SongBrowser.UI
 
             curX += outerButtonWidth;
 
-            Logger.Debug("Creating Sort By Display...");
+            Plugin.Log.Debug("Creating Sort By Display...");
             _sortByDisplay = _viewController.CreateUIButton("sortByValue", "PracticeButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 OnSortButtonClickEvent(PluginConfig.Instance.SortMode);
@@ -249,7 +248,7 @@ namespace SongBrowser.UI
             curX += outerButtonWidth;
 
             // create FilterBy button and its display
-            Logger.Debug("Creating Filter By...");
+            Plugin.Log.Debug("Creating Filter By...");
             _filterByButton = _viewController.CreateUIButton("filterBy", "PracticeButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 RefreshOuterUIState(UIState.FilterBy);
@@ -259,7 +258,7 @@ namespace SongBrowser.UI
 
             curX += outerButtonWidth;
 
-            Logger.Debug("Creating Filter By Display...");
+            Plugin.Log.Debug("Creating Filter By Display...");
             _filterByDisplay = _viewController.CreateUIButton("filterValue", "PracticeButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
                 PluginConfig.Instance.FilterMode = SongFilterMode.None;
@@ -273,7 +272,7 @@ namespace SongBrowser.UI
             curX += (outerButtonWidth / 2.0f);
 
             // random button
-            Logger.Debug("Creating Random Button...");
+            Plugin.Log.Debug("Creating Random Button...");
             _randomButton = _viewController.CreateIconButton("randomButton", "PracticeButton", new Vector2(curX + (randomButtonWidth / 4.0f), clearButtonY), new Vector2(randomButtonWidth, randomButtonWidth), () =>
             {
                 OnSortButtonClickEvent(SongSortMode.Random);
@@ -283,7 +282,7 @@ namespace SongBrowser.UI
             curX += (randomButtonWidth / 4.0f) * 2.0f;
 
             // playlist export
-            Logger.Debug("Creating playlist export button...");
+            Plugin.Log.Debug("Creating playlist export button...");
             _playlistExportButton = _viewController.CreateIconButton("playlistExportButton", "PracticeButton", new Vector2(curX + (randomButtonWidth / 4.0f), clearButtonY), new Vector2(randomButtonWidth, randomButtonWidth), () =>
             {
                 ShowInputKeyboard(CreatePlaylistButtonPressed);
@@ -296,7 +295,7 @@ namespace SongBrowser.UI
         /// </summary>
         private void CreateSortButtons()
         {
-            Logger.Debug("Create sort buttons...");
+            Plugin.Log.Debug("Create sort buttons...");
 
             float sortButtonFontSize = 2.0f;
             float sortButtonX = -63.0f;
@@ -352,7 +351,7 @@ namespace SongBrowser.UI
         /// </summary>
         private void CreateFilterButtons()
         {
-            Logger.Debug("Creating filter buttons...");
+            Plugin.Log.Debug("Creating filter buttons...");
 
             float filterButtonFontSize = 2.25f;
             float filterButtonX = -63.0f;
@@ -405,7 +404,7 @@ namespace SongBrowser.UI
         /// </summary>
         private void CreateFastPageButtons()
         {
-            Logger.Debug("Creating fast scroll button...");
+            Plugin.Log.Debug("Creating fast scroll button...");
             _pageUpFastButton = BeatSaberUI.CreatePageButton("PageUpFast",
                 _beatUi.LevelCollectionNavigationController.transform as RectTransform, "UpButton",
                 new Vector2(2.0f, 24f),
@@ -430,13 +429,13 @@ namespace SongBrowser.UI
         /// </summary>
         private void CreateDeleteUI()
         {
-            Logger.Debug("Creating delete dialog...");
+            Plugin.Log.Debug("Creating delete dialog...");
             _deleteDialog = UnityEngine.Object.Instantiate<SimpleDialogPromptViewController>(_beatUi.SimpleDialogPromptViewControllerPrefab);
             _deleteDialog.GetComponent<VRGraphicRaycaster>().SetField("_physicsRaycaster", BeatSaberUI.PhysicsRaycasterWithCache);
             _deleteDialog.name = "DeleteDialogPromptViewController";
             _deleteDialog.gameObject.SetActive(false);
 
-            Logger.Debug("Creating delete button...");
+            Plugin.Log.Debug("Creating delete button...");
             _deleteButton = BeatSaberUI.CreateIconButton("DeleteLevelButton", _beatUi.ActionButtons, "PracticeButton", Base64Sprites.DeleteIcon, "Delete Level");
             _deleteButton.transform.SetAsFirstSibling();
             _deleteButton.onClick.AddListener(delegate () {
@@ -450,7 +449,7 @@ namespace SongBrowser.UI
         private void ModifySongStatsPanel()
         {
             // modify stat panel, inject extra row of stats
-            Logger.Debug("Resizing Stats Panel...");
+            Plugin.Log.Debug("Resizing Stats Panel...");
 
             var statsPanel = _beatUi.StandardLevelDetailView.GetField<LevelParamsPanel, StandardLevelDetailView>("_levelParamsPanel");
             (statsPanel.transform as RectTransform).Translate(0, 0.05f, 0);
@@ -571,13 +570,13 @@ namespace SongBrowser.UI
         /// <returns></returns>
         public IEnumerator AsyncForceScrollToPosition(float position)
         {
-            Logger.Debug($"Will attempt force scrolling to position [{_model.LastScrollIndex}] at end of frame.");
+            Plugin.Log.Debug($"Will attempt force scrolling to position [{_model.LastScrollIndex}] at end of frame.");
 
             yield return new WaitForEndOfFrame();
 
             var tv = _beatUi.LevelCollectionTableView.GetField<TableView, LevelCollectionTableView>("_tableView");
             var sv = tv.GetField<ScrollView, TableView>("_scrollView");
-            Logger.Debug($"Force scrolling to {position}");
+            Plugin.Log.Debug($"Force scrolling to {position}");
             sv.ScrollTo(position, false);
         }
 
@@ -665,7 +664,7 @@ namespace SongBrowser.UI
         /// </summary>
         public void CancelFilter()
         {
-            Logger.Debug($"Cancelling filter, levelCollection {_lastLevelCollection}");
+            Plugin.Log.Debug($"Cancelling filter, levelCollection {_lastLevelCollection}");
             PluginConfig.Instance.FilterMode = SongFilterMode.None;
 
             UpdateLevelCollectionSelection();
@@ -677,10 +676,10 @@ namespace SongBrowser.UI
         /// <param name="annotatedBeatmapLevelCollection"></param>
         public virtual void HandleDidSelectAnnotatedBeatmapLevelCollection(IAnnotatedBeatmapLevelCollection annotatedBeatmapLevelCollection)
         {
-            Logger.Trace("HandleDidSelectAnnotatedBeatmapLevelCollection()");
+            Plugin.Log.Trace("HandleDidSelectAnnotatedBeatmapLevelCollection()");
             _lastLevelCollection = annotatedBeatmapLevelCollection;
             PluginConfig.Instance.CurrentLevelCategoryName = _beatUi.LevelFilteringNavigationController.selectedLevelCategory.ToString();
-            Logger.Debug("AnnotatedBeatmapLevelCollection, Selected Level Collection={0}", _lastLevelCollection);
+            Plugin.Log.Debug($"AnnotatedBeatmapLevelCollection, Selected Level Collection={_lastLevelCollection}");
         }
 
         /// <summary>
@@ -694,7 +693,7 @@ namespace SongBrowser.UI
         private void LevelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent(LevelFilteringNavigationController arg1, IAnnotatedBeatmapLevelCollection arg2,
             GameObject arg3, BeatmapCharacteristicSO arg4)
         {
-            Logger.Trace("_levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent(levelCollection={0})", arg2);
+            Plugin.Log.Trace($"_levelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent(levelCollection={arg2})");
 
             if (arg2 == null)
             {
@@ -702,17 +701,17 @@ namespace SongBrowser.UI
                 arg2 = _beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection();
                 if (arg2 == null)
                 {
-                    Logger.Warning("Nothing selected.  This is likely an error.");
+                    Plugin.Log.Warn("Nothing selected.  This is likely an error.");
                     return;
                 }
             }
 
-            Logger.Debug("Selected Level Collection={0}", arg2);
+            Plugin.Log.Debug($"Selected Level Collection={arg2}");
 
             // Do something about preview level packs, they can't be used past this point
             if (arg2 as PreviewBeatmapLevelPackSO)
             {
-                Logger.Info("Hiding SongBrowser, previewing a song pack.");
+                Plugin.Log.Info("Hiding SongBrowser, previewing a song pack.");
                 Hide();
                 return;
             }
@@ -722,7 +721,7 @@ namespace SongBrowser.UI
             // category transition, just record the new collection
             if (_selectingCategory)
             {
-                Logger.Info("Transitioning level category");
+                Plugin.Log.Info("Transitioning level category");
                 _lastLevelCollection = arg2;
                 StartCoroutine(RefreshSongListEndOfFrame());
                 return;
@@ -747,14 +746,14 @@ namespace SongBrowser.UI
             {
                 if (levelCollection == null)
                 {
-                    Logger.Debug("No level collection selected...");
+                    Plugin.Log.Debug("No level collection selected...");
                     return;
                 }
 
                 // store the real level collection
                 if (levelCollection.collectionName != SongBrowserModel.FilteredSongsCollectionName && _lastLevelCollection != null)
                 {
-                    Logger.Debug("Recording levelCollection: {0}", levelCollection.collectionName);
+                    Plugin.Log.Debug($"Recording levelCollection: {levelCollection.collectionName}");
                     _lastLevelCollection = levelCollection;
                     PluginConfig.Instance.CurrentLevelCategoryName = _beatUi.LevelFilteringNavigationController.selectedLevelCategory.ToString();
                 }
@@ -771,7 +770,7 @@ namespace SongBrowser.UI
             }
             catch (Exception e)
             {
-                Logger.Exception("Exception handling SelectLevelCollection...", e);
+                Plugin.Log.Critical($"Exception handling SelectLevelCollection: {e}");
             }
         }
 
@@ -808,7 +807,7 @@ namespace SongBrowser.UI
         /// </summary>
         private void OnClearButtonClickEvent()
         {
-            Logger.Debug("Clearing all sorts and filters.");
+            Plugin.Log.Debug("Clearing all sorts and filters.");
 
             PluginConfig.Instance.SortMode = SongSortMode.Original;
             PluginConfig.Instance.InvertSortResults = false;
@@ -824,11 +823,11 @@ namespace SongBrowser.UI
         /// </summary>
         private void OnSortButtonClickEvent(SongSortMode sortMode)
         {
-            Logger.Debug("Sort button - {0} - pressed.", sortMode.ToString());
+            Plugin.Log.Debug($"Sort button - {sortMode.ToString()} - pressed.");
 
             if ((sortMode.NeedsScoreSaberData() && !SongDataCore.Plugin.Songs.IsDataAvailable()))
             {
-                Logger.Info("Data for sort type is not available.");
+                Plugin.Log.Info("Data for sort type is not available.");
                 return;
             }
 
@@ -891,7 +890,7 @@ namespace SongBrowser.UI
         /// <param name="mode"></param>
         private void OnFilterButtonClickEvent(SongFilterMode mode)
         {
-            Logger.Debug($"FilterButton {mode} clicked.");
+            Plugin.Log.Debug($"FilterButton {mode} clicked.");
 
             CancelFilter();
 
@@ -949,7 +948,7 @@ namespace SongBrowser.UI
         /// <param name="sortMode"></param>
         private void OnSearchButtonClickEvent()
         {
-            Logger.Debug("Filter button - {0} - pressed.", SongFilterMode.Search.ToString());
+            Plugin.Log.Debug($"Filter button - {SongFilterMode.Search.ToString()} - pressed.");
 
             this.ShowSearchKeyboard();
         }
@@ -962,17 +961,17 @@ namespace SongBrowser.UI
         {
             try
             {
-                Logger.Trace("OnDidSelectLevelEvent()");
+                Plugin.Log.Trace("OnDidSelectLevelEvent()");
 
                 if (level == null)
                 {
-                    Logger.Debug("No level selected?");
+                    Plugin.Log.Debug("No level selected?");
                     return;
                 }
 
                 if (PluginConfig.Instance == null)
                 {
-                    Logger.Debug("Settings not instantiated yet?");
+                    Plugin.Log.Debug("Settings not instantiated yet?");
                     return;
                 }
 
@@ -981,7 +980,7 @@ namespace SongBrowser.UI
             }
             catch (Exception e)
             {
-                Logger.Exception("Exception selecting song:", e);
+                Plugin.Log.Critical($"Exception selecting song: {e}");
             }
         }
 
@@ -994,7 +993,7 @@ namespace SongBrowser.UI
         {
             try
             {
-                Logger.Trace("OnDidSelectBeatmapCharacteristic({0})", bc.compoundIdPartName);
+                Plugin.Log.Trace($"OnDidSelectBeatmapCharacteristic({bc.compoundIdPartName})");
                 _model.CurrentBeatmapCharacteristicSO = bc;
 
                 if (_beatUi.StandardLevelDetailView != null)
@@ -1006,7 +1005,7 @@ namespace SongBrowser.UI
             }
             catch (Exception e)
             {
-                Logger.Exception(e);
+                Plugin.Log.Critical(e);
             }
         }
 
@@ -1015,7 +1014,7 @@ namespace SongBrowser.UI
         /// </summary>
         private void OnDidChangeDifficultyEvent(StandardLevelDetailViewController view, IDifficultyBeatmap beatmap)
         {
-            Logger.Trace("OnDidChangeDifficultyEvent({0})", beatmap);
+            Plugin.Log.Trace($"OnDidChangeDifficultyEvent({beatmap})");
 
             if (view.selectedDifficultyBeatmap == null)
             {
@@ -1034,7 +1033,7 @@ namespace SongBrowser.UI
         /// <param name="type"></param>
         private void OnDidPresentContentEvent(StandardLevelDetailViewController view, StandardLevelDetailViewController.ContentType type)
         {
-            Logger.Trace("OnDidPresentContentEvent()");
+            Plugin.Log.Trace("OnDidPresentContentEvent()");
 
             if (type != StandardLevelDetailViewController.ContentType.OwnedAndReady)
             {
@@ -1062,7 +1061,7 @@ namespace SongBrowser.UI
         /// <param name="level"></param>
         private void HandleDidSelectLevelRow(IPreviewBeatmapLevel level)
         {
-            Logger.Trace("HandleDidSelectLevelRow({0})", level);
+            Plugin.Log.Trace($"HandleDidSelectLevelRow({level})");
 
             UpdateDeleteButtonState(level.levelID);
             RefreshQuickScrollButtons();
@@ -1133,13 +1132,13 @@ namespace SongBrowser.UI
                                     return;
                                 }
 
-                                Logger.Info($"Deleting song: {song.customLevelPath}");
+                                Plugin.Log.Info($"Deleting song: {song.customLevelPath}");
                                 _deletingSong = true;
                                 SongCore.Loader.Instance.DeleteSong(song.customLevelPath);
                                 StartCoroutine(ClearSongDeletionFlag());
 
                                 int removedLevels = levels.RemoveAll(x => x.levelID == selectedLevelID);
-                                Logger.Info($"Removed [{removedLevels}] level(s) from song list!");
+                                Plugin.Log.Info($"Removed [{removedLevels}] level(s) from song list!");
 
                                 this.UpdateLevelDataModel();
 
@@ -1156,7 +1155,7 @@ namespace SongBrowser.UI
                         }
                         catch (Exception e)
                         {
-                            Logger.Error("Unable to delete song! Exception: " + e);
+                            Plugin.Log.Error("Unable to delete song! Exception: " + e);
                         }
                     }
                 });
@@ -1200,7 +1199,7 @@ namespace SongBrowser.UI
         /// <param name="searchFor"></param>
         private void SearchViewControllerSearchButtonPressed(string searchFor)
         {
-            Logger.Debug("Searching for \"{0}\"...", searchFor);
+            Plugin.Log.Debug($"Searching for \"{searchFor}\"...");
 
             PluginConfig.Instance.FilterMode = SongFilterMode.Search;
             PluginConfig.Instance.SearchTerms.Insert(0, searchFor);
@@ -1264,7 +1263,7 @@ namespace SongBrowser.UI
                 newRow = totalSize - 1;
             }
 
-            Logger.Debug("jumpDirection: {0}, newRow: {1}", jumpDirection, newRow);
+            Plugin.Log.Debug($"jumpDirection: {jumpDirection}, newRow: {newRow}");
             _beatUi.ScrollToLevelByRow(newRow);
             RefreshQuickScrollButtons();
         }
@@ -1274,7 +1273,7 @@ namespace SongBrowser.UI
         /// </summary>
         public void RefreshScoreSaberData(IPreviewBeatmapLevel level)
         {
-            Logger.Trace("RefreshScoreSaberData({0})", level.levelID);
+            Plugin.Log.Trace($"RefreshScoreSaberData({level.levelID})");
 
             if (!SongDataCore.Plugin.Songs.IsDataAvailable())
             {
@@ -1287,19 +1286,19 @@ namespace SongBrowser.UI
             {
                 difficultyString = "Expert+";
             }
-            Logger.Debug(difficultyString);
+            Plugin.Log.Debug(difficultyString);
 
             // Check if we have data for this song
-            Logger.Debug("Checking if have info for song {0}", level.songName);
+            Plugin.Log.Debug($"Checking if have info for song {level.songName}");
             var hash = SongBrowserModel.GetSongHash(level.levelID);
             if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
             {
-                Logger.Debug("Checking if have difficulty for song {0} difficulty {1}", level.songName, difficultyString);
+                Plugin.Log.Debug($"Checking if have difficulty for song [{level.songName}] difficulty [{difficultyString}]");
                 BeatStarSong scoreSaberSong = SongDataCore.Plugin.Songs.Data.Songs[hash];
                 BeatStarSongDifficultyStats scoreSaberSongDifficulty = scoreSaberSong.diffs.FirstOrDefault(x => String.Equals(x.diff, difficultyString));
                 if (scoreSaberSongDifficulty != null)
                 {
-                    Logger.Debug("Display pp for song.");
+                    Plugin.Log.Debug("Display pp for song.");
                     double pp = scoreSaberSongDifficulty.pp;
                     double star = scoreSaberSongDifficulty.star;
 
@@ -1318,7 +1317,7 @@ namespace SongBrowser.UI
                 BeatSaberUI.SetStatButtonText(_starStatButton, "NA");
             }
 
-            Logger.Debug("Done refreshing score saber stats.");
+            Plugin.Log.Debug("Done refreshing score saber stats.");
         }
 
         /// <summary>
@@ -1377,7 +1376,7 @@ namespace SongBrowser.UI
         /// </summary>
         public void Show()
         {
-            Logger.Trace("Show SongBrowserUI()");
+            Plugin.Log.Trace("Show SongBrowserUI()");
 
             this.SetVisibility(true);
         }
@@ -1387,7 +1386,7 @@ namespace SongBrowser.UI
         /// </summary>
         public void Hide()
         {
-            Logger.Trace("Hide SongBrowserUI()");
+            Plugin.Log.Trace("Hide SongBrowserUI()");
 
             this.SetVisibility(false);
         }
@@ -1562,7 +1561,7 @@ namespace SongBrowser.UI
         {
             try
             {
-                Logger.Trace("UpdateLevelDataModel()");
+                Plugin.Log.Trace("UpdateLevelDataModel()");
 
                 // get a current beatmap characteristic...
                 if (_model.CurrentBeatmapCharacteristicSO == null && _uiCreated)
@@ -1574,7 +1573,7 @@ namespace SongBrowser.UI
             }
             catch (Exception e)
             {
-                Logger.Exception("SongBrowser UI crashed trying to update the internal song lists: ", e);
+                Plugin.Log.Critical($"SongBrowser UI crashed trying to update the internal song lists: {e}");
             }
         }
 
@@ -1586,7 +1585,7 @@ namespace SongBrowser.UI
             if (_uiCreated)
             {
                 IAnnotatedBeatmapLevelCollection currentSelected = _beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection();
-                Logger.Debug("Updating level collection, current selected level collection: {0}", currentSelected);
+                Plugin.Log.Debug($"Updating level collection, current selected level collection: {currentSelected}");
 
                 // select category
                 if (!String.IsNullOrEmpty(PluginConfig.Instance.CurrentLevelCategoryName))
@@ -1601,13 +1600,13 @@ namespace SongBrowser.UI
                 {
                     if (currentSelected == null && String.IsNullOrEmpty(PluginConfig.Instance.CurrentLevelCategoryName))
                     {
-                        Logger.Debug("No level collection selected, acquiring the first available, likely OST1...");
+                        Plugin.Log.Debug("No level collection selected, acquiring the first available, likely OST1...");
                         currentSelected = _beatUi.BeatmapLevelsModel.allLoadedBeatmapLevelPackCollection.beatmapLevelPacks[0];
                     }
                 }
                 else if (currentSelected == null || (currentSelected.collectionName != PluginConfig.Instance.CurrentLevelCollectionName))
                 {
-                    Logger.Debug("Automatically selecting level collection: {0}", PluginConfig.Instance.CurrentLevelCollectionName);
+                    Plugin.Log.Debug($"Automatically selecting level collection: {PluginConfig.Instance.CurrentLevelCollectionName}");
                     _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent -= LevelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
 
                     _lastLevelCollection = _beatUi.GetLevelCollectionByName(PluginConfig.Instance.CurrentLevelCollectionName);
@@ -1627,7 +1626,7 @@ namespace SongBrowser.UI
                     }
                 }
 
-                Logger.Debug("Current Level Collection is: {0}", _lastLevelCollection);
+                Plugin.Log.Debug($"Current Level Collection is: {_lastLevelCollection}");
                 ProcessSongList();
             }
 

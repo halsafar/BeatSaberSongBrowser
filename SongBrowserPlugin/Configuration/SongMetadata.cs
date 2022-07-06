@@ -5,7 +5,6 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Logger = SongBrowser.Logging.Logger;
 
 namespace SongBrowser.Configuration
 {
@@ -39,7 +38,7 @@ namespace SongBrowser.Configuration
 
             try
             {
-                Logger.Debug("Loading SongMetaDataStore: {0}", storePath);
+                Plugin.Log.Debug($"Loading SongMetaDataStore: {storePath}");
                 using StreamReader file = File.OpenText(storePath);
                 JsonSerializer serializer = new JsonSerializer();
                 SongMetadataStore.Instance = (SongMetadataStore)serializer.Deserialize(file, typeof(SongMetadataStore));
@@ -47,8 +46,8 @@ namespace SongBrowser.Configuration
             }
             catch (JsonReaderException e)
             {
-                Logger.Exception("Could not parse SongMetaDataStore: {0}", e);
-                Logger.Warning("SongMetaDataStore is corrupted, deleting, creating new store...");
+                Plugin.Log.Critical($"Could not parse SongMetaDataStore: {e}");
+                Plugin.Log.Warn("SongMetaDataStore is corrupted, deleting, creating new store...");
                 File.Delete(storePath);
                 SongMetadataStore.CreateEmptyStore(storePath);
             }
@@ -65,7 +64,7 @@ namespace SongBrowser.Configuration
 
         public void Save()
         {
-            Logger.Debug("Saving SongMetaDataStore: {0}", this._storePath);
+            Plugin.Log.Debug($"Saving SongMetaDataStore: {this._storePath}");
 
             using StreamWriter file = File.CreateText(this._storePath);
 

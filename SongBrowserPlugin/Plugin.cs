@@ -6,7 +6,6 @@ using System;
 using System.Linq;
 using System.Reflection;
 using IPA.Loader;
-using Logger = SongBrowser.Logging.Logger;
 using Config = IPA.Config.Config;
 using HarmonyLib;
 using SongBrowser.Installers;
@@ -77,7 +76,7 @@ namespace SongBrowser
             }
             catch (Exception e)
             {
-                Logger.Exception("Exception on fresh menu scene change: " + e);
+                Plugin.Log.Critical($"Exception on fresh menu scene change: {e}");
             }
         }
 

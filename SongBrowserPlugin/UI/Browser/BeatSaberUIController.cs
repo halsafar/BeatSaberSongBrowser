@@ -5,7 +5,6 @@ using System.Linq;
 using IPA.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
-using Logger = SongBrowser.Logging.Logger;
 using BeatSaberPlaylistsLib.Types;
 
 namespace SongBrowser.DataAccess
@@ -55,61 +54,61 @@ namespace SongBrowser.DataAccess
         /// <param name="flowCoordinator"></param>
         public BeatSaberUIController(LevelSelectionFlowCoordinator flowCoordinator)
         {
-            Logger.Debug("Collecting all BeatSaberUI Elements...");
+            Plugin.Log.Debug("Collecting all BeatSaberUI Elements...");
 
             LevelSelectionFlowCoordinator = flowCoordinator;
 
             // gather flow coordinator elements
             LevelSelectionNavigationController = LevelSelectionFlowCoordinator.GetField<LevelSelectionNavigationController, LevelSelectionFlowCoordinator>("levelSelectionNavigationController");
-            Logger.Debug("Acquired LevelSelectionNavigationController [{0}]", LevelSelectionNavigationController.GetInstanceID());
+            Plugin.Log.Debug($"Acquired LevelSelectionNavigationController [{LevelSelectionNavigationController.GetInstanceID()}]");
 
             LevelFilteringNavigationController = LevelSelectionNavigationController.GetField<LevelFilteringNavigationController, LevelSelectionNavigationController>("_levelFilteringNavigationController");
-            Logger.Debug("Acquired LevelFilteringNavigationController [{0}]", LevelFilteringNavigationController.GetInstanceID());
+            Plugin.Log.Debug($"Acquired LevelFilteringNavigationController [{LevelFilteringNavigationController.GetInstanceID()}]");
 
             LevelCollectionNavigationController = LevelSelectionNavigationController.GetField<LevelCollectionNavigationController, LevelSelectionNavigationController>("_levelCollectionNavigationController");
-            Logger.Debug("Acquired LevelCollectionNavigationController [{0}]", LevelCollectionNavigationController.GetInstanceID());
+            Plugin.Log.Debug($"Acquired LevelCollectionNavigationController [{LevelCollectionNavigationController.GetInstanceID()}]");
 
             LevelCollectionViewController = LevelCollectionNavigationController.GetField<LevelCollectionViewController, LevelCollectionNavigationController>("_levelCollectionViewController");
-            Logger.Debug("Acquired LevelPackLevelsViewController [{0}]", LevelCollectionViewController.GetInstanceID());
+            Plugin.Log.Debug($"Acquired LevelPackLevelsViewController [{LevelCollectionViewController.GetInstanceID()}]");
 
             LevelDetailViewController = LevelCollectionNavigationController.GetField<StandardLevelDetailViewController, LevelCollectionNavigationController>("_levelDetailViewController");
-            Logger.Debug("Acquired StandardLevelDetailViewController [{0}]", LevelDetailViewController.GetInstanceID());
+            Plugin.Log.Debug($"Acquired StandardLevelDetailViewController [{LevelDetailViewController.GetInstanceID()}]");
 
             LevelCollectionTableView = this.LevelCollectionViewController.GetField<LevelCollectionTableView, LevelCollectionViewController>("_levelCollectionTableView");
-            Logger.Debug("Acquired LevelPackLevelsTableView [{0}]", LevelCollectionTableView.GetInstanceID());
+            Plugin.Log.Debug($"Acquired LevelPackLevelsTableView [{LevelCollectionTableView.GetInstanceID()}]");
 
             StandardLevelDetailView = LevelDetailViewController.GetField<StandardLevelDetailView, StandardLevelDetailViewController>("_standardLevelDetailView");
-            Logger.Debug("Acquired StandardLevelDetailView [{0}]", StandardLevelDetailView.GetInstanceID());
+            Plugin.Log.Debug($"Acquired StandardLevelDetailView [{StandardLevelDetailView.GetInstanceID()}]");
 
             BeatmapCharacteristicSelectionViewController = StandardLevelDetailView.GetField<BeatmapCharacteristicSegmentedControlController, StandardLevelDetailView>("_beatmapCharacteristicSegmentedControlController");
-            Logger.Debug("Acquired BeatmapCharacteristicSegmentedControlController [{0}]", BeatmapCharacteristicSelectionViewController.GetInstanceID());
+            Plugin.Log.Debug($"Acquired BeatmapCharacteristicSegmentedControlController [{BeatmapCharacteristicSelectionViewController.GetInstanceID()}]");
 
             LevelDifficultyViewController = StandardLevelDetailView.GetField<BeatmapDifficultySegmentedControlController, StandardLevelDetailView>("_beatmapDifficultySegmentedControlController");
-            Logger.Debug("Acquired BeatmapDifficultySegmentedControlController [{0}]", LevelDifficultyViewController.GetInstanceID());
+            Plugin.Log.Debug($"Acquired BeatmapDifficultySegmentedControlController [{LevelDifficultyViewController.GetInstanceID()}]");
 
             LevelCollectionTableViewTransform = LevelCollectionTableView.transform as RectTransform;
-            Logger.Debug("Acquired TableViewRectTransform from LevelPackLevelsTableView [{0}]", LevelCollectionTableViewTransform.GetInstanceID());
+            Plugin.Log.Debug($"Acquired TableViewRectTransform from LevelPackLevelsTableView [{LevelCollectionTableViewTransform.GetInstanceID()}]");
 
             AnnotatedBeatmapLevelCollectionsViewController = LevelFilteringNavigationController.GetField<AnnotatedBeatmapLevelCollectionsViewController, LevelFilteringNavigationController>("_annotatedBeatmapLevelCollectionsViewController");
-            Logger.Debug("Acquired AnnotatedBeatmapLevelCollectionsViewController from LevelFilteringNavigationController [{0}]", AnnotatedBeatmapLevelCollectionsViewController.GetInstanceID());
+            Plugin.Log.Debug($"Acquired AnnotatedBeatmapLevelCollectionsViewController from LevelFilteringNavigationController [{AnnotatedBeatmapLevelCollectionsViewController.GetInstanceID()}]");
 
             TableView tableView = LevelCollectionTableView.GetField<TableView, LevelCollectionTableView>("_tableView");
             ScrollView scrollView = tableView.GetField<ScrollView, TableView>("_scrollView");
             TableViewPageUpButton = scrollView.GetField<Button, ScrollView>("_pageUpButton");
             TableViewPageDownButton = scrollView.GetField<Button, ScrollView>("_pageDownButton");
-            Logger.Debug("Acquired Page Up and Down buttons...");
+            Plugin.Log.Debug("Acquired Page Up and Down buttons...");
 
             ActionButtons = StandardLevelDetailView.GetComponentsInChildren<RectTransform>().First(x => x.name == "ActionButtons");
-            Logger.Debug("Acquired ActionButtons [{0}]", ActionButtons.GetInstanceID());
+            Plugin.Log.Debug($"Acquired ActionButtons [{ActionButtons.GetInstanceID()}]");
 
             ScreenSystem = Resources.FindObjectsOfTypeAll<ScreenSystem>().Last();
-            Logger.Debug("Acquired ScreenSystem [{0}]", ScreenSystem.GetInstanceID());
+            Plugin.Log.Debug($"Acquired ScreenSystem [{ScreenSystem.GetInstanceID()}]");
 
             SimpleDialogPromptViewControllerPrefab = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().Last();
-            Logger.Debug("Acquired SimpleDialogPromptViewControllerPrefab [{0}]", SimpleDialogPromptViewControllerPrefab.GetInstanceID());
+            Plugin.Log.Debug($"Acquired SimpleDialogPromptViewControllerPrefab [{SimpleDialogPromptViewControllerPrefab.GetInstanceID()}]");
 
             BeatmapLevelsModel = Resources.FindObjectsOfTypeAll<BeatmapLevelsModel>().Last();
-            Logger.Debug("Acquired BeatmapLevelsModel [{0}]", BeatmapLevelsModel);
+            Plugin.Log.Debug($"Acquired BeatmapLevelsModel [{BeatmapLevelsModel}]");
         }
 
         /// <summary>
@@ -204,7 +203,7 @@ namespace SongBrowser.DataAccess
             var levelCollection = GetCurrentSelectedAnnotatedBeatmapLevelCollection();
             if (levelCollection == null)
             {
-                Logger.Debug("Current selected level collection is null for some reason...");
+                Plugin.Log.Debug("Current selected level collection is null for some reason...");
                 return null;
             }
             return SongBrowserModel.GetLevelsForLevelCollection(levelCollection);
@@ -212,7 +211,7 @@ namespace SongBrowser.DataAccess
 
         public bool SelectLevelCategory(String levelCategoryName)
         {
-            Logger.Trace("SelectLevelCategory({0})", levelCategoryName);
+            Plugin.Log.Trace($"SelectLevelCategory({levelCategoryName})");
 
             try
             {
@@ -235,11 +234,11 @@ namespace SongBrowser.DataAccess
 
                 if (category == LevelFilteringNavigationController.selectedLevelCategory)
                 {
-                    Logger.Debug($"Level category [{category}] is already selected");
+                    Plugin.Log.Debug($"Level category [{category}] is already selected");
                     return false;
                 }
 
-                Logger.Info("Selecting level category: {0}", levelCategoryName);
+                Plugin.Log.Info($"Selecting level category: {levelCategoryName}");
 
                 var selectLeveCategoryViewController = LevelFilteringNavigationController.GetComponentInChildren<SelectLevelCategoryViewController>();
                 var iconSegementController = selectLeveCategoryViewController.GetComponentInChildren<IconSegmentedControl>();
@@ -252,13 +251,13 @@ namespace SongBrowser.DataAccess
                 LevelFilteringNavigationController.UpdateSecondChildControllerContent(category);
                 //AnnotatedBeatmapLevelCollectionsViewController.RefreshAvailability();
 
-                Logger.Debug("Done selecting level category.");
+                Plugin.Log.Debug("Done selecting level category.");
 
                 return true;
 
             } catch (Exception e)
             {
-                Logger.Exception(e);
+                Plugin.Log.Critical(e);
             }
 
             return false;
@@ -270,27 +269,27 @@ namespace SongBrowser.DataAccess
         /// <param name="levelCollectionName"></param>
         public void SelectLevelCollection(String levelCollectionName)
         {
-            Logger.Trace("SelectLevelCollection({0})", levelCollectionName);
+            Plugin.Log.Trace($"SelectLevelCollection({levelCollectionName})");
 
             try
             {
                 IAnnotatedBeatmapLevelCollection collection = GetLevelCollectionByName(levelCollectionName);
                 if (collection == null)
                 {
-                    Logger.Debug("Could not locate requested level collection...");
+                    Plugin.Log.Debug("Could not locate requested level collection...");
                     return;
                 }
 
-                Logger.Info("Selecting level collection: {0}", collection.collectionName);
+                Plugin.Log.Info($"Selecting level collection: {collection.collectionName}");
 
                 LevelFilteringNavigationController.SelectAnnotatedBeatmapLevelCollection(collection as IBeatmapLevelPack);
                 LevelFilteringNavigationController.HandleAnnotatedBeatmapLevelCollectionsViewControllerDidSelectAnnotatedBeatmapLevelCollection(collection);
 
-                Logger.Debug("Done selecting level collection!");
+                Plugin.Log.Debug("Done selecting level collection!");
             }
             catch (Exception e)
             {
-                Logger.Exception(e);
+                Plugin.Log.Critical(e);
             }
         }
 
@@ -301,14 +300,14 @@ namespace SongBrowser.DataAccess
         /// <param name="levelID"></param>
         public void SelectAndScrollToLevel(string levelID)
         {
-            Logger.Debug("Scrolling to LevelID: {0}", levelID);
+            Plugin.Log.Debug($"Scrolling to LevelID: {levelID}");
 
             // Check once per load
             if (!_checkedForTwitchPlugin)
             {
-                Logger.Info("Checking for BeatSaber Twitch Integration Plugin...");
+                Plugin.Log.Info("Checking for BeatSaber Twitch Integration Plugin...");
                 _detectedTwitchPluginQueue = Resources.FindObjectsOfTypeAll<HMUI.ViewController>().Any(x => x.name == "RequestInfo");
-                Logger.Info("BeatSaber Twitch Integration plugin detected: " + _detectedTwitchPluginQueue);
+                Plugin.Log.Info("BeatSaber Twitch Integration plugin detected: " + _detectedTwitchPluginQueue);
 
                 _checkedForTwitchPlugin = true;
             }
@@ -316,7 +315,7 @@ namespace SongBrowser.DataAccess
             // Skip scrolling to level if twitch plugin has queue active.
             if (_detectedTwitchPluginQueue)
             {
-                Logger.Debug("Skipping SelectAndScrollToLevel() because we detected Twitch Integration Plugin has a Queue active...");
+                Plugin.Log.Debug("Skipping SelectAndScrollToLevel() because we detected Twitch Integration Plugin has a Queue active...");
                 return;
             }
 
@@ -338,7 +337,7 @@ namespace SongBrowser.DataAccess
 
                 int selectedRow = LevelCollectionTableView.GetField<int, LevelCollectionTableView>("_selectedRow");
 
-                Logger.Debug("Song is not in the level pack, cannot scroll to it...  Using last known row {0}/{1}", selectedRow, maxCount);
+                Plugin.Log.Debug($"Song is not in the level pack, cannot scroll to it...  Using last known row {selectedRow}/{maxCount}");
                 selectedIndex = Math.Min(maxCount, selectedRow);
             }
             else if (LevelCollectionViewController.GetField<bool, LevelCollectionViewController>("_showHeader"))
@@ -356,7 +355,7 @@ namespace SongBrowser.DataAccess
         /// <param name="selectedIndex"></param>
         public void ScrollToLevelByRow(int selectedIndex)
         {
-            Logger.Debug("Scrolling level list to idx: {0}", selectedIndex);
+            Plugin.Log.Debug($"Scrolling level list to idx: {selectedIndex}");
 
             TableView tableView = LevelCollectionTableView.GetField<TableView, LevelCollectionTableView>("_tableView");
             var selectedRow = LevelCollectionTableView.GetField<int, LevelCollectionTableView>("_selectedRow");
@@ -373,24 +372,24 @@ namespace SongBrowser.DataAccess
         /// </summary>
         public void RefreshSongList(string currentSelectedLevelId, bool scrollToLevel = true)
         {
-            Logger.Info("Refreshing the song list view.");
+            Plugin.Log.Info("Refreshing the song list view.");
             try
             {
                 var levels = GetCurrentLevelCollectionLevels();
                 if (levels == null)
                 {
-                    Logger.Info("Nothing to refresh yet.");
+                    Plugin.Log.Info("Nothing to refresh yet.");
                     return;
                 }
 
-                Logger.Debug("Checking if TableView is initialized...");
+                Plugin.Log.Debug("Checking if TableView is initialized...");
                 TableView tableView = LevelCollectionTableView.GetField<TableView, LevelCollectionTableView>("_tableView");
                 bool tableViewInit = tableView.GetField<bool, TableView>("_isInitialized");
 
-                Logger.Debug("Reloading SongList TableView");
+                Plugin.Log.Debug("Reloading SongList TableView");
                 tableView.ReloadData();
 
-                Logger.Debug("Attempting to scroll to level [{0}]", currentSelectedLevelId);
+                Plugin.Log.Debug($"Attempting to scroll to level [{currentSelectedLevelId}]");
                 String selectedLevelID = currentSelectedLevelId;
                 if (!String.IsNullOrEmpty(currentSelectedLevelId))
                 {
@@ -400,7 +399,7 @@ namespace SongBrowser.DataAccess
                 {
                     if (levels.Count > 0)
                     {
-                        Logger.Debug("Currently selected level ID does not exist, picking the first...");
+                        Plugin.Log.Debug("Currently selected level ID does not exist, picking the first...");
                         selectedLevelID = levels.FirstOrDefault().levelID;
                     }
                 }
@@ -412,7 +411,7 @@ namespace SongBrowser.DataAccess
             }
             catch (Exception e)
             {
-                Logger.Exception("Exception refreshing song list:", e);
+                Plugin.Log.Critical($"Exception refreshing song list: {e}");
             }
         }
     }
