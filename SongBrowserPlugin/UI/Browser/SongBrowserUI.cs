@@ -670,11 +670,6 @@ namespace SongBrowser.UI
             Logger.Debug($"Cancelling filter, levelCollection {_lastLevelCollection}");
             PluginConfig.Instance.FilterMode = SongFilterMode.None;
 
-            GameObject _noDataGO = _beatUi.LevelCollectionViewController.GetField<GameObject, LevelCollectionViewController>("_noDataInfoGO");
-            string _headerText = _beatUi.LevelCollectionTableView.GetField<string, LevelCollectionTableView>("_headerText");
-            Sprite _headerSprite = _beatUi.LevelCollectionTableView.GetField<Sprite, LevelCollectionTableView>("_headerSprite");
-
-
             UpdateLevelCollectionSelection();
         }
 
