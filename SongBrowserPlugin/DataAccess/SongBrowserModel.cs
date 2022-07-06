@@ -37,7 +37,8 @@ namespace SongBrowser
         public static Func<List<IPreviewBeatmapLevel>, List<IPreviewBeatmapLevel>> CustomSortHandler;
         public static Action<ConcurrentDictionary<string, CustomPreviewBeatmapLevel>> didFinishProcessingSongs;
 
-        public bool SortWasMissingData { get; private set; } = false;
+        public bool SortWasMissingData { get; set; } = false;
+        public bool FilterWasMissingData { get; set; } = false;
 
         /// <summary>
         /// Get the last selected (stored in settings) level id.
@@ -274,6 +275,8 @@ namespace SongBrowser
                 PluginConfig.Instance.FilterMode = SongFilterMode.None;
             }
 
+            FilterWasMissingData = false;
+
             switch (PluginConfig.Instance.FilterMode)
             {
                 case SongFilterMode.Favorites:
@@ -324,6 +327,9 @@ namespace SongBrowser
                     break;
                 case SongSortMode.Newest:
                     sortedSongs = SortNewest(filteredSongs);
+                    break;
+                case SongSortMode.LastPlayed:
+                    sortedSongs = SortLastPlayed(filteredSongs);
                     break;
                 case SongSortMode.Author:
                     sortedSongs = SortAuthor(filteredSongs);
@@ -504,34 +510,43 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> FilterRanked(List<IPreviewBeatmapLevel> levels, bool includeRanked, bool includeUnranked)
         {
-            var filteredLevels = levels.Where(x =>
+            List<IPreviewBeatmapLevel> filteredLevels = null;
+            if (SongDataCore.Plugin.Songs.IsDataAvailable())
             {
-                if (!SongDataCore.Plugin.Songs.IsDataAvailable())
-                {                    
-                    return false;
-                }
+                filteredLevels = levels.Where(x =>
+                {
+                    if (!SongDataCore.Plugin.Songs.IsDataAvailable())
+                    {
+                        return false;
+                    }
 
-                if (x == null)
-                {
-                    return false;
-                }
+                    if (x == null)
+                    {
+                        return false;
+                    }
 
-                var hash = SongBrowserModel.GetSongHash(x.levelID);
-                double maxPP = 0.0;
-                if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
-                {
-                    maxPP = SongDataCore.Plugin.Songs.Data.Songs[hash].diffs.Max(y => y.pp);
-                }
+                    var hash = SongBrowserModel.GetSongHash(x.levelID);
+                    double maxPP = 0.0;
+                    if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
+                    {
+                        maxPP = SongDataCore.Plugin.Songs.Data.Songs[hash].diffs.Max(y => y.pp);
+                    }
 
-                if (maxPP > 0f)
-                {
-                    return includeRanked;
-                }
-                else
-                {
-                    return includeUnranked;
-                }
-            }).ToList();
+                    if (maxPP > 0f)
+                    {
+                        return includeRanked;
+                    }
+                    else
+                    {
+                        return includeUnranked;
+                    }
+                }).ToList();
+            }
+            else
+            {
+                filteredLevels = new List<IPreviewBeatmapLevel>();
+                FilterWasMissingData = true;
+            }
 
             if (filteredLevels.Count == 0)
             {
@@ -654,6 +669,23 @@ namespace SongBrowser
                 .OrderByDescending(x => _cachedLastWriteTimes.ContainsKey(x.levelID) ? _cachedLastWriteTimes[x.levelID] : DateTime.MinValue)
                 .ToList();
         }
+
+        /// <summary>
+        /// Sorting by newest (file time, creation+modified).
+        /// </summary>
+        /// <param name="levels"></param>
+        /// <returns></returns>
+        private List<IPreviewBeatmapLevel> SortLastPlayed(List<IPreviewBeatmapLevel> levels)
+        {
+            Logger.Info("Sorting song list by last played.");
+            return levels
+                .OrderByDescending(x =>
+                    SongMetadataStore.Instance.GetMetadataForLevelID(x.levelID).LastPlayed != null
+                    ? SongMetadataStore.Instance.GetMetadataForLevelID(x.levelID).LastPlayed
+                    : DateTime.MinValue)
+                .ToList();
+        }
+
 
         /// <summary>
         /// Sorting by the song author.

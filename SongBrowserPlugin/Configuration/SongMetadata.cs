@@ -16,9 +16,6 @@ namespace SongBrowser.Configuration
         [JsonIgnore]
         private string _storePath;
 
-        [JsonIgnore]
-        private bool _dirty = false;
-
         [UseConverter(typeof(DictionaryConverter<SongMetadata>))]
         [NonNullable]
         public virtual Dictionary<string, SongMetadata> Songs { get; set; } = new Dictionary<string, SongMetadata>();
@@ -62,19 +59,12 @@ namespace SongBrowser.Configuration
             if (!Instance.Songs.ContainsKey(levelID))
             {
                 Instance.Songs.Add(levelID, new SongMetadata());
-                _dirty = true;
             }
             return Instance.Songs[levelID];
         }
 
         public void Save()
         {
-            // Skip Saving
-            if (!this._dirty)
-            {
-                return;
-            }
-
             Logger.Debug("Saving SongMetaDataStore: {0}", this._storePath);
 
             using StreamWriter file = File.CreateText(this._storePath);
@@ -86,8 +76,6 @@ namespace SongBrowser.Configuration
             JsonSerializer serializer = JsonSerializer.Create(opts);
 
             serializer.Serialize(file, this);
-
-            this._dirty = false;
         }
     }
 
@@ -95,5 +83,8 @@ namespace SongBrowser.Configuration
     {
         [UseConverter]
         public virtual DateTime? AddedAt { get; set; }
+
+        [UseConverter]
+        public virtual DateTime? LastPlayed { get; set; } = null;
     }
 }

@@ -313,6 +313,7 @@ namespace SongBrowser.UI
                 new KeyValuePair<string, SongSortMode>("Author", SongSortMode.Author),
                 new KeyValuePair<string, SongSortMode>("Mapper", SongSortMode.Mapper),
                 new KeyValuePair<string, SongSortMode>("Newest", SongSortMode.Newest),
+                new KeyValuePair<string, SongSortMode>("LastPlay", SongSortMode.LastPlayed),
                 new KeyValuePair<string, SongSortMode>("Vanilla", SongSortMode.Vanilla),
                 new KeyValuePair<string, SongSortMode>("#Plays", SongSortMode.YourPlayCount),
                 new KeyValuePair<string, SongSortMode>("BPM", SongSortMode.Bpm),
@@ -531,6 +532,20 @@ namespace SongBrowser.UI
 
             // stop add favorites from scrolling to the top
             _beatUi.StandardLevelDetailView.didFavoriteToggleChangeEvent += OnDidFavoriteToggleChangeEvent;
+
+            _beatUi.LevelCollectionNavigationController.didPressActionButtonEvent += OnDidPressActionButton;
+        }
+
+        /// <summary>
+        /// Fetch the metadata instance for the song being started.
+        /// Store the current time of day as last played.
+        /// </summary>
+        /// <param name="viewController"></param>
+        public virtual void OnDidPressActionButton(LevelCollectionNavigationController viewController)
+        {
+            SongMetadata metaData = SongMetadataStore.Instance.GetMetadataForLevelID(this._model.LastSelectedLevelId);
+            metaData.LastPlayed = DateTime.UtcNow;
+            _model.SortWasMissingData = true;
         }
 
         /// <summary>
@@ -584,7 +599,7 @@ namespace SongBrowser.UI
                 yield break;
             }
 
-            if (!_model.SortWasMissingData)
+            if (!_model.SortWasMissingData && !_model.FilterWasMissingData)
             {
                 yield break;
             }
@@ -595,16 +610,17 @@ namespace SongBrowser.UI
                    _beatUi.LevelSelectionNavigationController.isInTransition ||
                    _beatUi.LevelDetailViewController.isInTransition ||
                    !_beatUi.LevelSelectionNavigationController.isInViewControllerHierarchy ||
-                   !_beatUi.LevelDetailViewController.isInViewControllerHierarchy ||
-                   !_beatUi.LevelSelectionNavigationController.isActiveAndEnabled ||
-                   !_beatUi.LevelDetailViewController.isActiveAndEnabled))
+                   !_beatUi.LevelSelectionNavigationController.isActiveAndEnabled))
             {
                 yield return null;
             }
 
             //yield return new WaitForEndOfFrame();
 
-            if (PluginConfig.Instance.SortMode.NeedsScoreSaberData() && SongDataCore.Plugin.Songs.IsDataAvailable())
+            if (SongDataCore.Plugin.Songs.IsDataAvailable() &&
+                    (PluginConfig.Instance.SortMode.NeedsScoreSaberData() ||
+                    PluginConfig.Instance.FilterMode.NeedsScoreSaberData()) ||
+                PluginConfig.Instance.SortMode.NeedsRefresh())
             {
                 ProcessSongList();
                 RefreshSongUI();

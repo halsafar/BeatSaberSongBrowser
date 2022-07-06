@@ -25,6 +25,7 @@ namespace SongBrowser.Configuration
         Bpm,
         Length,
         Vanilla,
+        LastPlayed,
 
         // Allow mods to extend functionality.
         Custom,
@@ -47,6 +48,17 @@ namespace SongBrowser.Configuration
                 case SongSortMode.Heat:
                 case SongSortMode.PP:
                 case SongSortMode.Stars:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static bool NeedsRefresh(this SongSortMode s)
+        {
+            switch (s)
+            {
+                case SongSortMode.LastPlayed:
                     return true;
                 default:
                     return false;
