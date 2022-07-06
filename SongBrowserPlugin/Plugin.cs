@@ -29,7 +29,7 @@ namespace SongBrowser
         public void Init(IPA.Logging.Logger logger, Zenjector zenjector, PluginMetadata metadata)
         {
             Log = logger;
-            VersionNumber = metadata.Version?.ToString() ?? Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
+            VersionNumber = metadata.HVersion?.ToString() ?? Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
             harmony = new Harmony(HarmonyId);
             zenjector.Install<SongBrowserMenuInstaller>(Location.Menu);
         }
@@ -51,7 +51,8 @@ namespace SongBrowser
         public void OnApplicationStart()
         {
             Instance = this;
-            IsCustomJsonDataEnabled = PluginManager.EnabledPlugins.FirstOrDefault(p => p.Name == "CustomJSONData")?.Version >= new SemVer.Version("2.0.0");
+            IsCustomJsonDataEnabled = PluginManager.EnabledPlugins.FirstOrDefault(p => p.Name == "CustomJSONData")?.HVersion >= new Hive.Versioning.Version("2.0.0");
+            Plugin.Log.Debug($"CustomJsonData Plugin Status: {IsCustomJsonDataEnabled}");
 
             Base64Sprites.Init();
 
