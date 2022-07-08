@@ -4,7 +4,6 @@ namespace SongBrowser.Configuration
     public enum SongFilterMode
     {
         None,
-        Favorites,
         Playlist,
         Search,
         Ranked,
@@ -18,7 +17,9 @@ namespace SongBrowser.Configuration
         Expert,
         ExpertPlus,
         // For other mods that extend SongBrowser
-        Custom
+        Custom,
+        // Deprecated
+        Favorites
     }
 
     static class SongFilterModeMethods

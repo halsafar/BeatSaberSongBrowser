@@ -289,9 +289,6 @@ namespace SongBrowser
                     case SongFilterMode.ExpertPlus:
                         filteredSongs = FilterDifficulty(filteredSongs, (BeatmapDifficulty)Enum.Parse(typeof(BeatmapDifficulty), kvp.Key.ToString()));
                         break;
-                    case SongFilterMode.Favorites:
-                        filteredSongs = FilterFavorites(filteredSongs);
-                        break;
                     case SongFilterMode.Search:
                         filteredSongs = FilterSearch(filteredSongs);
                         break;
@@ -425,7 +422,7 @@ namespace SongBrowser
             }
 
             Plugin.Log.Debug("Creating filtered level pack...");
-            BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsCollectionName, packName, selectedBeatmapCollection.collectionName, coverImage, smallCoverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
+            BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsCollectionName, packName, packName, coverImage, smallCoverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
 
             Plugin.Log.Debug("Acquiring necessary fields to call SetData(pack)...");
             LevelCollectionNavigationController lcnvc = navController.GetField<LevelCollectionNavigationController, LevelSelectionNavigationController>("_levelCollectionNavigationController");
@@ -447,17 +444,6 @@ namespace SongBrowser
                 _notAllowedCharacteristics);
 
             //_sortedSongs.ForEach(x => Plugin.Log.Debug(x.levelID));
-        }
-
-        /// <summary>
-        /// Filter songs based on playerdata favorites.
-        /// </summary>
-        private List<IPreviewBeatmapLevel> FilterFavorites(List<IPreviewBeatmapLevel> levels)
-        {
-            Plugin.Log.Info("Filtering song list as favorites playlist...");
-
-            PlayerDataModel playerData = Resources.FindObjectsOfTypeAll<PlayerDataModel>().FirstOrDefault();
-            return levels.Where(x => playerData.playerData.favoritesLevelIds.Contains(x.levelID)).ToList();
         }
 
         /// <summary>
