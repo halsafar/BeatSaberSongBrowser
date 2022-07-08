@@ -17,6 +17,7 @@ namespace SongBrowser.DataAccess
 
         public LevelFilteringNavigationController LevelFilteringNavigationController;
         public LevelCollectionNavigationController LevelCollectionNavigationController;
+        public LevelSearchViewController LevelSearchViewController;
 
         public LevelCollectionViewController LevelCollectionViewController;
         public LevelCollectionTableView LevelCollectionTableView;
@@ -64,6 +65,9 @@ namespace SongBrowser.DataAccess
 
             LevelFilteringNavigationController = LevelSelectionNavigationController.GetField<LevelFilteringNavigationController, LevelSelectionNavigationController>("_levelFilteringNavigationController");
             Plugin.Log.Debug($"Acquired LevelFilteringNavigationController [{LevelFilteringNavigationController.GetInstanceID()}]");
+
+            LevelSearchViewController = LevelFilteringNavigationController.GetField<LevelSearchViewController, LevelFilteringNavigationController>("_levelSearchViewController");
+            Plugin.Log.Debug($"Acquired LevelSearchViewController [{LevelSearchViewController.GetInstanceID()}]");
 
             LevelCollectionNavigationController = LevelSelectionNavigationController.GetField<LevelCollectionNavigationController, LevelSelectionNavigationController>("_levelCollectionNavigationController");
             Plugin.Log.Debug($"Acquired LevelCollectionNavigationController [{LevelCollectionNavigationController.GetInstanceID()}]");
@@ -123,6 +127,7 @@ namespace SongBrowser.DataAccess
             }
 
             var pack = LevelCollectionNavigationController.GetField<IBeatmapLevelPack, LevelCollectionNavigationController>("_levelPack");
+
             return pack;
         }
 
@@ -133,6 +138,13 @@ namespace SongBrowser.DataAccess
         public IAnnotatedBeatmapLevelCollection GetCurrentSelectedAnnotatedBeatmapLevelCollection()
         {
             IAnnotatedBeatmapLevelCollection collection = GetCurrentSelectedLevelPack();
+
+            if (collection == null)
+            {
+                LevelSearchViewController.BeatmapLevelPackCollection filterCollection = LevelSearchViewController.GetField<LevelSearchViewController.BeatmapLevelPackCollection, LevelSearchViewController>("_beatmapLevelPackCollection");
+                return filterCollection;
+            }
+
             if (collection == null)
             {
                 collection = GetCurrentSelectedPlaylist();
@@ -232,12 +244,6 @@ namespace SongBrowser.DataAccess
                     return false;
                 }
 
-                if (category == LevelFilteringNavigationController.selectedLevelCategory)
-                {
-                    Plugin.Log.Debug($"Level category [{category}] is already selected");
-                    return false;
-                }
-
                 Plugin.Log.Info($"Selecting level category: {levelCategoryName}");
 
                 var selectLeveCategoryViewController = LevelFilteringNavigationController.GetComponentInChildren<SelectLevelCategoryViewController>();
@@ -249,6 +255,7 @@ namespace SongBrowser.DataAccess
                 iconSegementController.SelectCellWithNumber(selectCellNumber);
                 selectLeveCategoryViewController.LevelFilterCategoryIconSegmentedControlDidSelectCell(iconSegementController, selectCellNumber);
                 LevelFilteringNavigationController.UpdateSecondChildControllerContent(category);
+                LevelSearchViewController.ResetCurrentFilterParams();
                 //AnnotatedBeatmapLevelCollectionsViewController.RefreshAvailability();
 
                 Plugin.Log.Debug("Done selecting level category.");
@@ -355,7 +362,7 @@ namespace SongBrowser.DataAccess
         /// <param name="selectedIndex"></param>
         public void ScrollToLevelByRow(int selectedIndex)
         {
-            Plugin.Log.Debug($"Scrolling level list to idx: {selectedIndex}");
+            Plugin.Log.Trace($"ScrollToLevelByRow: {selectedIndex}");
 
             TableView tableView = LevelCollectionTableView.GetField<TableView, LevelCollectionTableView>("_tableView");
             var selectedRow = LevelCollectionTableView.GetField<int, LevelCollectionTableView>("_selectedRow");
@@ -382,14 +389,12 @@ namespace SongBrowser.DataAccess
                     return;
                 }
 
-                Plugin.Log.Debug("Checking if TableView is initialized...");
                 TableView tableView = LevelCollectionTableView.GetField<TableView, LevelCollectionTableView>("_tableView");
                 bool tableViewInit = tableView.GetField<bool, TableView>("_isInitialized");
 
                 Plugin.Log.Debug("Reloading SongList TableView");
                 tableView.ReloadData();
 
-                Plugin.Log.Debug($"Attempting to scroll to level [{currentSelectedLevelId}]");
                 String selectedLevelID = currentSelectedLevelId;
                 if (!String.IsNullOrEmpty(currentSelectedLevelId))
                 {

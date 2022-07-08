@@ -51,13 +51,11 @@ namespace SongBrowser.Configuration
 
         public static bool NeedsRefresh(this SongSortMode s)
         {
-            switch (s)
+            return s switch
             {
-                case SongSortMode.LastPlayed:
-                    return true;
-                default:
-                    return false;
-            }
+                SongSortMode.LastPlayed => true,
+                _ => false,
+            };
         }
     }
 }

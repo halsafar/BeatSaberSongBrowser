@@ -73,7 +73,9 @@ namespace SongBrowser
         /// <param name="songListViewController"></param>
         public void Init()
         {
-            Plugin.Log.Info($"Settings loaded, filter/sorting mode is: {PluginConfig.Instance.FilterMode}/{PluginConfig.Instance.SortMode}");
+            Plugin.Log.Info($"Settings loaded, filter/sorting mode is: " +
+                $"{PluginConfig.Instance.GetFilterModeString()}/" +
+                $"{PluginConfig.Instance.SortMode}");
         }
 
         /// <summary>
@@ -262,59 +264,65 @@ namespace SongBrowser
             Plugin.Log.Debug($"Using songs from level collection: {selectedBeatmapCollection.collectionName} [num={selectedBeatmapCollection.beatmapLevelCollection.beatmapLevels.Count}");
             unsortedSongs = GetLevelsForLevelCollection(selectedBeatmapCollection).ToList();
 
-            // filter
-            Plugin.Log.Debug($"Starting filtering songs by {PluginConfig.Instance.FilterMode}");
+            Plugin.Log.Debug($"Start filtering songs");
+
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            if (PluginConfig.Instance.FilterMode == SongFilterMode.Requirements && !Plugin.IsCustomJsonDataEnabled)
+            filteredSongs = unsortedSongs;
+            foreach (var kvp in PluginConfig.Instance.FilterModes)
             {
-                PluginConfig.Instance.FilterMode = SongFilterMode.None;
+                if (kvp.Value == SortFilterStates.Disabled)
+                {
+                    continue;
+                }
+
+                Plugin.Log.Info($"Filtering by {kvp.Key}");
+
+                FilterWasMissingData = false;
+
+                switch ((SongFilterMode)Enum.Parse(typeof(SongFilterMode), kvp.Key.ToString()))
+                {
+                    case SongFilterMode.Easy:
+                    case SongFilterMode.Normal:
+                    case SongFilterMode.Hard:
+                    case SongFilterMode.Expert:
+                    case SongFilterMode.ExpertPlus:
+                        filteredSongs = FilterDifficulty(filteredSongs, (BeatmapDifficulty)Enum.Parse(typeof(BeatmapDifficulty), kvp.Key.ToString()));
+                        break;
+                    case SongFilterMode.Favorites:
+                        filteredSongs = FilterFavorites(filteredSongs);
+                        break;
+                    case SongFilterMode.Search:
+                        filteredSongs = FilterSearch(filteredSongs);
+                        break;
+                    case SongFilterMode.Ranked:
+                        filteredSongs = FilterRanked(filteredSongs, true, false);
+                        break;
+                    case SongFilterMode.Unranked:
+                        filteredSongs = FilterRanked(filteredSongs, false, true);
+                        break;
+                    case SongFilterMode.Played:
+                        filteredSongs = FilterPlayed(filteredSongs, true, false);
+                        break;
+                    case SongFilterMode.Unplayed:
+                        filteredSongs = FilterPlayed(filteredSongs, false, true);
+                        break;
+                    case SongFilterMode.Requirements:
+                        filteredSongs = FilterRequirements(filteredSongs);
+                        break;
+                    case SongFilterMode.Custom:
+                        Plugin.Log.Info("Song filter mode set to custom. Deferring filter behaviour to another mod.");
+                        filteredSongs = CustomFilterHandler != null ? CustomFilterHandler.Invoke(selectedBeatmapCollection) : filteredSongs;
+                        break;
+                    case SongFilterMode.None:
+                    default:
+                        Plugin.Log.Info("No song filter selected...");
+                        break;
+                }
+
+                stopwatch.Stop();
             }
 
-            FilterWasMissingData = false;
-
-            switch (PluginConfig.Instance.FilterMode)
-            {
-                case SongFilterMode.Easy:
-                case SongFilterMode.Normal:
-                case SongFilterMode.Hard:
-                case SongFilterMode.Expert:
-                case SongFilterMode.ExpertPlus:
-                    filteredSongs = FilterDifficulty(unsortedSongs, (BeatmapDifficulty)Enum.Parse(typeof(BeatmapDifficulty), PluginConfig.Instance.FilterMode.ToString()));
-                    break;
-                case SongFilterMode.Favorites:
-                    filteredSongs = FilterFavorites(unsortedSongs);
-                    break;
-                case SongFilterMode.Search:
-                    filteredSongs = FilterSearch(unsortedSongs);
-                    break;
-                case SongFilterMode.Ranked:
-                    filteredSongs = FilterRanked(unsortedSongs, true, false);
-                    break;
-                case SongFilterMode.Unranked:
-                    filteredSongs = FilterRanked(unsortedSongs, false, true);
-                    break;
-                case SongFilterMode.Played:
-                    filteredSongs = FilterPlayed(unsortedSongs, true, false);
-                    break;
-                case SongFilterMode.Unplayed:
-                    filteredSongs = FilterPlayed(unsortedSongs, false, true);
-                    break;
-                case SongFilterMode.Requirements:
-                    filteredSongs = FilterRequirements(unsortedSongs);
-                    break;
-                case SongFilterMode.Custom:
-                    Plugin.Log.Info("Song filter mode set to custom. Deferring filter behaviour to another mod.");
-                    filteredSongs = CustomFilterHandler != null ? CustomFilterHandler.Invoke(selectedBeatmapCollection) : unsortedSongs;
-                    break;
-                case SongFilterMode.None:
-                default:
-                    Plugin.Log.Info("No song filter selected...");
-                    filteredSongs = unsortedSongs;
-                    break;
-            }
-
-            stopwatch.Stop();
             Plugin.Log.Info($"Filtering songs took {stopwatch.ElapsedMilliseconds}ms");
 
             // sort
@@ -398,7 +406,7 @@ namespace SongBrowser
                 packName = "";
             }
 
-            if (!packName.EndsWith("*") && PluginConfig.Instance.FilterMode != SongFilterMode.None)
+            if (!packName.EndsWith("*") && PluginConfig.Instance.FilterModes.Any(x => x.Value == SortFilterStates.Enabled))
             {
                 packName += "*";
             }
@@ -419,13 +427,6 @@ namespace SongBrowser
             Plugin.Log.Debug("Creating filtered level pack...");
             BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsCollectionName, packName, selectedBeatmapCollection.collectionName, coverImage, smallCoverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
 
-            /*
-             public virtual void SetData(
-                IAnnotatedBeatmapLevelCollection annotatedBeatmapLevelCollection,
-                bool showPackHeader, bool showPlayerStats, bool showPracticeButton,
-                string actionButtonText,
-                GameObject noDataInfoPrefab, BeatmapDifficultyMask allowedBeatmapDifficultyMask, BeatmapCharacteristicSO[] notAllowedCharacteristics);
-            */
             Plugin.Log.Debug("Acquiring necessary fields to call SetData(pack)...");
             LevelCollectionNavigationController lcnvc = navController.GetField<LevelCollectionNavigationController, LevelSelectionNavigationController>("_levelCollectionNavigationController");
             LevelFilteringNavigationController lfnc = navController.GetField<LevelFilteringNavigationController, LevelSelectionNavigationController>("_levelFilteringNavigationController");
@@ -435,7 +436,8 @@ namespace SongBrowser
             var _notAllowedCharacteristics = navController.GetField<BeatmapCharacteristicSO[], LevelSelectionNavigationController>("_notAllowedCharacteristics");
             var noDataPrefab = lfnc.GetField<GameObject, LevelFilteringNavigationController>("_currentNoDataInfoPrefab");
 
-            Plugin.Log.Debug("Calling lcnvc.SetData...");
+            //Plugin.Log.Debug("Calling lcnvc.SetData...");
+
             lcnvc.SetData(levelPack,
                 true,
                 !_hidePracticeButton,
@@ -566,6 +568,11 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> FilterRequirements(List<IPreviewBeatmapLevel> levels)
         {
+            if (!Plugin.IsCustomJsonDataEnabled)
+            {
+                return levels.ToList();
+            }
+
             return levels.Where(x =>
             {
                 if (x is CustomPreviewBeatmapLevel customLevel)

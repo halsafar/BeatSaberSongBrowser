@@ -152,7 +152,6 @@ namespace SongBrowser.UI
 
                 var screenContainer = Resources.FindObjectsOfTypeAll<Transform>().First(x => x.name == "ScreenContainer");
                 var curvedCanvasSettings = screenContainer.GetComponents<CurvedCanvasSettings>().First();
-                Plugin.Log.Debug($"CurvedCanvasRadius: {curvedCanvasSettings.radius}");
 
                 _viewController = BeatSaberUI.CreateCurvedViewController<SongBrowserViewController>("SongBrowserViewController", curvedCanvasSettings.radius);
                 _viewController.rectTransform.SetParent(_beatUi.LevelCollectionNavigationController.rectTransform, false);
@@ -261,7 +260,6 @@ namespace SongBrowser.UI
             Plugin.Log.Debug("Creating Filter By Display...");
             _filterByDisplay = _viewController.CreateUIButton("filterValue", "PracticeButton", new Vector2(curX, buttonY), new Vector2(outerButtonWidth, buttonHeight), () =>
             {
-                PluginConfig.Instance.FilterMode = SongFilterMode.None;
                 CancelFilter();
                 ProcessSongList();
                 RefreshSongUI();
@@ -614,16 +612,38 @@ namespace SongBrowser.UI
 
             //yield return new WaitForEndOfFrame();
 
-            if (SongDataCore.Plugin.Songs.IsDataAvailable() &&
-                    (PluginConfig.Instance.SortMode.NeedsScoreSaberData() ||
-                    PluginConfig.Instance.FilterMode.NeedsScoreSaberData()) ||
-                PluginConfig.Instance.SortMode.NeedsRefresh())
+            if (SortorFilterModeRequiresRefresh())
             {
                 ProcessSongList();
                 RefreshSongUI();
             }
 
             _asyncUpdating = false;
+        }
+
+        private bool SortorFilterModeRequiresRefresh()
+        {
+            if ((SongDataCore.Plugin.Songs.IsDataAvailable() && PluginConfig.Instance.SortMode.NeedsScoreSaberData()) ||
+                PluginConfig.Instance.SortMode.NeedsRefresh())
+            {
+                return true;
+            }
+
+            foreach (var kvp in PluginConfig.Instance.FilterModes)
+            {
+                if (kvp.Value == SortFilterStates.Disabled)
+                {
+                    continue;
+                }
+
+                SongFilterMode mode = (SongFilterMode)Enum.Parse(typeof(SongFilterMode), kvp.Key.ToString());
+                if (SongDataCore.Plugin.Songs.IsDataAvailable() && mode.NeedsScoreSaberData())
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -665,9 +685,8 @@ namespace SongBrowser.UI
         public void CancelFilter()
         {
             Plugin.Log.Debug($"Cancelling filter, levelCollection {_lastLevelCollection}");
-            PluginConfig.Instance.FilterMode = SongFilterMode.None;
-
-            UpdateLevelCollectionSelection();
+            PluginConfig.Instance.ResetFilterMode();
+            UpdateLevelCollectionSelection(false);
         }
 
         /// <summary>
@@ -787,7 +806,7 @@ namespace SongBrowser.UI
             if (_lastLevelCollection != null && _lastLevelCollection as IPlaylist != null)
             {
                 scrollToLevel = false;
-                PluginConfig.Instance.SortMode = SongSortMode.Original;
+                PluginConfig.Instance.ResetSortMode();
                 RefreshSortButtonUI();
             }
 
@@ -809,9 +828,8 @@ namespace SongBrowser.UI
         {
             Plugin.Log.Debug("Clearing all sorts and filters.");
 
-            PluginConfig.Instance.SortMode = SongSortMode.Original;
-            PluginConfig.Instance.InvertSortResults = false;
-            PluginConfig.Instance.FilterMode = SongFilterMode.None;
+            PluginConfig.Instance.ResetSortMode();
+            PluginConfig.Instance.ResetFilterMode();
 
             CancelFilter();
             ProcessSongList();
@@ -823,7 +841,7 @@ namespace SongBrowser.UI
         /// </summary>
         private void OnSortButtonClickEvent(SongSortMode sortMode)
         {
-            Plugin.Log.Debug($"Sort button - {sortMode.ToString()} - pressed.");
+            Plugin.Log.Debug($"Sort button - {sortMode} - pressed.");
 
             if ((sortMode.NeedsScoreSaberData() && !SongDataCore.Plugin.Songs.IsDataAvailable()))
             {
@@ -892,7 +910,7 @@ namespace SongBrowser.UI
         {
             Plugin.Log.Debug($"FilterButton {mode} clicked.");
 
-            CancelFilter();
+            UpdateLevelCollectionSelection(false);
 
             var isAllSongs = _beatUi.LevelFilteringNavigationController.selectedLevelCategory == SelectLevelCategoryViewController.LevelCategory.All;
 
@@ -906,28 +924,20 @@ namespace SongBrowser.UI
                 _lastLevelCollection = _beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection();
             }
 
-            if (mode == SongFilterMode.Favorites)
+            GameObject _noDataGO = _beatUi.LevelCollectionViewController.GetField<GameObject, LevelCollectionViewController>("_noDataInfoGO");
+            string _headerText = _beatUi.LevelCollectionTableView.GetField<string, LevelCollectionTableView>("_headerText");
+            Sprite _headerSprite = _beatUi.LevelCollectionTableView.GetField<Sprite, LevelCollectionTableView>("_headerSprite");
+
+            IBeatmapLevelCollection levelCollection = _lastLevelCollection.beatmapLevelCollection;
+            _beatUi.LevelCollectionViewController.SetData(levelCollection, _headerText, _headerSprite, false, _noDataGO);
+
+            if (PluginConfig.Instance.IsFilterEnabled(mode))
             {
-                _beatUi.SelectLevelCategory(SelectLevelCategoryViewController.LevelCategory.Favorites.ToString());
+                PluginConfig.Instance.SetFilterState(mode, SortFilterStates.Disabled);
             }
             else
             {
-                GameObject _noDataGO = _beatUi.LevelCollectionViewController.GetField<GameObject, LevelCollectionViewController>("_noDataInfoGO");
-                string _headerText = _beatUi.LevelCollectionTableView.GetField<string, LevelCollectionTableView>("_headerText");
-                Sprite _headerSprite = _beatUi.LevelCollectionTableView.GetField<Sprite, LevelCollectionTableView>("_headerSprite");
-
-                IBeatmapLevelCollection levelCollection = _lastLevelCollection.beatmapLevelCollection;
-                _beatUi.LevelCollectionViewController.SetData(levelCollection, _headerText, _headerSprite, false, _noDataGO);
-            }
-
-            // If selecting the same filter, cancel
-            if (PluginConfig.Instance.FilterMode == mode)
-            {
-                PluginConfig.Instance.FilterMode = SongFilterMode.None;
-            }
-            else
-            {
-                PluginConfig.Instance.FilterMode = mode;
+                PluginConfig.Instance.SetFilterState(mode, SortFilterStates.Enabled);
             }
 
             switch (mode)
@@ -948,7 +958,7 @@ namespace SongBrowser.UI
         /// <param name="sortMode"></param>
         private void OnSearchButtonClickEvent()
         {
-            Plugin.Log.Debug($"Filter button - {SongFilterMode.Search.ToString()} - pressed.");
+            Plugin.Log.Debug($"Filter button - {SongFilterMode.Search} - pressed.");
 
             this.ShowSearchKeyboard();
         }
@@ -1201,7 +1211,7 @@ namespace SongBrowser.UI
         {
             Plugin.Log.Debug($"Searching for \"{searchFor}\"...");
 
-            PluginConfig.Instance.FilterMode = SongFilterMode.Search;
+            PluginConfig.Instance.SetFilterState(SongFilterMode.Search, SortFilterStates.Enabled);
             PluginConfig.Instance.SearchTerms.Insert(0, searchFor);
             _model.LastSelectedLevelId = null;
 
@@ -1286,19 +1296,16 @@ namespace SongBrowser.UI
             {
                 difficultyString = "Expert+";
             }
-            Plugin.Log.Debug(difficultyString);
 
             // Check if we have data for this song
-            Plugin.Log.Debug($"Checking if have info for song {level.songName}");
+            Plugin.Log.Debug($"Checking score saber data for [{level.songName}] difficulty [{difficultyString}]");
             var hash = SongBrowserModel.GetSongHash(level.levelID);
             if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
             {
-                Plugin.Log.Debug($"Checking if have difficulty for song [{level.songName}] difficulty [{difficultyString}]");
                 BeatStarSong scoreSaberSong = SongDataCore.Plugin.Songs.Data.Songs[hash];
                 BeatStarSongDifficultyStats scoreSaberSongDifficulty = scoreSaberSong.diffs.FirstOrDefault(x => String.Equals(x.diff, difficultyString));
                 if (scoreSaberSongDifficulty != null)
                 {
-                    Plugin.Log.Debug("Display pp for song.");
                     double pp = scoreSaberSongDifficulty.pp;
                     double star = scoreSaberSongDifficulty.star;
 
@@ -1316,8 +1323,6 @@ namespace SongBrowser.UI
                 BeatSaberUI.SetStatButtonText(_ppStatButton, "NA");
                 BeatSaberUI.SetStatButtonText(_starStatButton, "NA");
             }
-
-            Plugin.Log.Debug("Done refreshing score saber stats.");
         }
 
         /// <summary>
@@ -1347,7 +1352,7 @@ namespace SongBrowser.UI
         }
 
         /// <summary>
-        /// TODO - evaluate this sillyness...
+        /// Wait for events to finish firing before checking scroll bars.
         /// </summary>
         /// <returns></returns>
         public IEnumerator RefreshQuickScrollButtonsAsync()
@@ -1471,11 +1476,13 @@ namespace SongBrowser.UI
             {
                 sortByDisplay = PluginConfig.Instance.SortMode.ToString();
             }
+
             _sortByDisplay.SetButtonText(sortByDisplay);
-            if (PluginConfig.Instance.FilterMode != SongFilterMode.Custom)
+
+            if (!PluginConfig.Instance.IsFilterEnabled(SongFilterMode.Custom))
             {
                 // Custom SongFilterMod implies that another mod has modified the text of this button (do not overwrite)
-                _filterByDisplay.SetButtonText(PluginConfig.Instance.FilterMode.ToString());
+                _filterByDisplay.SetButtonText(PluginConfig.Instance.GetFilterModeString());
             }
         }
 
@@ -1513,12 +1520,14 @@ namespace SongBrowser.UI
                 }
             }
 
+            bool hasEnabledFilter = false;
             foreach (SongFilterButton filterButton in _filterButtonGroup)
             {
                 filterButton.Button.SetButtonUnderlineColor(Color.white);
-                if (filterButton.FilterMode == PluginConfig.Instance.FilterMode)
+                if (PluginConfig.Instance.IsFilterEnabled(filterButton.FilterMode))
                 {
                     filterButton.Button.SetButtonUnderlineColor(Color.green);
+                    hasEnabledFilter = true;
                 }
             }
 
@@ -1531,7 +1540,7 @@ namespace SongBrowser.UI
                 _sortByDisplay.SetButtonUnderlineColor(Color.green);
             }
 
-            if (PluginConfig.Instance.FilterMode != SongFilterMode.None)
+            if (hasEnabledFilter)
             {
                 _filterByDisplay.SetButtonUnderlineColor(Color.green);
             }
@@ -1580,18 +1589,22 @@ namespace SongBrowser.UI
         /// <summary>
         /// Logic for fixing BeatSaber's level pack selection bugs.
         /// </summary>
-        public bool UpdateLevelCollectionSelection()
+        public bool UpdateLevelCollectionSelection(bool processSongs)
         {
             if (_uiCreated)
             {
                 IAnnotatedBeatmapLevelCollection currentSelected = _beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection();
                 Plugin.Log.Debug($"Updating level collection, current selected level collection: {currentSelected}");
 
+                _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent -= LevelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
+
                 // select category
                 if (!String.IsNullOrEmpty(PluginConfig.Instance.CurrentLevelCategoryName))
                 {
                     _selectingCategory = true;
                     _beatUi.SelectLevelCategory(PluginConfig.Instance.CurrentLevelCategoryName);
+                    currentSelected = _beatUi.GetCurrentSelectedAnnotatedBeatmapLevelCollection();
+                    Plugin.Log.Debug($"Selected level category, current selected level collection: {currentSelected}");
                     _selectingCategory = false;
                 }
 
@@ -1604,10 +1617,9 @@ namespace SongBrowser.UI
                         currentSelected = _beatUi.BeatmapLevelsModel.allLoadedBeatmapLevelPackCollection.beatmapLevelPacks[0];
                     }
                 }
-                else if (currentSelected == null || (currentSelected.collectionName != PluginConfig.Instance.CurrentLevelCollectionName))
+                else if (currentSelected.collectionName != PluginConfig.Instance.CurrentLevelCollectionName)
                 {
                     Plugin.Log.Debug($"Automatically selecting level collection: {PluginConfig.Instance.CurrentLevelCollectionName}");
-                    _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent -= LevelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
 
                     _lastLevelCollection = _beatUi.GetLevelCollectionByName(PluginConfig.Instance.CurrentLevelCollectionName);
                     if (_lastLevelCollection as PreviewBeatmapLevelPackSO)
@@ -1615,7 +1627,6 @@ namespace SongBrowser.UI
                         Hide();
                     }
                     _beatUi.SelectLevelCollection(PluginConfig.Instance.CurrentLevelCollectionName);
-                    _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += LevelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
                 }
 
                 if (_lastLevelCollection == null)
@@ -1626,8 +1637,13 @@ namespace SongBrowser.UI
                     }
                 }
 
+                _beatUi.LevelFilteringNavigationController.didSelectAnnotatedBeatmapLevelCollectionEvent += LevelFilteringNavController_didSelectAnnotatedBeatmapLevelCollectionEvent;
+
                 Plugin.Log.Debug($"Current Level Collection is: {_lastLevelCollection}");
-                ProcessSongList();
+                if (processSongs)
+                {
+                    ProcessSongList();
+                }
             }
 
             return false;
