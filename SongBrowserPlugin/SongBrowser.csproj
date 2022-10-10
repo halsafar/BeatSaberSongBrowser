@@ -40,6 +40,9 @@
         <Reference Include="CustomJSONData">
           <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Plugins\CustomJSONData.dll</HintPath>
         </Reference>
+        <Reference Include="Hive.Versioning">
+          <HintPath>D:\Games\Steam\SteamApps\common\Beat Saber\Libs\Hive.Versioning.dll</HintPath>
+        </Reference>
         <Reference Include="Microsoft.CSharp" />
         <Reference Include="SiraUtil">
           <HintPath>$(BeatSaberDir)\Plugins\SiraUtil.dll</HintPath>

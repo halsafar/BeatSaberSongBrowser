@@ -62,8 +62,7 @@ namespace SongBrowser.UI
         {
             byte[] imageData = Convert.FromBase64String(encodedData);
 
-            int width, height;
-            GetImageSize(imageData, out width, out height);
+            GetImageSize(imageData, out int width, out int height);
 
             Texture2D texture = new Texture2D(width, height, TextureFormat.ARGB32, false, true)
             {

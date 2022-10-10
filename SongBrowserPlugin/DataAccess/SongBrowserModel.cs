@@ -1,16 +1,12 @@
-﻿using SongBrowser.DataAccess;
-using SongCore.Utilities;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using HMUI;
 using IPA.Utilities;
 using UnityEngine;
-using Logger = SongBrowser.Logging.Logger;
 using CustomJSONData.CustomBeatmap;
 using SongBrowser.Configuration;
 
@@ -37,7 +33,8 @@ namespace SongBrowser
         public static Func<List<IPreviewBeatmapLevel>, List<IPreviewBeatmapLevel>> CustomSortHandler;
         public static Action<ConcurrentDictionary<string, CustomPreviewBeatmapLevel>> didFinishProcessingSongs;
 
-        public bool SortWasMissingData { get; private set; } = false;
+        public bool SortWasMissingData { get; set; } = false;
+        public bool FilterWasMissingData { get; set; } = false;
 
         /// <summary>
         /// Get the last selected (stored in settings) level id.
@@ -76,7 +73,9 @@ namespace SongBrowser
         /// <param name="songListViewController"></param>
         public void Init()
         {
-            Logger.Info($"Settings loaded, filter/sorting mode is: {PluginConfig.Instance.FilterMode}/{PluginConfig.Instance.SortMode}");
+            Plugin.Log.Info($"Settings loaded, filter/sorting mode is: " +
+                $"{PluginConfig.Instance.GetFilterModeString()}/" +
+                $"{PluginConfig.Instance.SortMode}");
         }
 
         /// <summary>
@@ -108,7 +107,7 @@ namespace SongBrowser
 
             if (!Directory.Exists(customSongsPath))
             {
-                Logger.Error("CustomSong directory is missing...");
+                Plugin.Log.Error("CustomSong directory is missing...");
                 return;
             }
 
@@ -128,7 +127,7 @@ namespace SongBrowser
             }
 
             lastWriteTimer.Stop();
-            Logger.Info("Determining song download time and determining mappings took {0}ms", lastWriteTimer.ElapsedMilliseconds);
+            Plugin.Log.Info($"Determining song download time and determining mappings took {lastWriteTimer.ElapsedMilliseconds}ms");
 
             if (customSongDirChanged) {
 	            Stopwatch fileSystemTimer = new Stopwatch();
@@ -138,7 +137,7 @@ namespace SongBrowser
 			            .Select((level, index) => new { Identifier = level.Value.levelID, Index = index })
 			            .ToDictionary(kvp => kvp.Identifier, kvp => kvp.Index);
 	            fileSystemTimer.Stop();
-	            Logger.Info("Determining filesystem song order took {0}ms", fileSystemTimer.ElapsedMilliseconds);
+	            Plugin.Log.Info($"Determining filesystem song order took {fileSystemTimer.ElapsedMilliseconds}ms");
             }
 
             // Update song Infos, directory tree, and sort
@@ -152,7 +151,7 @@ namespace SongBrowser
 
             timer.Stop();
 
-            Logger.Info("Updating songs infos took {0}ms", timer.ElapsedMilliseconds);
+            Plugin.Log.Info($"Updating songs infos took {timer.ElapsedMilliseconds}ms");
         }
 
         /// <summary>
@@ -177,7 +176,7 @@ namespace SongBrowser
                 } 
                 catch (Exception e)
                 {
-                    Logger.Exception("Failure during song meta data scrape: {0}", e);
+                    Plugin.Log.Critical($"Failure during song meta data scrape: {e}");
                     return DateTime.MinValue;
                 }
             } 
@@ -249,7 +248,7 @@ namespace SongBrowser
         /// </summary>
         public void ProcessSongList(IAnnotatedBeatmapLevelCollection selectedBeatmapCollection, LevelSelectionNavigationController navController)
         {
-            Logger.Trace("ProcessSongList()");
+            Plugin.Log.Trace("ProcessSongList()");
 
             List<IPreviewBeatmapLevel> unsortedSongs;
             List<IPreviewBeatmapLevel> filteredSongs;
@@ -258,61 +257,73 @@ namespace SongBrowser
             // Abort
             if (selectedBeatmapCollection == null)
             {
-                Logger.Debug("Cannot process songs yet, no level collection selected...");
+                Plugin.Log.Debug("Cannot process songs yet, no level collection selected...");
                 return;
             }
 
-            Logger.Debug($"Using songs from level collection: {selectedBeatmapCollection.collectionName} [num={selectedBeatmapCollection.beatmapLevelCollection.beatmapLevels.Count}");
+            Plugin.Log.Debug($"Using songs from level collection: {selectedBeatmapCollection.collectionName} [num={selectedBeatmapCollection.beatmapLevelCollection.beatmapLevels.Count}");
             unsortedSongs = GetLevelsForLevelCollection(selectedBeatmapCollection).ToList();
 
-            // filter
-            Logger.Debug($"Starting filtering songs by {PluginConfig.Instance.FilterMode}");
+            Plugin.Log.Debug($"Start filtering songs");
+
             Stopwatch stopwatch = Stopwatch.StartNew();
 
-            if (PluginConfig.Instance.FilterMode == SongFilterMode.Requirements && !Plugin.IsCustomJsonDataEnabled)
+            filteredSongs = unsortedSongs;
+            foreach (var kvp in PluginConfig.Instance.FilterModes)
             {
-                PluginConfig.Instance.FilterMode = SongFilterMode.None;
+                if (kvp.Value == SortFilterStates.Disabled)
+                {
+                    continue;
+                }
+
+                Plugin.Log.Info($"Filtering by {kvp.Key}");
+
+                FilterWasMissingData = false;
+
+                switch ((SongFilterMode)Enum.Parse(typeof(SongFilterMode), kvp.Key.ToString()))
+                {
+                    case SongFilterMode.Easy:
+                    case SongFilterMode.Normal:
+                    case SongFilterMode.Hard:
+                    case SongFilterMode.Expert:
+                    case SongFilterMode.ExpertPlus:
+                        filteredSongs = FilterDifficulty(filteredSongs, (BeatmapDifficulty)Enum.Parse(typeof(BeatmapDifficulty), kvp.Key.ToString()));
+                        break;
+                    case SongFilterMode.Search:
+                        filteredSongs = FilterSearch(filteredSongs);
+                        break;
+                    case SongFilterMode.Ranked:
+                        filteredSongs = FilterRanked(filteredSongs, true, false);
+                        break;
+                    case SongFilterMode.Unranked:
+                        filteredSongs = FilterRanked(filteredSongs, false, true);
+                        break;
+                    case SongFilterMode.Played:
+                        filteredSongs = FilterPlayed(filteredSongs, true, false);
+                        break;
+                    case SongFilterMode.Unplayed:
+                        filteredSongs = FilterPlayed(filteredSongs, false, true);
+                        break;
+                    case SongFilterMode.Requirements:
+                        filteredSongs = FilterRequirements(filteredSongs);
+                        break;
+                    case SongFilterMode.Custom:
+                        Plugin.Log.Info("Song filter mode set to custom. Deferring filter behaviour to another mod.");
+                        filteredSongs = CustomFilterHandler != null ? CustomFilterHandler.Invoke(selectedBeatmapCollection) : filteredSongs;
+                        break;
+                    case SongFilterMode.None:
+                    default:
+                        Plugin.Log.Info("No song filter selected...");
+                        break;
+                }
+
+                stopwatch.Stop();
             }
 
-            switch (PluginConfig.Instance.FilterMode)
-            {
-                case SongFilterMode.Favorites:
-                    filteredSongs = FilterFavorites(unsortedSongs);
-                    break;
-                case SongFilterMode.Search:
-                    filteredSongs = FilterSearch(unsortedSongs);
-                    break;
-                case SongFilterMode.Ranked:
-                    filteredSongs = FilterRanked(unsortedSongs, true, false);
-                    break;
-                case SongFilterMode.Unranked:
-                    filteredSongs = FilterRanked(unsortedSongs, false, true);
-                    break;
-                case SongFilterMode.Played:
-                    filteredSongs = FilterPlayed(unsortedSongs, true, false);
-                    break;
-                case SongFilterMode.Unplayed:
-                    filteredSongs = FilterPlayed(unsortedSongs, false, true);
-                    break;
-                case SongFilterMode.Requirements:
-                    filteredSongs = FilterRequirements(unsortedSongs);
-                    break;
-                case SongFilterMode.Custom:
-                    Logger.Info("Song filter mode set to custom. Deferring filter behaviour to another mod.");
-                    filteredSongs = CustomFilterHandler != null ? CustomFilterHandler.Invoke(selectedBeatmapCollection) : unsortedSongs;
-                    break;
-                case SongFilterMode.None:
-                default:
-                    Logger.Info("No song filter selected...");
-                    filteredSongs = unsortedSongs;
-                    break;
-            }
-
-            stopwatch.Stop();
-            Logger.Info("Filtering songs took {0}ms", stopwatch.ElapsedMilliseconds);
+            Plugin.Log.Info($"Filtering songs took {stopwatch.ElapsedMilliseconds}ms");
 
             // sort
-            Logger.Debug($"Starting to sort songs by {PluginConfig.Instance.SortMode}");
+            Plugin.Log.Debug($"Starting to sort songs by {PluginConfig.Instance.SortMode}");
             stopwatch = Stopwatch.StartNew();
 
             SortWasMissingData = false;
@@ -324,6 +335,9 @@ namespace SongBrowser
                     break;
                 case SongSortMode.Newest:
                     sortedSongs = SortNewest(filteredSongs);
+                    break;
+                case SongSortMode.LastPlayed:
+                    sortedSongs = SortLastPlayed(filteredSongs);
                     break;
                 case SongSortMode.Author:
                     sortedSongs = SortAuthor(filteredSongs);
@@ -379,7 +393,7 @@ namespace SongBrowser
             }
 
             stopwatch.Stop();
-            Logger.Info("Sorting songs took {0}ms", stopwatch.ElapsedMilliseconds);
+            Plugin.Log.Info($"Sorting songs took {stopwatch.ElapsedMilliseconds}ms");
 
             // Still hacking in a custom level pack
             // Asterisk the pack name so it is identifable as filtered.
@@ -389,7 +403,7 @@ namespace SongBrowser
                 packName = "";
             }
 
-            if (!packName.EndsWith("*") && PluginConfig.Instance.FilterMode != SongFilterMode.None)
+            if (!packName.EndsWith("*") && PluginConfig.Instance.FilterModes.Any(x => x.Value == SortFilterStates.Enabled))
             {
                 packName += "*";
             }
@@ -407,17 +421,10 @@ namespace SongBrowser
                 smallCoverImage = BeatSaberMarkupLanguage.Utilities.ImageResources.BlankSprite;
             }
 
-            Logger.Debug("Creating filtered level pack...");
-            BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsCollectionName, packName, selectedBeatmapCollection.collectionName, coverImage, smallCoverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
+            Plugin.Log.Debug("Creating filtered level pack...");
+            BeatmapLevelPack levelPack = new BeatmapLevelPack(SongBrowserModel.FilteredSongsCollectionName, packName, packName, coverImage, smallCoverImage, new BeatmapLevelCollection(sortedSongs.ToArray()));
 
-            /*
-             public virtual void SetData(
-                IAnnotatedBeatmapLevelCollection annotatedBeatmapLevelCollection,
-                bool showPackHeader, bool showPlayerStats, bool showPracticeButton,
-                string actionButtonText,
-                GameObject noDataInfoPrefab, BeatmapDifficultyMask allowedBeatmapDifficultyMask, BeatmapCharacteristicSO[] notAllowedCharacteristics);
-            */
-            Logger.Debug("Acquiring necessary fields to call SetData(pack)...");
+            Plugin.Log.Debug("Acquiring necessary fields to call SetData(pack)...");
             LevelCollectionNavigationController lcnvc = navController.GetField<LevelCollectionNavigationController, LevelSelectionNavigationController>("_levelCollectionNavigationController");
             LevelFilteringNavigationController lfnc = navController.GetField<LevelFilteringNavigationController, LevelSelectionNavigationController>("_levelFilteringNavigationController");
             var _hidePracticeButton = navController.GetField<bool, LevelSelectionNavigationController>("_hidePracticeButton");
@@ -426,7 +433,8 @@ namespace SongBrowser
             var _notAllowedCharacteristics = navController.GetField<BeatmapCharacteristicSO[], LevelSelectionNavigationController>("_notAllowedCharacteristics");
             var noDataPrefab = lfnc.GetField<GameObject, LevelFilteringNavigationController>("_currentNoDataInfoPrefab");
 
-            Logger.Debug("Calling lcnvc.SetData...");
+            //Plugin.Log.Debug("Calling lcnvc.SetData...");
+
             lcnvc.SetData(levelPack,
                 true,
                 !_hidePracticeButton,
@@ -435,18 +443,7 @@ namespace SongBrowser
                 _allowedBeatmapDifficultyMask,
                 _notAllowedCharacteristics);
 
-            //_sortedSongs.ForEach(x => Logger.Debug(x.levelID));
-        }
-
-        /// <summary>
-        /// Filter songs based on playerdata favorites.
-        /// </summary>
-        private List<IPreviewBeatmapLevel> FilterFavorites(List<IPreviewBeatmapLevel> levels)
-        {
-            Logger.Info("Filtering song list as favorites playlist...");
-
-            PlayerDataModel playerData = Resources.FindObjectsOfTypeAll<PlayerDataModel>().FirstOrDefault();
-            return levels.Where(x => playerData.playerData.favoritesLevelIds.Contains(x.levelID)).ToList();
+            //_sortedSongs.ForEach(x => Plugin.Log.Debug(x.levelID));
         }
 
         /// <summary>
@@ -459,19 +456,19 @@ namespace SongBrowser
             // Make sure we can actually search.
             if (PluginConfig.Instance.SearchTerms.Count <= 0)
             {
-                Logger.Error("Tried to search for a song with no valid search terms...");
+                Plugin.Log.Error("Tried to search for a song with no valid search terms...");
                 SortSongName(levels);
                 return levels;
             }
             string searchTerm = PluginConfig.Instance.SearchTerms[0];
             if (String.IsNullOrEmpty(searchTerm))
             {
-                Logger.Error("Empty search term entered.");
+                Plugin.Log.Error("Empty search term entered.");
                 SortSongName(levels);
                 return levels;
             }
 
-            Logger.Info("Filtering song list by search term: {0}", searchTerm);
+            Plugin.Log.Info($"Filtering song list by search term: {searchTerm}");
 
             var terms = searchTerm.Split(' ');
             foreach (var term in terms)
@@ -504,34 +501,43 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> FilterRanked(List<IPreviewBeatmapLevel> levels, bool includeRanked, bool includeUnranked)
         {
-            var filteredLevels = levels.Where(x =>
+            List<IPreviewBeatmapLevel> filteredLevels = null;
+            if (SongDataCore.Plugin.Songs.IsDataAvailable())
             {
-                if (!SongDataCore.Plugin.Songs.IsDataAvailable())
-                {                    
-                    return false;
-                }
+                filteredLevels = levels.Where(x =>
+                {
+                    if (!SongDataCore.Plugin.Songs.IsDataAvailable())
+                    {
+                        return false;
+                    }
 
-                if (x == null)
-                {
-                    return false;
-                }
+                    if (x == null)
+                    {
+                        return false;
+                    }
 
-                var hash = SongBrowserModel.GetSongHash(x.levelID);
-                double maxPP = 0.0;
-                if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
-                {
-                    maxPP = SongDataCore.Plugin.Songs.Data.Songs[hash].diffs.Max(y => y.pp);
-                }
+                    var hash = SongBrowserModel.GetSongHash(x.levelID);
+                    double maxPP = 0.0;
+                    if (SongDataCore.Plugin.Songs.Data.Songs.ContainsKey(hash))
+                    {
+                        maxPP = SongDataCore.Plugin.Songs.Data.Songs[hash].diffs.Max(y => y.pp);
+                    }
 
-                if (maxPP > 0f)
-                {
-                    return includeRanked;
-                }
-                else
-                {
-                    return includeUnranked;
-                }
-            }).ToList();
+                    if (maxPP > 0f)
+                    {
+                        return includeRanked;
+                    }
+                    else
+                    {
+                        return includeUnranked;
+                    }
+                }).ToList();
+            }
+            else
+            {
+                filteredLevels = new List<IPreviewBeatmapLevel>();
+                FilterWasMissingData = true;
+            }
 
             if (filteredLevels.Count == 0)
             {
@@ -548,6 +554,11 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> FilterRequirements(List<IPreviewBeatmapLevel> levels)
         {
+            if (!Plugin.IsCustomJsonDataEnabled)
+            {
+                return levels.ToList();
+            }
+
             return levels.Where(x =>
             {
                 if (x is CustomPreviewBeatmapLevel customLevel)
@@ -617,6 +628,16 @@ namespace SongBrowser
 
             return filteredLevels;
         }
+        /// <summary>
+        /// Filter songs based on a difficulty.
+        /// </summary>
+        /// <param name="levels"></param>
+        /// <param name="beatmapDifficulty"></param>
+        /// <returns></returns>
+        private List<IPreviewBeatmapLevel> FilterDifficulty(List<IPreviewBeatmapLevel> levels, BeatmapDifficulty beatmapDifficulty)
+        {
+            return levels.Where(x => x.previewDifficultyBeatmapSets.Any(y => y.beatmapDifficulties.Any(z => z.Equals(beatmapDifficulty)))).ToList();
+        }
 
         /// <summary>
         /// Sorting returns original list.
@@ -625,7 +646,7 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortOriginal(List<IPreviewBeatmapLevel> levels)
         {
-            Logger.Info("Sorting song list as original");
+            Plugin.Log.Info("Sorting song list as original");
             return levels;
         }
         
@@ -636,7 +657,7 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortVanilla(List<IPreviewBeatmapLevel> levels)
         {
-	        Logger.Info("Sorting song list by vanilla ordering.");
+	        Plugin.Log.Info("Sorting song list by vanilla ordering.");
 	        return levels
 			        .OrderBy(level => _cachedFileSystemOrder.TryGetValue(level.levelID, out int index) ? index : int.MaxValue)
 			        .ToList();
@@ -649,11 +670,28 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortNewest(List<IPreviewBeatmapLevel> levels)
         {
-            Logger.Info("Sorting song list as newest.");
+            Plugin.Log.Info("Sorting song list as newest.");
             return levels
                 .OrderByDescending(x => _cachedLastWriteTimes.ContainsKey(x.levelID) ? _cachedLastWriteTimes[x.levelID] : DateTime.MinValue)
                 .ToList();
         }
+
+        /// <summary>
+        /// Sorting by newest (file time, creation+modified).
+        /// </summary>
+        /// <param name="levels"></param>
+        /// <returns></returns>
+        private List<IPreviewBeatmapLevel> SortLastPlayed(List<IPreviewBeatmapLevel> levels)
+        {
+            Plugin.Log.Info("Sorting song list by last played.");
+            return levels
+                .OrderByDescending(x =>
+                    SongMetadataStore.Instance.GetMetadataForLevelID(x.levelID).LastPlayed != null
+                    ? SongMetadataStore.Instance.GetMetadataForLevelID(x.levelID).LastPlayed
+                    : DateTime.MinValue)
+                .ToList();
+        }
+
 
         /// <summary>
         /// Sorting by the song author.
@@ -662,7 +700,7 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortAuthor(List<IPreviewBeatmapLevel> levelIds)
         {
-            Logger.Info("Sorting song list by author");
+            Plugin.Log.Info("Sorting song list by author");
             return levelIds
                 .OrderBy(x => x.songAuthorName)
                 .ThenBy(x => x.songName)
@@ -676,7 +714,7 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortMapper(List<IPreviewBeatmapLevel> levelIds)
         {
-            Logger.Info("Sorting song list by mapper");
+            Plugin.Log.Info("Sorting song list by mapper");
             return levelIds
                 .OrderBy(x => x.levelAuthorName)
                 .ThenBy(x => x.songName)
@@ -690,7 +728,7 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortPlayCount(List<IPreviewBeatmapLevel> levels)
         {
-            Logger.Info("Sorting song list by playcount");
+            Plugin.Log.Info("Sorting song list by playcount");
             return levels
                 .OrderByDescending(x => _levelIdToPlayCount.ContainsKey(x.levelID) ? _levelIdToPlayCount[x.levelID] : 0)
                 .ThenBy(x => x.songName)
@@ -704,7 +742,7 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortPerformancePoints(List<IPreviewBeatmapLevel> levels)
         {
-            Logger.Info("Sorting song list by performance points...");
+            Plugin.Log.Info("Sorting song list by performance points...");
 
             if (!SongDataCore.Plugin.Songs.IsDataAvailable())
             {
@@ -735,7 +773,7 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortStars(List<IPreviewBeatmapLevel> levels)
         {
-            Logger.Info("Sorting song list by star points...");
+            Plugin.Log.Info("Sorting song list by star points...");
 
             if (!SongDataCore.Plugin.Songs.IsDataAvailable())
             {
@@ -756,7 +794,7 @@ namespace SongBrowser
                             : y.star);
                     }
 
-                    //Logger.Debug("Stars={0}", stars);
+                    //Plugin.Log.Debug("Stars={stars}");
                     if (stars != 0)
                     {
                         return stars;
@@ -774,7 +812,7 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortRandom(List<IPreviewBeatmapLevel> levelIds)
         {
-            Logger.Info("Sorting song list by random (seed={0})...", PluginConfig.Instance.RandomSongSeed);
+            Plugin.Log.Info($"Sorting song list by random (seed={PluginConfig.Instance.RandomSongSeed})...");
 
             System.Random rnd = new System.Random(PluginConfig.Instance.RandomSongSeed);
 
@@ -791,7 +829,7 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortSongName(List<IPreviewBeatmapLevel> levels)
         {
-            Logger.Info("Sorting song list as default (songName)");
+            Plugin.Log.Info("Sorting song list as default (songName)");
             return levels
                 .OrderBy(x => x.songName)
                 .ThenBy(x => x.songAuthorName)
@@ -805,7 +843,7 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortSongBpm(List<IPreviewBeatmapLevel> levels)
         {
-            Logger.Info("Sorting song list by beatsPerMinute/songName");
+            Plugin.Log.Info("Sorting song list by beatsPerMinute/songName");
             return levels
                 .OrderBy(x => x.beatsPerMinute)
                 .ThenBy(x => x.songName)
@@ -819,7 +857,7 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortSongLength(List<IPreviewBeatmapLevel> levels)
         {
-            Logger.Info("Sorting song list by songDuration/songName");
+            Plugin.Log.Info("Sorting song list by songDuration/songName");
             return levels
                 .OrderBy(x => x.songDuration)
                 .ThenBy(x => x.songName)
@@ -833,7 +871,7 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortUpVotes(List<IPreviewBeatmapLevel> levelIds)
         {
-            Logger.Info("Sorting song list by BeatSaver UpVotes");
+            Plugin.Log.Info("Sorting song list by BeatSaver UpVotes");
 
             // Do not always have data when trying to sort by UpVotes
             if (!SongDataCore.Plugin.Songs.IsDataAvailable())
@@ -865,7 +903,7 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortBeatSaverPlayCount(List<IPreviewBeatmapLevel> levelIds)
         {
-            Logger.Info("Sorting song list by BeatSaver PlayCount");
+            Plugin.Log.Info("Sorting song list by BeatSaver PlayCount");
             return levelIds;
             // Do not always have data when trying to sort by UpVotes
             /*if (!SongDataCore.Plugin.Songs.IsDataAvailable())
@@ -896,7 +934,7 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortBeatSaverRating(List<IPreviewBeatmapLevel> levelIds)
         {
-            Logger.Info("Sorting song list by BeatSaver Rating!");
+            Plugin.Log.Info("Sorting song list by BeatSaver Rating!");
 
             // Do not always have data when trying to sort by rating
             if (!SongDataCore.Plugin.Songs.IsDataAvailable())
@@ -928,7 +966,7 @@ namespace SongBrowser
         /// <returns></returns>
         private List<IPreviewBeatmapLevel> SortBeatSaverHeat(List<IPreviewBeatmapLevel> levelIds)
         {
-            Logger.Info("Sorting song list by BeatSaver Heat!");
+            Plugin.Log.Info("Sorting song list by BeatSaver Heat!");
 
             // Do not always have data when trying to sort by heat
             if (!SongDataCore.Plugin.Songs.IsDataAvailable())

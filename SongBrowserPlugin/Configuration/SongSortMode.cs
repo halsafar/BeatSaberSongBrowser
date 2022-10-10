@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿
 namespace SongBrowser.Configuration
 {
     public enum SongSortMode
@@ -25,6 +20,7 @@ namespace SongBrowser.Configuration
         Bpm,
         Length,
         Vanilla,
+        LastPlayed,
 
         // Allow mods to extend functionality.
         Custom,
@@ -51,6 +47,15 @@ namespace SongBrowser.Configuration
                 default:
                     return false;
             }
+        }
+
+        public static bool NeedsRefresh(this SongSortMode s)
+        {
+            return s switch
+            {
+                SongSortMode.LastPlayed => true,
+                _ => false,
+            };
         }
     }
 }

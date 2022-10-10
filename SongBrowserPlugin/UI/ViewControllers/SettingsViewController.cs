@@ -7,10 +7,8 @@ using Zenject;
 
 namespace SongBrowser.UI.ViewControllers
 {
-    public class SettingsViewController : IInitializable, IDisposable, INotifyPropertyChanged
+    public class SettingsViewController : IInitializable, IDisposable
     {
-        public event PropertyChangedEventHandler PropertyChanged;   
-
         [UIValue("random-instant-queue")]
         public bool DefaultAllowDuplicates
         {
